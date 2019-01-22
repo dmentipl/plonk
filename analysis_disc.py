@@ -16,6 +16,28 @@ udist = dump.units['dist']
 utime = dump.units['time']
 umass = dump.units['mass']
 
+#--- Surface density
+
+mpGas = dump.massParticles['gas']
+cylindricalRadius = np.linalg.norm(dump.position['gas'][:,0:2], axis=1)
+
+nbins = 300
+
+rIn = 10
+rOut = 200
+dR = (rOut - rIn)/(nbins - 1)
+
+radii = np.linspace(rIn, rOut, nbins)
+sigma = np.empty_like(radii)
+
+for idx, R in enumerate(radii):
+
+    npart1 = len(np.where(cylindricalRadius < R + dR/2)[0])
+    npart2 = len(np.where(cylindricalRadius < R - dR/2)[0])
+    npart = abs(npart1 - npart2)
+    area = np.pi * ( (R + dR/2)**2 - (R - dR/2)**2 )
+    sigma[idx] = mpGas * npart / area
+
 #--- Angular momentum
 
 position = dump.position['gas']
