@@ -9,34 +9,63 @@ Daniel Mentiplay, 2019.
 import numpy as np
 
 from dump import Dump
+from utils import density_from_smoothing_length
+
+#--- Read dump file
 
 dump = Dump('disc_00000.ascii')
+
+#--- Units
 
 udist = dump.units['dist']
 utime = dump.units['time']
 umass = dump.units['mass']
 
-#--- Surface density
+#--- Particle properties
 
-mpGas = dump.massParticles['gas']
-cylindricalRadius = np.linalg.norm(dump.position['gas'][:,0:2], axis=1)
+massGasParticle = dump.massParticles['gas']
+position        = dump.position['gas']
+velocity        = dump.velocity['gas']
+momentum        = massGasParticle * velocity
+angularMomentum = np.cross(position, momentum)
+smoothingLength = dump.smoothingLength['gas']
 
-nbins = 300
+#--- Radial binning
 
+nBins = 150
 rIn = 10
 rOut = 200
-dR = (rOut - rIn)/(nbins - 1)
 
-radii = np.linspace(rIn, rOut, nbins)
-sigma = np.empty_like(radii)
+dR = (rOut - rIn)/(nBins - 1)
+radius = np.linspace(rIn, rOut, nBins)
+cylindricalRadius = np.linalg.norm(dump.position['gas'][:,0:2], axis=1)
 
-for idx, R in enumerate(radii):
+#--- Surface density
 
-    npart1 = len(np.where(cylindricalRadius < R + dR/2)[0])
-    npart2 = len(np.where(cylindricalRadius < R - dR/2)[0])
-    npart = abs(npart1 - npart2)
+surfaceDensity  = np.empty_like(radius)
+averageDensity  = np.empty_like(radius)
+meanHeight      = np.empty_like(radius)
+scaleHeight     = np.empty_like(radius)
+
+for idx, R in enumerate(radius):
+
+    indicies = np.where((cylindricalRadius < R + dR/2) & \
+                        (cylindricalRadius > R - dR/2))[0]
+
+    npart = len(indicies)
+
     area = np.pi * ( (R + dR/2)**2 - (R - dR/2)**2 )
-    sigma[idx] = mpGas * npart / area
+    surfaceDensity[idx] = massGasParticle * npart / area
+
+    meanHeight[idx]  = np.sum(position[indicies, 2])/npart
+    scaleHeight[idx] = np.sqrt(np.sum( ( position[indicies, 2] \
+                                       - meanHeight[idx] )**2 ) / (npart - 1))
+
+    averageDensity[idx] = np.sum( density_from_smoothing_length( \
+            smoothingLength[indicies], massGasParticle ) ) / npart
+
+
+
 
 #--- Angular momentum
 
