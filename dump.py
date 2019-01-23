@@ -13,7 +13,6 @@ positionIndex = slice(0, 3)
 massIndex = 3
 smoothingLengthIndex = 4
 velocityIndex = slice(6, 9)
-dustFracIndexStart = 9
 
 class Dump:
     '''
@@ -42,6 +41,13 @@ class Dump:
                         header.append(line[2:])
                 else:
                     break
+
+        #--- Dump type
+
+        if 'v_x' in header[8].split():
+            self.dumpType = 'full'
+        else:
+            self.dumpType = 'small'
 
         #--- Data
 
@@ -99,16 +105,6 @@ class Dump:
 
         units['mass'] = massUnit
 
-        velocityUnit = float(header[6].split()[6])
-        velocityUnitLabel = header[7].split()[6][1:-1]
-
-        if velocityUnitLabel in ['cm/s']:
-            pass
-        else:
-            raise ValueError('Cannot determine velocity unit')
-
-        units['velocity'] = velocityUnit
-
         self.units = units
 
     def _get_from_data(self, data):
@@ -141,16 +137,16 @@ class Dump:
 
         massParticles = dict()
 
-        massParticles['gas'] = data[np.where(itype == iGas)[0][0], 3]
+        massParticles['gas'] = data[np.where(itype == iGas)[0][0], massIndex]
 
         massSink = list()
         for i in np.where(itype == iSink)[0]:
-            massSink.append(data[i, 3])
+            massSink.append(data[i, massIndex])
         massParticles['sink'] = massSink
 
         massDust = list()
         for i in range(iDust, iDust + nDustTypes):
-            massDust.append(data[np.where(itype == i)[0][0], 3])
+            massDust.append(data[np.where(itype == i)[0][0], massIndex])
         massParticles['dust'] = massDust
 
         self.massParticles = massParticles
@@ -171,17 +167,19 @@ class Dump:
 
         #--- Velocity
 
-        velocity = dict()
+        if self.dumpType == 'full':
 
-        velocity['gas'] = data[np.where(itype == iGas), velocityIndex][0]
-        velocity['sink'] = data[np.where(itype == iSink), velocityIndex][0]
+            velocity = dict()
 
-        velocityDust = list()
-        for i in range(iDust, iDust + nDustTypes):
-            velocityDust.append(data[np.where(itype == i)[0], velocityIndex])
-        velocity['dust'] = velocityDust
+            velocity['gas'] = data[np.where(itype == iGas), velocityIndex][0]
+            velocity['sink'] = data[np.where(itype == iSink), velocityIndex][0]
 
-        self.velocity = velocity
+            velocityDust = list()
+            for i in range(iDust, iDust + nDustTypes):
+                velocityDust.append(data[np.where(itype == i)[0], velocityIndex])
+            velocity['dust'] = velocityDust
+
+            self.velocity = velocity
 
         #--- Smoothing length
 
@@ -201,6 +199,11 @@ class Dump:
         self.smoothingLength = smoothingLength
 
         #--- Dust fraction
+
+        if self.dumpType == 'full':
+            dustFracIndexStart = 9
+        else:
+            dustFracIndexStart = 6
 
         dustFracIndex = slice(dustFracIndexStart, dustFracIndexStart + nDustTypes)
         self.dustFrac = data[np.where(itype == iGas), dustFracIndex][0]
