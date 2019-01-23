@@ -94,28 +94,32 @@ if fullDump:
 dR = (rOut - rIn)/(nRadialBins - 1)
 radius = np.linspace(rIn, rOut, nRadialBins)
 
-cylindricalRadiusGas = np.linalg.norm(positionGas[:,0:2], axis=1)
-heightGas = positionGas[:,2]
+cylindricalRadiusGas = np.linalg.norm(positionGas[:, 0:2], axis=1)
+heightGas = positionGas[:, 2]
 
 cylindricalRadiusDust = list()
 heightDust = list()
 for idx in range(nDustTypes):
     cylindricalRadiusDust.append( \
-            np.linalg.norm(dump.position['dust'][idx][:,0:2], axis=1) )
-    heightDust.append(positionDust[idx][:,2])
+            np.linalg.norm(dump.position['dust'][idx][:, 0:2], axis=1) )
+    heightDust.append(positionDust[idx][:, 2])
 
 #--- Calculate radially binned quantities
 
-surfaceDensityGas  = np.empty_like(radius)
-midplaneDensityGas = np.empty_like(radius)
-meanHeightGas      = np.empty_like(radius)
-scaleHeightGas     = np.empty_like(radius)
+meanSmoothingLengthGas = np.empty_like(radius)
+surfaceDensityGas      = np.empty_like(radius)
+midplaneDensityGas     = np.empty_like(radius)
+scaleHeightGas         = np.empty_like(radius)
+meanAngularMomentumGas = np.empty_like([radius, radius, radius])
 
-surfaceDensityDust  = [np.empty_like(radius) for i in range(nDustTypes)]
-midplaneDensityDust = [np.empty_like(radius) for i in range(nDustTypes)]
-meanHeightDust      = [np.empty_like(radius) for i in range(nDustTypes)]
-scaleHeightDust     = [np.empty_like(radius) for i in range(nDustTypes)]
-Stokes              = [np.empty_like(radius) for i in range(nDustTypes)]
+meanSmoothingLengthDust = [np.empty_like(radius) for i in range(nDustTypes)]
+surfaceDensityDust      = [np.empty_like(radius) for i in range(nDustTypes)]
+midplaneDensityDust     = [np.empty_like(radius) for i in range(nDustTypes)]
+scaleHeightDust         = [np.empty_like(radius) for i in range(nDustTypes)]
+meanAngularMomentumDust = [np.empty_like([radius, radius, radius])
+                           for i in range(nDustTypes)]
+
+Stokes                  = [np.empty_like(radius) for i in range(nDustTypes)]
 
 for idxi, R in enumerate(radius):
 
@@ -128,12 +132,18 @@ for idxi, R in enumerate(radius):
 
     nPartGas = len(indiciesGas)
 
+    meanSmoothingLengthGas[idxi] = np.sum( smoothingLengthGas[indiciesGas] ) \
+                                         / nPartGas
+
+    meanAngularMomentumGas[:, idxi] = np.sum( angularMomentumGas[indiciesGas],
+                                              axis=0 ) / nPartGas
+
     surfaceDensityGas[idxi] = massParticleGas * nPartGas / area
 
-    meanHeightGas[idxi]  = np.sum( heightGas[indiciesGas] ) / nPartGas
+    meanHeightGas = np.sum( heightGas[indiciesGas] ) / nPartGas
 
     scaleHeightGas[idxi] = np.sqrt( np.sum( \
-                           (heightGas[indiciesGas] - meanHeightGas[idxi])**2 ) \
+                           (heightGas[indiciesGas] - meanHeightGas)**2 ) \
                                  / (nPartGas - 1) )
 
     if midplaneSlice:
@@ -143,8 +153,8 @@ for idxi, R in enumerate(radius):
         indiciesMidplaneGas = np.where(
             (cylindricalRadiusGas < R + dR/2) &
             (cylindricalRadiusGas > R - dR/2) &
-            (heightGas < meanHeightGas[idxi] + frac * scaleHeightGas[idxi]) &
-            (heightGas > meanHeightGas[idxi] - frac * scaleHeightGas[idxi])
+            (heightGas < meanHeightGas + frac * scaleHeightGas[idxi]) &
+            (heightGas > meanHeightGas - frac * scaleHeightGas[idxi])
             )[0]
 
         midplaneDensityGas[idxi] = np.sum(
@@ -171,16 +181,22 @@ for idxi, R in enumerate(radius):
 
         if nPartDust > minPart:
 
-            meanHeightDust[idxj][idxi] = np.sum(
-                heightDust[idxj][indiciesDust] ) / nPartDust
+            meanSmoothingLengthDust[idxj][idxi] = np.sum(
+                smoothingLengthDust[idxj][indiciesDust] ) / nPartDust
+
+            meanAngularMomentumDust[idxj][:, idxi] = np.sum(
+                angularMomentumDust[idxj][indiciesDust], axis=0 ) / nPartDust
+
+            meanHeightDust = np.sum(heightDust[idxj][indiciesDust]) / nPartDust
 
             scaleHeightDust[idxj][idxi] = np.sqrt(
                 np.sum(
-                    ( heightDust[idxj][indiciesDust] - meanHeightDust[idxj][idxi] )**2
+                    ( heightDust[idxj][indiciesDust] - meanHeightDust )**2
                     ) / (nPartDust - 1) )
         else:
 
-            meanHeightDust[idxj][idxi] = np.nan
+            meanSmoothingLengthDust[idxj][idxi] = np.nan
+            meanAngularMomentumDust[idxj][:, idxi] = np.nan
             scaleHeightDust[idxj][idxi] = np.nan
 
         midplaneDensityDust[idxj][idxi] = surfaceDensityDust[idxj][idxi] \
@@ -194,35 +210,3 @@ for idxi, R in enumerate(radius):
             np.sqrt(gamma*np.pi/8) * grainDens[idxj] * grainSize[idxj] \
             / ( scaleHeightGas[idxi] \
             * (midplaneDensityGas[idxi] + midplaneDensityDust[idxj][idxi]) )
-
-
-
-
-
-
-
-
-
-#--- Angular momentum
-
-position = dump.position['gas']
-momentum = dump.massParticles['gas'] * dump.velocity['gas']
-
-angularMomentum = np.cross(position, momentum)
-angularMomentumTotal = np.sum(angularMomentum, axis=0)
-angularMomentumTotalMagnitude = np.linalg.norm(angularMomentumTotal)
-
-angmom = angularMomentumTotalMagnitude * unitMass * unitDist**2 / unitTime
-print(f'Total angular momentum in gas disc is {angmom:g} g.cm^2/s')
-
-nSinks = dump.nParticles['sink']
-position = dump.position['sink']
-momentum = np.empty_like(position)
-for i in range(nSinks):
-    momentum[i] = dump.massParticles['sink'][i] * dump.velocity['sink'][i]
-
-angularMomentum = np.cross(position, momentum)
-angularMomentumTotalMagnitude = np.sum(angularMomentum, axis=1)
-angularMomentumTotalMagnitudeCGS = angularMomentumTotalMagnitude * unitMass * unitDist**2 / unitTime
-for idx, angmom in enumerate(angularMomentumTotalMagnitudeCGS):
-    print(f'Total angular momentum in sink {idx} is {angmom:g} g.cm^2/s')
