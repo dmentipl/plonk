@@ -19,13 +19,13 @@ minPart = 5
 
 #--- Parameters
 
-gamma = 1  # TODO: read from dump
-rIn = 10  # TODO: read from dump
-rOut = 200  # TODO: read from dump
+gamma = 1    # TODO: read from dump
+rIn   = 10   # TODO: read from dump
+rOut  = 200  # TODO: read from dump
 
 #--- Read dump file
 
-dump = Dump('disc_00000.ascii')
+dump = Dump('disc_00006.ascii')
 
 fullDump = bool(dump.dumpType == 'full')
 
@@ -110,16 +110,20 @@ meanSmoothingLengthGas = np.empty_like(radius)
 surfaceDensityGas      = np.empty_like(radius)
 midplaneDensityGas     = np.empty_like(radius)
 scaleHeightGas         = np.empty_like(radius)
-meanAngularMomentumGas = np.empty_like([radius, radius, radius])
+
+if fullDump:
+    meanAngularMomentumGas = np.empty_like([radius, radius, radius])
 
 meanSmoothingLengthDust = [np.empty_like(radius) for i in range(nDustTypes)]
 surfaceDensityDust      = [np.empty_like(radius) for i in range(nDustTypes)]
 midplaneDensityDust     = [np.empty_like(radius) for i in range(nDustTypes)]
 scaleHeightDust         = [np.empty_like(radius) for i in range(nDustTypes)]
-meanAngularMomentumDust = [np.empty_like([radius, radius, radius])
-                           for i in range(nDustTypes)]
-
 Stokes                  = [np.empty_like(radius) for i in range(nDustTypes)]
+
+if fullDump:
+    meanAngularMomentumDust = [np.empty_like([radius, radius, radius])
+                               for i in range(nDustTypes)]
+
 
 for idxi, R in enumerate(radius):
 
@@ -135,8 +139,9 @@ for idxi, R in enumerate(radius):
     meanSmoothingLengthGas[idxi] = np.sum( smoothingLengthGas[indiciesGas] ) \
                                          / nPartGas
 
-    meanAngularMomentumGas[:, idxi] = np.sum( angularMomentumGas[indiciesGas],
-                                              axis=0 ) / nPartGas
+    if fullDump:
+        meanAngularMomentumGas[:, idxi] = np.sum( angularMomentumGas[indiciesGas],
+                                                  axis=0 ) / nPartGas
 
     surfaceDensityGas[idxi] = massParticleGas * nPartGas / area
 
@@ -184,8 +189,9 @@ for idxi, R in enumerate(radius):
             meanSmoothingLengthDust[idxj][idxi] = np.sum(
                 smoothingLengthDust[idxj][indiciesDust] ) / nPartDust
 
-            meanAngularMomentumDust[idxj][:, idxi] = np.sum(
-                angularMomentumDust[idxj][indiciesDust], axis=0 ) / nPartDust
+            if fullDump:
+                meanAngularMomentumDust[idxj][:, idxi] = np.sum(
+                    angularMomentumDust[idxj][indiciesDust], axis=0 ) / nPartDust
 
             meanHeightDust = np.sum(heightDust[idxj][indiciesDust]) / nPartDust
 
@@ -196,7 +202,10 @@ for idxi, R in enumerate(radius):
         else:
 
             meanSmoothingLengthDust[idxj][idxi] = np.nan
-            meanAngularMomentumDust[idxj][:, idxi] = np.nan
+
+            if fullDump:
+                meanAngularMomentumDust[idxj][:, idxi] = np.nan
+
             scaleHeightDust[idxj][idxi] = np.nan
 
         midplaneDensityDust[idxj][idxi] = surfaceDensityDust[idxj][idxi] \
