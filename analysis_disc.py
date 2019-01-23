@@ -7,7 +7,9 @@ Daniel Mentiplay, 2019.
 # TODO: really just a testing script at the moment.
 
 import numpy as np
+from numpy.linalg import norm
 
+from constants import constants
 from dump import Dump
 from utils import density_from_smoothing_length
 
@@ -49,6 +51,7 @@ def calculate_radially_binned_quantities( nRadialBins=None,
         - tilt
         - twist
         - psi
+        - eccentricity
     '''
 
     if nRadialBins is None:
@@ -87,6 +90,7 @@ def calculate_radially_binned_quantities( nRadialBins=None,
         meanTilt                 = np.empty_like(radialBins)
         meanTwist                = np.empty_like(radialBins)
         meanPsi                  = np.empty_like(radialBins)
+        meanEccentricity         = np.empty_like(radialBins)
 
     else:
 
@@ -95,6 +99,7 @@ def calculate_radially_binned_quantities( nRadialBins=None,
         meanTilt                 = None
         meanTwist                = None
         meanPsi                  = None
+        meanEccentricity         = None
 
 
     for index, R in enumerate(radialBins):
@@ -124,7 +129,7 @@ def calculate_radially_binned_quantities( nRadialBins=None,
                     angularMomentum[indicies], axis=0 ) / nPart
 
                 magnitudeAngularMomentum[index] = \
-                        np.linalg.norm(meanAngularMomentum[:, index])
+                        norm(meanAngularMomentum[:, index])
 
                 meanTilt[index] = np.arccos( meanAngularMomentum[2, index] \
                                            / magnitudeAngularMomentum[index] )
@@ -184,7 +189,35 @@ def calculate_radially_binned_quantities( nRadialBins=None,
              meanAngularMomentum,
              meanTilt,
              meanTwist,
-             meanPsi )
+             meanPsi,
+             meanEccentricity )
+
+# ---------------------------------------------------------------------------- #
+
+def calculate_eccentricity( massParticle,
+                            position,
+                            velocity,
+                            angularMomentum ):
+    '''
+    Calculate eccentricity.
+    '''
+
+    gravitationalParameter = constants.G / ( unitDist**3 / unitTime**2 / unitMass )
+    gravitationalParameter *= stellarMass
+
+    specificKineticEnergy = 1/2 * norm(velocity, axis=1)**2
+    specificGravitationalEnergy = - gravitationalParameter / norm(position, axis=1)
+    specificEnergy = specificKineticEnergy + specificGravitationalEnergy
+
+    specificAngularMomentum = norm(angularMomentum, axis=1) \
+                            / massParticle
+
+    term = 2 * specificEnergy * specificAngularMomentum**2 \
+         / gravitationalParameter**2
+
+    eccentricity = np.sqrt( 1 + term )
+
+    return eccentricity
 
 # ---------------------------------------------------------------------------- #
 
@@ -258,6 +291,8 @@ if __name__ == '__main__':
     nSinks = dump.nParticles['sink']
     massParticleSink = dump.massParticles['sink']
 
+    stellarMass = massParticleSink[0]
+
     smoothingLengthSink = dump.smoothingLength['sink']
     positionSink = dump.position['sink']
 
@@ -270,9 +305,16 @@ if __name__ == '__main__':
             angularMomentumSink.append(np.cross(positionSink[idx],
                                                 momentumSink[idx]))
 
+#--- Gas eccentricity
+
+    eccentricityGas = calculate_eccentricity( massParticleGas,
+                                              positionGas,
+                                              velocityGas,
+                                              angularMomentumGas )
+
 #--- Radially bin gas
 
-    cylindricalRadiusGas = np.linalg.norm(positionGas[:, 0:2], axis=1)
+    cylindricalRadiusGas = norm(positionGas[:, 0:2], axis=1)
     heightGas = positionGas[:, 2]
 
     vals = calculate_radially_binned_quantities( numberRadialBins,
@@ -293,6 +335,7 @@ if __name__ == '__main__':
     tiltGas                = vals[6]
     twistGas               = vals[7]
     psiGas                 = vals[8]
+    meanEccentricityGas    = vals[9]
 
 #--- Radially bin dust
 
@@ -307,11 +350,21 @@ if __name__ == '__main__':
     tiltDust                = list()
     twistDust               = list()
     psiDust                 = list()
+    eccentricityDust        = list()
+    meanEccentricityDust    = list()
 
     for idx in range(nDustTypes):
 
+        #--- Dust eccentricity
+
+        eccentricityDust.append(
+            calculate_eccentricity( massParticleDust[idx],
+                                    positionDust[idx],
+                                    velocityDust[idx],
+                                    angularMomentumDust[idx] ) )
+
         cylindricalRadiusDust.append(
-            np.linalg.norm(dump.position['dust'][idx][:, 0:2], axis=1) )
+            norm(dump.position['dust'][idx][:, 0:2], axis=1) )
 
         heightDust.append(positionDust[idx][:, 2])
 
@@ -331,7 +384,10 @@ if __name__ == '__main__':
         meanAngularMomentumDust.append( vals[5] )
         tiltDust.               append( vals[6] )
         twistDust.              append( vals[7] )
-        psiDust.                append( vals[7] )
+        psiDust.                append( vals[8] )
+        meanEccentricityDust.   append( vals[9] )
+
+    #--- Stokes
 
     Stokes = [np.empty_like(radialBinsDisc) for i in range(nDustTypes)]
 
