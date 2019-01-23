@@ -39,7 +39,8 @@ def calculate_radially_binned_quantities( nRadialBins=None,
                                           height=None,
                                           smoothingLength=None,
                                           massParticle=None,
-                                          angularMomentum=None ):
+                                          angularMomentum=None,
+                                          eccentricity=None ):
     '''
     Calculate averaged radially binned quantities:
         - radial bins
@@ -84,6 +85,9 @@ def calculate_radially_binned_quantities( nRadialBins=None,
     scaleHeight         = np.empty_like(radialBins)
 
     if angularMomentum is not None:
+
+        if eccentricity is None:
+            raise ValueError('Need eccentricity')
 
         useVelocities = True
 
@@ -142,6 +146,8 @@ def calculate_radially_binned_quantities( nRadialBins=None,
                     meanAngularMomentum[1, index] / magnitudeAngularMomentum[index],
                     meanAngularMomentum[0, index] / magnitudeAngularMomentum[index] )
 
+                meanEccentricity[index] = np.sum( eccentricity[indicies] ) / nPart
+
         else:
 
             meanSmoothingLength[index] = np.nan
@@ -153,6 +159,7 @@ def calculate_radially_binned_quantities( nRadialBins=None,
                 meanAngularMomentum[:, index] = np.nan
                 meanTilt[index]               = np.nan
                 meanTwist[index]              = np.nan
+                meanEccentricity[index]       = np.nan
 
         if midplaneSlice:
 
@@ -330,7 +337,8 @@ if __name__ == '__main__':
                                                  heightGas,
                                                  smoothingLengthGas,
                                                  massParticleGas,
-                                                 angularMomentumGas )
+                                                 angularMomentumGas,
+                                                 eccentricityGas )
 
     radialBinsDisc         = vals[0]
     surfaceDensityGas      = vals[1]
@@ -383,7 +391,8 @@ if __name__ == '__main__':
                                                      heightDust[idx],
                                                      smoothingLengthDust[idx],
                                                      massParticleDust[idx],
-                                                     angularMomentumDust[idx] )
+                                                     angularMomentumDust[idx],
+                                                     eccentricityDust[idx] )
 
         surfaceDensityDust.     append( vals[1] )
         midplaneDensityDust.    append( vals[2] )
