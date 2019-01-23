@@ -13,9 +13,9 @@ from utils import density_from_smoothing_length
 
 #--- Options
 
-midplaneSlice = False
+midplaneSlice    = False
 numberRadialBins = 150
-minPart = 5
+minPart          = 5
 
 #--- Parameters
 
@@ -25,42 +25,71 @@ rOut  = 200  # TODO: read from dump
 
 #--- Dump file name
 
-dumpFileName = 'disc_00000.ascii'
+dumpFileName = 'disc_00000.ascii'  # TODO: get dump filename as input
+                                   # TODO: read multiple dumpfiles
 
 # ---------------------------------------------------------------------------- #
 
-def calculate_radially_binned_quantities( nRadialBins,
-                                          radiusIn,
-                                          radiusOut,
-                                          cylindricalRadius,
-                                          height,
-                                          smoothingLength,
-                                          massParticle,
-                                          angularMomentum ):
+def calculate_radially_binned_quantities( nRadialBins=None,
+                                          radiusIn=None,
+                                          radiusOut=None,
+                                          cylindricalRadius=None,
+                                          height=None,
+                                          smoothingLength=None,
+                                          massParticle=None,
+                                          angularMomentum=None ):
     '''
-    Calculate radially binned quantities:
+    Calculate averaged radially binned quantities:
         - radial bins
         - surface density
         - midplane density
         - scale height
-        - mean smoothing length
+        - smoothing length
         - angular momentum
         - tilt
         - twist
     '''
 
-    dR = (radiusOut - radiusIn)/(nRadialBins - 1)
+    if nRadialBins is None:
+        raise ValueError('Need nRadialBins')
+
+    if radiusIn is None:
+        raise ValueError('Need radiusIn')
+
+    if radiusOut is None:
+        raise ValueError('Need radiusOut')
+
+    if cylindricalRadius is None:
+        raise ValueError('Need cylindricalRadius')
+
+    if height is None:
+        raise ValueError('Need height')
+
+    if smoothingLength is None:
+        raise ValueError('Need smoothingLength')
+
+    if massParticle is None:
+        raise ValueError('Need massParticle')
+
+    dR         = (radiusOut - radiusIn) / (nRadialBins - 1)
     radialBins = np.linspace(rIn, rOut, nRadialBins)
 
-    meanSmoothingLength= np.empty_like(radialBins)
-    surfaceDensity= np.empty_like(radialBins)
-    midplaneDensity= np.empty_like(radialBins)
-    scaleHeight= np.empty_like(radialBins)
+    meanSmoothingLength = np.empty_like(radialBins)
+    surfaceDensity      = np.empty_like(radialBins)
+    midplaneDensity     = np.empty_like(radialBins)
+    scaleHeight         = np.empty_like(radialBins)
 
-    if isFullDump:
-        meanAngularMomentum= np.empty_like([radialBins, radialBins, radialBins])
-        tilt  = np.empty_like(radialBins)
-        twist = np.empty_like(radialBins)
+    if angularMomentum is not None:
+
+        meanAngularMomentum = np.empty_like(3*[radialBins])
+        meanTilt            = np.empty_like(radialBins)
+        meanTwist           = np.empty_like(radialBins)
+
+    else:
+
+        meanAngularMomentum = None
+        meanTilt            = None
+        meanTwist           = None
 
 
     for index, R in enumerate(radialBins):
@@ -84,7 +113,7 @@ def calculate_radially_binned_quantities( nRadialBins,
             scaleHeight[index] = np.sqrt( np.sum(
                 (height[indicies] - meanHeight)**2 ) / (nPart - 1) )
 
-            if isFullDump:
+            if angularMomentum is not None:
 
                 meanAngularMomentum[:, index] = np.sum(
                     angularMomentum[indicies], axis=0 ) / nPart
@@ -92,10 +121,10 @@ def calculate_radially_binned_quantities( nRadialBins,
                 magnitudeAngularMomentum = \
                         np.linalg.norm(meanAngularMomentum[:, index])
 
-                tilt[index] = np.arccos( meanAngularMomentum[2, index] \
-                                      / magnitudeAngularMomentum )
+                meanTilt[index] = np.arccos( meanAngularMomentum[2, index] \
+                                           / magnitudeAngularMomentum )
 
-                twist[index] = np.arctan2(
+                meanTwist[index] = np.arctan2(
                     meanAngularMomentum[1, index] / magnitudeAngularMomentum,
                     meanAngularMomentum[0, index] / magnitudeAngularMomentum )
 
@@ -103,10 +132,13 @@ def calculate_radially_binned_quantities( nRadialBins,
 
             meanSmoothingLength[index] = np.nan
 
-            if isFullDump:
-                meanAngularMomentum[:, index] = np.nan
-
             scaleHeight[index] = np.nan
+
+            if isFullDump:
+
+                meanAngularMomentum[:, index] = np.nan
+                meanTilt[index]               = np.nan
+                meanTwist[index]              = np.nan
 
         if midplaneSlice:
 
@@ -121,8 +153,7 @@ def calculate_radially_binned_quantities( nRadialBins,
 
             midplaneDensity[index] = np.sum(
                 density_from_smoothing_length(
-                    smoothingLength[indiciesMidplane], massParticle ) ) \
-                    / nPart
+                    smoothingLength[indiciesMidplane], massParticle ) ) / nPart
 
         else:
 
@@ -137,8 +168,8 @@ def calculate_radially_binned_quantities( nRadialBins,
              meanSmoothingLength,
              scaleHeight,
              meanAngularMomentum,
-             tilt,
-             twist )
+             meanTilt,
+             meanTwist )
 
 # ---------------------------------------------------------------------------- #
 
@@ -171,6 +202,10 @@ if __name__ == '__main__':
         velocityGas = dump.velocity['gas']
         momentumGas = massParticleGas * velocityGas
         angularMomentumGas = np.cross(positionGas, momentumGas)
+    else:
+        velocityGas = None
+        momentumGas = None
+        angularMomentumGas = None
 
 #--- Dust particle properties
 
@@ -195,6 +230,13 @@ if __name__ == '__main__':
             momentumDust.append(massParticleDust[idx] * velocityDust[idx])
             angularMomentumDust.append(np.cross(positionDust[idx],
                                                 momentumDust[idx]))
+    else:
+        velocityDust = None
+        momentumDust = list()
+        angularMomentumDust = list()
+        for idx in range(nDustTypes):
+            momentumDust.append(None)
+            angularMomentumDust.append(None)
 
 #--- Sink particle properties
 
