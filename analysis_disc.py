@@ -20,8 +20,8 @@ minPart          = 5
 #--- Parameters
 
 gamma = 1    # TODO: read from dump
-rIn   = 10   # TODO: read from dump
-rOut  = 200  # TODO: read from dump
+rIn   = 10   # TODO: read from dump, or set manually, or calculate
+rOut  = 200  # TODO: read from dump, or set manually, or calculate
 
 #--- Dump file name
 
@@ -48,6 +48,7 @@ def calculate_radially_binned_quantities( nRadialBins=None,
         - angular momentum
         - tilt
         - twist
+        - psi
     '''
 
     if nRadialBins is None:
@@ -81,15 +82,19 @@ def calculate_radially_binned_quantities( nRadialBins=None,
 
     if angularMomentum is not None:
 
-        meanAngularMomentum = np.empty_like(3*[radialBins])
-        meanTilt            = np.empty_like(radialBins)
-        meanTwist           = np.empty_like(radialBins)
+        meanAngularMomentum      = np.empty_like(3*[radialBins])
+        magnitudeAngularMomentum = np.empty_like(radialBins)
+        meanTilt                 = np.empty_like(radialBins)
+        meanTwist                = np.empty_like(radialBins)
+        meanPsi                  = np.empty_like(radialBins)
 
     else:
 
-        meanAngularMomentum = None
-        meanTilt            = None
-        meanTwist           = None
+        meanAngularMomentum      = None
+        magnitudeAngularMomentum = None
+        meanTilt                 = None
+        meanTwist                = None
+        meanPsi                  = None
 
 
     for index, R in enumerate(radialBins):
@@ -118,15 +123,15 @@ def calculate_radially_binned_quantities( nRadialBins=None,
                 meanAngularMomentum[:, index] = np.sum(
                     angularMomentum[indicies], axis=0 ) / nPart
 
-                magnitudeAngularMomentum = \
+                magnitudeAngularMomentum[index] = \
                         np.linalg.norm(meanAngularMomentum[:, index])
 
                 meanTilt[index] = np.arccos( meanAngularMomentum[2, index] \
-                                           / magnitudeAngularMomentum )
+                                           / magnitudeAngularMomentum[index] )
 
                 meanTwist[index] = np.arctan2(
-                    meanAngularMomentum[1, index] / magnitudeAngularMomentum,
-                    meanAngularMomentum[0, index] / magnitudeAngularMomentum )
+                    meanAngularMomentum[1, index] / magnitudeAngularMomentum[index],
+                    meanAngularMomentum[0, index] / magnitudeAngularMomentum[index] )
 
         else:
 
@@ -134,7 +139,7 @@ def calculate_radially_binned_quantities( nRadialBins=None,
 
             scaleHeight[index] = np.nan
 
-            if isFullDump:
+            if angularMomentum is not None:
 
                 meanAngularMomentum[:, index] = np.nan
                 meanTilt[index]               = np.nan
@@ -162,6 +167,15 @@ def calculate_radially_binned_quantities( nRadialBins=None,
 
         midplaneDensity[index] = np.nan_to_num( midplaneDensity[index] )
 
+    if angularMomentum is not None:
+
+        unitAngularMomentum = meanAngularMomentum/magnitudeAngularMomentum
+
+        meanPsi = radialBins * np.sqrt(
+            np.gradient(unitAngularMomentum[0], dR)**2 + \
+            np.gradient(unitAngularMomentum[1], dR)**2 + \
+            np.gradient(unitAngularMomentum[2], dR)**2 )
+
     return ( radialBins,
              surfaceDensity,
              midplaneDensity,
@@ -169,7 +183,8 @@ def calculate_radially_binned_quantities( nRadialBins=None,
              scaleHeight,
              meanAngularMomentum,
              meanTilt,
-             meanTwist )
+             meanTwist,
+             meanPsi )
 
 # ---------------------------------------------------------------------------- #
 
@@ -277,19 +292,21 @@ if __name__ == '__main__':
     meanAngularMomentumGas = vals[5]
     tiltGas                = vals[6]
     twistGas               = vals[7]
+    psiGas                 = vals[8]
 
 #--- Radially bin dust
 
-    cylindricalRadiusDust = list()
-    heightDust = list()
+    cylindricalRadiusDust   = list()
+    heightDust              = list()
 
-    surfaceDensityDust = list()
-    midplaneDensityDust = list()
+    surfaceDensityDust      = list()
+    midplaneDensityDust     = list()
     meanSmoothingLengthDust = list()
-    scaleHeightDust = list()
+    scaleHeightDust         = list()
     meanAngularMomentumDust = list()
-    tiltDust = list()
-    twistDust = list()
+    tiltDust                = list()
+    twistDust               = list()
+    psiDust                 = list()
 
     for idx in range(nDustTypes):
 
@@ -314,6 +331,7 @@ if __name__ == '__main__':
         meanAngularMomentumDust.append( vals[5] )
         tiltDust.               append( vals[6] )
         twistDust.              append( vals[7] )
+        psiDust.                append( vals[7] )
 
     Stokes = [np.empty_like(radialBinsDisc) for i in range(nDustTypes)]
 
