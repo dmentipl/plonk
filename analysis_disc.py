@@ -14,10 +14,14 @@ from utils import density_from_smoothing_length
 #--- Options
 
 midplaneSlice = False
+nRadialBins = 150
+minPart = 5
 
 #--- Parameters
 
 gamma = 1  # TODO: read from dump
+rIn = 10  # TODO: read from dump
+rOut = 200  # TODO: read from dump
 
 #--- Read dump file
 
@@ -82,12 +86,8 @@ for idx in range(nSinks):
 
 #--- Radial binning
 
-nBins = 150
-rIn = 10
-rOut = 200
-
-dR = (rOut - rIn)/(nBins - 1)
-radius = np.linspace(rIn, rOut, nBins)
+dR = (rOut - rIn)/(nRadialBins - 1)
+radius = np.linspace(rIn, rOut, nRadialBins)
 
 cylindricalRadiusGas = np.linalg.norm(positionGas[:,0:2], axis=1)
 heightGas = positionGas[:,2]
@@ -164,17 +164,26 @@ for idxi, R in enumerate(radius):
         surfaceDensityDust[idxj][idxi] = massParticleDust[idxj] \
                                        * nPartDust / area
 
-        meanHeightDust[idxj][idxi]  = np.sum(
-            heightDust[idxj][indiciesDust] ) / nPartDust
+        if nPartDust > minPart:
 
-        scaleHeightDust[idxj][idxi] = np.sqrt(
-            np.sum(
-                ( heightDust[idxj][indiciesDust] - meanHeightDust[idxj][idxi] )**2
-                ) / (nPartDust - 1) )
+            meanHeightDust[idxj][idxi] = np.sum(
+                heightDust[idxj][indiciesDust] ) / nPartDust
+
+            scaleHeightDust[idxj][idxi] = np.sqrt(
+                np.sum(
+                    ( heightDust[idxj][indiciesDust] - meanHeightDust[idxj][idxi] )**2
+                    ) / (nPartDust - 1) )
+        else:
+
+            meanHeightDust[idxj][idxi] = np.nan
+            scaleHeightDust[idxj][idxi] = np.nan
 
         midplaneDensityDust[idxj][idxi] = surfaceDensityDust[idxj][idxi] \
                                         / np.sqrt(2*np.pi) \
                                         / scaleHeightDust[idxj][idxi]
+
+        midplaneDensityDust[idxj][idxi] = np.nan_to_num(
+            midplaneDensityDust[idxj][idxi] )
 
         Stokes[idxj][idxi] = \
             np.sqrt(gamma*np.pi/8) * grainDens[idxj] * grainSize[idxj] \
