@@ -85,6 +85,8 @@ def calculate_radially_binned_quantities( nRadialBins=None,
 
     if angularMomentum is not None:
 
+        useVelocities = True
+
         meanAngularMomentum      = np.empty_like(3*[radialBins])
         magnitudeAngularMomentum = np.empty_like(radialBins)
         meanTilt                 = np.empty_like(radialBins)
@@ -93,6 +95,8 @@ def calculate_radially_binned_quantities( nRadialBins=None,
         meanEccentricity         = np.empty_like(radialBins)
 
     else:
+
+        useVelocities = False
 
         meanAngularMomentum      = None
         magnitudeAngularMomentum = None
@@ -123,7 +127,7 @@ def calculate_radially_binned_quantities( nRadialBins=None,
             scaleHeight[index] = np.sqrt( np.sum(
                 (height[indicies] - meanHeight)**2 ) / (nPart - 1) )
 
-            if angularMomentum is not None:
+            if useVelocities:
 
                 meanAngularMomentum[:, index] = np.sum(
                     angularMomentum[indicies], axis=0 ) / nPart
@@ -144,7 +148,7 @@ def calculate_radially_binned_quantities( nRadialBins=None,
 
             scaleHeight[index] = np.nan
 
-            if angularMomentum is not None:
+            if useVelocities:
 
                 meanAngularMomentum[:, index] = np.nan
                 meanTilt[index]               = np.nan
@@ -172,7 +176,7 @@ def calculate_radially_binned_quantities( nRadialBins=None,
 
         midplaneDensity[index] = np.nan_to_num( midplaneDensity[index] )
 
-    if angularMomentum is not None:
+    if useVelocities:
 
         unitAngularMomentum = meanAngularMomentum/magnitudeAngularMomentum
 
@@ -307,10 +311,12 @@ if __name__ == '__main__':
 
 #--- Gas eccentricity
 
-    eccentricityGas = calculate_eccentricity( massParticleGas,
-                                              positionGas,
-                                              velocityGas,
-                                              angularMomentumGas )
+    if isFullDump:
+
+        eccentricityGas = calculate_eccentricity( massParticleGas,
+                                                  positionGas,
+                                                  velocityGas,
+                                                  angularMomentumGas )
 
 #--- Radially bin gas
 
@@ -357,11 +363,13 @@ if __name__ == '__main__':
 
         #--- Dust eccentricity
 
-        eccentricityDust.append(
-            calculate_eccentricity( massParticleDust[idx],
-                                    positionDust[idx],
-                                    velocityDust[idx],
-                                    angularMomentumDust[idx] ) )
+        if isFullDump:
+
+            eccentricityDust.append(
+                calculate_eccentricity( massParticleDust[idx],
+                                        positionDust[idx],
+                                        velocityDust[idx],
+                                        angularMomentumDust[idx] ) )
 
         cylindricalRadiusDust.append(
             norm(dump.position['dust'][idx][:, 0:2], axis=1) )
