@@ -4,8 +4,6 @@ analysis_disc.py
 Daniel Mentiplay, 2019.
 '''
 
-# TODO: really just a testing script at the moment.
-
 import numpy as np
 from numpy.linalg import norm
 
@@ -15,15 +13,15 @@ from utils import density_from_smoothing_length
 
 #--- Options
 
-midplaneSlice    = False
-numberRadialBins = 150
-minPart          = 5
+midplaneSlice    = False  # Calculate midplane density by taking a slice
+numberRadialBins = 150    # Number of radial bins
+minPart          = 5      # Minimum number of particles to compute averages
 
 #--- Parameters
 
-gamma = 1    # TODO: read from dump
-rIn   = 10   # TODO: read from dump, or set manually, or calculate
-rOut  = 200  # TODO: read from dump, or set manually, or calculate
+gamma = 1    # TODO: read from dump header (showheader)
+rIn   = 10   # TODO: get as input (or calculate from data?)
+rOut  = 200  # TODO: get as input (or calculate from data?)
 
 #--- Dump file name
 
@@ -271,10 +269,10 @@ if __name__ == '__main__':
     nDustTypes = len(dump.nParticles['dust'])
     massParticleDust = dump.massParticles['dust']
 
-    # TODO: hack for broken splash to ascii
+    # TODO: hack for broken splash to ascii; get from dump header (showheader)
     massParticleDust[1] = massParticleDust[0]
 
-    # TODO: hack; get from .setup or HDF5 file
+    # TODO: hack; get from dump header (showheader)
     grainDens = np.array([3., 3.]) / unitDens
     grainSize = np.array([0.01, 0.1]) / unitDist
 
@@ -302,6 +300,7 @@ if __name__ == '__main__':
     nSinks = dump.nParticles['sink']
     massParticleSink = dump.massParticles['sink']
 
+    # TODO: check if sink[0] is really the star; check if binary
     stellarMass = massParticleSink[0]
 
     smoothingLengthSink = dump.smoothingLength['sink']
@@ -404,7 +403,7 @@ if __name__ == '__main__':
         psiDust.                append( vals[8] )
         meanEccentricityDust.   append( vals[9] )
 
-    #--- Stokes
+#--- Stokes
 
     Stokes = [np.empty_like(radialBinsDisc) for i in range(nDustTypes)]
 
