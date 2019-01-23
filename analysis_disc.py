@@ -25,7 +25,10 @@ rOut = 200  # TODO: read from dump
 
 #--- Read dump file
 
-dump = Dump('disc_00000.ascii')
+dump = Dump('disc_00006.ascii')
+
+if dump.dumpType == 'full':
+    fullDump = True
 
 #--- Units
 
@@ -42,12 +45,13 @@ unitSurfaceDens = unitMass / unitDist**2
 
 massParticleGas = dump.massParticles['gas']
 
-positionGas = dump.position['gas']
-velocityGas = dump.velocity['gas']
 smoothingLengthGas = dump.smoothingLength['gas']
+positionGas = dump.position['gas']
 
-momentumGas = massParticleGas * velocityGas
-angularMomentumGas = np.cross(positionGas, momentumGas)
+if fullDump:
+    velocityGas = dump.velocity['gas']
+    momentumGas = massParticleGas * velocityGas
+    angularMomentumGas = np.cross(positionGas, momentumGas)
 
 #--- Dust particle properties
 
@@ -59,30 +63,32 @@ massParticleDust[1] = massParticleDust[0]  # TODO: hack for broken splash to asc
 grainDens = np.array([3., 3.]) / unitDens
 grainSize = np.array([0.01, 0.1]) / unitDist
 
-positionDust = dump.position['dust']
-velocityDust = dump.velocity['dust']
 smoothingLengthDust = dump.smoothingLength['dust']
+positionDust = dump.position['dust']
 
-momentumDust = list()
-angularMomentumDust = list()
-for idx in range(nDustTypes):
-    momentumDust.append(massParticleDust[idx] * velocityDust[idx])
-    angularMomentumDust.append(np.cross(positionDust[idx], momentumDust[idx]))
+if fullDump:
+    velocityDust = dump.velocity['dust']
+    momentumDust = list()
+    angularMomentumDust = list()
+    for idx in range(nDustTypes):
+        momentumDust.append(massParticleDust[idx] * velocityDust[idx])
+        angularMomentumDust.append(np.cross(positionDust[idx], momentumDust[idx]))
 
 #--- Sink particle properties
 
 nSinks = dump.nParticles['sink']
 massParticleSink = dump.massParticles['sink']
 
-positionSink = dump.position['sink']
-velocitySink = dump.velocity['sink']
 smoothingLengthSink = dump.smoothingLength['sink']
+positionSink = dump.position['sink']
 
-momentumSink = list()
-angularMomentumSink = list()
-for idx in range(nSinks):
-    momentumSink.append(massParticleSink[idx] * velocitySink[idx])
-    angularMomentumSink.append(np.cross(positionSink[idx], momentumSink[idx]))
+if fullDump:
+    velocitySink = dump.velocity['sink']
+    momentumSink = list()
+    angularMomentumSink = list()
+    for idx in range(nSinks):
+        momentumSink.append(massParticleSink[idx] * velocitySink[idx])
+        angularMomentumSink.append(np.cross(positionSink[idx], momentumSink[idx]))
 
 #--- Radial binning
 
