@@ -25,9 +25,8 @@ rOut  = 200  # TODO: read from dump
 
 #--- Read dump file
 
-dump = Dump('disc_00006.ascii')
-
-fullDump = bool(dump.dumpType == 'full')
+dump = Dump('disc_00000.ascii')
+isFullDump = bool(dump.dumpType == 'full')
 
 #--- Units
 
@@ -47,7 +46,7 @@ massParticleGas = dump.massParticles['gas']
 smoothingLengthGas = dump.smoothingLength['gas']
 positionGas = dump.position['gas']
 
-if fullDump:
+if isFullDump:
     velocityGas = dump.velocity['gas']
     momentumGas = massParticleGas * velocityGas
     angularMomentumGas = np.cross(positionGas, momentumGas)
@@ -65,7 +64,7 @@ grainSize = np.array([0.01, 0.1]) / unitDist
 smoothingLengthDust = dump.smoothingLength['dust']
 positionDust = dump.position['dust']
 
-if fullDump:
+if isFullDump:
     velocityDust = dump.velocity['dust']
     momentumDust = list()
     angularMomentumDust = list()
@@ -81,7 +80,7 @@ massParticleSink = dump.massParticles['sink']
 smoothingLengthSink = dump.smoothingLength['sink']
 positionSink = dump.position['sink']
 
-if fullDump:
+if isFullDump:
     velocitySink = dump.velocity['sink']
     momentumSink = list()
     angularMomentumSink = list()
@@ -111,8 +110,10 @@ surfaceDensityGas      = np.empty_like(radius)
 midplaneDensityGas     = np.empty_like(radius)
 scaleHeightGas         = np.empty_like(radius)
 
-if fullDump:
+if isFullDump:
     meanAngularMomentumGas = np.empty_like([radius, radius, radius])
+    tilt  = np.empty_like(radius)
+    twist = np.empty_like(radius)
 
 meanSmoothingLengthDust = [np.empty_like(radius) for i in range(nDustTypes)]
 surfaceDensityDust      = [np.empty_like(radius) for i in range(nDustTypes)]
@@ -120,7 +121,7 @@ midplaneDensityDust     = [np.empty_like(radius) for i in range(nDustTypes)]
 scaleHeightDust         = [np.empty_like(radius) for i in range(nDustTypes)]
 Stokes                  = [np.empty_like(radius) for i in range(nDustTypes)]
 
-if fullDump:
+if isFullDump:
     meanAngularMomentumDust = [np.empty_like([radius, radius, radius])
                                for i in range(nDustTypes)]
 
@@ -139,10 +140,6 @@ for idxi, R in enumerate(radius):
     meanSmoothingLengthGas[idxi] = np.sum( smoothingLengthGas[indiciesGas] ) \
                                          / nPartGas
 
-    if fullDump:
-        meanAngularMomentumGas[:, idxi] = np.sum( angularMomentumGas[indiciesGas],
-                                                  axis=0 ) / nPartGas
-
     surfaceDensityGas[idxi] = massParticleGas * nPartGas / area
 
     meanHeightGas = np.sum( heightGas[indiciesGas] ) / nPartGas
@@ -150,6 +147,20 @@ for idxi, R in enumerate(radius):
     scaleHeightGas[idxi] = np.sqrt( np.sum( \
                            (heightGas[indiciesGas] - meanHeightGas)**2 ) \
                                  / (nPartGas - 1) )
+
+    if isFullDump:
+
+        meanAngularMomentumGas[:, idxi] = np.sum( angularMomentumGas[indiciesGas],
+                                                  axis=0 ) / nPartGas
+
+        magnitudeAngularMomentumGas = np.linalg.norm(meanAngularMomentumGas[:, idxi])
+
+        tilt[idxi] = np.arccos( meanAngularMomentumGas[2, idxi] \
+                              / magnitudeAngularMomentumGas )
+
+        twist[idxi] = np.arctan2(
+            meanAngularMomentumGas[1, idxi] / magnitudeAngularMomentumGas,
+            meanAngularMomentumGas[0, idxi] / magnitudeAngularMomentumGas )
 
     if midplaneSlice:
 
@@ -189,7 +200,7 @@ for idxi, R in enumerate(radius):
             meanSmoothingLengthDust[idxj][idxi] = np.sum(
                 smoothingLengthDust[idxj][indiciesDust] ) / nPartDust
 
-            if fullDump:
+            if isFullDump:
                 meanAngularMomentumDust[idxj][:, idxi] = np.sum(
                     angularMomentumDust[idxj][indiciesDust], axis=0 ) / nPartDust
 
@@ -203,7 +214,7 @@ for idxi, R in enumerate(radius):
 
             meanSmoothingLengthDust[idxj][idxi] = np.nan
 
-            if fullDump:
+            if isFullDump:
                 meanAngularMomentumDust[idxj][:, idxi] = np.nan
 
             scaleHeightDust[idxj][idxi] = np.nan
