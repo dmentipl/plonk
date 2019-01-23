@@ -25,10 +25,9 @@ rOut = 200  # TODO: read from dump
 
 #--- Read dump file
 
-dump = Dump('disc_00006.ascii')
+dump = Dump('disc_00000.ascii')
 
-if dump.dumpType == 'full':
-    fullDump = True
+fullDump = bool(dump.dumpType == 'full')
 
 #--- Units
 
