@@ -237,9 +237,9 @@ def disc_analysis(dump):
 
     units = dump.units
 
-    unitDist = units['distance']
-    unitTime = units['time']
-    unitMass = units['mass']
+    uDist = units['distance']
+    uTime = units['time']
+    uMass = units['mass']
 
 #--- Gas particle properties
 
@@ -300,9 +300,8 @@ def disc_analysis(dump):
     # TODO: check if sink[0] is really the star; check if binary
     stellarMass = massParticleSink[0]
 
-    gravitationalParameter = \
-        constants.G / ( unitDist**3 / unitTime**2 / unitMass )
-    gravitationalParameter *= stellarMass
+    gravitationalParameter = constants.G / ( uDist**3 / uTime**2 / uMass ) \
+                           * stellarMass
 
     smoothingLengthSink = arrays.smoothingLength['sink']
     positionSink = arrays.position['sink']
@@ -428,23 +427,55 @@ def disc_analysis(dump):
                 / ( scaleHeightGas[idxi] \
                 * (midplaneDensityGas[idxi] + midplaneDensityDust[idxj][idxi]) )
 
+#--- Package into dictionary
+
+    surfaceDensity              = dict()
+    surfaceDensity['gas']       = surfaceDensityGas
+    surfaceDensity['dust']      = surfaceDensityDust
+
+    midplaneDensity             = dict()
+    midplaneDensity['gas']      = midplaneDensityGas
+    midplaneDensity['dust']     = midplaneDensityDust
+
+    meanSmoothingLength         = dict()
+    meanSmoothingLength['gas']  = meanSmoothingLengthGas
+    meanSmoothingLength['dust'] = meanSmoothingLengthDust
+
+    scaleHeight                 = dict()
+    scaleHeight['gas']          = scaleHeightGas
+    scaleHeight['dust']         = scaleHeightDust
+
+    meanAngularMomentum         = dict()
+    meanAngularMomentum['gas']  = meanAngularMomentumGas
+    meanAngularMomentum['dust'] = meanAngularMomentumDust
+
+    tilt                        = dict()
+    tilt['gas']                 = tiltGas
+    tilt['dust']                = tiltDust
+
+    twist                       = dict()
+    twist['gas']                = twistGas
+    twist['dust']               = twistDust
+
+    psi                         = dict()
+    psi['gas']                  = psiGas
+    psi['dust']                 = psiDust
+
+    meanEccentricity            = dict()
+    meanEccentricity['gas']     = meanEccentricityGas
+    meanEccentricity['dust']    = meanEccentricityDust
+
+
+#--- Return
+
     return ( radialBinsDisc,
-             surfaceDensityGas,
-             midplaneDensityGas,
-             meanSmoothingLengthGas,
-             scaleHeightGas,
-             meanAngularMomentumGas,
-             tiltGas,
-             twistGas,
-             psiGas,
-             meanEccentricityGas,
-             surfaceDensityDust,
-             midplaneDensityDust,
-             meanSmoothingLengthDust,
-             scaleHeightDust,
-             meanAngularMomentumDust,
-             tiltDust,
-             twistDust,
-             psiDust,
-             eccentricityDust,
-             meanEccentricityDust )
+             surfaceDensity,
+             midplaneDensity,
+             meanSmoothingLength,
+             scaleHeight,
+             meanAngularMomentum,
+             tilt,
+             twist,
+             psi,
+             meanEccentricity,
+             Stokes )
