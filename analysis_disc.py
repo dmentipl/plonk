@@ -331,6 +331,10 @@ if __name__ == '__main__':
                                                   velocityGas,
                                                   angularMomentumGas )
 
+    else:
+
+        eccentricityGas = None
+
 #--- Radially bin gas
 
     cylindricalRadiusGas = norm(positionGas[:, 0:2], axis=1)
@@ -384,6 +388,10 @@ if __name__ == '__main__':
                                         positionDust[idx],
                                         velocityDust[idx],
                                         angularMomentumDust[idx] ) )
+
+        else:
+
+            eccentricityDust.append(None)
 
         cylindricalRadiusDust.append(
             norm(arrays.position['dust'][idx][:, 0:2], axis=1) )
