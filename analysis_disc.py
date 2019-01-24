@@ -75,7 +75,7 @@ def calculate_radially_binned_quantities( nRadialBins=None,
         raise ValueError('Need massParticle')
 
     dR         = (radiusOut - radiusIn) / (nRadialBins - 1)
-    radialBins = np.linspace(rIn, rOut, nRadialBins)
+    radialBins = np.linspace(radiusIn, radiusOut, nRadialBins)
 
     meanSmoothingLength = np.empty_like(radialBins)
     surfaceDensity      = np.empty_like(radialBins)
