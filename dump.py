@@ -34,6 +34,7 @@ class Dump:
         self.units = header.units
         self.dumpType = header.dumpType
         self.containsDust = header.containsDust
+        self.time = self.parameters['time']
 
         nDustSmall = 0
         nDustLarge = 0
