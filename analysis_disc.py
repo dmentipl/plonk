@@ -307,13 +307,21 @@ def disc_analysis(dump):
     positionSink = arrays.position['sink']
 
     if isFullDump:
+
         velocitySink = arrays.velocity['sink']
         momentumSink = list()
         angularMomentumSink = list()
+
         for idx in range(nSinks):
             momentumSink.append(massParticleSink[idx] * velocitySink[idx])
             angularMomentumSink.append(np.cross(positionSink[idx],
                                                 momentumSink[idx]))
+
+        eccentricitySink = calculate_eccentricity( massParticleSink,
+                                                   positionSink,
+                                                   velocitySink,
+                                                   angularMomentumSink,
+                                                   gravitationalParameter )
 
 #--- Gas eccentricity
 
@@ -440,6 +448,7 @@ def disc_analysis(dump):
     meanSmoothingLength         = dict()
     meanSmoothingLength['gas']  = meanSmoothingLengthGas
     meanSmoothingLength['dust'] = meanSmoothingLengthDust
+    meanSmoothingLength['sink'] = smoothingLengthSink
 
     scaleHeight                 = dict()
     scaleHeight['gas']          = scaleHeightGas
@@ -448,6 +457,7 @@ def disc_analysis(dump):
     meanAngularMomentum         = dict()
     meanAngularMomentum['gas']  = meanAngularMomentumGas
     meanAngularMomentum['dust'] = meanAngularMomentumDust
+    meanAngularMomentum['sink'] = angularMomentumSink
 
     tilt                        = dict()
     tilt['gas']                 = tiltGas
@@ -464,6 +474,7 @@ def disc_analysis(dump):
     meanEccentricity            = dict()
     meanEccentricity['gas']     = meanEccentricityGas
     meanEccentricity['dust']    = meanEccentricityDust
+    meanEccentricity['sink']    = eccentricitySink
 
 
 #--- Return
