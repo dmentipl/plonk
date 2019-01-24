@@ -4,6 +4,8 @@ header.py
 Daniel Mentiplay, 2019.
 '''
 
+from units import Units
+
 class Header:
     '''
     Header class represents the header from a dump file (in the format produced
@@ -85,4 +87,8 @@ class Header:
 
             prevKey = key
 
-        self.header = dict(zip(newKeys, newValues))
+        parameters = dict(zip(newKeys, newValues))
+        self.parameters = parameters
+
+        units = Units(parameters['udist'], parameters['umass'], parameters['utime'])
+        self.units = units.units

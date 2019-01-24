@@ -235,14 +235,11 @@ def disc_analysis(dump):
 
 #--- Units
 
-    unitDist = parameters['udist']
-    unitTime = parameters['utime']
-    unitMass = parameters['udist']
+    units = dump.units
 
-    unitMomen       = unitMass * unitDist / unitTime
-    unitAngMomen    = unitMass * unitDist**2 / unitTime
-    unitDens        = unitMass / unitDist**3
-    unitSurfaceDens = unitMass / unitDist**2
+    unitDist = units['distance']
+    unitTime = units['time']
+    unitMass = units['mass']
 
 #--- Gas particle properties
 
