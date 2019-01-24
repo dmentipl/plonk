@@ -54,6 +54,10 @@ The following variables are available:
   - psi
   - eccentricity
   - Stokes
+
+for both gas and dust (if available).
+
+There is also the dump file object 'dump'.
 '''
 
 print(output)
