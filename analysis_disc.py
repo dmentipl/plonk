@@ -9,6 +9,7 @@ from numpy.linalg import norm
 
 from constants import constants
 from dump import Dump
+from itypes import iTypes
 from utils import density_from_smoothing_length
 
 #--- Options
@@ -19,7 +20,6 @@ minPart          = 5      # Minimum number of particles to compute averages
 
 #--- Parameters
 
-gamma = 1    # TODO: read from dump header (showheader)
 rIn   = 10   # TODO: get as input (or calculate from data?)
 rOut  = 200  # TODO: get as input (or calculate from data?)
 
@@ -237,13 +237,14 @@ if __name__ == '__main__':
     dump = Dump(dumpFilePrefix)
     isFullDump = bool(dump.dumpType == 'full')
     arrays = dump.arrays
-    header = dump.header.header
+    parameters = dump.parameters
+    containsDust = dump.containsDust
 
 #--- Units
 
-    unitDist = header['udist']
-    unitTime = header['utime']
-    unitMass = header['udist']
+    unitDist = parameters['udist']
+    unitTime = parameters['utime']
+    unitMass = parameters['udist']
 
     unitMomen       = unitMass * unitDist / unitTime
     unitAngMomen    = unitMass * unitDist**2 / unitTime
@@ -252,7 +253,7 @@ if __name__ == '__main__':
 
 #--- Gas particle properties
 
-    massParticleGas = arrays.massParticles['gas']
+    massParticleGas = parameters['massoftype'][iTypes.iGas - 1]
 
     smoothingLengthGas = arrays.smoothingLength['gas']
     positionGas = arrays.position['gas']
@@ -268,39 +269,43 @@ if __name__ == '__main__':
 
 #--- Dust particle properties
 
-    nDustTypes = len(arrays.nParticles['dust'])
-    massParticleDust = arrays.massParticles['dust']
+    if containsDust:
 
-    # TODO: hack for broken splash to ascii; get from dump header (showheader)
-    massParticleDust[1] = massParticleDust[0]
+        if 'ndustlarge' in parameters:
 
-    # TODO: hack; get from dump header (showheader)
-    grainDens = np.array([3., 3.]) / unitDens
-    grainSize = np.array([0.01, 0.1]) / unitDist
+            nDustLarge = parameters['ndustlarge']
+            massParticleDust = parameters['massoftype'] \
+                    [iTypes.iDust - 1 : iTypes.iDust + nDustLarge - 1]
 
-    smoothingLengthDust = arrays.smoothingLength['dust']
-    positionDust = arrays.position['dust']
+        else:
+            nDustLarge = 0
 
-    if isFullDump:
-        velocityDust = arrays.velocity['dust']
-        momentumDust = list()
-        angularMomentumDust = list()
-        for idx in range(nDustTypes):
-            momentumDust.append(massParticleDust[idx] * velocityDust[idx])
-            angularMomentumDust.append(np.cross(positionDust[idx],
-                                                momentumDust[idx]))
-    else:
-        velocityDust = None
-        momentumDust = list()
-        angularMomentumDust = list()
-        for idx in range(nDustTypes):
-            momentumDust.append(None)
-            angularMomentumDust.append(None)
+        grainDens = parameters['graindens'][0: nDustLarge]
+        grainSize = parameters['grainsize'][0: nDustLarge]
+
+        smoothingLengthDust = arrays.smoothingLength['dust']
+        positionDust = arrays.position['dust']
+
+        if isFullDump:
+            velocityDust = arrays.velocity['dust']
+            momentumDust = list()
+            angularMomentumDust = list()
+            for idx in range(nDustLarge):
+                momentumDust.append(massParticleDust[idx] * velocityDust[idx])
+                angularMomentumDust.append(np.cross(positionDust[idx],
+                                                    momentumDust[idx]))
+        else:
+            velocityDust = None
+            momentumDust = list()
+            angularMomentumDust = list()
+            for idx in range(nDustLarge):
+                momentumDust.append(None)
+                angularMomentumDust.append(None)
 
 #--- Sink particle properties
 
-    nSinks = arrays.nParticles['sink']
-    massParticleSink = arrays.massParticles['sink']
+    nSinks = parameters['nptmass']
+    massParticleSink = arrays.massSink
 
     # TODO: check if sink[0] is really the star; check if binary
     stellarMass = massParticleSink[0]
@@ -368,7 +373,7 @@ if __name__ == '__main__':
     eccentricityDust        = list()
     meanEccentricityDust    = list()
 
-    for idx in range(nDustTypes):
+    for idx in range(nDustLarge):
 
         #--- Dust eccentricity
 
@@ -407,10 +412,12 @@ if __name__ == '__main__':
 
 #--- Stokes
 
-    Stokes = [np.empty_like(radialBinsDisc) for i in range(nDustTypes)]
+    gamma = parameters['gamma']
+
+    Stokes = [np.empty_like(radialBinsDisc) for i in range(nDustLarge)]
 
     for idxi in range(len(radialBinsDisc)):
-        for idxj in range(nDustTypes):
+        for idxj in range(nDustLarge):
 
             Stokes[idxj][idxi] = \
                 np.sqrt(gamma*np.pi/8) * grainDens[idxj] * grainSize[idxj] \

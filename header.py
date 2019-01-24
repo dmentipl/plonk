@@ -27,22 +27,34 @@ class Header:
             values = list()
 
             firstLine = True
+
             for line in file:
+
                 if firstLine:
+
                     if line[0] == 'F':
                         self.dumpType = 'full'
                     elif line[0] == 'S':
                         self.dumpType = 'small'
                     else:
                         raise ValueError('Cannot determine dump type')
+
+                    if 'dust' in line:
+                        self.containsDust = True
+                    else:
+                        self.containsDust = False
+
                     firstLine = False
                     continue
+
                 keys.append(line.rstrip('\n').split()[0])
                 value = line.rstrip('\n').split()[1]
+
                 if '.' in value:
                     value = float(value)
                 else:
                     value = int(value)
+
                 values.append(value)
 
         newKeys = list()

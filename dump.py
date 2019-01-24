@@ -29,12 +29,25 @@ class Dump:
 
         headerFileName = self.filePrefix + '.header'
         header = Header(headerFileName)
-        self.header = header
+
+        self.parameters = header.header
+
         self.dumpType = header.dumpType
+        self.containsDust = header.containsDust
+
+        if 'ndustsmall' in header.header:
+            nDustSmall = header.header['ndustsmall']
+        else:
+            nDustSmall = 0
+
+        if 'ndustlarge' in header.header:
+            nDustLarge = header.header['ndustlarge']
+        else:
+            nDustLarge = 0
 
         #--- Data
 
         dumpFileName = self.filePrefix + '.ascii'
         data = np.loadtxt(dumpFileName)
-        arrays = Arrays(data, self.dumpType)
+        arrays = Arrays(data, self.dumpType, nDustSmall, nDustLarge)
         self.arrays = arrays

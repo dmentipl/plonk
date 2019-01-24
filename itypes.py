@@ -15,13 +15,15 @@ class ITypes:
 
         self.iGas  = 1
         self.iSink = 3
-        self.iDust = 8
+        self.iDust = 7
 
-        self.iGasLabel = 'gas'
+        self.iGasSplash  = 1
+        self.iSinkSplash = 3
+        self.iDustSplash = 8
+
+        self.iGasLabel  = 'gas'
         self.iSinkLabel = 'sink'
         self.iDustLabel = 'dust'
-
-        self.maxDustTypes = 10
 
 # Instantiate Types class to create global types object.
 iTypes = ITypes()

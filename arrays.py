@@ -18,11 +18,15 @@ class Arrays:
     Arrays class represents the particle arrays from Phantom output.
 
     Arguments:
-        data     : 2d numpy array of particle data
-        dumpType : 'full' or 'small'
+        data         : 2d numpy array of particle data
+        dumpType     : 'full' or 'small'
+
+    Optional:
+        nDustSmall   : number of small dust types
+        nDustLarge   : number of large dust types
     '''
 
-    def __init__(self, data, dumpType):
+    def __init__(self, data, dumpType, nDustSmall=None, nDustLarge=None):
 
         if isinstance(data, np.ndarray):
             if data.ndim != 2:
@@ -37,43 +41,42 @@ class Arrays:
         else:
             raise ValueError('Cannot determine dump type')
 
-        iGas = iTypes.iGas
-        iSink = iTypes.iSink
-        iDust = iTypes.iDust
-        maxDustTypes = iTypes.maxDustTypes
+        if nDustSmall is not None:
+            if isinstance(nDustSmall, int):
+                if nDustSmall > 0:
+                    containsSmallDust = True
+                elif nDustSmall == 0:
+                    containsSmallDust = False
+                else:
+                    raise ValueError('nDustSmall must be > 0')
+            else:
+                raise ValueError('nDustSmall must be integer')
+        else:
+            containsSmallDust = False
+            nDustSmall = 0
 
-        #--- Number of particles
+        if nDustLarge is not None:
+            if isinstance(nDustLarge, int):
+                if nDustLarge > 0:
+                    containsLargeDust = True
+                elif nDustLarge == 0:
+                    containsLargeDust = False
+                else:
+                    raise ValueError('nDustLarge must be > 0')
+            else:
+                raise ValueError('nDustLarge must be integer')
+        else:
+            containsLargeDust = False
+            nDustLarge = 0
 
-        nParticles = dict()
+        containsDust = bool(containsSmallDust or containsLargeDust)
+        nDustTypes = nDustSmall + nDustLarge
+
+        iGas  = iTypes.iGasSplash
+        iSink = iTypes.iSinkSplash
+        iDust = iTypes.iDustSplash
 
         itype = data[:,-1]
-
-        nParticles['gas'] = len(np.where(itype == iGas)[0])
-        nParticles['sink'] = len(np.where(itype == iSink)[0])
-
-        nDust = list()
-        for i in range(iDust, maxDustTypes+1):
-            l = len(np.where(itype == i)[0])
-            if l > 0:
-                nDust.append(l)
-        nParticles['dust'] = nDust
-        nDustTypes = len(nDust)
-
-        #--- Mass of particles
-
-        massParticles = dict()
-
-        massParticles['gas'] = data[np.where(itype == iGas)[0][0], massIndex]
-
-        massSink = list()
-        for i in np.where(itype == iSink)[0]:
-            massSink.append(data[i, massIndex])
-        massParticles['sink'] = massSink
-
-        massDust = list()
-        for i in range(iDust, iDust + nDustTypes):
-            massDust.append(data[np.where(itype == i)[0][0], massIndex])
-        massParticles['dust'] = massDust
 
         #--- Position
 
@@ -82,10 +85,12 @@ class Arrays:
         position['gas'] = data[np.where(itype == iGas), positionIndex][0]
         position['sink'] = data[np.where(itype == iSink), positionIndex][0]
 
-        positionDust = list()
-        for i in range(iDust, iDust + nDustTypes):
-            positionDust.append(data[np.where(itype == i)[0], positionIndex])
-        position['dust'] = positionDust
+        if containsLargeDust:
+
+            positionDust = list()
+            for i in range(iDust, iDust + nDustLarge):
+                positionDust.append(data[np.where(itype == i)[0], positionIndex])
+            position['dust'] = positionDust
 
         #--- Velocity
 
@@ -96,10 +101,12 @@ class Arrays:
             velocity['gas'] = data[np.where(itype == iGas), velocityIndex][0]
             velocity['sink'] = data[np.where(itype == iSink), velocityIndex][0]
 
-            velocityDust = list()
-            for i in range(iDust, iDust + nDustTypes):
-                velocityDust.append(data[np.where(itype == i)[0], velocityIndex])
-            velocity['dust'] = velocityDust
+            if containsLargeDust:
+
+                velocityDust = list()
+                for i in range(iDust, iDust + nDustLarge):
+                    velocityDust.append(data[np.where(itype == i)[0], velocityIndex])
+                velocity['dust'] = velocityDust
 
         #--- Smoothing length
 
@@ -110,28 +117,42 @@ class Arrays:
         smoothingLength['sink'] = data[np.where(itype == iSink),
                                        smoothingLengthIndex][0]
 
-        smoothingLengthDust = list()
-        for i in range(iDust, iDust + nDustTypes):
-            smoothingLengthDust.append(data[np.where(itype == i)[0],
-                                            smoothingLengthIndex])
-        smoothingLength['dust'] = smoothingLengthDust
+        if containsLargeDust:
 
+            smoothingLengthDust = list()
+            for i in range(iDust, iDust + nDustLarge):
+                smoothingLengthDust.append(data[np.where(itype == i)[0],
+                                                smoothingLengthIndex])
+            smoothingLength['dust'] = smoothingLengthDust
 
         #--- Dust fraction
 
-        if isFullDump:
-            dustFracIndexStart = 9
-        else:
-            dustFracIndexStart = 6
+        if containsDust:
 
-        dustFracIndex = slice(dustFracIndexStart, dustFracIndexStart + nDustTypes)
+            if isFullDump:
+                dustFracIndexStart = 9
+            else:
+                dustFracIndexStart = 6
 
-        #--- Add to class
+            dustFracIndex = slice(dustFracIndexStart, dustFracIndexStart + nDustTypes)
+            dustFrac = data[np.where(itype == iGas), dustFracIndex][0]
 
-        self.nParticles = nParticles
-        self.massParticles = massParticles
+        #--- Sink masses
+
+        massSink = list()
+        for i in np.where(itype == iSink)[0]:
+            massSink.append(data[i, massIndex])
+
+        #--- Add to object
+
         self.position = position
         self.smoothingLength = smoothingLength
+
         if isFullDump:
             self.velocity = velocity
-        self.dustFrac = data[np.where(itype == iGas), dustFracIndex][0]
+
+        if containsDust:
+            self.dustFrac = dustFrac
+
+        if massSink:
+            self.massSink = massSink
