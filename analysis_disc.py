@@ -8,7 +8,6 @@ import numpy as np
 from numpy.linalg import norm
 
 from constants import constants
-from dump import Dump
 from itypes import iTypes
 from utils import density_from_smoothing_length
 
@@ -22,11 +21,6 @@ minPart          = 5      # Minimum number of particles to compute averages
 
 rIn   = 10   # TODO: get as input (or calculate from data?)
 rOut  = 200  # TODO: get as input (or calculate from data?)
-
-#--- Dump file name
-
-dumpFilePrefix = 'disc_00000'  # TODO: get dump filename as input
-                               # TODO: read multiple dumpfiles
 
 # ---------------------------------------------------------------------------- #
 
@@ -206,13 +200,11 @@ def calculate_radially_binned_quantities( nRadialBins=None,
 def calculate_eccentricity( massParticle,
                             position,
                             velocity,
-                            angularMomentum ):
+                            angularMomentum,
+                            gravitationalParameter ):
     '''
     Calculate eccentricity.
     '''
-
-    gravitationalParameter = constants.G / ( unitDist**3 / unitTime**2 / unitMass )
-    gravitationalParameter *= stellarMass
 
     specificKineticEnergy = 1/2 * norm(velocity, axis=1)**2
     specificGravitationalEnergy = - gravitationalParameter / norm(position, axis=1)
@@ -230,11 +222,12 @@ def calculate_eccentricity( massParticle,
 
 # ---------------------------------------------------------------------------- #
 
-if __name__ == '__main__':
+def disc_analysis(dump):
+    '''
+    Perform disc analysis.
+    '''
+    # TODO: add docs
 
-#--- Read dump file
-
-    dump = Dump(dumpFilePrefix)
     isFullDump = bool(dump.dumpType == 'full')
     arrays = dump.arrays
     parameters = dump.parameters
@@ -310,6 +303,10 @@ if __name__ == '__main__':
     # TODO: check if sink[0] is really the star; check if binary
     stellarMass = massParticleSink[0]
 
+    gravitationalParameter = \
+        constants.G / ( unitDist**3 / unitTime**2 / unitMass )
+    gravitationalParameter *= stellarMass
+
     smoothingLengthSink = arrays.smoothingLength['sink']
     positionSink = arrays.position['sink']
 
@@ -329,7 +326,8 @@ if __name__ == '__main__':
         eccentricityGas = calculate_eccentricity( massParticleGas,
                                                   positionGas,
                                                   velocityGas,
-                                                  angularMomentumGas )
+                                                  angularMomentumGas,
+                                                  gravitationalParameter )
 
     else:
 
@@ -387,7 +385,8 @@ if __name__ == '__main__':
                 calculate_eccentricity( massParticleDust[idx],
                                         positionDust[idx],
                                         velocityDust[idx],
-                                        angularMomentumDust[idx] ) )
+                                        angularMomentumDust[idx],
+                                        gravitationalParameter ) )
 
         else:
 
@@ -431,3 +430,24 @@ if __name__ == '__main__':
                 np.sqrt(gamma*np.pi/8) * grainDens[idxj] * grainSize[idxj] \
                 / ( scaleHeightGas[idxi] \
                 * (midplaneDensityGas[idxi] + midplaneDensityDust[idxj][idxi]) )
+
+    return ( radialBinsDisc,
+             surfaceDensityGas,
+             midplaneDensityGas,
+             meanSmoothingLengthGas,
+             scaleHeightGas,
+             meanAngularMomentumGas,
+             tiltGas,
+             twistGas,
+             psiGas,
+             meanEccentricityGas,
+             surfaceDensityDust,
+             midplaneDensityDust,
+             meanSmoothingLengthDust,
+             scaleHeightDust,
+             meanAngularMomentumDust,
+             tiltDust,
+             twistDust,
+             psiDust,
+             eccentricityDust,
+             meanEccentricityDust )
