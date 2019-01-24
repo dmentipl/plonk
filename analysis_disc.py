@@ -25,8 +25,8 @@ rOut  = 200  # TODO: get as input (or calculate from data?)
 
 #--- Dump file name
 
-dumpFileName = 'disc_00000.ascii'  # TODO: get dump filename as input
-                                   # TODO: read multiple dumpfiles
+dumpFilePrefix = 'disc_00000'  # TODO: get dump filename as input
+                               # TODO: read multiple dumpfiles
 
 # ---------------------------------------------------------------------------- #
 
@@ -234,29 +234,31 @@ if __name__ == '__main__':
 
 #--- Read dump file
 
-    dump = Dump(dumpFileName)
+    dump = Dump(dumpFilePrefix)
     isFullDump = bool(dump.dumpType == 'full')
+    arrays = dump.arrays
+    header = dump.header.header
 
 #--- Units
 
-    unitDist = dump.units['dist']
-    unitTime = dump.units['time']
-    unitMass = dump.units['mass']
+    unitDist = header['udist']
+    unitTime = header['utime']
+    unitMass = header['udist']
 
-    unitMomen = unitMass * unitDist / unitTime
-    unitAngMomen = unitMass * unitDist**2 / unitTime
-    unitDens = unitMass / unitDist**3
+    unitMomen       = unitMass * unitDist / unitTime
+    unitAngMomen    = unitMass * unitDist**2 / unitTime
+    unitDens        = unitMass / unitDist**3
     unitSurfaceDens = unitMass / unitDist**2
 
 #--- Gas particle properties
 
-    massParticleGas = dump.massParticles['gas']
+    massParticleGas = arrays.massParticles['gas']
 
-    smoothingLengthGas = dump.smoothingLength['gas']
-    positionGas = dump.position['gas']
+    smoothingLengthGas = arrays.smoothingLength['gas']
+    positionGas = arrays.position['gas']
 
     if isFullDump:
-        velocityGas = dump.velocity['gas']
+        velocityGas = arrays.velocity['gas']
         momentumGas = massParticleGas * velocityGas
         angularMomentumGas = np.cross(positionGas, momentumGas)
     else:
@@ -266,8 +268,8 @@ if __name__ == '__main__':
 
 #--- Dust particle properties
 
-    nDustTypes = len(dump.nParticles['dust'])
-    massParticleDust = dump.massParticles['dust']
+    nDustTypes = len(arrays.nParticles['dust'])
+    massParticleDust = arrays.massParticles['dust']
 
     # TODO: hack for broken splash to ascii; get from dump header (showheader)
     massParticleDust[1] = massParticleDust[0]
@@ -276,11 +278,11 @@ if __name__ == '__main__':
     grainDens = np.array([3., 3.]) / unitDens
     grainSize = np.array([0.01, 0.1]) / unitDist
 
-    smoothingLengthDust = dump.smoothingLength['dust']
-    positionDust = dump.position['dust']
+    smoothingLengthDust = arrays.smoothingLength['dust']
+    positionDust = arrays.position['dust']
 
     if isFullDump:
-        velocityDust = dump.velocity['dust']
+        velocityDust = arrays.velocity['dust']
         momentumDust = list()
         angularMomentumDust = list()
         for idx in range(nDustTypes):
@@ -297,17 +299,17 @@ if __name__ == '__main__':
 
 #--- Sink particle properties
 
-    nSinks = dump.nParticles['sink']
-    massParticleSink = dump.massParticles['sink']
+    nSinks = arrays.nParticles['sink']
+    massParticleSink = arrays.massParticles['sink']
 
     # TODO: check if sink[0] is really the star; check if binary
     stellarMass = massParticleSink[0]
 
-    smoothingLengthSink = dump.smoothingLength['sink']
-    positionSink = dump.position['sink']
+    smoothingLengthSink = arrays.smoothingLength['sink']
+    positionSink = arrays.position['sink']
 
     if isFullDump:
-        velocitySink = dump.velocity['sink']
+        velocitySink = arrays.velocity['sink']
         momentumSink = list()
         angularMomentumSink = list()
         for idx in range(nSinks):
@@ -379,7 +381,7 @@ if __name__ == '__main__':
                                         angularMomentumDust[idx] ) )
 
         cylindricalRadiusDust.append(
-            norm(dump.position['dust'][idx][:, 0:2], axis=1) )
+            norm(arrays.position['dust'][idx][:, 0:2], axis=1) )
 
         heightDust.append(positionDust[idx][:, 2])
 

@@ -8,6 +8,9 @@ class Header:
     '''
     Header class represents the header from a dump file (in the format produced
     by the phantom showheader utility program).
+
+    Arguments:
+        filename : e.g. disc_00000.header
     '''
 
     def __init__(self, filename):
@@ -26,6 +29,12 @@ class Header:
             firstLine = True
             for line in file:
                 if firstLine:
+                    if line[0] == 'F':
+                        self.dumpType = 'full'
+                    elif line[0] == 'S':
+                        self.dumpType = 'small'
+                    else:
+                        raise ValueError('Cannot determine dump type')
                     firstLine = False
                     continue
                 keys.append(line.rstrip('\n').split()[0])
