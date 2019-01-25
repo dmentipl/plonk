@@ -4,6 +4,9 @@ header.py
 Daniel Mentiplay, 2019.
 '''
 
+import h5py
+import numpy as np
+
 from units import Units
 
 class Header:
@@ -19,9 +22,18 @@ class Header:
 
         self.filename = filename
 
-        self._read_file()
+        fileExtension = filename.split('.')[-1]
 
-    def _read_file(self):
+        if fileExtension  == 'h5':
+            self._read_hdf5_file()
+
+        elif fileExtension == 'header':
+            self._read_showheader_file()
+
+        else:
+            raise ValueError('Cannot read header from file')
+
+    def _read_showheader_file(self):
 
         with open(self.filename, 'r') as file:
 
@@ -88,7 +100,38 @@ class Header:
             prevKey = key
 
         parameters = dict(zip(newKeys, newValues))
+
+        for key in parameters:
+            if isinstance(parameters[key], list):
+                parameters[key] = np.array(parameters[key])
+
         self.parameters = parameters
 
         units = Units(parameters['udist'], parameters['umass'], parameters['utime'])
         self.units = units.units
+
+    def _read_hdf5_file(self):
+
+        f = h5py.File(self.filename, 'r')
+
+        headerGroup = f['header']
+
+        parameters = dict()
+        for key in headerGroup.keys():
+            parameters[key] = headerGroup[key].value
+
+        f.close()
+
+        self.parameters = parameters
+
+        units = Units(parameters['udist'], parameters['umass'], parameters['utime'])
+        self.units = units.units
+
+        warning = '''
+Warning: hdf5 header read cannot determine if full/small dump or if the dump
+contains dust. For now assume full dump and no dust.
+        '''
+        print(warning)
+
+        self.dumpType = 'full'
+        self.containsDust = False

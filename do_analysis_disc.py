@@ -9,7 +9,7 @@ from dump import Dump
 
 #--- Dump file name
 
-dumpFilePrefix = 'disc_00000'  # TODO: get dump filename as input
+dumpFilename = 'disc_00000.h5'  # TODO: get dump filename as input
                                # TODO: read multiple dumpfiles
 
 # ---------------------------------------------------------------------------- #
@@ -17,13 +17,13 @@ dumpFilePrefix = 'disc_00000'  # TODO: get dump filename as input
 
 #--- Read dump file
 
-print('\nReading in data from dumpfile: ' + dumpFilePrefix + '\n')
+print('\nReading in data from dumpfile: ' + dumpFilename + '\n')
 
-dump = Dump(dumpFilePrefix)
+dump = Dump(dumpFilename)
 
 #--- Perform analysis
 
-print('Performing disc analysis on dumpfile: ' + dumpFilePrefix + '\n')
+print('Performing disc analysis on dumpfile: ' + dumpFilename + '\n')
 
 analysis = disc_analysis(dump)
 
