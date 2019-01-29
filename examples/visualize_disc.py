@@ -1,5 +1,5 @@
 '''
-pysplash.py
+visualize_disc.py
 
 Daniel Mentiplay, 2019.
 '''
@@ -9,8 +9,8 @@ import numpy as np
 
 import splash
 
-from .dump import Dump
-from .utils import density_from_smoothing_length
+from plonk.dumps import Dump
+from plonk.utils import density_from_smoothing_length
 
 #--- Options
 

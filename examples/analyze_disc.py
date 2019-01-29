@@ -1,11 +1,11 @@
 '''
-do_analysis_disc.py
+analyze_disc.py
 
 Daniel Mentiplay, 2019.
 '''
 
-from .analysis_disc import disc_analysis
-from .dump import Dump
+from plonk.analysis.disc import disc_analysis
+from plonk.dumps import Dump
 
 #--- Dump file name
 

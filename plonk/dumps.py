@@ -1,5 +1,5 @@
 '''
-dump.py
+dumps.py
 
 Daniel Mentiplay, 2019.
 '''
@@ -7,13 +7,28 @@ Daniel Mentiplay, 2019.
 import h5py
 import numpy as np
 
-from .itypes import iTypes
 from .units import Units
+
+# ---------------------------------------------------------------------------- #
+
+iGas  = 1
+iSink = 3
+iDust = 7
+
+iGasSplash  = 1
+iSinkSplash = 3
+iDustSplash = 8
+
+iGasLabel  = 'gas'
+iSinkLabel = 'sink'
+iDustLabel = 'dust'
 
 positionIndex = slice(0, 3)
 massIndex = 3
 smoothingLengthIndex = 4
 velocityIndex = slice(6, 9)
+
+# ---------------------------------------------------------------------------- #
 
 class Dump:
     '''
@@ -92,6 +107,8 @@ class Dump:
 
         return data
 
+# ---------------------------------------------------------------------------- #
+
 class Arrays:
     '''
     Arrays class represents the particle arrays from Phantom output.
@@ -150,9 +167,6 @@ class Arrays:
 
         containsDust = bool(containsSmallDust or containsLargeDust)
         nDustTypes = nDustSmall + nDustLarge
-
-        iGas  = iTypes.iGasSplash
-        iDust = iTypes.iDustSplash
 
         itype = data[:,-1]
 
@@ -222,6 +236,8 @@ class Arrays:
 
         if containsDust:
             self.dustFrac = dustFrac
+
+# ---------------------------------------------------------------------------- #
 
 class Header:
     '''
@@ -349,24 +365,3 @@ contains dust. For now assume full dump and no dust.
 
         self.dumpType = 'full'
         self.containsDust = False
-
-class ParticleTypes:
-    '''
-    ParticleTypes class represents integer labels for particle types.
-    '''
-
-    # pylint: disable=too-many-instance-attributes
-
-    def __init__(self):
-
-        self.iGas  = 1
-        self.iSink = 3
-        self.iDust = 7
-
-        self.iGasSplash  = 1
-        self.iSinkSplash = 3
-        self.iDustSplash = 8
-
-        self.iGasLabel  = 'gas'
-        self.iSinkLabel = 'sink'
-        self.iDustLabel = 'dust'
