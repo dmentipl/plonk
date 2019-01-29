@@ -4,13 +4,22 @@ sinks.py
 Daniel Mentiplay, 2019.
 '''
 
-from .evolution import Evolution
+class Sinks:
+    '''
+    Sinks class represents Phantom sink particles with the following properties:
 
-prefix = 'disc'
+        - mass
+        - accretionRadius
+        - spin
+        - position
+        - velocity
+    '''
 
-nSinks = 4
+    def __init__(self, position=None, velocity=None, accretionRadius=None,
+                 mass=None, spin=None):
 
-sink = list()
-for i in range(1,nSinks+1):
-    filename = prefix + 'Sink000' + str(i) + 'N01.ev'
-    sink.append(Evolution(filename))
+        self.position = position
+        self.velocity = velocity
+        self.accretionRadius = accretionRadius
+        self.mass = mass
+        self.spin = spin
