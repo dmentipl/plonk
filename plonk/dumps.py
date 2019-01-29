@@ -75,6 +75,7 @@ class Dump:
         self.units = header.units
         self.dumpType = header.dumpType
         self.containsDust = header.containsDust
+        self.containsSinks = header.containsSinks
         self.time = self.parameters['time']
 
         nDustSmall = 0
@@ -92,7 +93,7 @@ class Dump:
         elif dumpFileFormat == 'ASCII':
             data = np.loadtxt(filename)
 
-        arrays = Arrays(data, self.dumpType, nDustSmall, nDustLarge)
+        arrays = Arrays(data, self.dumpType, self.containsSinks, nDustSmall, nDustLarge)
         self.arrays = arrays
 
 
@@ -122,15 +123,16 @@ class Arrays:
     Arrays class represents the particle arrays from Phantom output.
 
     Arguments:
-        data         : 2d numpy array of particle data
-        dumpType     : 'full' or 'small'
+        data          : 2d numpy array of particle data
+        dumpType      : 'full' or 'small'
 
     Optional:
-        nDustSmall   : number of small dust types
-        nDustLarge   : number of large dust types
+        containsSinks : (bool) contains sink particles
+        nDustSmall    : number of small dust types
+        nDustLarge    : number of large dust types
     '''
 
-    def __init__(self, data, dumpType, nDustSmall=None, nDustLarge=None):
+    def __init__(self, data, dumpType, containsSinks=None, nDustSmall=None, nDustLarge=None):
 
         if isinstance(data, np.ndarray):
             if data.ndim != 2:
@@ -144,6 +146,12 @@ class Arrays:
             isFullDump = False
         else:
             raise ValueError('Cannot determine dump type')
+
+        if containsSinks is not None:
+            if not isinstance(containsSinks, bool):
+                raise ValueError('containsSinks must be bool')
+        else:
+            containsSinks = False
 
         if nDustSmall is not None:
             if isinstance(nDustSmall, int):
@@ -184,6 +192,9 @@ class Arrays:
 
         position['gas'] = data[np.where(itype == iGas), positionIndex][0]
 
+        if containsSinks:
+            position['sink'] = data[np.where(itype == iSink), positionIndex][0]
+
         if containsLargeDust:
 
             positionDust = list()
@@ -199,6 +210,9 @@ class Arrays:
 
             velocity['gas'] = data[np.where(itype == iGas), velocityIndex][0]
 
+            if containsSinks:
+                velocity['sink'] = data[np.where(itype == iSink), velocityIndex][0]
+
             if containsLargeDust:
 
                 velocityDust = list()
@@ -212,6 +226,10 @@ class Arrays:
 
         smoothingLength['gas'] = data[np.where(itype == iGas),
                                       smoothingLengthIndex][0]
+
+        if containsSinks:
+            smoothingLength['sink'] = data[np.where(itype == iSink),
+                                           smoothingLengthIndex][0]
 
         if containsLargeDust:
 
@@ -233,6 +251,13 @@ class Arrays:
             dustFracIndex = slice(dustFracIndexStart, dustFracIndexStart + nDustTypes)
             dustFrac = data[np.where(itype == iGas), dustFracIndex][0]
 
+        #--- Sink masses
+
+        if containsSinks:
+
+            massSink = list()
+            for i in np.where(itype == iSink)[0]:
+                massSink.append(data[i, massIndex])
 
         #--- Add to object
 
@@ -244,6 +269,9 @@ class Arrays:
 
         if containsDust:
             self.dustFrac = dustFrac
+
+        if containsSinks:
+            self.massSink = massSink
 
 # ---------------------------------------------------------------------------- #
 
@@ -350,6 +378,8 @@ class Header:
 
         self.parameters = parameters
 
+        self.containsSinks = bool(parameters['nptmass'] > 0)
+
         units = Units(parameters['udist'], parameters['umass'], parameters['utime'])
         self.units = units.units
 
@@ -366,6 +396,8 @@ class Header:
         f.close()
 
         self.parameters = parameters
+
+        self.containsSinks = bool(parameters['nptmass'] > 0)
 
         units = Units(parameters['udist'], parameters['umass'], parameters['utime'])
         self.units = units.units

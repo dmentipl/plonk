@@ -4,13 +4,13 @@ analyze_disc.py
 Daniel Mentiplay, 2019.
 '''
 
-from plonk.analysis.disc import disc_analysis
-from plonk.dumps import Dump
+from plonk.plonk.analysis.disc import disc_analysis
+from plonk.plonk.dumps import Dump
 
 #--- Dump file name
 
-dumpFilename = 'data/disc_00000.h5'  # TODO: get dump filename as input
-                                     # TODO: read multiple dumpfiles
+dumpFilename = 'data/disc_00000.ascii'  # TODO: get dump filename as input
+                                        # TODO: read multiple dumpfiles
 
 # ---------------------------------------------------------------------------- #
 

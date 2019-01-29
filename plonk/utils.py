@@ -6,9 +6,7 @@ Daniel Mentiplay, 2019.
 
 import numpy as np
 
-hfact = 1.2
-
-def density_from_smoothing_length(smoothingLength, particleMass):
+def density_from_smoothing_length(smoothingLength, particleMass, hfact=1.2):
     '''
     Calculate density from particle mass and smoothing length.
     '''

@@ -6,18 +6,44 @@ Daniel Mentiplay, 2019.
 
 class Particles:
     '''
-    Particles class represents Phantom particle arrays with the following
-    properties:
-
-        - position
-        - velocity
-        - smoothing length
-        - dust fraction
+    Generic SPH particles.
     '''
 
-    def __init__(self, position, velocity, smoothingLength, dustFrac):
+    def __init__(self):
 
-        self.position = position
-        self.velocity = velocity
-        self.smoothingLength = smoothingLength
-        self.dustFrac = dustFrac
+        #--- Number of particles
+
+        self.nParticles = 0
+
+        #--- Mass of particles
+
+        self.massParticle = 0
+
+        #--- Positions
+
+        self.position = None
+
+        #--- Velocities
+
+        self.velocity = None
+
+        #--- Smoothing lengths
+
+        self.smoothingLength = None
+
+class Gas(Particles):
+    '''
+    Gas particles.
+    '''
+
+    def __init__(self):
+        super().__init__()
+
+        #--- Dust fractions
+
+        self.dustFrac = None
+
+class Dust(Particles):
+    '''
+    Dust particles.
+    '''
