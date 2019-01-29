@@ -4,6 +4,8 @@ dumps.py
 Daniel Mentiplay, 2019.
 '''
 
+import os
+
 import h5py
 import numpy as np
 
@@ -49,7 +51,13 @@ class Dump:
 
     def __init__(self, filename):
 
-        self.filename = filename
+        exists = os.path.isfile(filename)
+
+        if exists:
+            self.filename = filename
+        else:
+            raise FileNotFoundError
+
         filePrefix    = filename.split('.')[0]
         fileExtension = filename.split('.')[-1]
 
@@ -250,7 +258,12 @@ class Header:
 
     def __init__(self, filename):
 
-        self.filename = filename
+        exists = os.path.isfile(filename)
+
+        if exists:
+            self.filename = filename
+        else:
+            raise FileNotFoundError
 
         fileExtension = filename.split('.')[-1]
 
