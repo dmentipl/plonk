@@ -10,7 +10,7 @@ from .dump import Dump
 #--- Dump file name
 
 dumpFilename = 'disc_00000.h5'  # TODO: get dump filename as input
-                               # TODO: read multiple dumpfiles
+                                # TODO: read multiple dumpfiles
 
 # ---------------------------------------------------------------------------- #
 
