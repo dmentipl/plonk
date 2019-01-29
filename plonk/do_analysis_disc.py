@@ -4,8 +4,8 @@ do_analysis_disc.py
 Daniel Mentiplay, 2019.
 '''
 
-from analysis_disc import disc_analysis
-from dump import Dump
+from .analysis_disc import disc_analysis
+from .dump import Dump
 
 #--- Dump file name
 

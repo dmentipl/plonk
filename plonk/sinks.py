@@ -4,7 +4,7 @@ sinks.py
 Daniel Mentiplay, 2019.
 '''
 
-from evolution import Evolution
+from .evolution import Evolution
 
 prefix = 'disc'
 

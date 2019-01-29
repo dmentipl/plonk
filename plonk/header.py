@@ -7,7 +7,7 @@ Daniel Mentiplay, 2019.
 import h5py
 import numpy as np
 
-from units import Units
+from .units import Units
 
 class Header:
     '''

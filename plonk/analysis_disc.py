@@ -7,9 +7,9 @@ Daniel Mentiplay, 2019.
 import numpy as np
 from numpy.linalg import norm
 
-from constants import constants
-from itypes import iTypes
-from utils import density_from_smoothing_length
+from .constants import constants
+from .itypes import iTypes
+from .utils import density_from_smoothing_length
 
 #--- Options
 

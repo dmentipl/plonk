@@ -1,2 +1,4 @@
-# phantomanalysis
-Phantom analysis but with Python
+Plonk
+=====
+
+Phantom analysis and visualization but with Python.

@@ -7,8 +7,8 @@ Daniel Mentiplay, 2019.
 import h5py
 import numpy as np
 
-from arrays import Arrays
-from header import Header
+from .arrays import Arrays
+from .header import Header
 
 class Dump:
     '''

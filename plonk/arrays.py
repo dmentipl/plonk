@@ -6,7 +6,7 @@ Daniel Mentiplay, 2019.
 
 import numpy as np
 
-from itypes import iTypes
+from .itypes import iTypes
 
 positionIndex = slice(0, 3)
 massIndex = 3

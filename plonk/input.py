@@ -7,9 +7,10 @@ Daniel Mentiplay, 2019.
 import matplotlib.pyplot as plt
 import numpy as np
 
-from dump import Dump
 import splash
-from utils import density_from_smoothing_length
+
+from .dump import Dump
+from .utils import density_from_smoothing_length
 
 #--- Options
 
