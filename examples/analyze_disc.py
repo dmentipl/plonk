@@ -9,8 +9,8 @@ from plonk.dumps import Dump
 
 #--- Dump file name
 
-dumpFilename = 'disc_00000.h5'  # TODO: get dump filename as input
-                                # TODO: read multiple dumpfiles
+dumpFilename = 'data/disc_00000.h5'  # TODO: get dump filename as input
+                                     # TODO: read multiple dumpfiles
 
 # ---------------------------------------------------------------------------- #
 
