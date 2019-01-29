@@ -27,6 +27,9 @@ rOut  = 200  # TODO: get as input (or calculate from data?)
 def disc_analysis(dump):
     '''
     Perform disc analysis.
+
+    Arguments:
+        dump : Dump object
     '''
     # TODO: add docs
 
@@ -102,7 +105,8 @@ def disc_analysis(dump):
     # TODO: check if sink[0] is really the star; check if binary
     stellarMass = massParticleSink[0]
 
-    gravitationalParameter = constants.G / ( uDist**3 / uTime**2 / uMass ) \
+    gravitationalParameter = constants.gravitationalConstant \
+                           / ( uDist**3 / uTime**2 / uMass ) \
                            * stellarMass
 
     smoothingLengthSink = arrays.smoothingLength['sink']
