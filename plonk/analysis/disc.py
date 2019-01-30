@@ -45,8 +45,6 @@ def disc_analysis(dump):
 
     containsSmallDust = bool(nDustSmall > 0)
     containsLargeDust = bool(nDustLarge > 0)
-
-    nDustTypes = nDustSmall + nDustLarge
     containsDust = bool(containsSmallDust or containsLargeDust)
 
     if containsDust:
@@ -121,7 +119,6 @@ def disc_analysis(dump):
                                / ( uDist**3 / uTime**2 / uMass ) \
                                * stellarMass
 
-        smoothingLengthSink = sinks.smoothingLength
         positionSink = sinks.position
 
         if isFullDump:
@@ -266,7 +263,6 @@ def disc_analysis(dump):
     meanSmoothingLength         = dict()
     meanSmoothingLength['gas']  = meanSmoothingLengthGas
     meanSmoothingLength['dust'] = meanSmoothingLengthDust
-    meanSmoothingLength['sink'] = smoothingLengthSink
 
     scaleHeight                 = dict()
     scaleHeight['gas']          = scaleHeightGas

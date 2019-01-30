@@ -4,8 +4,8 @@ analyze_disc.py
 Daniel Mentiplay, 2019.
 '''
 
-from plonk.plonk.analysis.disc import disc_analysis
-from plonk.plonk.dumps import Dump
+from plonk.analysis.disc import disc_analysis
+from plonk.dumps import Dump
 
 #--- Dump file name
 

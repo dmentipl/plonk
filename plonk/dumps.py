@@ -79,6 +79,7 @@ class Dump:
 
         if fileExtension == 'h5':
             dumpFileFormat = 'HDF5'
+            print('WARNING: HDF5 dump reader not fully implemented')
 
         elif fileExtension == 'ascii':
             dumpFileFormat = 'ASCII'
@@ -353,11 +354,5 @@ def _read_header_from_hdf5(headerFileName):
         header[key] = headerGroup[key].value
 
     f.close()
-
-    warning = '''
-WARNING: For now HDF5 header read cannot determine if full/small dump
-     For now assume full dump.
-    '''
-    print(warning)
 
     return header
