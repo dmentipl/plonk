@@ -7,38 +7,69 @@ Daniel Mentiplay, 2019.
 from plonk.analysis.disc import disc_analysis
 from plonk.dumps import Dump
 
-#--- Dump file name
+#--- Options
 
-dumpFilename = 'data/disc_00000.ascii'  # TODO: get dump filename as input
-                                        # TODO: read multiple dumpfiles
+# TODO: get as input
+numberRadialBins = 150
+radiusIn         = 10
+radiusOut        = 200
+
+#--- Dump file names
+
+# TODO: get dump file names as input
+dumpFileNames = ['data/disc_00000.ascii', 'data/disc_00006.ascii']
 
 # ---------------------------------------------------------------------------- #
 
 
+
+dumps = list()
+
+for dumpFileName in dumpFileNames:
+
 #--- Read dump file
 
-print('\nReading in data from dumpfile: ' + dumpFilename + '\n')
+    print('Reading in data from dumpfile: ' + dumpFileName + '... ', end='',
+          flush=True)
 
-dump = Dump()
-dump.read_dump(dumpFilename)
+    dump = Dump()
+    dump.read_dump(dumpFileName)
+
+    print('done')
+
+    dumps.append(dump)
 
 #--- Perform analysis
 
-print('Performing disc analysis on dumpfile: ' + dumpFilename + '\n')
+radialBins      = list()
+surfaceDensity  = list()
+midplaneDensity = list()
+smoothingLength = list()
+scaleHeight     = list()
+angularMomentum = list()
+tilt            = list()
+twist           = list()
+psi             = list()
+eccentricity    = list()
+Stokes          = list()
 
-analysis = disc_analysis(dump)
+for dump in dumps:
 
-radialBins      = analysis[0]
-surfaceDensity  = analysis[1]
-midplaneDensity = analysis[2]
-smoothingLength = analysis[3]
-scaleHeight     = analysis[4]
-angularMomentum = analysis[5]
-tilt            = analysis[6]
-twist           = analysis[7]
-psi             = analysis[8]
-eccentricity    = analysis[9]
-Stokes          = analysis[10]
+    print('Performing disc analysis on dumpfile: ' + dump.filename)
+
+    analysis = disc_analysis(dump, radiusIn, radiusOut, numberRadialBins)
+
+    radialBins.     append( analysis[0] )
+    surfaceDensity. append( analysis[1] )
+    midplaneDensity.append( analysis[2] )
+    smoothingLength.append( analysis[3] )
+    scaleHeight.    append( analysis[4] )
+    angularMomentum.append( analysis[5] )
+    tilt.           append( analysis[6] )
+    twist.          append( analysis[7] )
+    psi.            append( analysis[8] )
+    eccentricity.   append( analysis[9] )
+    Stokes.         append( analysis[10] )
 
 output = \
 '''

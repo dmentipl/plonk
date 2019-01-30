@@ -1,6 +1,8 @@
 '''
 disc.py
 
+Phantom analysis for dusty discs.
+
 Daniel Mentiplay, 2019.
 '''
 
@@ -10,27 +12,25 @@ from numpy.linalg import norm
 from ..constants import constants
 from ..utils import density_from_smoothing_length
 
-#--- Options
-
-midplaneSlice    = False  # Calculate midplane density by taking a slice
-numberRadialBins = 150    # Number of radial bins
-minPart          = 5      # Minimum number of particles to compute averages
-
-#--- Parameters
-
-rIn   = 10   # TODO: get as input (or calculate from data?)
-rOut  = 200  # TODO: get as input (or calculate from data?)
-
 # ---------------------------------------------------------------------------- #
 
-def disc_analysis(dump):
+def disc_analysis(dump, radiusIn, radiusOut, numberRadialBins,
+                  midplaneSlice=False, minParticleAverage=5):
     '''
     Perform disc analysis.
 
     Arguments:
-        dump : Dump object
+        dump             : Dump object
+        radiusIn         : Inner disc radius for radial binning
+        radiusOut        : Outer disc radius for radial binning
+        numberRadialBins : Number of radial bins
+
+    Optional:
+        midplaneSlice      : Calculate midplane density by taking a slice
+        minParticleAverage : Minimum number of particles to compute averages
     '''
-    # TODO: add docs
+
+    # TODO: add to docs
 
     isFullDump = dump.fullDump
 
@@ -69,12 +69,12 @@ def disc_analysis(dump):
     positionGas        = gas.position
 
     if isFullDump:
-        velocityGas = gas.velocity
-        momentumGas = massParticleGas * velocityGas
+        velocityGas        = gas.velocity
+        momentumGas        = massParticleGas * velocityGas
         angularMomentumGas = np.cross(positionGas, momentumGas)
     else:
-        velocityGas = None
-        momentumGas = None
+        velocityGas        = None
+        momentumGas        = None
         angularMomentumGas = None
 
 #--- Dust particle properties
@@ -85,14 +85,9 @@ def disc_analysis(dump):
         smoothingLengthDust = list()
         positionDust        = list()
 
-        if isFullDump:
-            velocityDust        = list()
-            momentumDust        = list()
-            angularMomentumDust = list()
-        else:
-            velocityDust        = None
-            momentumDust        = None
-            angularMomentumDust = None
+        velocityDust        = list()
+        momentumDust        = list()
+        angularMomentumDust = list()
 
         for idx in range(nDustLarge):
 
@@ -105,6 +100,10 @@ def disc_analysis(dump):
                 momentumDust.append(massParticleDust[idx] * velocityDust[idx])
                 angularMomentumDust.append(np.cross(positionDust[idx],
                                                     momentumDust[idx]))
+            else:
+                velocityDust.append(None)
+                momentumDust.append(None)
+                angularMomentumDust.append(None)
 
 #--- Sink particle properties
 
@@ -123,20 +122,28 @@ def disc_analysis(dump):
 
         if isFullDump:
 
-            velocitySink = sinks.velocity
-            momentumSink = list()
-            angularMomentumSink = list()
+            velocitySink        = sinks.velocity
+            momentumSink        = np.full((nSinks, 3), np.nan)
+            angularMomentumSink = np.full((nSinks, 3), np.nan)
+            eccentricitySink    = np.full(nSinks, np.nan)
 
             for idx in range(nSinks):
-                momentumSink.append(massParticleSink[idx] * velocitySink[idx])
-                angularMomentumSink.append(np.cross(positionSink[idx],
-                                                    momentumSink[idx]))
+                momentumSink[idx] = massParticleSink[idx] * velocitySink[idx]
+                angularMomentumSink[idx] = np.cross(positionSink[idx],
+                                                    momentumSink[idx])
 
             eccentricitySink = _calculate_eccentricity( massParticleSink,
                                                         positionSink,
                                                         velocitySink,
                                                         angularMomentumSink,
                                                         gravitationalParameter )
+
+        else:
+
+            velocitySink        = None
+            momentumSink        = None
+            angularMomentumSink = None
+            eccentricitySink    = None
 
 #--- Gas eccentricity
 
@@ -158,14 +165,17 @@ def disc_analysis(dump):
     heightGas = positionGas[:, 2]
 
     vals = _calculate_radially_binned_quantities( numberRadialBins,
-                                                  rIn,
-                                                  rOut,
+                                                  radiusIn,
+                                                  radiusOut,
                                                   cylindricalRadiusGas,
                                                   heightGas,
                                                   smoothingLengthGas,
                                                   massParticleGas,
                                                   angularMomentumGas,
-                                                  eccentricityGas )
+                                                  eccentricityGas,
+                                                  parameters,
+                                                  midplaneSlice,
+                                                  minParticleAverage )
 
     radialBinsDisc         = vals[0]
     surfaceDensityGas      = vals[1]
@@ -217,14 +227,17 @@ def disc_analysis(dump):
         heightDust.append(positionDust[idx][:, 2])
 
         vals = _calculate_radially_binned_quantities( numberRadialBins,
-                                                      rIn,
-                                                      rOut,
+                                                      radiusIn,
+                                                      radiusOut,
                                                       cylindricalRadiusDust[idx],
                                                       heightDust[idx],
                                                       smoothingLengthDust[idx],
                                                       massParticleDust[idx],
                                                       angularMomentumDust[idx],
-                                                      eccentricityDust[idx] )
+                                                      eccentricityDust[idx],
+                                                      parameters,
+                                                      midplaneSlice,
+                                                      minParticleAverage )
 
         surfaceDensityDust.     append( vals[1] )
         midplaneDensityDust.    append( vals[2] )
@@ -240,7 +253,7 @@ def disc_analysis(dump):
 
     gamma = parameters.eos['gamma']
 
-    Stokes = [np.empty_like(radialBinsDisc) for i in range(nDustLarge)]
+    Stokes = [np.full_like(radialBinsDisc, np.nan) for i in range(nDustLarge)]
 
     for idxi in range(len(radialBinsDisc)):
         for idxj in range(nDustLarge):
@@ -307,7 +320,7 @@ def disc_analysis(dump):
 
 # ---------------------------------------------------------------------------- #
 
-def _calculate_radially_binned_quantities( nRadialBins=None,
+def _calculate_radially_binned_quantities( numberRadialBins=None,
                                            radiusIn=None,
                                            radiusOut=None,
                                            cylindricalRadius=None,
@@ -316,7 +329,9 @@ def _calculate_radially_binned_quantities( nRadialBins=None,
                                            massParticle=None,
                                            angularMomentum=None,
                                            eccentricity=None,
-                                           parameters=None):
+                                           parameters=None,
+                                           midplaneSlice=None,
+                                           minParticleAverage=None ):
     '''
     Calculate averaged radially binned quantities:
         - radial bins
@@ -331,8 +346,8 @@ def _calculate_radially_binned_quantities( nRadialBins=None,
         - eccentricity
     '''
 
-    if nRadialBins is None:
-        raise ValueError('Need nRadialBins')
+    if numberRadialBins is None:
+        raise ValueError('Need numberRadialBins')
 
     if radiusIn is None:
         raise ValueError('Need radiusIn')
@@ -355,13 +370,13 @@ def _calculate_radially_binned_quantities( nRadialBins=None,
     if midplaneSlice and parameters is None:
         raise ValueError('"parameters" required to calculate midplane slice')
 
-    dR         = (radiusOut - radiusIn) / (nRadialBins - 1)
-    radialBins = np.linspace(radiusIn, radiusOut, nRadialBins)
+    dR         = (radiusOut - radiusIn) / (numberRadialBins - 1)
+    radialBins = np.linspace(radiusIn, radiusOut, numberRadialBins)
 
-    meanSmoothingLength = np.empty_like(radialBins)
-    surfaceDensity      = np.empty_like(radialBins)
-    midplaneDensity     = np.empty_like(radialBins)
-    scaleHeight         = np.empty_like(radialBins)
+    meanSmoothingLength = np.full_like(radialBins, np.nan)
+    surfaceDensity      = np.full_like(radialBins, np.nan)
+    midplaneDensity     = np.full_like(radialBins, np.nan)
+    scaleHeight         = np.full_like(radialBins, np.nan)
 
     if angularMomentum is not None:
 
@@ -370,12 +385,12 @@ def _calculate_radially_binned_quantities( nRadialBins=None,
 
         useVelocities = True
 
-        meanAngularMomentum      = np.empty_like(3*[radialBins])
-        magnitudeAngularMomentum = np.empty_like(radialBins)
-        meanTilt                 = np.empty_like(radialBins)
-        meanTwist                = np.empty_like(radialBins)
-        meanPsi                  = np.empty_like(radialBins)
-        meanEccentricity         = np.empty_like(radialBins)
+        meanAngularMomentum      = np.full_like(3*[radialBins], np.nan)
+        magnitudeAngularMomentum = np.full_like(radialBins, np.nan)
+        meanTilt                 = np.full_like(radialBins, np.nan)
+        meanTwist                = np.full_like(radialBins, np.nan)
+        meanPsi                  = np.full_like(radialBins, np.nan)
+        meanEccentricity         = np.full_like(radialBins, np.nan)
 
     else:
 
@@ -400,7 +415,7 @@ def _calculate_radially_binned_quantities( nRadialBins=None,
 
         surfaceDensity[index] = massParticle * nPart / area
 
-        if nPart > minPart:
+        if nPart > minParticleAverage:
 
             meanSmoothingLength[index] = np.sum(
                 smoothingLength[indicies] ) / nPart
