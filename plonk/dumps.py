@@ -255,9 +255,11 @@ class Dump:
 
                 sinkVelocity        = arrays['vxyz_ptmass_label'].value
 
-            f.close()
-
             # TODO: add dustfrac
+            if containsDust:
+                print('WARNING: HDF5 dump reader not fully implemented')
+
+            f.close()
 
         elif dumpFileFormat == 'ASCII':
 
