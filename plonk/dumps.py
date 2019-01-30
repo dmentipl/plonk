@@ -18,14 +18,15 @@ from .units import Units
 
 #--- Reading Phantom ACSII files
 
-iGas  = 1
-iSink = 3
-iDust = 8
+iGas         = 1
+iSink        = 3
+iDustPhantom = 7
+iDustSplash  = 8
 
-positionIndex = slice(0, 3)
-massIndex = 3
+positionIndex        = slice(0, 3)
+massIndex            = 3
 smoothingLengthIndex = 4
-velocityIndex = slice(6, 9)
+velocityIndex        = slice(6, 9)
 
 # ---------------------------------------------------------------------------- #
 
@@ -84,6 +85,9 @@ class Dump:
         elif fileExtension == 'ascii':
             dumpFileFormat = 'ASCII'
 
+        else:
+            raise ValueError('Cannot determine dump file format')
+
         self._read_header(filePrefix, dumpFileFormat)
         self._read_arrays(filePrefix, dumpFileFormat)
 
@@ -109,23 +113,26 @@ class Dump:
         elif dumpFileFormat == 'ASCII':
             header = self._read_header_from_showheader(headerFileName)
 
-        self.parameters.dust['nDustSmall']   = header.get('ndustsmall')
-        self.parameters.dust['nDustLarge']   = header.get('ndustlarge')
-        self.parameters.dust['grainSize']    = header.get('grainsize')
-        self.parameters.dust['grainDens']    = header.get('graindens')
+        self.parameters.particles['npartoftype'] = header.get('npartoftype')
+        self.parameters.particles['massoftype']  = header.get('massoftype')
 
-        self.parameters.eos['ieos']          = header.get('ieos')
-        self.parameters.eos['gamma']         = header.get('gamma')
-        self.parameters.eos['polyk']         = header.get('polyk')
-        self.parameters.eos['qfacdisc']      = header.get('qfacdisc')
+        self.parameters.dust['nDustSmall']       = header.get('ndustsmall')
+        self.parameters.dust['nDustLarge']       = header.get('ndustlarge')
+        self.parameters.dust['grainSize']        = header.get('grainsize')
+        self.parameters.dust['grainDens']        = header.get('graindens')
 
-        self.parameters.numerical['hfact']   = header.get('hfact')
-        self.parameters.numerical['tolh']    = header.get('tolh')
-        self.parameters.numerical['C_cour']  = header.get('C_cour')
-        self.parameters.numerical['C_force'] = header.get('C_force')
-        self.parameters.numerical['alpha']   = header.get('alpha')
+        self.parameters.eos['ieos']              = header.get('ieos')
+        self.parameters.eos['gamma']             = header.get('gamma')
+        self.parameters.eos['polyk']             = header.get('polyk')
+        self.parameters.eos['qfacdisc']          = header.get('qfacdisc')
 
-        self.parameters.sinks['nSinks']      = header.get('nptmass')
+        self.parameters.numerical['hfact']       = header.get('hfact')
+        self.parameters.numerical['tolh']        = header.get('tolh')
+        self.parameters.numerical['C_cour']      = header.get('C_cour')
+        self.parameters.numerical['C_force']     = header.get('C_force')
+        self.parameters.numerical['alpha']       = header.get('alpha')
+
+        self.parameters.sinks['nSinks']          = header.get('nptmass')
 
         self.parameters.units = Units(header['udist'], header['umass'],
                                       header['utime']).units
@@ -215,38 +222,6 @@ class Dump:
         if not exists:
             raise FileNotFoundError
 
-        if dumpFileFormat == 'HDF5':
-
-            f = h5py.File(dumpFileName, 'r')
-
-            arraysGroup = f['arrays']
-
-            xyzh = arraysGroup['xyzh_label'].value
-            vxyzu = arraysGroup['vxyzu_label'].value
-            itype = arraysGroup['itype'].value
-
-            f.close()
-
-            data = np.stack( ( xyzh[:, 0], xyzh[:, 1], xyzh[:, 2],
-                               np.ones_like(itype), xyzh[:, 3],
-                               np.ones_like(itype), vxyzu[:, 0], vxyzu[:, 1],
-                               vxyzu[:, 2], itype ) )
-
-        elif dumpFileFormat == 'ASCII':
-
-            data = np.loadtxt(dumpFileName)
-
-        self._put_arrays_into_objects(data)
-
-
-    def _put_arrays_into_objects(self, data):
-
-        if isinstance(data, np.ndarray):
-            if data.ndim != 2:
-                raise ValueError('data must be 2d numpy array')
-        else:
-            raise ValueError('data must be 2d numpy array')
-
         nDustSmall = self.parameters.dust['nDustSmall']
         nDustLarge = self.parameters.dust['nDustLarge']
 
@@ -256,36 +231,92 @@ class Dump:
         nDustTypes = nDustSmall + nDustLarge
         containsDust = bool(containsSmallDust or containsLargeDust)
 
-        itype = data[:,-1]
+        nSinks = self.parameters.sinks['nSinks']
+        containsSinks = bool(nSinks > 0)
 
-        containsSinks = self.parameters.sinks['nSinks']
+        if dumpFileFormat == 'HDF5':
+
+            f = h5py.File(dumpFileName, 'r')
+            arrays = f['arrays']
+
+            particleType            = arrays['itype'].value
+
+            particlePosition        = arrays['xyzh_label'].value[:, 0:3]
+            particleSmoothingLength = arrays['xyzh_label'].value[:, 3]
+
+            if self.fullDump:
+                particleVelocity    = arrays['vxyzu_label'].value[:, 0:3]
+
+            if containsSinks:
+
+                sinkPosition        = arrays['xyzmh_ptmass_label'].value[:, 0:3]
+                sinkMass            = arrays['xyzmh_ptmass_label'].value[:, 3]
+                sinkAccretionRadius = arrays['xyzmh_ptmass_label'].value[:, 4]
+
+                sinkVelocity        = arrays['vxyz_ptmass_label'].value
+
+            f.close()
+
+            # TODO: add dustfrac
+
+        elif dumpFileFormat == 'ASCII':
+
+            data = np.loadtxt(dumpFileName)
+
+            particleType            = data[:, -1]
+
+            particlePosition        = data[:, positionIndex]
+            particleSmoothingLength = data[:, smoothingLengthIndex]
+
+            if self.fullDump:
+                particleVelocity    = data[:, velocityIndex]
+
+            if containsDust:
+
+                if self.fullDump:
+                    dustFracIndexStart = 9
+                else:
+                    dustFracIndexStart = 6
+
+                dustFracIndex = slice(dustFracIndexStart,
+                                      dustFracIndexStart + nDustTypes)
+
+                dustFrac            = data[:, dustFracIndex]
+
+            if containsSinks:
+
+                sinkPosition        = data[np.where(particleType == iSink),
+                                           positionIndex][0]
+
+                sinkMass            = data[np.where(particleType == iSink),
+                                           massIndex][0]
+
+                sinkAccretionRadius = data[np.where(particleType == iSink),
+                                           smoothingLengthIndex][0]
+
+                if self.fullDump:
+                    sinkVelocity    = data[np.where(particleType == iSink),
+                                           velocityIndex][0]
 
         #--- Gas
 
         gas = Gas()
 
-        gas.number = len(data[np.where(itype == iGas), massIndex][0])
+        gas.number = self.parameters.particles['npartoftype'][0]
+        gas.mass   = self.parameters.particles['massoftype'][0]
 
-        gas.mass = data[np.where(itype == iGas), massIndex][0][0]
-
-        gas.position = data[np.where(itype == iGas), positionIndex][0]
-
-        gas.smoothingLength = data[np.where(itype == iGas),
-                                   smoothingLengthIndex][0]
+        gas.position        = particlePosition[np.where(particleType == iGas)]
+        gas.smoothingLength = particleSmoothingLength[np.where(particleType == iGas)]
 
         if self.fullDump:
-            gas.velocity = data[np.where(itype == iGas), velocityIndex][0]
+            gas.velocity = particleVelocity[np.where(particleType == iGas)]
+        else:
+            gas.velocity = None
 
         if containsDust:
-
-            if self.fullDump:
-                dustFracIndexStart = 9
-            else:
-                dustFracIndexStart = 6
-            dustFracIndex = slice(dustFracIndexStart,
-                                  dustFracIndexStart + nDustTypes)
-
-            gas.dustFrac = data[np.where(itype == iGas), dustFracIndex][0]
+            gas.dustFrac = dustFrac[np.where(particleType == iGas)]
+        else:
+            gas.dustfrac = None
 
         self.gas = gas
 
@@ -295,28 +326,34 @@ class Dump:
 
             dust = list()
 
-            for i in range(nDustLarge):
+            for idx in range(nDustLarge):
 
                 dust.append(Dust())
 
-                itype_ = i + iDust
+                itypePhantom = idx + iDustPhantom - 1
+                itypeSplash  = idx + iDustSplash
 
-                dust[i].number = len(data[np.where(itype == iDust),
-                                          massIndex][0])
+                dust[idx].number = \
+                    self.parameters.particles['npartoftype'][itypePhantom]
 
-                dust[i].mass = data[np.where(itype == iGas), massIndex][0][0]
+                dust[idx].mass = \
+                    self.parameters.particles['massoftype'][itypePhantom]
 
-                dust[i].position = data[np.where(itype == itype_)[0],
-                                        positionIndex]
+                dust[idx].position = particlePosition[
+                    np.where(particleType == itypeSplash)]
 
-                dust[i].smoothingLength = data[np.where(itype == itype_)[0],
-                                               smoothingLengthIndex]
+                dust[idx].smoothingLength = particleSmoothingLength[
+                    np.where(particleType == itypeSplash)]
 
                 if self.fullDump:
-                    dust[i].velocity = data[np.where(itype == itype_)[0],
-                                            velocityIndex]
+                    dust[idx].velocity = particleVelocity[
+                        np.where(particleType == itypeSplash)]
 
             self.dust = dust
+
+        else:
+
+            self.dust = None
 
         #--- Sinks
 
@@ -324,22 +361,18 @@ class Dump:
 
             sinks = Sinks()
 
-            sinks.number = len(data[np.where(itype == iSink), massIndex][0])
-
-            sinks.mass = data[np.where(itype == iSink), massIndex][0]
-
-            sinks.position = data[np.where(itype == iSink),
-                                  positionIndex][0]
-
-            sinks.accretionRadius = data[np.where(itype == iSink),
-                                         smoothingLengthIndex][0]
-
+            sinks.number          = nSinks
+            sinks.mass            = sinkMass
+            sinks.position        = sinkPosition
+            sinks.accretionRadius = sinkAccretionRadius
             if self.fullDump:
-
-                sinks.velocity = data[np.where(itype == iSink),
-                                      velocityIndex][0]
+                sinks.velocity    = sinkVelocity
 
             self.sinks = sinks
+
+        else:
+
+            self.sinks = None
 
 #--- Functions
 

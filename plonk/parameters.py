@@ -13,6 +13,11 @@ class Parameters:
 
     def __init__(self):
 
+        particles = dict()
+
+        particles['npartoftype'] = list()
+        particles['massoftype'] = list()
+
         dust = dict()
 
         dust['nDustSmall'] = 0
@@ -39,6 +44,7 @@ class Parameters:
 
         sinks['nSinks'] = 0
 
+        self.particles = particles
         self.dust      = dust
         self.eos       = eos
         self.numerical = numerical
