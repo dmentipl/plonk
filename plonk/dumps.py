@@ -330,7 +330,7 @@ class Dump:
             sinks.position = data[np.where(itype == iSink),
                                   positionIndex][0]
 
-            sinks.smoothingLength = data[np.where(itype == iSink),
+            sinks.accretionRadius = data[np.where(itype == iSink),
                                          smoothingLengthIndex][0]
 
             if self.fullDump:

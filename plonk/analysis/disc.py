@@ -241,7 +241,7 @@ def disc_analysis(dump):
 
 #--- Stokes
 
-    gamma = parameters['gamma']
+    gamma = parameters.eos['gamma']
 
     Stokes = [np.empty_like(radialBinsDisc) for i in range(nDustLarge)]
 
