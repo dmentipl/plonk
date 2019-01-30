@@ -10,7 +10,7 @@ import numpy as np
 from numpy.linalg import norm
 
 from ..constants import constants
-from ..utils import density_from_smoothing_length
+from ..particles import density_from_smoothing_length
 
 # ---------------------------------------------------------------------------- #
 

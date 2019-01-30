@@ -13,6 +13,7 @@ from .particles import Gas, Dust
 from .parameters import Parameters
 from .sinks import Sinks
 from .units import Units
+from .utils import print_warning, print_error
 
 # ---------------------------------------------------------------------------- #
 
@@ -68,6 +69,8 @@ class Dump:
             ASCII
         '''
 
+        # TODO: keep working on HDF5 Phantom output
+
         exists = os.path.isfile(filename)
 
         if exists:
@@ -80,7 +83,7 @@ class Dump:
 
         if fileExtension == 'h5':
             dumpFileFormat = 'HDF5'
-            print('WARNING: HDF5 dump reader not fully implemented')
+            print_error('HDF5 dump reader not fully implemented')
 
         elif fileExtension == 'ascii':
             dumpFileFormat = 'ASCII'
@@ -257,7 +260,7 @@ class Dump:
 
             # TODO: add dustfrac
             if containsDust:
-                print('WARNING: HDF5 dump reader not fully implemented')
+                print_warning('HDF5 dump reader cannot read dustfrac yet')
 
             f.close()
 

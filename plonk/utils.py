@@ -4,11 +4,22 @@ utils.py
 Daniel Mentiplay, 2019.
 '''
 
-import numpy as np
-
-def density_from_smoothing_length(smoothingLength, particleMass, hfact=1.2):
+def print_warning(message):
     '''
-    Calculate density from particle mass and smoothing length.
+    Print formatted warning message.
     '''
+    message = 'WARNING: ' + message
+    print( '\n' \
+         + len(message)*'-' + '\n' \
+         + message + '\n' \
+         + len(message)*'-' )
 
-    return particleMass * (hfact/np.abs(smoothingLength))**3
+def print_error(message):
+    '''
+    Print formatted error message.
+    '''
+    message = 'ERROR: ' + message
+    print( '\n' \
+         + len(message)*'-' + '\n' \
+         + message + '\n' \
+         + len(message)*'-' )
