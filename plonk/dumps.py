@@ -89,10 +89,8 @@ class Dump:
         elif fileExtension == 'ascii':
             dumpFileFormat = 'ASCII'
 
-        containsSinks, nDustSmall, nDustLarge = \
-                self._read_header(filePrefix, dumpFileFormat)
-        self._read_arrays(filePrefix, dumpFileFormat, containsSinks, nDustSmall,
-                          nDustLarge)
+        self._read_header(filePrefix, dumpFileFormat)
+        self._read_arrays(filePrefix, dumpFileFormat)
 
 #--- Read header
 
@@ -111,34 +109,28 @@ class Dump:
             raise FileNotFoundError
 
         if dumpFileFormat == 'HDF5':
-
             header = self._read_header_from_hdf5(headerFileName)
 
         elif dumpFileFormat == 'ASCII':
             header = self._read_header_from_showheader(headerFileName)
 
-        self.parameters.dust.nDustSmall   = header.get('ndustsmall')
-        self.parameters.dust.nDustLarge   = header.get('ndustlarge')
-        self.parameters.dust.grainSize    = header.get('grainsize')
-        self.parameters.dust.grainDens    = header.get('graindens')
+        self.parameters.dust['nDustSmall']   = header.get('ndustsmall')
+        self.parameters.dust['nDustLarge']   = header.get('ndustlarge')
+        self.parameters.dust['grainSize']    = header.get('grainsize')
+        self.parameters.dust['grainDens']    = header.get('graindens')
 
-        self.parameters.eos.ieos          = header.get('ieos')
-        self.parameters.eos.gamma         = header.get('gamma')
-        self.parameters.eos.polyk         = header.get('polyk')
-        self.parameters.eos.qfacdisc      = header.get('qfacdisc')
+        self.parameters.eos['ieos']          = header.get('ieos')
+        self.parameters.eos['gamma']         = header.get('gamma')
+        self.parameters.eos['polyk']         = header.get('polyk')
+        self.parameters.eos['qfacdisc']      = header.get('qfacdisc')
 
-        self.parameters.numerical.tolh    = header.get('ieos')
-        self.parameters.numerical.C_cour  = header.get('ieos')
-        self.parameters.numerical.C_force = header.get('ieos')
-        self.parameters.numerical.alpha   = header.get('ieos')
-        self.parameters.numerical.tolh    = header.get('ieos')
+        self.parameters.numerical['tolh']    = header.get('tolh')
+        self.parameters.numerical['C_cour']  = header.get('C_cour')
+        self.parameters.numerical['C_force'] = header.get('C_force')
+        self.parameters.numerical['alpha']   = header.get('alpha')
 
         self.parameters.units = Units(header['udist'], header['umass'],
                                       header['utime']).units
-
-        containsSinks = bool(header['nptmass'] > 0)
-
-        return containsSinks, nDustSmall, nDustLarge
 
     def _read_header_from_showheader(self, headerFileName):
 
@@ -209,30 +201,9 @@ class Dump:
 
         return header
 
-    def _read_header_from_hdf5(self, headerFileName):
-
-        f = h5py.File(headerFileName, 'r')
-
-        headerGroup = f['header']
-
-        header = dict()
-        for key in headerGroup.keys():
-            header[key] = headerGroup[key].value
-
-        f.close()
-
-        warning = '''
-WARNING: For now HDF5 header read cannot determine if full/small dump
-         For now assume full dump.
-        '''
-        print(warning)
-
-        return header
-
 #--- Read arrays
 
-    def _read_arrays(self, filePrefix, dumpFileFormat, containsSinks,
-                     nDustSmall, nDustLarge):
+    def _read_arrays(self, filePrefix, dumpFileFormat):
 
         if dumpFileFormat == 'HDF5':
             fileExtension = 'h5'
@@ -267,12 +238,10 @@ WARNING: For now HDF5 header read cannot determine if full/small dump
 
             data = np.loadtxt(dumpFileName)
 
-        self._put_arrays_into_objects(data, containsSinks, nDustSmall,
-                                      nDustLarge)
+        self._put_arrays_into_objects(data)
 
 
-    def _put_arrays_into_objects(self, data, containsSinks=None,
-                                 nDustSmall=None, nDustLarge=None):
+    def _put_arrays_into_objects(self, data):
 
         if isinstance(data, np.ndarray):
             if data.ndim != 2:
@@ -280,48 +249,26 @@ WARNING: For now HDF5 header read cannot determine if full/small dump
         else:
             raise ValueError('data must be 2d numpy array')
 
-        if containsSinks is not None:
-            if not isinstance(containsSinks, bool):
-                raise ValueError('containsSinks must be bool')
-        else:
-            containsSinks = False
+        nDustSmall = self.parameters.dust['nDustSmall']
+        nDustLarge = self.parameters.dust['nDustLarge']
 
-        if nDustSmall is not None:
-            if isinstance(nDustSmall, int):
-                if nDustSmall > 0:
-                    containsSmallDust = True
-                elif nDustSmall == 0:
-                    containsSmallDust = False
-                else:
-                    raise ValueError('nDustSmall must be > 0')
-            else:
-                raise ValueError('nDustSmall must be integer')
-        else:
-            containsSmallDust = False
-            nDustSmall = 0
+        containsSmallDust = bool(nDustSmall > 0)
+        containsLargeDust = bool(nDustLarge > 0)
 
-        if nDustLarge is not None:
-            if isinstance(nDustLarge, int):
-                if nDustLarge > 0:
-                    containsLargeDust = True
-                elif nDustLarge == 0:
-                    containsLargeDust = False
-                else:
-                    raise ValueError('nDustLarge must be > 0')
-            else:
-                raise ValueError('nDustLarge must be integer')
-        else:
-            containsLargeDust = False
-            nDustLarge = 0
-
-        containsDust = bool(containsSmallDust or containsLargeDust)
         nDustTypes = nDustSmall + nDustLarge
+        containsDust = bool(containsSmallDust or containsLargeDust)
 
         itype = data[:,-1]
+
+        containsSinks = np.any(itype == iSink)
 
         #--- Gas
 
         gas = Gas()
+
+        gas.number = len(data[np.where(itype == iGas), massIndex][0])
+
+        gas.mass = data[np.where(itype == iGas), massIndex][0]
 
         gas.position = data[np.where(itype == iGas), positionIndex][0]
 
@@ -356,6 +303,11 @@ WARNING: For now HDF5 header read cannot determine if full/small dump
 
                 itype_ = i + iDust
 
+                dust[i].number = len(data[np.where(itype == iDust),
+                                          massIndex][0])
+
+                dust[i].mass = data[np.where(itype == iGas), massIndex][0]
+
                 dust[i].postion = data[np.where(itype == itype_)[0],
                                        positionIndex]
 
@@ -374,8 +326,9 @@ WARNING: For now HDF5 header read cannot determine if full/small dump
 
             sinks = Sinks()
 
-            sinks.mass = data[np.where(itype == iSink),
-                              massIndex][0]
+            sinks.number = len(data[np.where(itype == iSink), massIndex][0])
+
+            sinks.mass = data[np.where(itype == iSink), massIndex][0]
 
             sinks.position = data[np.where(itype == iSink),
                                   positionIndex][0]
@@ -389,3 +342,25 @@ WARNING: For now HDF5 header read cannot determine if full/small dump
                                       velocityIndex][0]
 
             self.sinks = sinks
+
+#--- Functions
+
+def _read_header_from_hdf5(headerFileName):
+
+    f = h5py.File(headerFileName, 'r')
+
+    headerGroup = f['header']
+
+    header = dict()
+    for key in headerGroup.keys():
+        header[key] = headerGroup[key].value
+
+    f.close()
+
+    warning = '''
+WARNING: For now HDF5 header read cannot determine if full/small dump
+     For now assume full dump.
+    '''
+    print(warning)
+
+    return header

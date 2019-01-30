@@ -13,37 +13,28 @@ class Parameters:
 
     def __init__(self):
 
-        class Dust:
-            '''
-            Dust parameters.
-            '''
-            def __init__(self):
-                self.ndustsmall = 0
-                self.ndustlarge = 0
-                self.grainSize = list()
-                self.grainDens = list()
+        dust = dict()
 
-        class EOS:
-            '''
-            Equation of state parameters.
-            '''
-            def __init__(self):
-                self.ieos = 3
-                self.gamma = 1.
-                self.polyk = 1.
-                self.qfacdisc = 0.5
+        dust['nDustSmall'] = 0
+        dust['nDustLarge'] = 0
+        dust['grainSize'] = list()
+        dust['grainDens'] = list()
 
-        class Numerical:
-            '''
-            Numerical parameters.
-            '''
-            def __init__(self):
-                self.tolh = 0.0001
-                self.C_cour = 0.3
-                self.C_force = 0.25
-                self.alpha = 0.1
+        eos = dict()
 
-        self.dust      = Dust()
-        self.eos       = EOS()
-        self.numerical = Numerical()
+        eos['ieos'] = 3
+        eos['gamma'] = 1.
+        eos['polyk'] = 1.
+        eos['qfacdisc'] = 0.5
+
+        numerical = dict()
+
+        numerical['tolh'] = 0.0001
+        numerical['C_cour'] = 0.3
+        numerical['C_force'] = 0.25
+        numerical['alpha'] = 0.1
+
+        self.dust      = dust
+        self.eos       = eos
+        self.numerical = numerical
         self.units     = Units()
