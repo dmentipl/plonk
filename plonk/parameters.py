@@ -4,21 +4,14 @@ parameters.py
 Daniel Mentiplay, 2019.
 '''
 
+from .units import Units
+
 class Parameters:
     '''
     Phantom simulation parameters.
     '''
 
     def __init__(self):
-
-        class Particles:
-            '''
-            Particle parameters.
-            '''
-            def __init__(self):
-                self.ntypes = 17
-                self.npartoftype = list()
-                self.massoftype = list()
 
         class Dust:
             '''
@@ -29,13 +22,6 @@ class Parameters:
                 self.ndustlarge = 0
                 self.grainSize = list()
                 self.grainDens = list()
-
-        class Sink:
-            '''
-            Sink parameters.
-            '''
-            def __init__(self):
-                self.nSinks = 0
 
         class EOS:
             '''
@@ -56,10 +42,8 @@ class Parameters:
                 self.C_cour = 0.3
                 self.C_force = 0.25
                 self.alpha = 0.1
-                self.alphau = 1.0
 
-        self.particles = Particles()
         self.dust      = Dust()
-        self.sink      = Sink()
         self.eos       = EOS()
         self.numerical = Numerical()
+        self.units     = Units()

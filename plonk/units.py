@@ -18,7 +18,7 @@ class Units:
 
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, udist=None, umass=None, utime=None):
+    def __init__(self, udist=1., umass=1., utime=1.):
 
         self.units = dict()
 
