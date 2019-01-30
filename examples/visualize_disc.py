@@ -7,14 +7,13 @@ Daniel Mentiplay, 2019.
 import matplotlib.pyplot as plt
 import numpy as np
 
-import splash
-
 from plonk.dumps import Dump
 from plonk.utils import density_from_smoothing_length
+from plonk.visualization.splash import splash
 
 #--- Options
 
-dumpFilePrefix = 'disc_00000'
+filename = 'data/disc_00000.ascii'
 
 npixx = 1000
 npixy = 1000
@@ -23,31 +22,32 @@ index = 9
 
 #--- Splash subroutines
 
-interpolate2d = splash.splash.interpolate2d
-set_interpolation_weights = splash.splash.set_interpolation_weights
+interpolate2d = splash.interpolate2d
+set_interpolation_weights = splash.set_interpolation_weights
 
 #--- Read dump file
 
 print('Reading dumpfile...')
 
-dump = Dump(dumpFilePrefix)
+dump = Dump()
+dump.read_dump(filename)
 
-npart = dump.parameters['npartoftype'][0]
-mass = dump.parameters['massoftype'][0]
+npart = dump.gas.number
+mass  = dump.gas.mass
 
 dat = np.empty((npart,11), dtype=np.float32, order='F')
 
-dat[:,  0] = dump.arrays.position['gas'][:, 0]
-dat[:,  1] = dump.arrays.position['gas'][:, 1]
-dat[:,  2] = dump.arrays.position['gas'][:, 2]
-dat[:,  3] = np.array(npart*[dump.parameters['massoftype'][0]])
-dat[:,  4] = dump.arrays.smoothingLength['gas']
+dat[:,  0] = dump.gas.position[:, 0]
+dat[:,  1] = dump.gas.position[:, 1]
+dat[:,  2] = dump.gas.position[:, 2]
+dat[:,  3] = np.array(npart*[mass])
+dat[:,  4] = dump.gas.smoothingLength
 dat[:,  5] = density_from_smoothing_length(dat[:, 4], mass)
-dat[:,  6] = dump.arrays.velocity['gas'][:, 0]
-dat[:,  7] = dump.arrays.velocity['gas'][:, 1]
-dat[:,  8] = dump.arrays.velocity['gas'][:, 2]
-dat[:,  9] = dump.arrays.dustFrac[:, 0]
-dat[:, 10] = dump.arrays.dustFrac[:, 1]
+dat[:,  6] = dump.gas.velocity[:, 0]
+dat[:,  7] = dump.gas.velocity[:, 1]
+dat[:,  8] = dump.gas.velocity[:, 2]
+dat[:,  9] = dump.gas.dustFrac[:, 0]
+dat[:, 10] = dump.gas.dustFrac[:, 1]
 
 itype = np.ones(npart)
 

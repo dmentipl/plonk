@@ -1,1 +1,6 @@
 data
+plonk/visualization/libsplash/.f2py_f2cmap
+plonk/visualization/libsplash/_splash.cpython-37m-darwin.so
+plonk/visualization/libsplash/_splash.cpython-37m-darwin.so.dSYM/
+plonk/visualization/libsplash/f90wrap_splash.f90
+plonk/visualization/splash.py
