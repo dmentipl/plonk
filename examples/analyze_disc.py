@@ -21,8 +21,6 @@ dumpFileNames = ['data/disc_00000.ascii', 'data/disc_00006.ascii']
 
 # ---------------------------------------------------------------------------- #
 
-
-
 dumps = list()
 
 for dumpFileName in dumpFileNames:
@@ -89,7 +87,8 @@ The following variables are available:
 
 for both gas and dust (if available).
 
-There is also the dump file object 'dump'.
+There is also the list of dump objects 'dumps' each of which contain all
+available information about the dump.
 '''
 
 print(output)
