@@ -315,7 +315,8 @@ def _calculate_radially_binned_quantities( nRadialBins=None,
                                            smoothingLength=None,
                                            massParticle=None,
                                            angularMomentum=None,
-                                           eccentricity=None ):
+                                           eccentricity=None,
+                                           parameters=None):
     '''
     Calculate averaged radially binned quantities:
         - radial bins
@@ -350,6 +351,9 @@ def _calculate_radially_binned_quantities( nRadialBins=None,
 
     if massParticle is None:
         raise ValueError('Need massParticle')
+
+    if midplaneSlice and parameters is None:
+        raise ValueError('"parameters" required to calculate midplane slice')
 
     dR         = (radiusOut - radiusIn) / (nRadialBins - 1)
     radialBins = np.linspace(radiusIn, radiusOut, nRadialBins)
@@ -447,9 +451,12 @@ def _calculate_radially_binned_quantities( nRadialBins=None,
                 (height > meanHeight - frac * scaleHeight[index])
                 )[0]
 
+            hfact = parameters.numerical['hfact']
+
             midplaneDensity[index] = np.sum(
                 density_from_smoothing_length(
-                    smoothingLength[indiciesMidplane], massParticle ) ) / nPart
+                    smoothingLength[indiciesMidplane], massParticle , hfact)
+                ) / nPart
 
         else:
 
