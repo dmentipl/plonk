@@ -56,7 +56,6 @@ irho = 1
 ipmass = 1
 ndim = 3
 iamtypei = np.ones(1)
-inormalise = False
 usetype = True
 ntypes = 1
 masstype = mass
