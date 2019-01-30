@@ -29,12 +29,18 @@ class Parameters:
 
         numerical = dict()
 
+        numerical['hfact'] = 1.2
         numerical['tolh'] = 0.0001
         numerical['C_cour'] = 0.3
         numerical['C_force'] = 0.25
         numerical['alpha'] = 0.1
 
+        sinks = dict()
+
+        sinks['nSinks'] = 0
+
         self.dust      = dust
         self.eos       = eos
         self.numerical = numerical
+        self.sinks     = sinks
         self.units     = Units()

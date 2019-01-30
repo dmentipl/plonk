@@ -8,7 +8,6 @@ import numpy as np
 from numpy.linalg import norm
 
 from ..constants import constants
-from ..dumps import iGas, iDust
 from ..utils import density_from_smoothing_length
 
 #--- Options
@@ -33,14 +32,33 @@ def disc_analysis(dump):
     '''
     # TODO: add docs
 
-    isFullDump = bool(dump.dumpType == 'full')
-    arrays = dump.arrays
+    isFullDump = dump.fullDump
+
+    gas   = dump.gas
+    dust  = dump.dust
+    sinks = dump.sinks
+
     parameters = dump.parameters
-    containsDust = dump.containsDust
+
+    nDustSmall = parameters.dust['nDustSmall']
+    nDustLarge = parameters.dust['nDustLarge']
+
+    containsSmallDust = bool(nDustSmall > 0)
+    containsLargeDust = bool(nDustLarge > 0)
+
+    nDustTypes = nDustSmall + nDustLarge
+    containsDust = bool(containsSmallDust or containsLargeDust)
+
+    if containsDust:
+        grainSize = parameters.dust['grainSize']
+        grainDens = parameters.dust['grainDens']
+
+    nSinks = parameters.sinks['nSinks']
+    containsSinks = bool(nSinks > 0)
 
 #--- Units
 
-    units = dump.units
+    units = parameters.units
 
     uDist = units['distance']
     uTime = units['time']
@@ -48,13 +66,12 @@ def disc_analysis(dump):
 
 #--- Gas particle properties
 
-    massParticleGas = parameters['massoftype'][iGas - 1]
-
-    smoothingLengthGas = arrays.smoothingLength['gas']
-    positionGas = arrays.position['gas']
+    massParticleGas    = gas.mass
+    smoothingLengthGas = gas.smoothingLength
+    positionGas        = gas.position
 
     if isFullDump:
-        velocityGas = arrays.velocity['gas']
+        velocityGas = gas.velocity
         momentumGas = massParticleGas * velocityGas
         angularMomentumGas = np.cross(positionGas, momentumGas)
     else:
@@ -64,70 +81,65 @@ def disc_analysis(dump):
 
 #--- Dust particle properties
 
-    if containsDust:
+    if containsLargeDust:
 
-        if 'ndustlarge' in parameters:
-
-            nDustLarge = parameters['ndustlarge']
-            massParticleDust = parameters['massoftype'] \
-                    [iDust - 1 : iDust + nDustLarge - 1]
-
-        else:
-            nDustLarge = 0
-
-        grainDens = parameters['graindens'][0: nDustLarge]
-        grainSize = parameters['grainsize'][0: nDustLarge]
-
-        smoothingLengthDust = arrays.smoothingLength['dust']
-        positionDust = arrays.position['dust']
+        massParticleDust    = list()
+        smoothingLengthDust = list()
+        positionDust        = list()
 
         if isFullDump:
-            velocityDust = arrays.velocity['dust']
-            momentumDust = list()
+            velocityDust        = list()
+            momentumDust        = list()
             angularMomentumDust = list()
-            for idx in range(nDustLarge):
+        else:
+            velocityDust        = None
+            momentumDust        = None
+            angularMomentumDust = None
+
+        for idx in range(nDustLarge):
+
+            massParticleDust.   append(dust[idx].mass)
+            smoothingLengthDust.append(dust[idx].smoothingLength)
+            positionDust.       append(dust[idx].position)
+
+            if isFullDump:
+                velocityDust.append(dust[idx].velocity)
                 momentumDust.append(massParticleDust[idx] * velocityDust[idx])
                 angularMomentumDust.append(np.cross(positionDust[idx],
                                                     momentumDust[idx]))
-        else:
-            velocityDust = None
-            momentumDust = list()
-            angularMomentumDust = list()
-            for idx in range(nDustLarge):
-                momentumDust.append(None)
-                angularMomentumDust.append(None)
 
 #--- Sink particle properties
 
-    nSinks = parameters['nptmass']
-    massParticleSink = arrays.massSink
+    if containsSinks:
 
-    # TODO: check if sink[0] is really the star; check if binary
-    stellarMass = massParticleSink[0]
+        massParticleSink = sinks.mass
 
-    gravitationalParameter = constants.gravitationalConstant \
-                           / ( uDist**3 / uTime**2 / uMass ) \
-                           * stellarMass
+        # TODO: check if sink[0] is really the star; check if binary
+        stellarMass = massParticleSink[0]
 
-    smoothingLengthSink = arrays.smoothingLength['sink']
-    positionSink = arrays.position['sink']
+        gravitationalParameter = constants.gravitationalConstant \
+                               / ( uDist**3 / uTime**2 / uMass ) \
+                               * stellarMass
 
-    if isFullDump:
+        smoothingLengthSink = sinks.smoothingLength
+        positionSink = sinks.position
 
-        velocitySink = arrays.velocity['sink']
-        momentumSink = list()
-        angularMomentumSink = list()
+        if isFullDump:
 
-        for idx in range(nSinks):
-            momentumSink.append(massParticleSink[idx] * velocitySink[idx])
-            angularMomentumSink.append(np.cross(positionSink[idx],
-                                                momentumSink[idx]))
+            velocitySink = sinks.velocity
+            momentumSink = list()
+            angularMomentumSink = list()
 
-        eccentricitySink = _calculate_eccentricity( massParticleSink,
-                                                    positionSink,
-                                                    velocitySink,
-                                                    angularMomentumSink,
-                                                    gravitationalParameter )
+            for idx in range(nSinks):
+                momentumSink.append(massParticleSink[idx] * velocitySink[idx])
+                angularMomentumSink.append(np.cross(positionSink[idx],
+                                                    momentumSink[idx]))
+
+            eccentricitySink = _calculate_eccentricity( massParticleSink,
+                                                        positionSink,
+                                                        velocitySink,
+                                                        angularMomentumSink,
+                                                        gravitationalParameter )
 
 #--- Gas eccentricity
 
@@ -203,7 +215,7 @@ def disc_analysis(dump):
             eccentricityDust.append(None)
 
         cylindricalRadiusDust.append(
-            norm(arrays.position['dust'][idx][:, 0:2], axis=1) )
+            norm(positionDust[idx][:, 0:2], axis=1) )
 
         heightDust.append(positionDust[idx][:, 2])
 

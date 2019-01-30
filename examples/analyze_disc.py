@@ -19,7 +19,8 @@ dumpFilename = 'data/disc_00000.ascii'  # TODO: get dump filename as input
 
 print('\nReading in data from dumpfile: ' + dumpFilename + '\n')
 
-dump = Dump(dumpFilename)
+dump = Dump()
+dump.read_dump(dumpFilename)
 
 #--- Perform analysis
 

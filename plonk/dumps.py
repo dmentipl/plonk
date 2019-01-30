@@ -124,10 +124,13 @@ class Dump:
         self.parameters.eos['polyk']         = header.get('polyk')
         self.parameters.eos['qfacdisc']      = header.get('qfacdisc')
 
+        self.parameters.numerical['hfact']   = header.get('hfact')
         self.parameters.numerical['tolh']    = header.get('tolh')
         self.parameters.numerical['C_cour']  = header.get('C_cour')
         self.parameters.numerical['C_force'] = header.get('C_force')
         self.parameters.numerical['alpha']   = header.get('alpha')
+
+        self.parameters.sinks['nSinks']      = header.get('nptmass')
 
         self.parameters.units = Units(header['udist'], header['umass'],
                                       header['utime']).units
@@ -260,7 +263,7 @@ class Dump:
 
         itype = data[:,-1]
 
-        containsSinks = np.any(itype == iSink)
+        containsSinks = self.parameters.sinks['nSinks']
 
         #--- Gas
 
@@ -268,7 +271,7 @@ class Dump:
 
         gas.number = len(data[np.where(itype == iGas), massIndex][0])
 
-        gas.mass = data[np.where(itype == iGas), massIndex][0]
+        gas.mass = data[np.where(itype == iGas), massIndex][0][0]
 
         gas.position = data[np.where(itype == iGas), positionIndex][0]
 
@@ -306,7 +309,7 @@ class Dump:
                 dust[i].number = len(data[np.where(itype == iDust),
                                           massIndex][0])
 
-                dust[i].mass = data[np.where(itype == iGas), massIndex][0]
+                dust[i].mass = data[np.where(itype == iGas), massIndex][0][0]
 
                 dust[i].postion = data[np.where(itype == itype_)[0],
                                        positionIndex]

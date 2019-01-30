@@ -13,11 +13,11 @@ class Particles:
 
         #--- Number of particles
 
-        self.nParticles = 0
+        self.number = 0
 
         #--- Mass of particles
 
-        self.massParticle = 0
+        self.mass = 0
 
         #--- Positions
 
