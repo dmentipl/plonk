@@ -23,3 +23,4 @@ with open('splash.py', 'w') as file:
     file.writelines(lines)
 
 subprocess.run('mv splash.py ..', shell=True)
+subprocess.run('rm splash.mod splash.o f90wrap_splash.f90', shell=True)
