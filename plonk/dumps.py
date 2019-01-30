@@ -16,17 +16,11 @@ from .units import Units
 
 # ---------------------------------------------------------------------------- #
 
+#--- Reading Phantom ACSII files
+
 iGas  = 1
 iSink = 3
-iDust = 7
-
-iGasSplash  = 1
-iSinkSplash = 3
-iDustSplash = 8
-
-iGasLabel  = 'gas'
-iSinkLabel = 'sink'
-iDustLabel = 'dust'
+iDust = 8
 
 positionIndex = slice(0, 3)
 massIndex = 3
@@ -109,7 +103,7 @@ class Dump:
             raise FileNotFoundError
 
         if dumpFileFormat == 'HDF5':
-            header = self._read_header_from_hdf5(headerFileName)
+            header = _read_header_from_hdf5(headerFileName)
 
         elif dumpFileFormat == 'ASCII':
             header = self._read_header_from_showheader(headerFileName)
