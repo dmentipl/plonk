@@ -305,8 +305,8 @@ class Dump:
 
                 dust[i].mass = data[np.where(itype == iGas), massIndex][0][0]
 
-                dust[i].postion = data[np.where(itype == itype_)[0],
-                                       positionIndex]
+                dust[i].position = data[np.where(itype == itype_)[0],
+                                        positionIndex]
 
                 dust[i].smoothingLength = data[np.where(itype == itype_)[0],
                                                smoothingLengthIndex]
