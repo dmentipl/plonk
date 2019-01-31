@@ -76,7 +76,7 @@ class Dump:
         if exists:
             self.filename = filename
         else:
-            raise FileNotFoundError
+            raise FileNotFoundError('Cannot find dump file')
 
         filePrefix    = filename.split('.')[0]
         fileExtension = filename.split('.')[-1]
@@ -108,7 +108,8 @@ class Dump:
 
         exists = os.path.isfile(headerFileName)
         if not exists:
-            raise FileNotFoundError
+            raise FileNotFoundError('Cannot find header file: ' +
+                                    headerFileName)
 
         if dumpFileFormat == 'HDF5':
             header = _read_header_from_hdf5(headerFileName)
@@ -223,7 +224,7 @@ class Dump:
 
         exists = os.path.isfile(dumpFileName)
         if not exists:
-            raise FileNotFoundError
+            raise FileNotFoundError('Cannot find dump file: ' + dumpFileName)
 
         nDustSmall = self.parameters.dust['nDustSmall']
         nDustLarge = self.parameters.dust['nDustLarge']
