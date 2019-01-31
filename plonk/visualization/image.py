@@ -17,8 +17,11 @@ set_interpolation_weights = splash.set_interpolation_weights
 
 # ---------------------------------------------------------------------------- #
 
+# TODO: cmap, density weighting as options
 cmap            = 'gist_heat'
 densityWeighted = False
+
+# TODO: set number of pixels
 npixx           = 512
 npixy           = 512
 
@@ -76,51 +79,35 @@ class Image:
 
         return interpolationWeights
 
-    def plot(self, horizontalAxis, verticalAxis, render, ax=None, scale='lin',
-             vmin=None, vmax=None, fpeak=None, limit=-1, limits=None,
-             title=None, colorbar=False):
+    def plot(self,
+             horizontalAxisLabel,
+             verticalAxisLabel,
+             renderLabel,
+             horizontalRange=None,
+             verticalRange=None,
+             imageRange=-1,
+             renderScaleLabel='lin',
+             renderMin=None,
+             renderMax=None,
+             renderFractionMax=None,
+             title=None,
+             ax=None,
+             colorbar=False):
         '''
         Make image.
         '''
 
+        _scale = 'lin'
+
+        # TODO: add options
+        # TODO: choose what to plot
+        # TODO: add docs
+        # TODO: check if need to interpolate again
         # TODO: choose fluid type: gas, dust1, dust2, ...
-        # TODO: choose xData, yData, renderData
-
-        if horizontalAxis == 'x':
-            ix = 0
-        elif horizontalAxis == 'y':
-            ix = 1
-        elif horizontalAxis == 'z':
-            ix = 2
-        else:
-            raise ValueError('horizontalAxis should be "x", "y", or "z"')
-
-        if verticalAxis == 'x':
-            iy = 0
-        elif verticalAxis == 'y':
-            iy = 1
-        elif verticalAxis == 'z':
-            iy = 2
-        else:
-            raise ValueError('verticalAxis should be "x", "y", or "z"')
-
-        xData = self.gas.position[:, ix]
-        yData = self.gas.position[:, iy]
-
-        if render in ['rho', 'dens', 'density']:
-            renderData = density_from_smoothing_length(self.gas.smoothingLength,
-                                                       self.gas.mass,
-                                                       self.hfact)
-        else:
-            raise ValueError('render unknown')
 
         # TODO: set these according to fluid choice
         interpolationWeights = self.interpolationWeights['gas']
         smoothingLength = self.gas.smoothingLength
-
-        # TODO: set x and y range (check units)
-        xRange = [-500, 500]
-        yRange = [-500, 500]
 
         # TODO: choose these options
         normalise = False
@@ -128,57 +115,90 @@ class Image:
         periodicx = False
         periodicy = False
 
+        if horizontalAxisLabel == 'x':
+            iHorizontal = 0
+            horizontalAxisLabel = r'x [au]'
+        elif horizontalAxisLabel == 'y':
+            iHorizontal = 1
+            horizontalAxisLabel = r'y [au]'
+        elif horizontalAxisLabel == 'z':
+            iHorizontal = 2
+            horizontalAxisLabel = r'z [au]'
+        else:
+            raise ValueError('horizontalAxisLabel should be "x", "y", or "z"')
+
+        if verticalAxisLabel == 'x':
+            iVertical = 0
+            verticalAxisLabel = r'x [au]'
+        elif verticalAxisLabel == 'y':
+            iVertical = 1
+            verticalAxisLabel = r'y [au]'
+        elif verticalAxisLabel == 'z':
+            iVertical = 2
+            verticalAxisLabel = r'z [au]'
+        else:
+            raise ValueError('verticalAxisLabel should be "x", "y", or "z"')
+
+        horizontalData = self.gas.position[:, iHorizontal]
+        verticalData   = self.gas.position[:, iVertical]
+
+        if renderLabel in ['rho', 'dens', 'density']:
+            renderData = density_from_smoothing_length(self.gas.smoothingLength,
+                                                       self.gas.mass,
+                                                       self.hfact)
+        else:
+            raise ValueError('renderLabel unknown')
+
+        if imageRange > 0:
+            if horizontalRange is not None or verticalRange is not None:
+                raise ValueError( 'Cannot set imageRange and horizontalRange ' \
+                                + '(or verticalRange at the same time' )
+            horizontalRange = [-imageRange, imageRange]
+            verticalRange   = [-imageRange, imageRange]
+
+        if horizontalRange is None:
+            horizontalRange = [horizontalData.min(), horizontalData.max()]
+
+        if verticalRange is None:
+            verticalRange = [verticalData.min(), verticalData.max()]
+
         imageData = _interpolate_to_pixelgrid(
-            xData, yData, renderData, interpolationWeights, smoothingLength,
-            xRange, yRange, normalise, exact, periodicx, periodicy)
+            horizontalData, verticalData, renderData, interpolationWeights,
+            smoothingLength, horizontalRange, verticalRange, normalise, exact,
+            periodicx, periodicy )
 
-        # TODO: add options
-        # TODO: choose what to plot
-        # TODO: add docs
-        # TODO: check if need to interpolate again
+        extent = horizontalRange + verticalRange
 
-        extent = xRange + yRange
+        if renderMax is None:
+            vmax = imageData.max()
+
+        if renderFractionMax is not None:
+            vmax = imageData.max() * renderFractionMax
+
+        if renderMin is None:
+            vmin = imageData.min()
+
+        if renderScaleLabel is None:
+            renderScaleLabel = _scale
+
+        if renderScaleLabel == 'log':
+            norm = colors.SymLogNorm(1e-1*vmax, clip=True)
+        elif renderScaleLabel == 'lin':
+            norm = colors.Normalize(vmin=vmin, vmax=vmax, clip=True)
+        else:
+            raise ValueError("Unknown color renderScaleLabel: " \
+                + renderScaleLabel)
 
         if ax is None:
             ax = plt.gca()
 
-        _scale = 'lin'
+        img = ax.imshow(imageData, norm=norm, extent=extent, cmap=cmap)
 
-        if vmax is None:
-            vmax = imageData.max()
+        ax.set_xlabel(horizontalAxisLabel)
+        ax.set_ylabel(verticalAxisLabel)
 
-        if fpeak is not None:
-            vmax = imageData.max() * fpeak
-
-        if vmin is None:
-            vmin = imageData.min()
-
-        if scale is None:
-            scale = _scale
-
-        if scale == 'log':
-            norm = colors.SymLogNorm(1e-1*vmax, clip=True)
-        elif scale == 'lin':
-            norm = colors.Normalize(vmin=vmin, vmax=vmax, clip=True)
-        else:
-            raise ValueError("Unknown color scale: " + scale)
-
-        img = ax.imshow(imageData, norm=norm, extent=extent, origin='lower',
-                        cmap=cmap)
-
-        # TODO: set labels correctly
-        xlabel = r'x [au]'
-        ylabel = r'y [au]'
-
-        ax.set_xlabel(xlabel)
-        ax.set_ylabel(ylabel)
-
-        if limit > 0:
-            limits = [-limit,limit,-limit,limit]
-
-        if limits is not None:
-            ax.set_xlim(limits[0],limits[1])
-            ax.set_ylim(limits[2],limits[3])
+        ax.set_xlim(horizontalRange[0], horizontalRange[1])
+        ax.set_ylim(verticalRange[0], verticalRange[1])
 
         if title is not None:
             ax.set_title(title)
@@ -205,25 +225,25 @@ class Image:
 
         # TODO: write this
 
-def _interpolate_to_pixelgrid(xData, yData, renderData,
-                              interpolationWeights, smoothingLength, xRange,
-                              yRange, normalise=False, exact=False,
-                              periodicx=False, periodicy=False):
+def _interpolate_to_pixelgrid(horizontalData, verticalData, renderData,
+                              interpolationWeights, smoothingLength,
+                              horizontalRange, verticalRange, normalise=False,
+                              exact=False, periodicx=False, periodicy=False):
 
-    itype = np.ones_like(xData)
+    itype = np.ones_like(horizontalData)
     npart = len(smoothingLength)
 
-    xmax      = xRange[1]
-    ymax      = yRange[1]
-    xmin      = xRange[0]
-    ymin      = yRange[0]
+    xmax      = horizontalRange[1]
+    ymax      = verticalRange[1]
+    xmin      = horizontalRange[0]
+    ymin      = verticalRange[0]
     pixwidthx = (xmax - xmin) / npixx
     pixwidthy = (ymax - ymin) / npixy
 
     imageData = np.zeros((npixx, npixy), dtype=np.float32, order='F')
 
-    interpolate2d(x=xData,
-                  y=yData,
+    interpolate2d(x=horizontalData,
+                  y=verticalData,
                   hh=smoothingLength,
                   weight=interpolationWeights,
                   dat=renderData,
@@ -242,4 +262,3 @@ def _interpolate_to_pixelgrid(xData, yData, renderData,
                   periodicy=periodicy)
 
     return imageData
-
