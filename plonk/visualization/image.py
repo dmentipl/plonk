@@ -10,7 +10,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 
 from ..particles import density_from_smoothing_length
-from ..visualization.splash import splash
+from ..visualization.interpolate3D_projection import Projections3D
 
 class Image:
     '''
@@ -52,16 +52,13 @@ class Image:
     def _interpolation_weights(self, fluid):
 
         # TODO: density weighting as option
-        densityWeighted = True
+        densityWeighted = False
 
         nParticles      = fluid.number
         massParticle    = fluid.mass
         smoothingLength = fluid.smoothingLength
 
         interpolationWeights = np.zeros(len(smoothingLength))
-
-        print(interpolationWeights.shape)
-        print(smoothingLength.shape)
 
         if densityWeighted:
             interpolationWeights[:] = massParticle / smoothingLength**2
@@ -155,10 +152,12 @@ class Image:
         if verticalRange is None:
             verticalRange = [verticalData.min(), verticalData.max()]
 
+        depthData = self.gas.position[:, 2]
+
         imageData = _interpolate_to_pixelgrid(
-            horizontalData, verticalData, renderData, interpolationWeights,
-            smoothingLength, horizontalRange, verticalRange, normalise, exact,
-            periodicx, periodicy )
+            horizontalData, verticalData, depthData, renderData,
+            interpolationWeights, smoothingLength, horizontalRange,
+            verticalRange, normalise, exact, periodicx, periodicy )
 
         extent = horizontalRange + verticalRange
 
@@ -223,10 +222,10 @@ class Image:
 
         # TODO: write this
 
-def _interpolate_to_pixelgrid(horizontalData, verticalData, renderData,
-                              interpolationWeights, smoothingLength,
+def _interpolate_to_pixelgrid(horizontalData, verticalData, depthData,
+                              renderData, interpolationWeights, smoothingLength,
                               horizontalRange, verticalRange, normalise=False,
-                              exact=False, periodicx=False, periodicy=False):
+                              zobserver=100., dscreen=100., useaccelerate=False):
 
     # TODO: set number of pixels based on smoothing length
     npixx = 512
@@ -244,24 +243,25 @@ def _interpolate_to_pixelgrid(horizontalData, verticalData, renderData,
 
     imageData = np.zeros((npixx, npixy), dtype=np.float32, order='F')
 
-    splash.interpolate2d(x=horizontalData,
-                         y=verticalData,
-                         hh=smoothingLength,
-                         weight=interpolationWeights,
-                         dat=renderData,
-                         itype=itype,
-                         npart=npart,
-                         xmin=xmin,
-                         ymin=ymin,
-                         datsmooth=imageData,
-                         npixx=npixx,
-                         npixy=npixy,
-                         pixwidthx=pixwidthx,
-                         pixwidthy=pixwidthy,
-                         normalise=normalise,
-                         exact=exact,
-                         periodicx=periodicx,
-                         periodicy=periodicy)
+    Projections3D.interpolate3d_projection(x=horizontalData,
+                                           y=verticalData,
+                                           z=depthData,
+                                           hh=smoothingLength,
+                                           weight=interpolationWeights,
+                                           dat=renderData,
+                                           itype=itype,
+                                           npart=npart,
+                                           xmin=xmin,
+                                           ymin=ymin,
+                                           datsmooth=imageData,
+                                           npixx=npixx,
+                                           npixy=npixy,
+                                           pixwidthx=pixwidthx,
+                                           pixwidthy=pixwidthy,
+                                           normalise=normalise,
+                                           zobserver=zobserver,
+                                           dscreen=dscreen,
+                                           useaccelerate=useaccelerate)
 
     imageData = imageData.T
 
