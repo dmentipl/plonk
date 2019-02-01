@@ -12,21 +12,6 @@ import numpy as np
 from ..particles import density_from_smoothing_length
 from ..visualization.splash import splash
 
-interpolate2d = splash.interpolate2d
-set_interpolation_weights = splash.set_interpolation_weights
-
-# ---------------------------------------------------------------------------- #
-
-# TODO: cmap, density weighting as options
-cmap            = 'gist_heat'
-densityWeighted = False
-
-# TODO: set number of pixels
-npixx           = 512
-npixy           = 512
-
-# ---------------------------------------------------------------------------- #
-
 class Image:
     '''
     Rendered image.
@@ -66,16 +51,22 @@ class Image:
 
     def _interpolation_weights(self, fluid):
 
+        # TODO: density weighting as option
+        densityWeighted = True
+
         nParticles      = fluid.number
         massParticle    = fluid.mass
         smoothingLength = fluid.smoothingLength
 
-        interpolationWeights = np.zeros(nParticles)
+        interpolationWeights = np.zeros(len(smoothingLength))
+
+        print(interpolationWeights.shape)
+        print(smoothingLength.shape)
 
         if densityWeighted:
-            interpolationWeights[:] = massParticle / smoothingLength**3
+            interpolationWeights[:] = massParticle / smoothingLength**2
         else:
-            interpolationWeights[:] = 1 / self.hfact**3
+            interpolationWeights[:] = 1 / self.hfact**2
 
         return interpolationWeights
 
@@ -92,12 +83,14 @@ class Image:
              renderFractionMax=None,
              title=None,
              ax=None,
-             colorbar=False):
+             colorbar=False,
+             colormap=None):
         '''
         Make image.
         '''
 
-        _scale = 'lin'
+        _scale           = 'lin'
+        _cmap            = 'gist_heat'
 
         # TODO: add options
         # TODO: choose what to plot
@@ -169,6 +162,10 @@ class Image:
 
         extent = horizontalRange + verticalRange
 
+        cmap = _cmap
+        if colormap is not None:
+            cmap = colormap
+
         if renderMax is None:
             vmax = imageData.max()
 
@@ -192,7 +189,8 @@ class Image:
         if ax is None:
             ax = plt.gca()
 
-        img = ax.imshow(imageData, norm=norm, extent=extent, cmap=cmap)
+        img = ax.imshow(imageData, norm=norm, origin='lower', extent=extent,
+                        cmap=cmap)
 
         ax.set_xlabel(horizontalAxisLabel)
         ax.set_ylabel(verticalAxisLabel)
@@ -230,6 +228,10 @@ def _interpolate_to_pixelgrid(horizontalData, verticalData, renderData,
                               horizontalRange, verticalRange, normalise=False,
                               exact=False, periodicx=False, periodicy=False):
 
+    # TODO: set number of pixels based on smoothing length
+    npixx = 512
+    npixy = 512
+
     itype = np.ones_like(horizontalData)
     npart = len(smoothingLength)
 
@@ -242,23 +244,25 @@ def _interpolate_to_pixelgrid(horizontalData, verticalData, renderData,
 
     imageData = np.zeros((npixx, npixy), dtype=np.float32, order='F')
 
-    interpolate2d(x=horizontalData,
-                  y=verticalData,
-                  hh=smoothingLength,
-                  weight=interpolationWeights,
-                  dat=renderData,
-                  itype=itype,
-                  npart=npart,
-                  xmin=xmin,
-                  ymin=ymin,
-                  datsmooth=imageData,
-                  npixx=npixx,
-                  npixy=npixy,
-                  pixwidthx=pixwidthx,
-                  pixwidthy=pixwidthy,
-                  normalise=normalise,
-                  exact=exact,
-                  periodicx=periodicx,
-                  periodicy=periodicy)
+    splash.interpolate2d(x=horizontalData,
+                         y=verticalData,
+                         hh=smoothingLength,
+                         weight=interpolationWeights,
+                         dat=renderData,
+                         itype=itype,
+                         npart=npart,
+                         xmin=xmin,
+                         ymin=ymin,
+                         datsmooth=imageData,
+                         npixx=npixx,
+                         npixy=npixy,
+                         pixwidthx=pixwidthx,
+                         pixwidthy=pixwidthy,
+                         normalise=normalise,
+                         exact=exact,
+                         periodicx=periodicx,
+                         periodicy=periodicy)
+
+    imageData = imageData.T
 
     return imageData
