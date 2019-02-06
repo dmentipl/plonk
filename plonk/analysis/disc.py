@@ -10,7 +10,7 @@ import numpy as np
 from numpy.linalg import norm
 
 from ..constants import constants
-from ..particles import density_from_smoothing_length
+from ..ParticleData import density_from_smoothing_length
 
 # ---------------------------------------------------------------------------- #
 
@@ -32,80 +32,43 @@ def disc_analysis(dump, radiusIn, radiusOut, numberRadialBins,
 
     # TODO: add to docs
 
-    isFullDump = dump.fullDump
+    particleData = dump.ParticleData
+    sinkData = dump.SinkData
+    parameters = dump.Parameters
 
-    gas   = dump.gas
-    dust  = dump.dust
-    sinks = dump.sinks
-
-    parameters = dump.parameters
-
-    nDustSmall = parameters.dust['nDustSmall']
-    nDustLarge = parameters.dust['nDustLarge']
+    nDustSmall = parameters['ndustsmall']
+    nDustLarge = parameters['ndustlarge']
 
     containsSmallDust = bool(nDustSmall > 0)
     containsLargeDust = bool(nDustLarge > 0)
     containsDust = bool(containsSmallDust or containsLargeDust)
 
     if containsDust:
-        grainSize = parameters.dust['grainSize']
-        grainDens = parameters.dust['grainDens']
+        grainSize = parameters['grainsize']
+        grainDens = parameters['graindens']
 
-    nSinks = parameters.sinks['nSinks']
+    nSinks = parameters['nptmass']
     containsSinks = bool(nSinks > 0)
 
 #--- Units
 
-    units = parameters.units
+    units = dump.Units
 
     uDist = units['distance']
     uTime = units['time']
     uMass = units['mass']
 
-#--- Gas particle properties
+#--- Particle properties
 
-    massParticleGas    = gas.mass
-    smoothingLengthGas = gas.smoothingLength
-    positionGas        = gas.position
+    massParticle    = particleData.particleMass
+    position        = particleData.position
+    smoothingLength = particleData.smoothingLength
+    velocity        = particleData.velocity
+    if velocity is not None:
+        momentum        = np.transpose(np.array(3*[massParticle])) * velocity
+        angularMomentum = np.cross(position, momentum)
 
-    if isFullDump:
-        velocityGas        = gas.velocity
-        momentumGas        = massParticleGas * velocityGas
-        angularMomentumGas = np.cross(positionGas, momentumGas)
-    else:
-        velocityGas        = None
-        momentumGas        = None
-        angularMomentumGas = None
-
-#--- Dust particle properties
-
-    if containsLargeDust:
-
-        massParticleDust    = list()
-        smoothingLengthDust = list()
-        positionDust        = list()
-
-        velocityDust        = list()
-        momentumDust        = list()
-        angularMomentumDust = list()
-
-        for idx in range(nDustLarge):
-
-            massParticleDust.   append(dust[idx].mass)
-            smoothingLengthDust.append(dust[idx].smoothingLength)
-            positionDust.       append(dust[idx].position)
-
-            if isFullDump:
-                velocityDust.append(dust[idx].velocity)
-                momentumDust.append(massParticleDust[idx] * velocityDust[idx])
-                angularMomentumDust.append(np.cross(positionDust[idx],
-                                                    momentumDust[idx]))
-            else:
-                velocityDust.append(None)
-                momentumDust.append(None)
-                angularMomentumDust.append(None)
-
-#--- Sink particle properties
+#--- Sink properties
 
     if containsSinks:
 

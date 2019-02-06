@@ -4,8 +4,8 @@ analyze_disc.py
 Daniel Mentiplay, 2019.
 '''
 
-from plonk.analysis.disc import disc_analysis
-from plonk.dumps import Dump
+from plonk.plonk.analysis.disc import disc_analysis
+from plonk.plonk.PhantomDump import PhantomDump
 
 #--- Options
 
@@ -30,8 +30,7 @@ for dumpFileName in dumpFileNames:
     print('Reading in data from dumpfile: ' + dumpFileName + '... ', end='',
           flush=True)
 
-    dump = Dump()
-    dump.read_dump(dumpFileName)
+    dump = PhantomDump(dumpFileName)
 
     print('done')
 
@@ -53,7 +52,7 @@ Stokes          = list()
 
 for dump in dumps:
 
-    print('Performing disc analysis on dumpfile: ' + dump.filename)
+    print('Performing disc analysis')
 
     analysis = disc_analysis(dump, radiusIn, radiusOut, numberRadialBins)
 
