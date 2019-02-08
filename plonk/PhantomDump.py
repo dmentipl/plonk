@@ -8,6 +8,7 @@ import os
 
 import h5py
 import numpy as np
+import pandas as pd
 
 from .ParticleData import ParticleData
 from .SinkData import SinkData
@@ -37,8 +38,8 @@ class PhantomDump:
 
     def __init__(self, filename):
 
-        self.ParticleData = ParticleData()
-        self.SinkData     = SinkData()
+        self.ParticleData = None
+        self.SinkData     = None
         self.Parameters   = None
         self.Units        = None
 
@@ -176,51 +177,22 @@ class PhantomDump:
 
         elif dumpFileFormat == 'ASCII':
 
-            data = np.loadtxt(dumpFileName)
-
-            itype = data[:, -1]
-            particleIndicies = np.where(itype != iSink)
-            sinkIndicies     = np.where(itype == iSink)
-
-            self.ParticleData.particleType    = data[particleIndicies, -1][0]
-            self.ParticleData.position        = data[particleIndicies, positionIndex][0]
-            self.ParticleData.particleMass    = data[particleIndicies, massIndex][0]
-            self.ParticleData.smoothingLength = data[particleIndicies, smoothingLengthIndex][0]
-
+            names = ['x', 'y', 'z', 'm', 'h', 'rho']
             if isFullDump:
-                self.ParticleData.velocity = data[particleIndicies, velocityIndex][0]
-            else:
-                self.ParticleData.velocity = None
+                names += ['vx', 'vy', 'vz']
+            if nDustTypes > 0:
+                for n in range(nDustTypes):
+                    names += ['dustfrac' + str(n+1)]
+            names += ['divv', 'dt', 'itype']
 
-            if containsDust:
+            data = pd.read_csv(dumpFileName, comment='#', names=names,
+                               delim_whitespace=True)
 
-                if isFullDump:
-                    dustFracIndexStart = 9
-                else:
-                    dustFracIndexStart = 6
-
-                dustFracIndex = slice(dustFracIndexStart,
-                                      dustFracIndexStart + nDustTypes)
-
-                self.ParticleData.dustFrac = data[particleIndicies, dustFracIndex][0]
-
-            else:
-                self.ParticleData.dustFrac = None
+            self.ParticleData = data[data['itype']!=iSink].reset_index()
 
             if containsSinks:
 
-                self.SinkData.position        = data[sinkIndicies, positionIndex][0]
-                self.SinkData.mass            = data[sinkIndicies, massIndex][0]
-                self.SinkData.accretionRadius = data[sinkIndicies, smoothingLengthIndex][0]
-
-                if isFullDump:
-                    self.SinkData.velocity = data[sinkIndicies, velocityIndex][0]
-                else:
-                    self.SinkData.velocity = None
-
-            else:
-
-                self.SinkData = None
+                self.SinkData = data[data['itype']==iSink].reset_index()
 
 #--- Functions
 
