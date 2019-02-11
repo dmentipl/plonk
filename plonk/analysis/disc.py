@@ -77,7 +77,7 @@ def disc_analysis(radiusIn=None,
         particleData['pz'] = particleData['m'] * particleData['vz']
 
         angularMomentum = np.cross(particleData[['x', 'y', 'z']],
-                                   particleData[['vx', 'vy', 'vz']])
+                                   particleData[['px', 'py', 'pz']])
 
         particleData['Lx'] = angularMomentum[:, 0]
         particleData['Ly'] = angularMomentum[:, 1]
@@ -127,7 +127,7 @@ def disc_analysis(radiusIn=None,
         sinkData['pz'] = sinkData['m'] * sinkData['vz']
 
         angularMomentum = np.cross(sinkData[['x', 'y', 'z']],
-                                   sinkData[['vx', 'vy', 'vz']])
+                                   sinkData[['px', 'py', 'pz']])
 
         sinkData['Lx'] = angularMomentum[:, 0]
         sinkData['Ly'] = angularMomentum[:, 1]
