@@ -8,35 +8,47 @@ Daniel Mentiplay, 2019.
 
 import numpy as np
 from numpy.linalg import norm
+import pandas as pd
 
 from ..constants import constants
-from ..ParticleData import density_from_smoothing_length
 
 # ---------------------------------------------------------------------------- #
 
-def disc_analysis(dump, radiusIn, radiusOut, numberRadialBins,
-                  midplaneSlice=False, minParticleAverage=5):
+def disc_analysis(radiusIn=None,
+                  radiusOut=None,
+                  numberRadialBins=None,
+                  particleData=None,
+                  sinkData=None,
+                  parameters=None,
+                  units=None,
+                  minParticleAverage=None):
     '''
     Perform disc analysis.
 
+    TODO: add more docs
+
     Arguments:
-        dump             : Dump object
         radiusIn         : Inner disc radius for radial binning
         radiusOut        : Outer disc radius for radial binning
         numberRadialBins : Number of radial bins
 
     Optional:
-        midplaneSlice      : Calculate midplane density by taking a slice
         minParticleAverage : Minimum number of particles to compute averages
     '''
 
     # TODO: add to docs
 
-    particleData = dump.ParticleData
-    sinkData = dump.SinkData
-    parameters = dump.Parameters
+#--- Dump type
 
     isFullDump = 'vx' in particleData.columns
+
+#--- Units
+
+    uDist = units['distance']
+    uTime = units['time']
+    uMass = units['mass']
+
+#--- Dust
 
     nDustSmall = parameters['ndustsmall']
     nDustLarge = parameters['ndustlarge']
@@ -49,18 +61,7 @@ def disc_analysis(dump, radiusIn, radiusOut, numberRadialBins,
         grainSize = parameters['grainsize']
         grainDens = parameters['graindens']
 
-    nSinks = parameters['nptmass']
-    containsSinks = bool(nSinks > 0)
-
-#--- Units
-
-    units = dump.Units
-
-    uDist = units['distance']
-    uTime = units['time']
-    uMass = units['mass']
-
-#--- Extra particle properties
+#--- Momentum and angular momentum
 
     if isFullDump:
 
@@ -75,12 +76,25 @@ def disc_analysis(dump, radiusIn, radiusOut, numberRadialBins,
         particleData['ly'] = angularMomentum[:, 1]
         particleData['lz'] = angularMomentum[:, 2]
 
-#--- Sink properties
+    else:
+
+        particleData['px'] = np.nan
+        particleData['py'] = np.nan
+        particleData['pz'] = np.nan
+        particleData['lx'] = np.nan
+        particleData['ly'] = np.nan
+        particleData['lz'] = np.nan
+
+#--- Sinks
+
+    nSinks = parameters['nptmass']
+    containsSinks = bool(nSinks > 0)
 
     if containsSinks:
 
         # TODO: check if sink[0] is really the star; check if binary
         stellarMass = sinkData['m'][0]
+        print('Assuming the first sink particle is the central star')
 
         gravitationalParameter = constants.gravitationalConstant \
                                / ( uDist**3 / uTime**2 / uMass ) \
@@ -102,6 +116,15 @@ def disc_analysis(dump, radiusIn, radiusOut, numberRadialBins,
         sinkData['ly'] = angularMomentum[:, 1]
         sinkData['lz'] = angularMomentum[:, 2]
 
+    else:
+
+        sinkData['px'] = np.nan
+        sinkData['py'] = np.nan
+        sinkData['pz'] = np.nan
+        sinkData['lx'] = np.nan
+        sinkData['ly'] = np.nan
+        sinkData['lz'] = np.nan
+
 #--- Eccentricity
 
     if isFullDump:
@@ -120,34 +143,36 @@ def disc_analysis(dump, radiusIn, radiusOut, numberRadialBins,
                                      sinkData[['lx', 'ly', 'lz']],
                                      gravitationalParameter )
 
+    else:
+
+        particleData['e'] = np.nan
+        sinkData['e']     = np.nan
+
 #--- Calculate radially binned quantities
 
-    radialAverages = _calculate_radially_binned_quantities( numberRadialBins,
-                                                            radiusIn,
-                                                            radiusOut,
-                                                            particleData,
-                                                            isFullDump,
-                                                            parameters,
-                                                            midplaneSlice,
-                                                            minParticleAverage )
+    particleData['R'] = norm(particleData[['x', 'y']], axis=1)
+
+    radialData = _calculate_radially_binned_quantities( numberRadialBins,
+                                                        radiusIn,
+                                                        radiusOut,
+                                                        particleData,
+                                                        minParticleAverage )
 
 #--- Stokes
 
-    gamma = parameters.eos['gamma']
+    gamma = parameters['gamma']
 
-    Stokes = [np.full_like(radialBinsDisc, np.nan) for i in range(nDustLarge)]
+    # for idxi in range(len(radialBinsDisc)):
+    #     for idxj in range(nDustLarge):
 
-    for idxi in range(len(radialBinsDisc)):
-        for idxj in range(nDustLarge):
-
-            Stokes[idxj][idxi] = \
-                np.sqrt(gamma*np.pi/8) * grainDens[idxj] * grainSize[idxj] \
-                / ( scaleHeightGas[idxi] \
-                * (midplaneDensityGas[idxi] + midplaneDensityDust[idxj][idxi]) )
+    #         Stokes[idxj][idxi] = \
+    #             np.sqrt(gamma*np.pi/8) * grainDens[idxj] * grainSize[idxj] \
+    #             / ( scaleHeightGas[idxi] \
+    #             * (midplaneDensityGas[idxi] + midplaneDensityDust[idxj][idxi]) )
 
 #--- Return
 
-    return radialAverages
+    return radialData, particleData, sinkData
 
 # ---------------------------------------------------------------------------- #
 
@@ -155,9 +180,6 @@ def _calculate_radially_binned_quantities( numberRadialBins=None,
                                            radiusIn=None,
                                            radiusOut=None,
                                            particleData=None,
-                                           isFullDump=None,
-                                           parameters=None,
-                                           midplaneSlice=None,
                                            minParticleAverage=None ):
     '''
     Calculate averaged radially binned quantities:
@@ -182,104 +204,62 @@ def _calculate_radially_binned_quantities( numberRadialBins=None,
     if radiusOut is None:
         raise ValueError('Need radiusOut')
 
-    if midplaneSlice and parameters is None:
-        raise ValueError('"parameters" required to calculate midplane slice')
+    if particleData is None:
+        raise ValueError('Need particleData')
 
-    for index, R in enumerate(radialBins):
+    if minParticleAverage is None:
+        minParticleAverage = 5
 
-        area = np.pi * ( (R + dR/2)**2 - (R - dR/2)**2 )
+    radialBinWidth = (radiusOut - radiusIn) / (numberRadialBins - 1)
+    radialBins     = np.linspace(radiusIn, radiusOut, numberRadialBins)
 
-        indicies = np.where((cylindricalRadius < R + dR/2) & \
-                            (cylindricalRadius > R - dR/2))[0]
+    radialData = pd.DataFrame(radialBins, columns=['R'])
+    radialData['area'] = np.pi * ( (radialBins + radialBinWidth/2)**2 \
+                                 - (radialBins - radialBinWidth/2)**2 )
 
-        nPart = len(indicies)
+    radialData = radialData.reindex(
+        columns = radialData.columns.tolist() \
+        + ['sigma', 'h', 'H', 'lx', 'ly', 'lz', 'l', 'tilt', 'twist', 'e'] )
 
-        surfaceDensity[index] = massParticle * nPart / area
+    for index, radius in enumerate(radialBins):
 
-        if nPart > minParticleAverage:
+        radiusLeft  = radius - radialBinWidth/2
+        radiusRight = radius + radialBinWidth/2
 
-            meanSmoothingLength[index] = np.sum(
-                smoothingLength[indicies] ) / nPart
+        particlesInRadialBin = \
+            particleData.loc[ (particleData['R'] >= radiusLeft) \
+                            & (particleData['R'] <= radiusRight) ]
 
-            meanHeight = np.sum( height[indicies] ) / nPart
+        radialData['sigma'].iloc[index] = particlesInRadialBin['m'].sum() \
+                                        / radialData['area'].iloc[index]
 
-            scaleHeight[index] = np.sqrt( np.sum(
-                (height[indicies] - meanHeight)**2 ) / (nPart - 1) )
+        if len(particlesInRadialBin) > minParticleAverage:
 
-            if useVelocities:
+            radialData['h'].iloc[index] = particlesInRadialBin['h'].mean()
+            radialData['H'].iloc[index] = particlesInRadialBin['z'].std()
 
-                meanAngularMomentum[:, index] = np.sum(
-                    angularMomentum[indicies], axis=0 ) / nPart
+            radialData['lx'].iloc[index] = particlesInRadialBin['lx'].mean()
+            radialData['ly'].iloc[index] = particlesInRadialBin['ly'].mean()
+            radialData['lz'].iloc[index] = particlesInRadialBin['lz'].mean()
 
-                magnitudeAngularMomentum[index] = \
-                        norm(meanAngularMomentum[:, index])
+            radialData['e'].iloc[index] = particlesInRadialBin['e'].mean()
 
-                meanTilt[index] = np.arccos( meanAngularMomentum[2, index] \
-                                           / magnitudeAngularMomentum[index] )
 
-                meanTwist[index] = np.arctan2(
-                    meanAngularMomentum[1, index] / magnitudeAngularMomentum[index],
-                    meanAngularMomentum[0, index] / magnitudeAngularMomentum[index] )
+    radialData['l'] = norm(radialData[['lx','ly','lz']].values, axis=1)
 
-                meanEccentricity[index] = np.sum( eccentricity[indicies] ) / nPart
+    radialData['tilt'] = np.arccos( radialData['lz'] / radialData['l'] )
 
-        else:
+    radialData['twist'] = np.arctan2( radialData['ly'] / radialData['l'],
+                                      radialData['lx'] / radialData['l'] )
 
-            meanSmoothingLength[index] = np.nan
+    radialData['rho'] = radialData['sigma'] / radialData['H'] / np.sqrt(2*np.pi)
 
-            scaleHeight[index] = np.nan
+    radialData['psi'] = radialBins * np.sqrt(
+        np.gradient( radialData['lx']/radialData['l'], radialBinWidth )**2 + \
+        np.gradient( radialData['ly']/radialData['l'], radialBinWidth )**2 + \
+        np.gradient( radialData['lz']/radialData['l'], radialBinWidth )**2 )
 
-            if useVelocities:
-
-                meanAngularMomentum[:, index] = np.nan
-                meanTilt[index]               = np.nan
-                meanTwist[index]              = np.nan
-                meanEccentricity[index]       = np.nan
-
-        if midplaneSlice:
-
-            frac = 1/2
-
-            indiciesMidplane = np.where(
-                (cylindricalRadius < R + dR/2) &
-                (cylindricalRadius > R - dR/2) &
-                (height < meanHeight + frac * scaleHeight[index]) &
-                (height > meanHeight - frac * scaleHeight[index])
-                )[0]
-
-            hfact = parameters.numerical['hfact']
-
-            midplaneDensity[index] = np.sum(
-                density_from_smoothing_length(
-                    smoothingLength[indiciesMidplane], massParticle , hfact)
-                ) / nPart
-
-        else:
-
-            midplaneDensity[index] = surfaceDensity[index] / np.sqrt(2*np.pi) \
-                                                           / scaleHeight[index]
-
-        midplaneDensity[index] = np.nan_to_num( midplaneDensity[index] )
-
-    if useVelocities:
-
-        unitAngularMomentum = meanAngularMomentum/magnitudeAngularMomentum
-
-        meanPsi = radialBins * np.sqrt(
-            np.gradient(unitAngularMomentum[0], dR)**2 + \
-            np.gradient(unitAngularMomentum[1], dR)**2 + \
-            np.gradient(unitAngularMomentum[2], dR)**2 )
-
-    return ( radialBins,
-             surfaceDensity,
-             midplaneDensity,
-             meanSmoothingLength,
-             scaleHeight,
-             meanAngularMomentum,
-             meanTilt,
-             meanTwist,
-             meanPsi,
-             meanEccentricity )
+    return radialData
 
 # ---------------------------------------------------------------------------- #
 

@@ -38,56 +38,21 @@ for dumpFileName in dumpFileNames:
 
 #--- Perform analysis
 
-radialBins      = list()
-surfaceDensity  = list()
-midplaneDensity = list()
-smoothingLength = list()
-scaleHeight     = list()
-angularMomentum = list()
-tilt            = list()
-twist           = list()
-psi             = list()
-eccentricity    = list()
-Stokes          = list()
+radialAverages = list()
+particleData = list()
+sinkData = list()
 
 for dump in dumps:
 
     print('Performing disc analysis')
+    results = disc_analysis( radiusIn=radiusIn,
+                             radiusOut=radiusOut,
+                             numberRadialBins=numberRadialBins,
+                             particleData=dump.ParticleData,
+                             sinkData=dump.SinkData,
+                             parameters=dump.Parameters,
+                             units=dump.Units )
 
-    analysis = disc_analysis(dump, radiusIn, radiusOut, numberRadialBins)
-
-    radialBins.     append( analysis[0] )
-    surfaceDensity. append( analysis[1] )
-    midplaneDensity.append( analysis[2] )
-    smoothingLength.append( analysis[3] )
-    scaleHeight.    append( analysis[4] )
-    angularMomentum.append( analysis[5] )
-    tilt.           append( analysis[6] )
-    twist.          append( analysis[7] )
-    psi.            append( analysis[8] )
-    eccentricity.   append( analysis[9] )
-    Stokes.         append( analysis[10] )
-
-output = \
-'''
-The following variables are available:
-
-  - radialBins
-  - surfaceDensity
-  - midplaneDensity
-  - smoothingLength
-  - scaleHeight
-  - angularMomentum
-  - tilt
-  - twist
-  - psi
-  - eccentricity
-  - Stokes
-
-for both gas and dust (if available).
-
-There is also the list of dump objects 'dumps' each of which contain all
-available information about the dump.
-'''
-
-print(output)
+    radialAverages.append(results[0])
+    particleData.append(results[1])
+    sinkData.append(results[2])

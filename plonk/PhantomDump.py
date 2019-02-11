@@ -10,8 +10,6 @@ import h5py
 import numpy as np
 import pandas as pd
 
-from .ParticleData import ParticleData
-from .SinkData import SinkData
 from .units import Units
 from .utils import print_warning, print_error
 
@@ -183,7 +181,10 @@ class PhantomDump:
             if nDustTypes > 0:
                 for n in range(nDustTypes):
                     names += ['dustfrac' + str(n+1)]
-            names += ['divv', 'dt', 'itype']
+            if isFullDump:
+                names += ['divv', 'dt', 'itype']
+            else:
+                names += ['itype']
 
             data = pd.read_csv(dumpFileName, comment='#', names=names,
                                delim_whitespace=True)
