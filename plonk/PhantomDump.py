@@ -176,26 +176,38 @@ class PhantomDump:
         elif dumpFileFormat == 'ASCII':
 
             names = ['x', 'y', 'z', 'm', 'h', 'rho']
+            sinkDrop = list()
             if isFullDump:
                 names += ['vx', 'vy', 'vz']
             if nDustTypes > 0:
                 for n in range(nDustTypes):
                     names += ['dustfrac' + str(n+1)]
+                    sinkDrop += ['dustfrac' + str(n+1)]
             if isFullDump:
                 names += ['divv', 'dt', 'itype']
+                sinkDrop += ['divv', 'dt', 'itype']
             else:
                 names += ['itype']
+                sinkDrop += ['itype']
 
             data = pd.read_csv(dumpFileName, comment='#', names=names,
                                delim_whitespace=True)
 
-            self.ParticleData = data[data['itype']!=iSink].\
-                                reset_index(drop=True)
+            ParticleData = data[data['itype'] != iSink].reset_index(drop=True)
+
+            ParticleData.loc[
+                (ParticleData['itype'] >= iDustSplash) &
+                (ParticleData['itype'] <= iDustSplash + nDustLarge),
+                'itype'] -= 1
+
+            self.ParticleData = ParticleData
 
             if containsSinks:
 
-                self.SinkData = data[data['itype']==iSink].\
-                                reset_index(drop=True)
+                SinkData = data[data['itype'] == iSink].reset_index(drop=True)
+                SinkData = SinkData.drop(sinkDrop, axis=1)
+
+                self.SinkData = SinkData
 
 #--- Functions
 
