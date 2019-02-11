@@ -189,11 +189,13 @@ class PhantomDump:
             data = pd.read_csv(dumpFileName, comment='#', names=names,
                                delim_whitespace=True)
 
-            self.ParticleData = data[data['itype']!=iSink].reset_index()
+            self.ParticleData = data[data['itype']!=iSink].\
+                                reset_index(drop=True)
 
             if containsSinks:
 
-                self.SinkData = data[data['itype']==iSink].reset_index()
+                self.SinkData = data[data['itype']==iSink].\
+                                reset_index(drop=True)
 
 #--- Functions
 

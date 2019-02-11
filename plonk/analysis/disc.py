@@ -61,9 +61,16 @@ def disc_analysis(radiusIn=None,
         grainSize = parameters['grainsize']
         grainDens = parameters['graindens']
 
+#--- Spherical and cylindrical distance
+
+    particleData['r'] = norm(particleData[['x', 'y', 'z']], axis=1)
+    particleData['R'] = norm(particleData[['x', 'y']], axis=1)
+
 #--- Momentum and angular momentum
 
     if isFullDump:
+
+        particleData['|v|'] = norm(particleData[['vx', 'vy', 'vz']], axis=1)
 
         particleData['px'] = particleData['m'] * particleData['vx']
         particleData['py'] = particleData['m'] * particleData['vy']
@@ -72,18 +79,23 @@ def disc_analysis(radiusIn=None,
         angularMomentum = np.cross(particleData[['x', 'y', 'z']],
                                    particleData[['vx', 'vy', 'vz']])
 
-        particleData['lx'] = angularMomentum[:, 0]
-        particleData['ly'] = angularMomentum[:, 1]
-        particleData['lz'] = angularMomentum[:, 2]
+        particleData['Lx'] = angularMomentum[:, 0]
+        particleData['Ly'] = angularMomentum[:, 1]
+        particleData['Lz'] = angularMomentum[:, 2]
+        particleData['|L|'] = norm(angularMomentum, axis=1)
+        particleData['|l|'] = particleData['|L|'] / particleData['m']
 
     else:
 
-        particleData['px'] = np.nan
-        particleData['py'] = np.nan
-        particleData['pz'] = np.nan
-        particleData['lx'] = np.nan
-        particleData['ly'] = np.nan
-        particleData['lz'] = np.nan
+        particleData['|v|'] = np.nan
+        particleData['px']  = np.nan
+        particleData['py']  = np.nan
+        particleData['pz']  = np.nan
+        particleData['Lx']  = np.nan
+        particleData['Ly']  = np.nan
+        particleData['Lz']  = np.nan
+        particleData['|L|'] = np.nan
+        particleData['|l|'] = np.nan
 
 #--- Sinks
 
@@ -91,6 +103,9 @@ def disc_analysis(radiusIn=None,
     containsSinks = bool(nSinks > 0)
 
     if containsSinks:
+
+        sinkData['r'] = norm(sinkData[['x', 'y', 'z']], axis=1)
+        sinkData['R'] = norm(sinkData[['x', 'y']], axis=1)
 
         # TODO: check if sink[0] is really the star; check if binary
         stellarMass = sinkData['m'][0]
@@ -105,6 +120,8 @@ def disc_analysis(radiusIn=None,
 
     if isFullDump:
 
+        sinkData['|v|'] = norm(sinkData[['vx', 'vy', 'vz']], axis=1)
+
         sinkData['px'] = sinkData['m'] * sinkData['vx']
         sinkData['py'] = sinkData['m'] * sinkData['vy']
         sinkData['pz'] = sinkData['m'] * sinkData['vz']
@@ -112,36 +129,45 @@ def disc_analysis(radiusIn=None,
         angularMomentum = np.cross(sinkData[['x', 'y', 'z']],
                                    sinkData[['vx', 'vy', 'vz']])
 
-        sinkData['lx'] = angularMomentum[:, 0]
-        sinkData['ly'] = angularMomentum[:, 1]
-        sinkData['lz'] = angularMomentum[:, 2]
+        sinkData['Lx'] = angularMomentum[:, 0]
+        sinkData['Ly'] = angularMomentum[:, 1]
+        sinkData['Lz'] = angularMomentum[:, 2]
+        sinkData['|L|'] = norm(angularMomentum, axis=1)
+        sinkData['|l|'] = sinkData['|L|'] / sinkData['m']
 
     else:
 
-        sinkData['px'] = np.nan
-        sinkData['py'] = np.nan
-        sinkData['pz'] = np.nan
-        sinkData['lx'] = np.nan
-        sinkData['ly'] = np.nan
-        sinkData['lz'] = np.nan
+        sinkData['|v|'] = np.nan
+        sinkData['px']  = np.nan
+        sinkData['py']  = np.nan
+        sinkData['pz']  = np.nan
+        sinkData['Lx']  = np.nan
+        sinkData['Ly']  = np.nan
+        sinkData['Lz']  = np.nan
+        sinkData['|L|'] = np.nan
+        sinkData['|l|'] = np.nan
 
 #--- Eccentricity
 
     if isFullDump:
 
-        particleData['e'] = \
-            _calculate_eccentricity( sinkData['m'],
-                                     sinkData[['x', 'y', 'z']],
-                                     sinkData[['vx', 'vy', 'vz']],
-                                     sinkData[['lx', 'ly', 'lz']],
-                                     gravitationalParameter )
+        specificKineticEnergy = 1/2 * particleData['|v|']**2
+        specificGravitationalEnergy = \
+            - gravitationalParameter / particleData['r']
+        specificEnergy = specificKineticEnergy + specificGravitationalEnergy
+        term = 2 * specificEnergy * particleData['|l|']**2 \
+             / gravitationalParameter**2
 
-        sinkData['e'] = \
-            _calculate_eccentricity( sinkData['m'],
-                                     sinkData[['x', 'y', 'z']],
-                                     sinkData[['vx', 'vy', 'vz']],
-                                     sinkData[['lx', 'ly', 'lz']],
-                                     gravitationalParameter )
+        particleData['e'] = np.sqrt( 1 + term )
+
+        specificKineticEnergy = 1/2 * sinkData['|v|']**2
+        specificGravitationalEnergy = \
+            - gravitationalParameter / sinkData['r']
+        specificEnergy = specificKineticEnergy + specificGravitationalEnergy
+        term = 2 * specificEnergy * sinkData['|l|']**2 \
+             / gravitationalParameter**2
+
+        sinkData['e'] = np.sqrt( 1 + term )
 
     else:
 
@@ -149,8 +175,6 @@ def disc_analysis(radiusIn=None,
         sinkData['e']     = np.nan
 
 #--- Calculate radially binned quantities
-
-    particleData['R'] = norm(particleData[['x', 'y']], axis=1)
 
     radialData = _calculate_radially_binned_quantities( numberRadialBins,
                                                         radiusIn,
@@ -219,7 +243,7 @@ def _calculate_radially_binned_quantities( numberRadialBins=None,
 
     radialData = radialData.reindex(
         columns = radialData.columns.tolist() \
-        + ['sigma', 'h', 'H', 'lx', 'ly', 'lz', 'l', 'tilt', 'twist', 'e'] )
+        + ['sigma', 'h', 'H', 'Lx', 'Ly', 'Lz', 'l', 'tilt', 'twist', 'e'] )
 
     for index, radius in enumerate(radialBins):
 
@@ -238,50 +262,25 @@ def _calculate_radially_binned_quantities( numberRadialBins=None,
             radialData['h'].iloc[index] = particlesInRadialBin['h'].mean()
             radialData['H'].iloc[index] = particlesInRadialBin['z'].std()
 
-            radialData['lx'].iloc[index] = particlesInRadialBin['lx'].mean()
-            radialData['ly'].iloc[index] = particlesInRadialBin['ly'].mean()
-            radialData['lz'].iloc[index] = particlesInRadialBin['lz'].mean()
+            radialData['Lx'].iloc[index] = particlesInRadialBin['Lx'].mean()
+            radialData['Ly'].iloc[index] = particlesInRadialBin['Ly'].mean()
+            radialData['Lz'].iloc[index] = particlesInRadialBin['Lz'].mean()
 
             radialData['e'].iloc[index] = particlesInRadialBin['e'].mean()
 
 
-    radialData['l'] = norm(radialData[['lx','ly','lz']].values, axis=1)
+    radialData['l'] = norm(radialData[['Lx','Ly','Lz']].values, axis=1)
 
-    radialData['tilt'] = np.arccos( radialData['lz'] / radialData['l'] )
+    radialData['tilt'] = np.arccos( radialData['Lz'] / radialData['l'] )
 
-    radialData['twist'] = np.arctan2( radialData['ly'] / radialData['l'],
-                                      radialData['lx'] / radialData['l'] )
+    radialData['twist'] = np.arctan2( radialData['Ly'] / radialData['l'],
+                                      radialData['Lx'] / radialData['l'] )
 
     radialData['rho'] = radialData['sigma'] / radialData['H'] / np.sqrt(2*np.pi)
 
     radialData['psi'] = radialBins * np.sqrt(
-        np.gradient( radialData['lx']/radialData['l'], radialBinWidth )**2 + \
-        np.gradient( radialData['ly']/radialData['l'], radialBinWidth )**2 + \
-        np.gradient( radialData['lz']/radialData['l'], radialBinWidth )**2 )
+        np.gradient( radialData['Lx']/radialData['l'], radialBinWidth )**2 + \
+        np.gradient( radialData['Ly']/radialData['l'], radialBinWidth )**2 + \
+        np.gradient( radialData['Lz']/radialData['l'], radialBinWidth )**2 )
 
     return radialData
-
-# ---------------------------------------------------------------------------- #
-
-def _calculate_eccentricity( massParticle,
-                             position,
-                             velocity,
-                             angularMomentum,
-                             gravitationalParameter ):
-    '''
-    Calculate eccentricity.
-    '''
-
-    specificKineticEnergy = 1/2 * norm(velocity, axis=1)**2
-    specificGravitationalEnergy = - gravitationalParameter / norm(position, axis=1)
-    specificEnergy = specificKineticEnergy + specificGravitationalEnergy
-
-    specificAngularMomentum = norm(angularMomentum, axis=1) \
-                            / massParticle
-
-    term = 2 * specificEnergy * specificAngularMomentum**2 \
-         / gravitationalParameter**2
-
-    eccentricity = np.sqrt( 1 + term )
-
-    return eccentricity

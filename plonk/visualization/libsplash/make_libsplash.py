@@ -19,7 +19,9 @@ subprocess.run('f2py-f90wrap -m _interpolate3D_projection *.o -c ' \
 with open('interpolate3D_projection.py', 'r') as file:
     lines = file.readlines()
 
-lines[0] = 'from .libsplash import _interpolate3D_projection\n'
+for idx, line in enumerate(lines):
+    if 'import _interpolate3D_projection' in lines[idx]:
+        lines[idx] = 'from .libsplash import _interpolate3D_projection\n'
 
 with open('interpolate3D_projection.py', 'w') as file:
     file.writelines(lines)

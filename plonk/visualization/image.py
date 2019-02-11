@@ -9,7 +9,7 @@ import matplotlib.colors as colors
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 
-from ..particles import density_from_smoothing_length
+from ..ParticleData import density_from_smoothing_length
 from ..visualization.interpolate3D_projection import Projections3D
 
 class Image:
@@ -26,8 +26,7 @@ class Image:
 
     def _get_data_from_dump(self, dump):
 
-        self.hfact = dump.parameters.numerical['hfact']
-        self.fullDump = dump.fullDump
+        self.hfact = dump.Parameters['hfact']
 
         self.gas = dump.gas
         self.dust = dump.dust
