@@ -9,7 +9,6 @@ import matplotlib.colors as colors
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 
-from ..ParticleData import density_from_smoothing_length
 from ..visualization.interpolate3D_projection import Projections3D
 
 class Image:
@@ -22,54 +21,77 @@ class Image:
 
     def __init__(self, dump):
 
-        self._get_data_from_dump(dump)
+        self.ParticleData = dump.ParticleData
+        self.SinkData     = dump.SinkData
+        self.Parameters   = dump.Parameters
+        self.Units        = dump.Units
 
-    def _get_data_from_dump(self, dump):
+        self._default_plot_options()
 
-        self.hfact = dump.Parameters['hfact']
-
-        self.gas = dump.gas
-        self.dust = dump.dust
-
-        nDustSmall = dump.parameters.dust['nDustSmall']
-        nDustLarge = dump.parameters.dust['nDustLarge']
-        nDustTypes = nDustSmall + nDustLarge
-        containsDust = bool(nDustTypes > 0)
-
-        interpolationWeights = dict()
-
-        interpolationWeights['gas'] = self._interpolation_weights(dump.gas)
-
-        if containsDust:
-            interpolationWeights['dust'] = list()
-            for idx in range(nDustLarge):
-                interpolationWeights['dust'].append(
-                    self._interpolation_weights(dump.dust[idx]) )
-
-        self.interpolationWeights = interpolationWeights
-
-    def _interpolation_weights(self, fluid):
-
-        # TODO: density weighting as option
-        densityWeighted = False
-
-        nParticles      = fluid.number
-        massParticle    = fluid.mass
-        smoothingLength = fluid.smoothingLength
-
-        interpolationWeights = np.zeros(len(smoothingLength))
+    def _interpolation_weights(self, densityWeighted):
 
         if densityWeighted:
-            interpolationWeights[:] = massParticle / smoothingLength**2
+            self.ParticleData['interpolationWeights'] = \
+                self.ParticleData['m'] / self.ParticleData['h']**2
         else:
-            interpolationWeights[:] = 1 / self.hfact**2
+            self.ParticleData['interpolationWeights'] = \
+                1 / self.Parameters['hfact']
 
-        return interpolationWeights
+    def _default_plot_options(self):
+        '''
+        Set default plot options.
+        '''
+
+        PlotOptions = {
+            'densityWeighted': False,
+            'normalise':       False,
+            'zobserver':       100.,
+            'dscreen':         100.,
+            'useaccelerate':   False
+            }
+
+        self._interpolation_weights(PlotOptions['densityWeighted'])
+
+        self.PlotOptions = PlotOptions
+
+    def set_plot_options(self, densityWeighted=None, normalise=None,
+                         zobserver=None, dscreen=None, useaccelerate=None):
+        '''
+        Set plot options.
+        '''
+
+        if densityWeighted is not None:
+            self.PlotOptions['densityWeighted'] = densityWeighted
+            self._interpolation_weights(densityWeighted)
+
+        if normalise is not None:
+            self.PlotOptions['normalise'] = normalise
+
+        if zobserver is not None:
+            self.PlotOptions['zobserver'] = zobserver
+
+        if dscreen is not None:
+            self.PlotOptions['dscreen'] = dscreen
+
+        if useaccelerate is not None:
+            self.PlotOptions['useaccelerate'] = useaccelerate
+
+    def get_plot_options(self, option):
+        '''
+        Get plot options.
+        '''
+
+        if option in ['densityWeighted', 'normalise', 'zobserver', 'dscreen',
+                      'useaccelerate']:
+            return self.PlotOptions[option]
+
+        print(f'No option: {option}')
+        return None
 
     def plot(self,
-             horizontalAxisLabel,
-             verticalAxisLabel,
-             renderLabel,
+             horizontalAxis,
+             verticalAxis,
+             render,
              horizontalRange=None,
              verticalRange=None,
              imageRange=-1,
@@ -94,49 +116,10 @@ class Image:
         # TODO: check if need to interpolate again
         # TODO: choose fluid type: gas, dust1, dust2, ...
 
-        # TODO: set these according to fluid choice
-        interpolationWeights = self.interpolationWeights['gas']
-        smoothingLength = self.gas.smoothingLength
-
-        # TODO: choose these options
-        normalise = False
-        exact     = False
-        periodicx = False
-        periodicy = False
-
-        if horizontalAxisLabel == 'x':
-            iHorizontal = 0
-            horizontalAxisLabel = r'x [au]'
-        elif horizontalAxisLabel == 'y':
-            iHorizontal = 1
-            horizontalAxisLabel = r'y [au]'
-        elif horizontalAxisLabel == 'z':
-            iHorizontal = 2
-            horizontalAxisLabel = r'z [au]'
-        else:
-            raise ValueError('horizontalAxisLabel should be "x", "y", or "z"')
-
-        if verticalAxisLabel == 'x':
-            iVertical = 0
-            verticalAxisLabel = r'x [au]'
-        elif verticalAxisLabel == 'y':
-            iVertical = 1
-            verticalAxisLabel = r'y [au]'
-        elif verticalAxisLabel == 'z':
-            iVertical = 2
-            verticalAxisLabel = r'z [au]'
-        else:
-            raise ValueError('verticalAxisLabel should be "x", "y", or "z"')
-
-        horizontalData = self.gas.position[:, iHorizontal]
-        verticalData   = self.gas.position[:, iVertical]
-
-        if renderLabel in ['rho', 'dens', 'density']:
-            renderData = density_from_smoothing_length(self.gas.smoothingLength,
-                                                       self.gas.mass,
-                                                       self.hfact)
-        else:
-            raise ValueError('renderLabel unknown')
+        horizontalData = self.ParticleData['x']
+        verticalData   = self.ParticleData['y']
+        depthData      = self.ParticleData['z']
+        renderData     = self.ParticleData[render]
 
         if imageRange > 0:
             if horizontalRange is not None or verticalRange is not None:
@@ -151,12 +134,12 @@ class Image:
         if verticalRange is None:
             verticalRange = [verticalData.min(), verticalData.max()]
 
-        depthData = self.gas.position[:, 2]
-
         imageData = _interpolate_to_pixelgrid(
             horizontalData, verticalData, depthData, renderData,
-            interpolationWeights, smoothingLength, horizontalRange,
-            verticalRange, normalise, exact, periodicx, periodicy )
+            self.ParticleData['interpolationWeights'], self.ParticleData['h'],
+            horizontalRange, verticalRange, self.PlotOptions['normalise'],
+            self.PlotOptions['zobserver'], self.PlotOptions['dscreen'],
+            self.PlotOptions['useaccelerate'] )
 
         extent = horizontalRange + verticalRange
 
@@ -190,8 +173,8 @@ class Image:
         img = ax.imshow(imageData, norm=norm, origin='lower', extent=extent,
                         cmap=cmap)
 
-        ax.set_xlabel(horizontalAxisLabel)
-        ax.set_ylabel(verticalAxisLabel)
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
 
         ax.set_xlim(horizontalRange[0], horizontalRange[1])
         ax.set_ylim(verticalRange[0], verticalRange[1])

@@ -4,8 +4,8 @@ visualize_disc.py
 Daniel Mentiplay, 2019.
 '''
 
-from plonk.dumps import Dump
-from plonk.visualization.image import Image
+from plonk.plonk.PhantomDump import PhantomDump
+from plonk.plonk.visualization.image import Image
 
 #--- Dump file names
 
@@ -21,8 +21,7 @@ for dumpFileName in dumpFileNames:
     print('Reading in data from dumpfile: ' + dumpFileName + '... ', end='',
           flush=True)
 
-    dump = Dump()
-    dump.read_dump(dumpFileName)
+    dump = PhantomDump(dumpFileName)
 
     print('done')
 

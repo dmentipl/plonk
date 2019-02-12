@@ -198,7 +198,7 @@ class PhantomDump:
             ParticleData.loc[
                 (ParticleData['itype'] >= iDustSplash) &
                 (ParticleData['itype'] <= iDustSplash + nDustLarge),
-                'itype'] -= 1
+                'itype'] -= iDustSplash - iDust
 
             self.ParticleData = ParticleData
 
