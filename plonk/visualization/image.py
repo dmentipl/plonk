@@ -46,29 +46,42 @@ class Image:
         '''
 
         PlotOptions = {
+            'accelerate':      False,
             'colorbar':        True,
             'colormap':        'gist_heat',
             'colorscale':      'linear',
             'densityWeighted': False,
-            'dscreen':         100.,
+            'dscreen':         None,
             'normalize':       False,
-            'accelerate':      False,
-            'zobserver':       100.
+            'zobserver':       None
             }
 
         self._interpolation_weights(PlotOptions['densityWeighted'])
 
         self.PlotOptions = PlotOptions
 
-    def set_plot_options(self, densityWeighted=None, normalize=None,
-                         zobserver=None, dscreen=None, accelerate=None):
+    def set_plot_options(self, accelerate=None, colorbar=None, colorscale=None,
+                         densityWeighted=None, dscreen=None, normalize=None,
+                         zobserver=None):
         '''
         Set plot options.
         '''
 
+        if accelerate is not None:
+            self.PlotOptions['accelerate'] = accelerate
+
+        if colorbar is not None:
+            self.PlotOptions['colorbar'] = colorbar
+
+        if colorscale is not None:
+            self.PlotOptions['colorscale'] = colorscale
+
         if densityWeighted is not None:
             self.PlotOptions['densityWeighted'] = densityWeighted
             self._interpolation_weights(densityWeighted)
+
+        if dscreen is not None:
+            self.PlotOptions['dscreen'] = dscreen
 
         if normalize is not None:
             self.PlotOptions['normalize'] = normalize
@@ -76,28 +89,22 @@ class Image:
         if zobserver is not None:
             self.PlotOptions['zobserver'] = zobserver
 
-        if dscreen is not None:
-            self.PlotOptions['dscreen'] = dscreen
-
-        if accelerate is not None:
-            self.PlotOptions['accelerate'] = accelerate
-
     def get_plot_options(self, option):
         '''
         Get plot options.
         '''
 
-        if option in ['densityWeighted', 'normalize', 'zobserver', 'dscreen',
-                      'accelerate']:
+        if option in ['accelerate', 'colorbar', 'colorscale', 'densityWeighted',
+                      'dscreen', 'normalize', 'zobserver']:
             return self.PlotOptions[option]
 
         print(f'No option: {option}')
         return None
 
     def plot(self,
-             horizontalAxis='x',
-             verticalAxis='y',
-             render='rho',
+             horizontalAxis=None,
+             verticalAxis=None,
+             render=None,
              horizontalRange=None,
              verticalRange=None,
              imageRange=-1,
@@ -119,10 +126,23 @@ class Image:
         # TODO: check if need to interpolate again
         # TODO: choose fluid type: gas, dust1, dust2, ...
 
+        if horizontalAxis is None:
+            horizontalAxis = 'x'
+
+        if verticalAxis is None:
+            verticalAxis = 'y'
+
+        if render is None:
+            render = 'rho'
+
         print(f'Plotting {render} on [{horizontalAxis}, {verticalAxis}] window')
-        horizontalData = self.ParticleData['x']
-        verticalData   = self.ParticleData['y']
-        depthData      = self.ParticleData['z']
+
+        xyz = set(['x', 'y', 'z'])
+        depthAxis = xyz.difference([horizontalAxis, verticalAxis]).pop()
+
+        horizontalData = self.ParticleData[horizontalAxis]
+        verticalData   = self.ParticleData[verticalAxis]
+        depthData      = self.ParticleData[depthAxis]
         renderData     = self.ParticleData[render]
 
         if imageRange > 0:
@@ -138,12 +158,9 @@ class Image:
         if verticalRange is None:
             verticalRange = [verticalData.min(), verticalData.max()]
 
-        imageData = _interpolate_to_pixelgrid(
+        imageData = self._interpolate_to_pixelgrid(
             horizontalData, verticalData, depthData, renderData,
-            self.ParticleData['interpolationWeights'], self.ParticleData['h'],
-            horizontalRange, verticalRange, self.PlotOptions['normalize'],
-            self.PlotOptions['zobserver'], self.PlotOptions['dscreen'],
-            self.PlotOptions['accelerate'] )
+            horizontalRange, verticalRange )
 
         extent = horizontalRange + verticalRange
 
@@ -177,8 +194,8 @@ class Image:
         img = ax.imshow(imageData, norm=norm, origin='lower', extent=extent,
                         cmap=cmap)
 
-        ax.set_xlabel('x')
-        ax.set_ylabel('y')
+        ax.set_xlabel(horizontalAxis)
+        ax.set_ylabel(verticalAxis)
 
         ax.set_xlim(horizontalRange[0], horizontalRange[1])
         ax.set_ylim(verticalRange[0], verticalRange[1])
@@ -220,44 +237,61 @@ class Image:
 
         self._image.set_clim([a, b])
 
-def _interpolate_to_pixelgrid(horizontalData, verticalData, depthData,
-                              renderData, interpolationWeights, smoothingLength,
-                              horizontalRange, verticalRange, normalize=False,
-                              zobserver=100., dscreen=100., accelerate=False):
+    def _interpolate_to_pixelgrid(self, horizontalData, verticalData, depthData,
+                                  renderData, horizontalRange, verticalRange):
 
-    # TODO: set number of pixels based on smoothing length
-    npixx = 512
-    npixy = 512
+        # TODO: set number of pixels based on smoothing length
+        npixx = 512
+        npixy = 512
 
-    itype = np.ones_like(horizontalData)
-    npart = len(smoothingLength)
+        interpolationWeights = self.ParticleData['interpolationWeights']
+        smoothingLength = self.ParticleData['h']
+        normalize = self.PlotOptions['normalize']
+        zobserver = self.PlotOptions['zobserver']
+        dscreen = self.PlotOptions['dscreen']
+        accelerate = self.PlotOptions['accelerate']
 
-    xmax      = horizontalRange[1]
-    ymax      = verticalRange[1]
-    xmin      = horizontalRange[0]
-    ymin      = verticalRange[0]
-    pixwidthx = (xmax - xmin) / npixx
-    pixwidthy = (ymax - ymin) / npixy
+        if zobserver is None:
+            zobserver = 1e10
 
-    imageData = splash.interpolate3d_projection(x=horizontalData,
-                                                y=verticalData,
-                                                z=depthData,
-                                                hh=smoothingLength,
-                                                weight=interpolationWeights,
-                                                dat=renderData,
-                                                itype=itype,
-                                                npart=npart,
-                                                xmin=xmin,
-                                                ymin=ymin,
-                                                npixx=npixx,
-                                                npixy=npixy,
-                                                pixwidthx=pixwidthx,
-                                                pixwidthy=pixwidthy,
-                                                normalise=normalize,
-                                                zobserver=zobserver,
-                                                dscreen=dscreen,
-                                                useaccelerate=accelerate)
+        if dscreen is None:
+            dscreen = 1e10
 
-    imageData = imageData.T
+        if normalize is None:
+            normalize = False
 
-    return imageData
+        if accelerate is None:
+            accelerate = False
+
+        itype = np.ones_like(horizontalData)
+        npart = len(smoothingLength)
+
+        xmax      = horizontalRange[1]
+        ymax      = verticalRange[1]
+        xmin      = horizontalRange[0]
+        ymin      = verticalRange[0]
+        pixwidthx = (xmax - xmin) / npixx
+        pixwidthy = (ymax - ymin) / npixy
+
+        imageData = splash.interpolate3d_projection(x=horizontalData,
+                                                    y=verticalData,
+                                                    z=depthData,
+                                                    hh=smoothingLength,
+                                                    weight=interpolationWeights,
+                                                    dat=renderData,
+                                                    itype=itype,
+                                                    npart=npart,
+                                                    xmin=xmin,
+                                                    ymin=ymin,
+                                                    npixx=npixx,
+                                                    npixy=npixy,
+                                                    pixwidthx=pixwidthx,
+                                                    pixwidthy=pixwidthy,
+                                                    normalise=normalize,
+                                                    zobserver=zobserver,
+                                                    dscreen=dscreen,
+                                                    useaccelerate=accelerate)
+
+        imageData = imageData.T
+
+        return imageData
