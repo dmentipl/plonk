@@ -20,45 +20,38 @@
 !
 !-----------------------------------------------------------------
 
-!----------------------------------------------------------------------
-!
-!  Module containing all of the routines required for 3D projections
-!  (where rendered quantity is integrated along the line of sight)
-!
-!----------------------------------------------------------------------
-
-module projections3D
+module splash
  implicit none
 
- integer, parameter :: maxcoltable = 1000
- real, dimension(0:maxcoltable) :: coltable
- real, private :: dq2table = 4./maxcoltable
- real, private :: ddq2table = maxcoltable/4.
-
- real,    parameter :: pi          = 3.1415926536
- real,    parameter :: radkernel   = 2.
- real,    parameter :: radkernel2  = 4.
- real,    parameter :: cnormk2D    = 0.4547284088
- real,    parameter :: cnormk3D    = 0.3183098862
-
- public :: setup_integratedkernel
  public :: interpolate3D_projection
  public :: interpolate3D_proj_vec
+ public :: setup_integratedkernel
+ public :: w_cubic
  public :: wfromtable
+
+ private
+
+ integer, parameter :: maxcoltable = 1000
+ real, dimension(maxcoltable) :: coltable
+ real :: dq2table = 4./maxcoltable
+ real :: ddq2table = maxcoltable/4.
+
+ real, parameter :: radkernel   = 2.
+ real, parameter :: radkernel2  = 4.
+ real, parameter :: cnormk3D    = 0.3183098862
 
 contains
 
 subroutine setup_integratedkernel
 !-------------------------------------------------------------
-!     tabulates the integral through the cubic spline kernel
-!     tabulated in (r/h)**2 so that sqrt is not necessary
+! tabulates the integral through the cubic spline kernel
+! tabulated in (r/h)**2 so that sqrt is not necessary
 !-------------------------------------------------------------
- implicit none
+
  integer :: i,j
  real :: rxy2,deltaz,dz,z,q2,wkern,coldens
  integer, parameter :: npts = 100
 
- !print "(1x,a)",'setting up integrated kernel table...'
  dq2table = radkernel2/maxcoltable
  ddq2table = 1./dq2table
 
@@ -90,12 +83,13 @@ subroutine setup_integratedkernel
 
  return
 end subroutine setup_integratedkernel
-!
+
+real function wfromtable(q2)
+!-------------------------------------------------------------
 ! This function interpolates from the table of integrated kernel values
 ! to give w(q)
-!
-real function wfromtable(q2)
- implicit none
+!-------------------------------------------------------------
+
  real, intent(in) :: q2
  real :: dxx,dwdx
  integer :: index, index1
@@ -120,6 +114,9 @@ real function wfromtable(q2)
 
 end function wfromtable
 
+subroutine interpolate3D_projection(x,y,z,hh,weight,dat,itype,npart, &
+     xmin,ymin,datsmooth,npixx,npixy,pixwidthx,pixwidthy,normalise,zobserver,dscreen, &
+     useaccelerate)
 !--------------------------------------------------------------------------
 !     subroutine to interpolate from particle data to even grid of pixels
 !
@@ -155,11 +152,6 @@ end function wfromtable
 !     3D perspective added Nov 2005
 !--------------------------------------------------------------------------
 
-subroutine interpolate3D_projection(x,y,z,hh,weight,dat,itype,npart, &
-     xmin,ymin,datsmooth,npixx,npixy,pixwidthx,pixwidthy,normalise,zobserver,dscreen, &
-     useaccelerate)
-
-  implicit none
   integer, intent(in) :: npart,npixx,npixy
   real, intent(in), dimension(npart) :: x,y,z,hh,weight,dat
   integer, intent(in), dimension(npart) :: itype
@@ -485,6 +477,8 @@ subroutine interpolate3D_projection(x,y,z,hh,weight,dat,itype,npart, &
 
 end subroutine interpolate3D_projection
 
+subroutine interpolate3D_proj_vec(x,y,z,hh,weight,vecx,vecy,itype,npart,&
+     xmin,ymin,vecsmoothx,vecsmoothy,npixx,npixy,pixwidthx,pixwidthy,normalise,zobserver,dscreen)
 !--------------------------------------------------------------------------
 !
 !     Same as previous but for a vector quantity
@@ -501,10 +495,6 @@ end subroutine interpolate3D_projection
 !     Daniel Price 23/12/04
 !--------------------------------------------------------------------------
 
-subroutine interpolate3D_proj_vec(x,y,z,hh,weight,vecx,vecy,itype,npart,&
-     xmin,ymin,vecsmoothx,vecsmoothy,npixx,npixy,pixwidthx,pixwidthy,normalise,zobserver,dscreen)
-
-  implicit none
   integer, intent(in) :: npart,npixx,npixy
   real, intent(in), dimension(npart) :: x,y,z,hh,weight,vecx,vecy
   integer, intent(in), dimension(npart) :: itype
@@ -639,13 +629,11 @@ subroutine interpolate3D_proj_vec(x,y,z,hh,weight,vecx,vecy,itype,npart,&
 
 end subroutine interpolate3D_proj_vec
 
-!---------------------------------------
-!
-!  Functional forms of various kernels
-!
-!--------------------------------------
 pure real function w_cubic(q2)
- implicit none
+!---------------------------------------
+!  Cubic kernel
+!--------------------------------------
+
  real, intent(in) :: q2
  real :: q
 
@@ -661,4 +649,4 @@ pure real function w_cubic(q2)
 
 end function w_cubic
 
-end module projections3D
+end module splash

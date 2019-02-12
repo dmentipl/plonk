@@ -9,7 +9,7 @@ import matplotlib.colors as colors
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 
-from ..visualization.interpolate3D_projection import Projections3D
+from .splash import splash
 
 class Image:
     '''
@@ -44,10 +44,10 @@ class Image:
 
         PlotOptions = {
             'densityWeighted': False,
-            'normalise':       False,
-            'zobserver':       100.,
             'dscreen':         100.,
-            'useaccelerate':   False
+            'normalise':       False,
+            'useaccelerate':   False,
+            'zobserver':       100.
             }
 
         self._interpolation_weights(PlotOptions['densityWeighted'])
@@ -223,27 +223,24 @@ def _interpolate_to_pixelgrid(horizontalData, verticalData, depthData,
     pixwidthx = (xmax - xmin) / npixx
     pixwidthy = (ymax - ymin) / npixy
 
-    imageData = np.zeros((npixx, npixy), dtype=np.float32, order='F')
-
-    Projections3D.interpolate3d_projection(x=horizontalData,
-                                           y=verticalData,
-                                           z=depthData,
-                                           hh=smoothingLength,
-                                           weight=interpolationWeights,
-                                           dat=renderData,
-                                           itype=itype,
-                                           npart=npart,
-                                           xmin=xmin,
-                                           ymin=ymin,
-                                           datsmooth=imageData,
-                                           npixx=npixx,
-                                           npixy=npixy,
-                                           pixwidthx=pixwidthx,
-                                           pixwidthy=pixwidthy,
-                                           normalise=normalise,
-                                           zobserver=zobserver,
-                                           dscreen=dscreen,
-                                           useaccelerate=useaccelerate)
+    imageData = splash.interpolate3d_projection(x=horizontalData,
+                                                y=verticalData,
+                                                z=depthData,
+                                                hh=smoothingLength,
+                                                weight=interpolationWeights,
+                                                dat=renderData,
+                                                itype=itype,
+                                                npart=npart,
+                                                xmin=xmin,
+                                                ymin=ymin,
+                                                npixx=npixx,
+                                                npixy=npixy,
+                                                pixwidthx=pixwidthx,
+                                                pixwidthy=pixwidthy,
+                                                normalise=normalise,
+                                                zobserver=zobserver,
+                                                dscreen=dscreen,
+                                                useaccelerate=useaccelerate)
 
     imageData = imageData.T
 
