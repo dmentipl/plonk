@@ -28,6 +28,9 @@ class Image:
 
         self._default_plot_options()
 
+        self._image    = None
+        self._colorbar = None
+
     def _interpolation_weights(self, densityWeighted):
 
         if densityWeighted:
@@ -43,10 +46,13 @@ class Image:
         '''
 
         PlotOptions = {
+            'colorbar':        True,
+            'colormap':        'gist_heat',
+            'colorscale':      'linear',
             'densityWeighted': False,
             'dscreen':         100.,
-            'normalise':       False,
-            'useaccelerate':   False,
+            'normalize':       False,
+            'accelerate':      False,
             'zobserver':       100.
             }
 
@@ -54,8 +60,8 @@ class Image:
 
         self.PlotOptions = PlotOptions
 
-    def set_plot_options(self, densityWeighted=None, normalise=None,
-                         zobserver=None, dscreen=None, useaccelerate=None):
+    def set_plot_options(self, densityWeighted=None, normalize=None,
+                         zobserver=None, dscreen=None, accelerate=None):
         '''
         Set plot options.
         '''
@@ -64,8 +70,8 @@ class Image:
             self.PlotOptions['densityWeighted'] = densityWeighted
             self._interpolation_weights(densityWeighted)
 
-        if normalise is not None:
-            self.PlotOptions['normalise'] = normalise
+        if normalize is not None:
+            self.PlotOptions['normalize'] = normalize
 
         if zobserver is not None:
             self.PlotOptions['zobserver'] = zobserver
@@ -73,42 +79,39 @@ class Image:
         if dscreen is not None:
             self.PlotOptions['dscreen'] = dscreen
 
-        if useaccelerate is not None:
-            self.PlotOptions['useaccelerate'] = useaccelerate
+        if accelerate is not None:
+            self.PlotOptions['accelerate'] = accelerate
 
     def get_plot_options(self, option):
         '''
         Get plot options.
         '''
 
-        if option in ['densityWeighted', 'normalise', 'zobserver', 'dscreen',
-                      'useaccelerate']:
+        if option in ['densityWeighted', 'normalize', 'zobserver', 'dscreen',
+                      'accelerate']:
             return self.PlotOptions[option]
 
         print(f'No option: {option}')
         return None
 
     def plot(self,
-             horizontalAxis,
-             verticalAxis,
-             render,
+             horizontalAxis='x',
+             verticalAxis='y',
+             render='rho',
              horizontalRange=None,
              verticalRange=None,
              imageRange=-1,
-             renderScaleLabel='lin',
+             renderScale=None,
              renderMin=None,
              renderMax=None,
              renderFractionMax=None,
              title=None,
              ax=None,
-             colorbar=False,
+             colorbar=None,
              colormap=None):
         '''
         Make image.
         '''
-
-        _scale           = 'lin'
-        _cmap            = 'gist_heat'
 
         # TODO: add options
         # TODO: choose what to plot
@@ -116,6 +119,7 @@ class Image:
         # TODO: check if need to interpolate again
         # TODO: choose fluid type: gas, dust1, dust2, ...
 
+        print(f'Plotting {render} on [{horizontalAxis}, {verticalAxis}] window')
         horizontalData = self.ParticleData['x']
         verticalData   = self.ParticleData['y']
         depthData      = self.ParticleData['z']
@@ -124,7 +128,7 @@ class Image:
         if imageRange > 0:
             if horizontalRange is not None or verticalRange is not None:
                 raise ValueError( 'Cannot set imageRange and horizontalRange ' \
-                                + '(or verticalRange at the same time' )
+                                + '(or verticalRange) at the same time' )
             horizontalRange = [-imageRange, imageRange]
             verticalRange   = [-imageRange, imageRange]
 
@@ -137,13 +141,13 @@ class Image:
         imageData = _interpolate_to_pixelgrid(
             horizontalData, verticalData, depthData, renderData,
             self.ParticleData['interpolationWeights'], self.ParticleData['h'],
-            horizontalRange, verticalRange, self.PlotOptions['normalise'],
+            horizontalRange, verticalRange, self.PlotOptions['normalize'],
             self.PlotOptions['zobserver'], self.PlotOptions['dscreen'],
-            self.PlotOptions['useaccelerate'] )
+            self.PlotOptions['accelerate'] )
 
         extent = horizontalRange + verticalRange
 
-        cmap = _cmap
+        cmap = self.PlotOptions['colormap']
         if colormap is not None:
             cmap = colormap
 
@@ -156,16 +160,16 @@ class Image:
         if renderMin is None:
             vmin = imageData.min()
 
-        if renderScaleLabel is None:
-            renderScaleLabel = _scale
+        if renderScale is None:
+            renderScale = self.PlotOptions['colorscale']
 
-        if renderScaleLabel == 'log':
+        if renderScale == 'log':
             norm = colors.SymLogNorm(1e-1*vmax, clip=True)
-        elif renderScaleLabel == 'lin':
+        elif renderScale == 'linear':
             norm = colors.Normalize(vmin=vmin, vmax=vmax, clip=True)
         else:
-            raise ValueError("Unknown color renderScaleLabel: " \
-                + renderScaleLabel)
+            raise ValueError("Unknown color renderScale: " \
+                + renderScale)
 
         if ax is None:
             ax = plt.gca()
@@ -183,12 +187,17 @@ class Image:
             ax.set_title(title)
 
         cb = None
-        if colorbar:
+        if colorbar is not None:
+            colorbar_ = colorbar
+        else:
+            colorbar_ = self.PlotOptions['colorbar']
+        if colorbar_:
             divider = make_axes_locatable(ax)
             cax = divider.append_axes("right", size="5%", pad=0.05)
             cb = plt.colorbar(img, cax=cax)
 
-        return img, cb
+        self._image = img
+        self._colorbar = cb
 
     def _convert_units(self):
         '''
@@ -206,8 +215,8 @@ class Image:
 
 def _interpolate_to_pixelgrid(horizontalData, verticalData, depthData,
                               renderData, interpolationWeights, smoothingLength,
-                              horizontalRange, verticalRange, normalise=False,
-                              zobserver=100., dscreen=100., useaccelerate=False):
+                              horizontalRange, verticalRange, normalize=False,
+                              zobserver=100., dscreen=100., accelerate=False):
 
     # TODO: set number of pixels based on smoothing length
     npixx = 512
@@ -237,10 +246,10 @@ def _interpolate_to_pixelgrid(horizontalData, verticalData, depthData,
                                                 npixy=npixy,
                                                 pixwidthx=pixwidthx,
                                                 pixwidthy=pixwidthy,
-                                                normalise=normalise,
+                                                normalise=normalize,
                                                 zobserver=zobserver,
                                                 dscreen=dscreen,
-                                                useaccelerate=useaccelerate)
+                                                useaccelerate=accelerate)
 
     imageData = imageData.T
 
