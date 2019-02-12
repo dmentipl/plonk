@@ -9,6 +9,7 @@ import matplotlib.colors as colors
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 
+from ..PhantomDump import iGas, iDust
 from .splash import splash
 
 class Image:
@@ -34,11 +35,10 @@ class Image:
     def _interpolation_weights(self, densityWeighted):
 
         if densityWeighted:
-            self.ParticleData['interpolationWeights'] = \
+            self.ParticleData['weights'] = \
                 self.ParticleData['m'] / self.ParticleData['h']**2
         else:
-            self.ParticleData['interpolationWeights'] = \
-                1 / self.Parameters['hfact']
+            self.ParticleData['weights'] = 1 / self.Parameters['hfact']
 
     def _default_plot_options(self):
         '''
@@ -60,12 +60,25 @@ class Image:
 
         self.PlotOptions = PlotOptions
 
+    def print_plot_options(self):
+        '''
+        Print plot options.
+        '''
+
+        print('Current plot options:\n')
+        for opt in self.PlotOptions:
+            print(f'{opt:20}:  {self.PlotOptions[opt]}')
+
     def set_plot_options(self, accelerate=None, colorbar=None, colorscale=None,
                          densityWeighted=None, dscreen=None, normalize=None,
                          zobserver=None):
         '''
         Set plot options.
         '''
+
+        args = list(locals().values())[1:]
+        if all([arg is None for arg in args]):
+            self.print_plot_options()
 
         if accelerate is not None:
             self.PlotOptions['accelerate'] = accelerate
@@ -89,7 +102,7 @@ class Image:
         if zobserver is not None:
             self.PlotOptions['zobserver'] = zobserver
 
-    def get_plot_options(self, option):
+    def get_plot_option(self, option):
         '''
         Get plot options.
         '''
@@ -105,6 +118,8 @@ class Image:
              horizontalAxis=None,
              verticalAxis=None,
              render=None,
+             particleTypes=None,
+             itype=None,
              horizontalRange=None,
              verticalRange=None,
              imageRange=-1,
@@ -135,15 +150,43 @@ class Image:
         if render is None:
             render = 'rho'
 
+        itypes = list()
+
+        if itype is not None and particleTypes is not None:
+            raise ValueError('Cannot set itype and particleTypes together')
+
+        if particleTypes is None and itype is None:
+            itypes = [iGas]
+
+        if itype is not None:
+            itypes = [itype]
+
+        if particleTypes is not None:
+
+            if 'gas' in particleTypes:
+                itypes.append(iGas)
+
+            # TODO: can only plot one type at the moment
+            if 'dust' in particleTypes:
+                for i in range(self.Parameters['ndustlarge']):
+                    itypes.append(iDust + i)
+
+        if len(itypes) > 1:
+            raise ValueError('plotting multiple types at once is not working')
+
         print(f'Plotting {render} on [{horizontalAxis}, {verticalAxis}] window')
 
         xyz = set(['x', 'y', 'z'])
         depthAxis = xyz.difference([horizontalAxis, verticalAxis]).pop()
 
-        horizontalData = self.ParticleData[horizontalAxis]
-        verticalData   = self.ParticleData[verticalAxis]
-        depthData      = self.ParticleData[depthAxis]
-        renderData     = self.ParticleData[render]
+        pd = self.ParticleData.loc[self.ParticleData['itype'].isin(itypes)]
+
+        horizontalData  = pd[horizontalAxis]
+        verticalData    = pd[verticalAxis]
+        depthData       = pd[depthAxis]
+        renderData      = pd[render]
+        weights         = pd['weights']
+        smoothingLength = pd['h']
 
         if imageRange > 0:
             if horizontalRange is not None or verticalRange is not None:
@@ -159,8 +202,8 @@ class Image:
             verticalRange = [verticalData.min(), verticalData.max()]
 
         imageData = self._interpolate_to_pixelgrid(
-            horizontalData, verticalData, depthData, renderData,
-            horizontalRange, verticalRange )
+            horizontalData, verticalData, depthData, smoothingLength,
+            weights,renderData, horizontalRange, verticalRange )
 
         extent = horizontalRange + verticalRange
 
@@ -238,14 +281,13 @@ class Image:
         self._image.set_clim([a, b])
 
     def _interpolate_to_pixelgrid(self, horizontalData, verticalData, depthData,
-                                  renderData, horizontalRange, verticalRange):
+                                  smoothingLength, weights, renderData,
+                                  horizontalRange, verticalRange):
 
         # TODO: set number of pixels based on smoothing length
         npixx = 512
         npixy = 512
 
-        interpolationWeights = self.ParticleData['interpolationWeights']
-        smoothingLength = self.ParticleData['h']
         normalize = self.PlotOptions['normalize']
         zobserver = self.PlotOptions['zobserver']
         dscreen = self.PlotOptions['dscreen']
@@ -277,7 +319,7 @@ class Image:
                                                     y=verticalData,
                                                     z=depthData,
                                                     hh=smoothingLength,
-                                                    weight=interpolationWeights,
+                                                    weight=weights,
                                                     dat=renderData,
                                                     itype=itype,
                                                     npart=npart,
