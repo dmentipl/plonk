@@ -4,6 +4,7 @@ image.py
 Daniel Mentiplay, 2019.
 '''
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -17,6 +18,8 @@ options = ['accelerate',
            'colorscale',
            'densityWeighted',
            'dscreen',
+           'fontfamily',
+           'fontsize',
            'normalize',
            'zobserver']
 
@@ -53,6 +56,8 @@ class Image:
             'colorscale':      'linear',
             'densityWeighted': False,
             'dscreen':         None,
+            'fontfamily':      'sans-serif',
+            'fontsize':        12,
             'normalize':       False,
             'zobserver':       None
             }
@@ -68,8 +73,15 @@ class Image:
         for opt in self.PlotOptions:
             print(f'{opt:20}:  {self.PlotOptions[opt]}')
 
-    def set_plot_options(self, accelerate=None, colorbar=None, colorscale=None,
-                         densityWeighted=None, dscreen=None, normalize=None,
+    def set_plot_options(self,
+                         accelerate=None,
+                         colorbar=None,
+                         colorscale=None,
+                         densityWeighted=None,
+                         dscreen=None,
+                         fontfamily=None,
+                         fontsize=None,
+                         normalize=None,
                          zobserver=None):
         '''
         Set plot options.
@@ -93,6 +105,12 @@ class Image:
 
         if dscreen is not None:
             self.PlotOptions['dscreen'] = dscreen
+
+        if fontfamily is not None:
+            self.PlotOptions['fontfamily'] = fontfamily
+
+        if fontsize is not None:
+            self.PlotOptions['fontsize'] = fontsize
 
         if normalize is not None:
             self.PlotOptions['normalize'] = normalize
@@ -126,6 +144,7 @@ class Image:
              renderFractionMax=None,
              title=None,
              ax=None,
+             newfig=None,
              colorbar=None,
              colormap=None):
         '''
@@ -171,7 +190,7 @@ class Image:
         if len(itypes) > 1:
             raise ValueError('plotting multiple types at once is not working')
 
-        print(f'Plotting {render} on [{horizontalAxis}, {verticalAxis}] window')
+        print(f'Rendering {render} on [{horizontalAxis}, {verticalAxis}] window')
 
         xyz = set(['x', 'y', 'z'])
         depthAxis = xyz.difference([horizontalAxis, verticalAxis]).pop()
@@ -232,7 +251,12 @@ class Image:
             raise ValueError("Unknown color renderScale: " \
                 + renderScale)
 
+        mpl.rcParams['font.family'] = self.PlotOptions['fontfamily']
+        mpl.rcParams['font.size'] = self.PlotOptions['fontsize']
+
         if ax is None:
+            if newfig:
+                plt.figure()
             plt.clf()
             ax = plt.gca()
 
@@ -248,6 +272,8 @@ class Image:
         if title is not None:
             ax.set_title(title)
 
+        renderLabel = r'$\int$ '+ f'{render}' + ' dz'
+
         cb = None
         if colorbar is not None:
             colorbar_ = colorbar
@@ -257,6 +283,8 @@ class Image:
             divider = make_axes_locatable(ax)
             cax = divider.append_axes("right", size="5%", pad=0.05)
             cb = plt.colorbar(img, cax=cax)
+            if renderLabel:
+                cb.set_label(renderLabel)
 
         self._axis = ax
         self._image = img
