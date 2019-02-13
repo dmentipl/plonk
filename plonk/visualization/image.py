@@ -273,12 +273,18 @@ class Image:
 
         # TODO: write this
 
-    def set_colorbar(self, a, b):
+    def set_colorbar(self, vmin=None, vmax=None):
         '''
         Set colorbar limits.
         '''
 
-        self._image.set_clim([a, b])
+        if vmin is None:
+            vmin = self._colorbar.vmin
+
+        if vmax is None:
+            vmax = self._colorbar.vmax
+
+        self._image.set_clim([vmin, vmax])
 
     def _interpolate_to_pixelgrid(self, horizontalData, verticalData, depthData,
                                   smoothingLength, weights, renderData,
