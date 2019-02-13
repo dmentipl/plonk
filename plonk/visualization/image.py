@@ -9,7 +9,7 @@ import matplotlib.colors as colors
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 
-from ..PhantomDump import iGas, iDust
+from ..ParticleData import iGas, iDust
 from .splash import splash
 
 options = ['accelerate',

@@ -6,6 +6,9 @@ Daniel Mentiplay, 2019.
 
 import numpy as np
 
+iGas  = 1
+iDust = 7
+
 class ParticleData:
     '''
     Generic SPH particles.

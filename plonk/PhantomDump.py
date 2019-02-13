@@ -10,22 +10,16 @@ import h5py
 import numpy as np
 import pandas as pd
 
+from .ParticleData import density_from_smoothing_length, iDust
 from .units import Units
-from .utils import print_warning, print_error
+from .utils import print_warning
 
 # ---------------------------------------------------------------------------- #
 
-#--- Reading Phantom ACSII files
+#--- Reading Phantom-Splash ACSII files
 
-iGas         = 1
 iSink        = 3
-iDust        = 7
 iDustSplash  = 8
-
-positionIndex        = slice(0, 3)
-massIndex            = 3
-smoothingLengthIndex = 4
-velocityIndex        = slice(6, 9)
 
 # ---------------------------------------------------------------------------- #
 
@@ -76,7 +70,7 @@ class PhantomDump:
 
         if fileExtension == 'h5':
             dumpFileFormat = 'HDF5'
-            print_error('HDF5 dump reader not fully implemented')
+            print_warning('HDF5 dump reader not fully implemented')
 
         elif fileExtension == 'ascii':
             dumpFileFormat = 'ASCII'
@@ -105,7 +99,7 @@ class PhantomDump:
                                     headerFileName)
 
         if dumpFileFormat == 'HDF5':
-            header = _read_header_from_hdf5(headerFileName)
+            header, isFullDump = _read_header_from_hdf5(headerFileName)
 
         elif dumpFileFormat == 'ASCII':
             header, isFullDump = _read_header_from_showheader(headerFileName)
@@ -133,14 +127,8 @@ class PhantomDump:
         if not exists:
             raise FileNotFoundError('Cannot find dump file: ' + dumpFileName)
 
-        nDustSmall = self.Parameters['ndustsmall']
+        nDustTypes = self.Parameters['ndustsmall'] + self.Parameters['ndustlarge']
         nDustLarge = self.Parameters['ndustlarge']
-
-        containsSmallDust = bool(nDustSmall > 0)
-        containsLargeDust = bool(nDustLarge > 0)
-
-        nDustTypes = nDustSmall + nDustLarge
-        containsDust = bool(containsSmallDust or containsLargeDust)
 
         nSinks = self.Parameters['nptmass']
         containsSinks = bool(nSinks > 0)
@@ -148,28 +136,65 @@ class PhantomDump:
         if dumpFileFormat == 'HDF5':
 
             f = h5py.File(dumpFileName, 'r')
-            arrays = f['arrays']
 
-            self.ParticleData.particleType     = arrays['itype'].value
-            self.ParticleData.position         = arrays['xyzh_label'].value[:, 0:3]
-            self.ParticleData.smoothingLength  = arrays['xyzh_label'].value[:, 3]
+            #--- Particles
+
+            particles = f['particles']
+
+            self.ParticleData = \
+                pd.DataFrame( particles['xyz'][:, 0], columns=['x'] )
+            self.ParticleData['y'] = particles['xyz'][:, 1]
+            self.ParticleData['z'] = particles['xyz'][:, 2]
+            self.ParticleData['m'] = 1.
+            self.ParticleData['h'] = particles['h']
+
+            self.ParticleData['rho'] = density_from_smoothing_length(
+                self.ParticleData['h'],
+                self.ParticleData['m'],
+                hfact=self.Parameters['hfact'])
+
+            self.ParticleData['P'] = particles['pressure']
 
             if isFullDump:
-                self.ParticleData.velocity     = arrays['vxyzu_label'].value[:, 0:3]
-            else:
-                self.ParticleData.velocity     = None
+                self.ParticleData['vx'] = particles['vxyz'][:, 0]
+                self.ParticleData['vy'] = particles['vxyz'][:, 1]
+                self.ParticleData['vz'] = particles['vxyz'][:, 2]
+
+            if nDustTypes > 0:
+                for n in range(nDustTypes):
+                    tag1 = 'dustfrac' + str(n+1)
+                    tag2 = 'tstop' + str(n+1)
+                    self.ParticleData[tag1] = particles['dustfrac'][:, n]
+                    self.ParticleData[tag2] = particles['tstop'][:, n]
+
+            if isFullDump:
+                self.ParticleData['divv']  = particles['divv']
+                self.ParticleData['dt']    = particles['dt']
+                self.ParticleData['itype'] = particles['itype']
+
+            #--- Sinks
 
             if containsSinks:
-                self.SinkData.mass            = arrays['xyzmh_ptmass_label'].value[:, 3]
-                self.SinkData.position        = arrays['xyzmh_ptmass_label'].value[:, 0:3]
-                self.SinkData.accretionRadius = arrays['xyzmh_ptmass_label'].value[:, 4]
-                self.SinkData.velocity        = arrays['vxyz_ptmass_label'].value
-            else:
-                self.SinkData = None
 
-            # TODO: add dustfrac
-            if containsDust:
-                print_warning('HDF5 dump reader cannot read dustfrac yet')
+                sinks = f['sinks']
+
+                self.SinkData = \
+                        pd.DataFrame( sinks['xyz'][:nSinks, 0], columns=['x'] )
+                self.SinkData['y'] = sinks['xyz'][:nSinks, 1]
+                self.SinkData['z'] = sinks['xyz'][:nSinks, 2]
+                self.SinkData['m'] = sinks['m'][:nSinks]
+                self.SinkData['h'] = sinks['h'][:nSinks]
+                self.SinkData['hsoft'] = sinks['hsoft'][:nSinks]
+                self.SinkData['macc'] = sinks['maccreted'][:nSinks]
+                self.SinkData['spinx'] = sinks['spinxyz'][:nSinks, 0]
+                self.SinkData['spiny'] = sinks['spinxyz'][:nSinks, 1]
+                self.SinkData['spinz'] = sinks['spinxyz'][:nSinks, 2]
+                self.SinkData['tlast'] = sinks['tlast'][:nSinks]
+
+            if isFullDump:
+                self.SinkData['vx'] = sinks['vxyz'][:nSinks, 0]
+                self.SinkData['vy'] = sinks['vxyz'][:nSinks, 1]
+                self.SinkData['vz'] = sinks['vxyz'][:nSinks, 2]
 
             f.close()
 
@@ -223,7 +248,10 @@ def _read_header_from_hdf5(headerFileName):
 
     f.close()
 
-    return header
+    isFullDump = True
+    print_warning('HDF5 dump reader work in progress: assuming full dump')
+
+    return header, isFullDump
 
 def _read_header_from_showheader(headerFileName):
 
