@@ -12,6 +12,14 @@ import numpy as np
 from ..PhantomDump import iGas, iDust
 from .splash import splash
 
+options = ['accelerate',
+           'colorbar',
+           'colorscale',
+           'densityWeighted',
+           'dscreen',
+           'normalize',
+           'zobserver']
+
 class Image:
     '''
     Rendered image.
@@ -29,16 +37,9 @@ class Image:
 
         self._default_plot_options()
 
+        self._axis     = None
         self._image    = None
         self._colorbar = None
-
-    def _interpolation_weights(self, densityWeighted):
-
-        if densityWeighted:
-            self.ParticleData['weights'] = \
-                self.ParticleData['m'] / self.ParticleData['h']**2
-        else:
-            self.ParticleData['weights'] = 1 / self.Parameters['hfact']
 
     def _default_plot_options(self):
         '''
@@ -55,8 +56,6 @@ class Image:
             'normalize':       False,
             'zobserver':       None
             }
-
-        self._interpolation_weights(PlotOptions['densityWeighted'])
 
         self.PlotOptions = PlotOptions
 
@@ -91,7 +90,6 @@ class Image:
 
         if densityWeighted is not None:
             self.PlotOptions['densityWeighted'] = densityWeighted
-            self._interpolation_weights(densityWeighted)
 
         if dscreen is not None:
             self.PlotOptions['dscreen'] = dscreen
@@ -107,8 +105,7 @@ class Image:
         Get plot options.
         '''
 
-        if option in ['accelerate', 'colorbar', 'colorscale', 'densityWeighted',
-                      'dscreen', 'normalize', 'zobserver']:
+        if option in options:
             return self.PlotOptions[option]
 
         print(f'No option: {option}')
@@ -185,8 +182,12 @@ class Image:
         verticalData    = pd[verticalAxis]
         depthData       = pd[depthAxis]
         renderData      = pd[render]
-        weights         = pd['weights']
         smoothingLength = pd['h']
+
+        weights = _interpolation_weights(
+            self.PlotOptions['densityWeighted'], pd,
+            self.Parameters['hfact']
+            )
 
         if imageRange > 0:
             if horizontalRange is not None or verticalRange is not None:
@@ -203,7 +204,7 @@ class Image:
 
         imageData = self._interpolate_to_pixelgrid(
             horizontalData, verticalData, depthData, smoothingLength,
-            weights,renderData, horizontalRange, verticalRange )
+            weights, renderData, horizontalRange, verticalRange )
 
         extent = horizontalRange + verticalRange
 
@@ -232,6 +233,7 @@ class Image:
                 + renderScale)
 
         if ax is None:
+            plt.clf()
             ax = plt.gca()
 
         img = ax.imshow(imageData, norm=norm, origin='lower', extent=extent,
@@ -256,6 +258,7 @@ class Image:
             cax = divider.append_axes("right", size="5%", pad=0.05)
             cb = plt.colorbar(img, cax=cax)
 
+        self._axis = ax
         self._image = img
         self._colorbar = cb
 
@@ -343,3 +346,10 @@ class Image:
         imageData = imageData.T
 
         return imageData
+
+def _interpolation_weights(densityWeighted, ParticleData, hfact):
+
+    if densityWeighted:
+        return np.array(ParticleData['m'] / ParticleData['h']**2)
+
+    return np.full_like(ParticleData['h'], 1/hfact)
