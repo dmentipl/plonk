@@ -5,32 +5,32 @@ Daniel Mentiplay, 2019.
 '''
 
 from plonk.plonk.analysis.disc import disc_analysis
-from plonk.plonk.PhantomDump import PhantomDump
+from plonk.plonk.dump import PhantomDump
 
 #--- Options
 
 # TODO: get as input
-numberRadialBins = 150
-radiusIn         = 10
-radiusOut        = 200
+number_radial_bins = 150
+radius_in          = 10
+radius_out         = 200
 
 #--- Dump file names
 
 # TODO: get dump file names as input
-dumpFileNames = ['data/disc_00000.ascii', 'data/disc_00006.ascii']
+dump_file_names = ['data/disc_00000.ascii', 'data/disc_00006.ascii']
 
 # ---------------------------------------------------------------------------- #
 
 dumps = list()
 
-for dumpFileName in dumpFileNames:
+for dump_file_name in dump_file_names:
 
 #--- Read dump file
 
-    print('Reading in data from dumpfile: ' + dumpFileName + '... ', end='',
+    print('Reading in data from dumpfile: ' + dump_file_name + '... ', end='',
           flush=True)
 
-    dump = PhantomDump(dumpFileName)
+    dump = PhantomDump(dump_file_name)
 
     print('done')
 
@@ -38,21 +38,33 @@ for dumpFileName in dumpFileNames:
 
 #--- Perform analysis
 
-radialAverages = list()
-particleData = list()
-sinkData = list()
+radial_averages = list()
+particles       = list()
+sinks           = list()
 
 for dump in dumps:
 
     print('Performing disc analysis')
-    results = disc_analysis( radiusIn=radiusIn,
-                             radiusOut=radiusOut,
-                             numberRadialBins=numberRadialBins,
-                             particleData=dump.ParticleData,
-                             sinkData=dump.SinkData,
-                             parameters=dump.Parameters,
-                             units=dump.Units )
+    results = disc_analysis( radius_in          = radius_in,
+                             radius_out         = radius_out,
+                             number_radial_bins = number_radial_bins,
+                             particles          = dump.particles,
+                             sinks              = dump.sinks,
+                             parameters         = dump.parameters,
+                             units              = dump.units )
 
-    radialAverages.append(results[0])
-    particleData.append(results[1])
-    sinkData.append(results[2])
+    radial_averages.append(results[0])
+    particles.      append(results[1])
+    sinks.          append(results[2])
+
+
+message = '''
+Variables available:
+  dumps           : list of Dump objects from dump files read in
+  radial_averages : list of DataFrames with radial averages over the disc from
+                    each dump file
+  particles       : list of DataFrames with quantities on particles
+  sinks           : list of DataFrames with quantities on sinks
+'''
+
+print(message)

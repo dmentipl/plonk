@@ -50,10 +50,10 @@ class Units:
         self.units['density']          = self.units['mass'] \
                                        / self.units['distance']**3
 
-        self.units['surfaceDensity']   = self.units['mass'] \
+        self.units['surface_density']   = self.units['mass'] \
                                        / self.units['distance']**2
 
-        self.units['angularMomentum']  = self.units['mass'] \
+        self.units['angular_momentum']  = self.units['mass'] \
                                        * self.units['distance']**2 \
                                        / self.units['time']
 
@@ -61,18 +61,19 @@ class Units:
                                        * self.units['distance']**2 \
                                        / self.units['time']**2
 
-def convert(quantity, unitFrom, unitTo):
+def convert(quantity, unit_from, unit_to):
     '''
     Convert a quantity from one unit to another:
 
-        newValue = quantity * unitFrom / unitTo
+        new_value = quantity * unit_from / unit_to
 
-    e.g. massInEarthMass = massInCodeUnits * units['mass'] / constants.earthMass
+    e.g. mass_in_earth_mass = \\
+            mass_in_code_units * units['mass'] / constants.earth_mass
 
     Arguments:
-        quantity : quantity to be converted
-        unitFrom : current value of unit
-        unitTo   : unit to convert quantity to
+        quantity  : quantity to be converted
+        unit_from : current value of unit
+        unit_to   : unit to convert quantity to
     '''
 
-    return quantity * unitFrom / unitTo
+    return quantity * unit_from / unit_to

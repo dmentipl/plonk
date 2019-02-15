@@ -14,197 +14,195 @@ from ..constants import constants
 
 # ---------------------------------------------------------------------------- #
 
-def disc_analysis(radiusIn=None,
-                  radiusOut=None,
-                  numberRadialBins=None,
-                  particleData=None,
-                  sinkData=None,
+def disc_analysis(radius_in=None,
+                  radius_out=None,
+                  number_radial_bins=None,
+                  particles=None,
+                  sinks=None,
                   parameters=None,
                   units=None,
-                  minParticleAverage=None):
+                  min_particle_average=None):
     '''
     Perform disc analysis.
 
     TODO: add more docs
 
     Arguments:
-        radiusIn         : Inner disc radius for radial binning
-        radiusOut        : Outer disc radius for radial binning
-        numberRadialBins : Number of radial bins
+        radius_in          : Inner disc radius for radial binning
+        radius_out         : Outer disc radius for radial binning
+        number_radial_bins : Number of radial bins
+        particles          : Particle data frame
+        sinks              : Sink data frame
 
     Optional:
-        minParticleAverage : Minimum number of particles to compute averages
+        min_particle_average : Minimum number of particles to compute averages
     '''
 
     # TODO: add to docs
 
 #--- Dump type
 
-    isFullDump = 'vx' in particleData.columns
+    is_full_dump = 'vx' in particles.columns
 
 #--- Units
 
-    uDist = units['distance']
-    uTime = units['time']
-    uMass = units['mass']
+    u_dist = units['distance']
+    u_time = units['time']
+    u_mass = units['mass']
 
 #--- Dust
 
-    nDustSmall = parameters['ndustsmall']
-    nDustLarge = parameters['ndustlarge']
+    n_dust_small = parameters['ndustsmall']
+    n_dust_large = parameters['ndustlarge']
 
-    containsSmallDust = bool(nDustSmall > 0)
-    containsLargeDust = bool(nDustLarge > 0)
-    containsDust = bool(containsSmallDust or containsLargeDust)
+    contains_small_dust = bool(n_dust_small > 0)
+    contains_large_dust = bool(n_dust_large > 0)
+    contains_dust = bool(contains_small_dust or contains_large_dust)
 
-    if containsDust:
-        grainSize = parameters['grainsize']
-        grainDens = parameters['graindens']
+    if contains_dust:
+        grain_size = parameters['grainsize']
+        grain_dens = parameters['graindens']
 
 #--- Spherical and cylindrical distance
 
-    particleData['r'] = norm(particleData[['x', 'y', 'z']], axis=1)
-    particleData['R'] = norm(particleData[['x', 'y']], axis=1)
+    particles['r'] = norm(particles[['x', 'y', 'z']], axis=1)
+    particles['R'] = norm(particles[['x', 'y']], axis=1)
 
 #--- Momentum and angular momentum
 
-    if isFullDump:
+    if is_full_dump:
 
-        particleData['|v|'] = norm(particleData[['vx', 'vy', 'vz']], axis=1)
+        particles['|v|'] = norm(particles[['vx', 'vy', 'vz']], axis=1)
 
-        particleData['px'] = particleData['m'] * particleData['vx']
-        particleData['py'] = particleData['m'] * particleData['vy']
-        particleData['pz'] = particleData['m'] * particleData['vz']
+        particles['px'] = particles['m'] * particles['vx']
+        particles['py'] = particles['m'] * particles['vy']
+        particles['pz'] = particles['m'] * particles['vz']
 
-        angularMomentum = np.cross(particleData[['x', 'y', 'z']],
-                                   particleData[['px', 'py', 'pz']])
+        angular_momentum = np.cross(particles[['x', 'y', 'z']],
+                                    particles[['px', 'py', 'pz']])
 
-        particleData['Lx'] = angularMomentum[:, 0]
-        particleData['Ly'] = angularMomentum[:, 1]
-        particleData['Lz'] = angularMomentum[:, 2]
-        particleData['|L|'] = norm(angularMomentum, axis=1)
-        particleData['|l|'] = particleData['|L|'] / particleData['m']
+        particles['Lx']  = angular_momentum[:, 0]
+        particles['Ly']  = angular_momentum[:, 1]
+        particles['Lz']  = angular_momentum[:, 2]
+        particles['|L|'] = norm(angular_momentum, axis=1)
 
     else:
 
-        particleData['|v|'] = np.nan
-        particleData['px']  = np.nan
-        particleData['py']  = np.nan
-        particleData['pz']  = np.nan
-        particleData['Lx']  = np.nan
-        particleData['Ly']  = np.nan
-        particleData['Lz']  = np.nan
-        particleData['|L|'] = np.nan
-        particleData['|l|'] = np.nan
+        particles['|v|'] = np.nan
+        particles['px']  = np.nan
+        particles['py']  = np.nan
+        particles['pz']  = np.nan
+        particles['Lx']  = np.nan
+        particles['Ly']  = np.nan
+        particles['Lz']  = np.nan
+        particles['|L|'] = np.nan
 
 #--- Sinks
 
-    nSinks = parameters['nptmass']
-    containsSinks = bool(nSinks > 0)
+    n_sinks = parameters['nptmass']
+    contains_sinks = bool(n_sinks > 0)
 
-    if containsSinks:
+    if contains_sinks:
 
-        sinkData['r'] = norm(sinkData[['x', 'y', 'z']], axis=1)
-        sinkData['R'] = norm(sinkData[['x', 'y']], axis=1)
+        sinks['r'] = norm(sinks[['x', 'y', 'z']], axis=1)
+        sinks['R'] = norm(sinks[['x', 'y']], axis=1)
 
         # TODO: check if sink[0] is really the star; check if binary
-        stellarMass = sinkData['m'][0]
+        stellar_mass = sinks['m'][0]
         print('Assuming the first sink particle is the central star')
 
-        gravitationalParameter = constants.gravitationalConstant \
-                               / ( uDist**3 / uTime**2 / uMass ) \
-                               * stellarMass
+        gravitational_parameter = constants.gravitational_constant \
+                               / ( u_dist**3 / u_time**2 / u_mass ) \
+                               * stellar_mass
     else:
 
         raise Exception('Must have at least one sink to do disc analysis')
 
-    if isFullDump:
+    if is_full_dump:
 
-        sinkData['|v|'] = norm(sinkData[['vx', 'vy', 'vz']], axis=1)
+        sinks['|v|'] = norm(sinks[['vx', 'vy', 'vz']], axis=1)
 
-        sinkData['px'] = sinkData['m'] * sinkData['vx']
-        sinkData['py'] = sinkData['m'] * sinkData['vy']
-        sinkData['pz'] = sinkData['m'] * sinkData['vz']
+        sinks['px'] = sinks['m'] * sinks['vx']
+        sinks['py'] = sinks['m'] * sinks['vy']
+        sinks['pz'] = sinks['m'] * sinks['vz']
 
-        angularMomentum = np.cross(sinkData[['x', 'y', 'z']],
-                                   sinkData[['px', 'py', 'pz']])
+        angular_momentum = np.cross(sinks[['x', 'y', 'z']],
+                                    sinks[['px', 'py', 'pz']])
 
-        sinkData['Lx'] = angularMomentum[:, 0]
-        sinkData['Ly'] = angularMomentum[:, 1]
-        sinkData['Lz'] = angularMomentum[:, 2]
-        sinkData['|L|'] = norm(angularMomentum, axis=1)
-        sinkData['|l|'] = sinkData['|L|'] / sinkData['m']
+        sinks['Lx'] = angular_momentum[:, 0]
+        sinks['Ly'] = angular_momentum[:, 1]
+        sinks['Lz'] = angular_momentum[:, 2]
+        sinks['|L|'] = norm(angular_momentum, axis=1)
 
     else:
 
-        sinkData['|v|'] = np.nan
-        sinkData['px']  = np.nan
-        sinkData['py']  = np.nan
-        sinkData['pz']  = np.nan
-        sinkData['Lx']  = np.nan
-        sinkData['Ly']  = np.nan
-        sinkData['Lz']  = np.nan
-        sinkData['|L|'] = np.nan
-        sinkData['|l|'] = np.nan
+        sinks['|v|'] = np.nan
+        sinks['px']  = np.nan
+        sinks['py']  = np.nan
+        sinks['pz']  = np.nan
+        sinks['Lx']  = np.nan
+        sinks['Ly']  = np.nan
+        sinks['Lz']  = np.nan
+        sinks['|L|'] = np.nan
 
 #--- Eccentricity
 
-    if isFullDump:
+    if is_full_dump:
 
-        specificKineticEnergy = 1/2 * particleData['|v|']**2
-        specificGravitationalEnergy = \
-            - gravitationalParameter / particleData['r']
-        specificEnergy = specificKineticEnergy + specificGravitationalEnergy
-        term = 2 * specificEnergy * particleData['|l|']**2 \
-             / gravitationalParameter**2
+        kinetic_energy       = 1/2 * particles['|v|']**2
+        gravitational_energy = - gravitational_parameter / particles['r']
 
-        particleData['e'] = np.sqrt( 1 + term )
+        energy = kinetic_energy + gravitational_energy
+        term   = 2 * energy * (particles['|L|']/particles['m'])**2 \
+               / gravitational_parameter**2
 
-        specificKineticEnergy = 1/2 * sinkData['|v|']**2
-        specificGravitationalEnergy = \
-            - gravitationalParameter / sinkData['r']
-        specificEnergy = specificKineticEnergy + specificGravitationalEnergy
-        term = 2 * specificEnergy * sinkData['|l|']**2 \
-             / gravitationalParameter**2
+        particles['e'] = np.sqrt( 1 + term )
 
-        sinkData['e'] = np.sqrt( 1 + term )
+        kinetic_energy       = 1/2 * sinks['|v|']**2
+        gravitational_energy = - gravitational_parameter / sinks['r']
+
+        energy = kinetic_energy + gravitational_energy
+        term   = 2 * energy * (sinks['|L|']/sinks['m'])**2 \
+               / gravitational_parameter**2
+
+        sinks['e'] = np.sqrt( 1 + term )
 
     else:
 
-        particleData['e'] = np.nan
-        sinkData['e']     = np.nan
+        particles['e'] = np.nan
+        sinks['e']     = np.nan
 
 #--- Calculate radially binned quantities
 
-    radialData = _calculate_radially_binned_quantities( numberRadialBins,
-                                                        radiusIn,
-                                                        radiusOut,
-                                                        particleData,
-                                                        minParticleAverage )
+    radial_data = _calculate_radially_binned_quantities( number_radial_bins,
+                                                         radius_in,
+                                                         radius_out,
+                                                         particles,
+                                                         min_particle_average )
 
 #--- Stokes
 
     gamma = parameters['gamma']
 
-    # for idxi in range(len(radialBinsDisc)):
-    #     for idxj in range(nDustLarge):
+    # for idxi in range(len(radial_bins_disc)):
+    #     for idxj in range(n_dust_large):
 
     #         Stokes[idxj][idxi] = \
-    #             np.sqrt(gamma*np.pi/8) * grainDens[idxj] * grainSize[idxj] \
-    #             / ( scaleHeightGas[idxi] \
-    #             * (midplaneDensityGas[idxi] + midplaneDensityDust[idxj][idxi]) )
+    #             np.sqrt(gamma*np.pi/8) * grain_dens[idxj] * grain_size[idxj] \
+    #             / ( scale_height_gas[idxi] \
+    #             * (midplane_density_gas[idxi] + midplane_density_dust[idxj][idxi]) )
 
 #--- Return
 
-    return radialData, particleData, sinkData
+    return radial_data, particles, sinks
 
 # ---------------------------------------------------------------------------- #
 
-def _calculate_radially_binned_quantities( numberRadialBins=None,
-                                           radiusIn=None,
-                                           radiusOut=None,
-                                           particleData=None,
-                                           minParticleAverage=None ):
+def _calculate_radially_binned_quantities( number_radial_bins=None,
+                                           radius_in=None,
+                                           radius_out=None,
+                                           particles=None,
+                                           min_particle_average=None ):
     '''
     Calculate averaged radially binned quantities:
         - radial bins
@@ -219,68 +217,74 @@ def _calculate_radially_binned_quantities( numberRadialBins=None,
         - eccentricity
     '''
 
-    if numberRadialBins is None:
-        raise ValueError('Need numberRadialBins')
+    if number_radial_bins is None:
+        raise ValueError('Need number_radial_bins')
 
-    if radiusIn is None:
-        raise ValueError('Need radiusIn')
+    if radius_in is None:
+        raise ValueError('Need radius_in')
 
-    if radiusOut is None:
-        raise ValueError('Need radiusOut')
+    if radius_out is None:
+        raise ValueError('Need radius_out')
 
-    if particleData is None:
-        raise ValueError('Need particleData')
+    if particles is None:
+        raise ValueError('Need particles')
 
-    if minParticleAverage is None:
-        minParticleAverage = 5
+    if min_particle_average is None:
+        min_particle_average = 5
 
-    radialBinWidth = (radiusOut - radiusIn) / (numberRadialBins - 1)
-    radialBins     = np.linspace(radiusIn, radiusOut, numberRadialBins)
+    radial_bin_width = (radius_out - radius_in) / (number_radial_bins - 1)
+    radial_bins      = np.linspace(radius_in, radius_out, number_radial_bins)
 
-    radialData = pd.DataFrame(radialBins, columns=['R'])
-    radialData['area'] = np.pi * ( (radialBins + radialBinWidth/2)**2 \
-                                 - (radialBins - radialBinWidth/2)**2 )
+    radial_averages = pd.DataFrame(radial_bins, columns=['R'])
+    radial_averages['area'] = \
+        np.pi * ( (radial_bins + radial_bin_width/2)**2 \
+                - (radial_bins - radial_bin_width/2)**2 )
 
-    radialData = radialData.reindex(
-        columns = radialData.columns.tolist() \
-        + ['sigma', 'h', 'H', 'Lx', 'Ly', 'Lz', 'l', 'tilt', 'twist', 'e'] )
+    radial_averages = radial_averages.reindex(
+        columns = radial_averages.columns.tolist() \
+        + ['sigma', 'h', 'H', 'Lx', 'Ly', 'Lz', '|L|', 'tilt', 'twist', 'e'] )
 
-    for index, radius in enumerate(radialBins):
+    for index, radius in enumerate(radial_bins):
 
-        radiusLeft  = radius - radialBinWidth/2
-        radiusRight = radius + radialBinWidth/2
+        radius_left  = radius - radial_bin_width/2
+        radius_right = radius + radial_bin_width/2
 
-        particlesInRadialBin = \
-            particleData.loc[ (particleData['R'] >= radiusLeft) \
-                            & (particleData['R'] <= radiusRight) ]
+        particles_in_bin = \
+            particles.loc[ (particles['R'] >= radius_left) \
+                         & (particles['R'] <= radius_right) ]
 
-        radialData['sigma'].iloc[index] = particlesInRadialBin['m'].sum() \
-                                        / radialData['area'].iloc[index]
+        radial_averages['sigma'].iloc[index] = \
+            particles_in_bin['m'].sum() / radial_averages['area'].iloc[index]
 
-        if len(particlesInRadialBin) > minParticleAverage:
+        if len(particles_in_bin) > min_particle_average:
 
-            radialData['h'].iloc[index] = particlesInRadialBin['h'].mean()
-            radialData['H'].iloc[index] = particlesInRadialBin['z'].std()
+            radial_averages['h'].iloc[index] = particles_in_bin['h'].mean()
+            radial_averages['H'].iloc[index] = particles_in_bin['z'].std()
 
-            radialData['Lx'].iloc[index] = particlesInRadialBin['Lx'].mean()
-            radialData['Ly'].iloc[index] = particlesInRadialBin['Ly'].mean()
-            radialData['Lz'].iloc[index] = particlesInRadialBin['Lz'].mean()
+            radial_averages['Ly'].iloc[index]  = particles_in_bin['Ly'].mean()
+            radial_averages['Lx'].iloc[index]  = particles_in_bin['Lx'].mean()
+            radial_averages['Lz'].iloc[index]  = particles_in_bin['Lz'].mean()
+            radial_averages['|L|'].iloc[index] = particles_in_bin['|L|'].mean()
 
-            radialData['e'].iloc[index] = particlesInRadialBin['e'].mean()
+            radial_averages['e'].iloc[index] = particles_in_bin['e'].mean()
 
+    radial_averages['tilt'] = \
+        np.arccos( radial_averages['Lz'] / radial_averages['|L|'] )
 
-    radialData['l'] = norm(radialData[['Lx','Ly','Lz']].values, axis=1)
+    radial_averages['twist'] = \
+        np.arctan2( radial_averages['Ly'] / radial_averages['|L|'],
+                    radial_averages['Lx'] / radial_averages['|L|'] )
 
-    radialData['tilt'] = np.arccos( radialData['Lz'] / radialData['l'] )
+    radial_averages['rho'] = \
+        radial_averages['sigma'] / radial_averages['H'] / np.sqrt(2*np.pi)
 
-    radialData['twist'] = np.arctan2( radialData['Ly'] / radialData['l'],
-                                      radialData['Lx'] / radialData['l'] )
+    lx = radial_averages['Lx'] / radial_averages['|L|']
+    ly = radial_averages['Ly'] / radial_averages['|L|']
+    lz = radial_averages['Lz'] / radial_averages['|L|']
 
-    radialData['rho'] = radialData['sigma'] / radialData['H'] / np.sqrt(2*np.pi)
+    radial_averages['psi'] = radial_bins * np.sqrt(
+        np.gradient( lx, radial_bin_width )**2 + \
+        np.gradient( ly, radial_bin_width )**2 + \
+        np.gradient( lz, radial_bin_width )**2 )
 
-    radialData['psi'] = radialBins * np.sqrt(
-        np.gradient( radialData['Lx']/radialData['l'], radialBinWidth )**2 + \
-        np.gradient( radialData['Ly']/radialData['l'], radialBinWidth )**2 + \
-        np.gradient( radialData['Lz']/radialData['l'], radialBinWidth )**2 )
-
-    return radialData
+    return radial_averages

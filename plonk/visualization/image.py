@@ -10,13 +10,13 @@ import matplotlib.colors as colors
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 
-from ..ParticleData import iGas, iDust
+from ..particles import I_GAS, I_DUST
 from .splash import splash
 
 options = ['accelerate',
            'colorbar',
            'colorscale',
-           'densityWeighted',
+           'density_weighted',
            'dscreen',
            'fontfamily',
            'fontsize',
@@ -33,10 +33,10 @@ class Image:
 
     def __init__(self, dump):
 
-        self.ParticleData = dump.ParticleData
-        self.SinkData     = dump.SinkData
-        self.Parameters   = dump.Parameters
-        self.Units        = dump.Units
+        self.particles  = dump.particles
+        self.sinks      = dump.sinks
+        self.parameters = dump.parameters
+        self.units      = dump.units
 
         self._default_plot_options()
 
@@ -49,12 +49,12 @@ class Image:
         Set default plot options.
         '''
 
-        PlotOptions = {
+        plot_options = {
             'accelerate':      False,
             'colorbar':        True,
             'colormap':        'gist_heat',
             'colorscale':      'linear',
-            'densityWeighted': False,
+            'density_weighted': False,
             'dscreen':         None,
             'fontfamily':      'sans-serif',
             'fontsize':        12,
@@ -62,7 +62,7 @@ class Image:
             'zobserver':       None
             }
 
-        self.PlotOptions = PlotOptions
+        self.plot_options = plot_options
 
     def print_plot_options(self):
         '''
@@ -70,14 +70,14 @@ class Image:
         '''
 
         print('Current plot options:\n')
-        for opt in self.PlotOptions:
-            print(f'{opt:20}:  {self.PlotOptions[opt]}')
+        for opt in self.plot_options:
+            print(f'{opt:20}:  {self.plot_options[opt]}')
 
     def set_plot_options(self,
                          accelerate=None,
                          colorbar=None,
                          colorscale=None,
-                         densityWeighted=None,
+                         density_weighted=None,
                          dscreen=None,
                          fontfamily=None,
                          fontsize=None,
@@ -92,31 +92,31 @@ class Image:
             self.print_plot_options()
 
         if accelerate is not None:
-            self.PlotOptions['accelerate'] = accelerate
+            self.plot_options['accelerate'] = accelerate
 
         if colorbar is not None:
-            self.PlotOptions['colorbar'] = colorbar
+            self.plot_options['colorbar'] = colorbar
 
         if colorscale is not None:
-            self.PlotOptions['colorscale'] = colorscale
+            self.plot_options['colorscale'] = colorscale
 
-        if densityWeighted is not None:
-            self.PlotOptions['densityWeighted'] = densityWeighted
+        if density_weighted is not None:
+            self.plot_options['density_weighted'] = density_weighted
 
         if dscreen is not None:
-            self.PlotOptions['dscreen'] = dscreen
+            self.plot_options['dscreen'] = dscreen
 
         if fontfamily is not None:
-            self.PlotOptions['fontfamily'] = fontfamily
+            self.plot_options['fontfamily'] = fontfamily
 
         if fontsize is not None:
-            self.PlotOptions['fontsize'] = fontsize
+            self.plot_options['fontsize'] = fontsize
 
         if normalize is not None:
-            self.PlotOptions['normalize'] = normalize
+            self.plot_options['normalize'] = normalize
 
         if zobserver is not None:
-            self.PlotOptions['zobserver'] = zobserver
+            self.plot_options['zobserver'] = zobserver
 
     def get_plot_option(self, option):
         '''
@@ -124,24 +124,24 @@ class Image:
         '''
 
         if option in options:
-            return self.PlotOptions[option]
+            return self.plot_options[option]
 
         print(f'No option: {option}')
         return None
 
     def plot(self,
-             horizontalAxis=None,
-             verticalAxis=None,
+             horizontal_axis=None,
+             vertical_axis=None,
              render=None,
-             particleTypes=None,
+             particle_types=None,
              itype=None,
-             horizontalRange=None,
-             verticalRange=None,
-             imageRange=-1,
-             renderScale=None,
-             renderMin=None,
-             renderMax=None,
-             renderFractionMax=None,
+             horizontal_range=None,
+             vertical_range=None,
+             image_range=-1,
+             render_scale=None,
+             render_min=None,
+             render_max=None,
+             render_fraction_max=None,
              title=None,
              ax=None,
              newfig=None,
@@ -157,102 +157,102 @@ class Image:
         # TODO: check if need to interpolate again
         # TODO: choose fluid type: gas, dust1, dust2, ...
 
-        if horizontalAxis is None:
-            horizontalAxis = 'x'
+        if horizontal_axis is None:
+            horizontal_axis = 'x'
 
-        if verticalAxis is None:
-            verticalAxis = 'y'
+        if vertical_axis is None:
+            vertical_axis = 'y'
 
         if render is None:
             render = 'rho'
 
         itypes = list()
 
-        if itype is not None and particleTypes is not None:
-            raise ValueError('Cannot set itype and particleTypes together')
+        if itype is not None and particle_types is not None:
+            raise ValueError('Cannot set itype and particle_types together')
 
-        if particleTypes is None and itype is None:
-            itypes = [iGas]
+        if particle_types is None and itype is None:
+            itypes = [I_GAS]
 
         if itype is not None:
             itypes = [itype]
 
-        if particleTypes is not None:
+        if particle_types is not None:
 
-            if 'gas' in particleTypes:
-                itypes.append(iGas)
+            if 'gas' in particle_types:
+                itypes.append(I_GAS)
 
             # TODO: can only plot one type at the moment
-            if 'dust' in particleTypes:
-                for i in range(self.Parameters['ndustlarge']):
-                    itypes.append(iDust + i)
+            if 'dust' in particle_types:
+                for i in range(self.parameters['ndustlarge']):
+                    itypes.append(I_DUST + i)
 
         if len(itypes) > 1:
             raise ValueError('plotting multiple types at once is not working')
 
-        print(f'Rendering {render} on [{horizontalAxis}, {verticalAxis}] window')
+        print(f'Rendering {render} on [{horizontal_axis}, {vertical_axis}] window')
 
         xyz = set(['x', 'y', 'z'])
-        depthAxis = xyz.difference([horizontalAxis, verticalAxis]).pop()
+        depth_axis = xyz.difference([horizontal_axis, vertical_axis]).pop()
 
-        pd = self.ParticleData.loc[self.ParticleData['itype'].isin(itypes)]
+        pd = self.particles.loc[self.particles['itype'].isin(itypes)]
 
-        horizontalData  = pd[horizontalAxis]
-        verticalData    = pd[verticalAxis]
-        depthData       = pd[depthAxis]
-        renderData      = pd[render]
-        smoothingLength = pd['h']
+        horizontal_data  = pd[horizontal_axis]
+        vertical_data    = pd[vertical_axis]
+        depth_data       = pd[depth_axis]
+        render_data      = pd[render]
+        smoothing_length = pd['h']
 
         weights = _interpolation_weights(
-            self.PlotOptions['densityWeighted'], pd,
-            self.Parameters['hfact']
+            self.plot_options['density_weighted'], pd,
+            self.parameters['hfact']
             )
 
-        if imageRange > 0:
-            if horizontalRange is not None or verticalRange is not None:
-                raise ValueError( 'Cannot set imageRange and horizontalRange ' \
-                                + '(or verticalRange) at the same time' )
-            horizontalRange = [-imageRange, imageRange]
-            verticalRange   = [-imageRange, imageRange]
+        if image_range > 0:
+            if horizontal_range is not None or vertical_range is not None:
+                raise ValueError( 'Cannot set image_range and horizontal_range ' \
+                                + '(or vertical_range) at the same time' )
+            horizontal_range = [-image_range, image_range]
+            vertical_range   = [-image_range, image_range]
 
-        if horizontalRange is None:
-            horizontalRange = [horizontalData.min(), horizontalData.max()]
+        if horizontal_range is None:
+            horizontal_range = [horizontal_data.min(), horizontal_data.max()]
 
-        if verticalRange is None:
-            verticalRange = [verticalData.min(), verticalData.max()]
+        if vertical_range is None:
+            vertical_range = [vertical_data.min(), vertical_data.max()]
 
-        imageData = self._interpolate_to_pixelgrid(
-            horizontalData, verticalData, depthData, smoothingLength,
-            weights, renderData, horizontalRange, verticalRange )
+        image_data = self._interpolate_to_pixelgrid(
+            horizontal_data, vertical_data, depth_data, smoothing_length,
+            weights, render_data, horizontal_range, vertical_range )
 
-        extent = horizontalRange + verticalRange
+        extent = horizontal_range + vertical_range
 
-        cmap = self.PlotOptions['colormap']
+        cmap = self.plot_options['colormap']
         if colormap is not None:
             cmap = colormap
 
-        if renderMax is None:
-            vmax = imageData.max()
+        if render_max is None:
+            vmax = image_data.max()
 
-        if renderFractionMax is not None:
-            vmax = imageData.max() * renderFractionMax
+        if render_fraction_max is not None:
+            vmax = image_data.max() * render_fraction_max
 
-        if renderMin is None:
-            vmin = imageData.min()
+        if render_min is None:
+            vmin = image_data.min()
 
-        if renderScale is None:
-            renderScale = self.PlotOptions['colorscale']
+        if render_scale is None:
+            render_scale = self.plot_options['colorscale']
 
-        if renderScale == 'log':
-            norm = colors.SymLogNorm(1e-1*vmax, clip=True)
-        elif renderScale == 'linear':
+        if render_scale == 'log':
+            norm = colors.Sym_log_norm(1e-1*vmax, clip=True)
+        elif render_scale == 'linear':
             norm = colors.Normalize(vmin=vmin, vmax=vmax, clip=True)
         else:
-            raise ValueError("Unknown color renderScale: " \
-                + renderScale)
+            raise ValueError("Unknown color render_scale: " \
+                + render_scale)
 
-        mpl.rcParams['font.family'] = self.PlotOptions['fontfamily']
-        mpl.rcParams['font.size'] = self.PlotOptions['fontsize']
+        mpl.rcParams['font.family'] = self.plot_options['fontfamily']
+        mpl.rcParams['font.size']   = self.plot_options['fontsize']
 
         if ax is None:
             if newfig:
@@ -260,31 +260,31 @@ class Image:
             plt.clf()
             ax = plt.gca()
 
-        img = ax.imshow(imageData, norm=norm, origin='lower', extent=extent,
+        img = ax.imshow(image_data, norm=norm, origin='lower', extent=extent,
                         cmap=cmap)
 
-        ax.set_xlabel(horizontalAxis)
-        ax.set_ylabel(verticalAxis)
+        ax.set_xlabel(horizontal_axis)
+        ax.set_ylabel(vertical_axis)
 
-        ax.set_xlim(horizontalRange[0], horizontalRange[1])
-        ax.set_ylim(verticalRange[0], verticalRange[1])
+        ax.set_xlim(horizontal_range[0], horizontal_range[1])
+        ax.set_ylim(vertical_range[0], vertical_range[1])
 
         if title is not None:
             ax.set_title(title)
 
-        renderLabel = r'$\int$ '+ f'{render}' + ' dz'
+        render_label = r'$\int$ '+ f'{render}' + ' dz'
 
         cb = None
         if colorbar is not None:
             colorbar_ = colorbar
         else:
-            colorbar_ = self.PlotOptions['colorbar']
+            colorbar_ = self.plot_options['colorbar']
         if colorbar_:
             divider = make_axes_locatable(ax)
             cax = divider.append_axes("right", size="5%", pad=0.05)
             cb = plt.colorbar(img, cax=cax)
-            if renderLabel:
-                cb.set_label(renderLabel)
+            if render_label:
+                cb.set_label(render_label)
 
         self._axis = ax
         self._image = img
@@ -317,18 +317,18 @@ class Image:
 
         self._image.set_clim([vmin, vmax])
 
-    def _interpolate_to_pixelgrid(self, horizontalData, verticalData, depthData,
-                                  smoothingLength, weights, renderData,
-                                  horizontalRange, verticalRange):
+    def _interpolate_to_pixelgrid(self, horizontal_data, vertical_data, depth_data,
+                                  smoothing_length, weights, render_data,
+                                  horizontal_range, vertical_range):
 
         # TODO: set number of pixels based on smoothing length
         npixx = 512
         npixy = 512
 
-        normalize = self.PlotOptions['normalize']
-        zobserver = self.PlotOptions['zobserver']
-        dscreen = self.PlotOptions['dscreen']
-        accelerate = self.PlotOptions['accelerate']
+        normalize  = self.plot_options['normalize']
+        zobserver  = self.plot_options['zobserver']
+        dscreen    = self.plot_options['dscreen']
+        accelerate = self.plot_options['accelerate']
 
         if zobserver is None:
             zobserver = 1e10
@@ -342,22 +342,22 @@ class Image:
         if accelerate is None:
             accelerate = False
 
-        itype = np.ones_like(horizontalData)
-        npart = len(smoothingLength)
+        itype = np.ones_like(horizontal_data)
+        npart = len(smoothing_length)
 
-        xmax      = horizontalRange[1]
-        ymax      = verticalRange[1]
-        xmin      = horizontalRange[0]
-        ymin      = verticalRange[0]
+        xmax      = horizontal_range[1]
+        ymax      = vertical_range[1]
+        xmin      = horizontal_range[0]
+        ymin      = vertical_range[0]
         pixwidthx = (xmax - xmin) / npixx
         pixwidthy = (ymax - ymin) / npixy
 
-        imageData = splash.interpolate3d_projection(x=horizontalData,
-                                                    y=verticalData,
-                                                    z=depthData,
-                                                    hh=smoothingLength,
+        image_data = splash.interpolate3d_projection(x=horizontal_data,
+                                                    y=vertical_data,
+                                                    z=depth_data,
+                                                    hh=smoothing_length,
                                                     weight=weights,
-                                                    dat=renderData,
+                                                    dat=render_data,
                                                     itype=itype,
                                                     npart=npart,
                                                     xmin=xmin,
@@ -371,13 +371,13 @@ class Image:
                                                     dscreen=dscreen,
                                                     useaccelerate=accelerate)
 
-        imageData = imageData.T
+        image_data = image_data.T
 
-        return imageData
+        return image_data
 
-def _interpolation_weights(densityWeighted, ParticleData, hfact):
+def _interpolation_weights(density_weighted, particles, hfact):
 
-    if densityWeighted:
-        return np.array(ParticleData['m'] / ParticleData['h']**2)
+    if density_weighted:
+        return np.array(particles['m'] / particles['h']**2)
 
-    return np.full_like(ParticleData['h'], 1/hfact)
+    return np.full_like(particles['h'], 1/hfact)

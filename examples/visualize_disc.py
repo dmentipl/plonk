@@ -4,24 +4,24 @@ visualize_disc.py
 Daniel Mentiplay, 2019.
 '''
 
-from plonk.plonk.PhantomDump import PhantomDump
+from plonk.plonk.dump import PhantomDump
 from plonk.plonk.visualization.image import Image
 
 #--- Dump file names
 
 # TODO: get dump file names as input
-dumpFileNames = ['data/disc_00000.ascii', 'data/disc_00006.ascii']
+dump_file_names = ['data/disc_00000.ascii', 'data/disc_00006.ascii']
 
 dumps = list()
 
-for dumpFileName in dumpFileNames:
+for dump_file_name in dump_file_names:
 
 #--- Read dump file
 
-    print('Reading in data from dumpfile: ' + dumpFileName + '... ', end='',
+    print('Reading in data from dumpfile: ' + dump_file_name + '... ', end='',
           flush=True)
 
-    dump = PhantomDump(dumpFileName)
+    dump = PhantomDump(dump_file_name)
 
     print('done')
 
