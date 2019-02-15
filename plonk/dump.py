@@ -23,7 +23,7 @@ I_DUST_SPLASH  = 8
 
 # ---------------------------------------------------------------------------- #
 
-class PhantomDump:
+class Dump:
     '''
     Phantom dump.
     '''

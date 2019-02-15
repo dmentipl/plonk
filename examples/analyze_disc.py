@@ -5,7 +5,7 @@ Daniel Mentiplay, 2019.
 '''
 
 from plonk.plonk.analysis.disc import disc_analysis
-from plonk.plonk.dump import PhantomDump
+from plonk.plonk.dump import Dump
 
 #--- Options
 
@@ -30,7 +30,7 @@ for dump_file_name in dump_file_names:
     print('Reading in data from dumpfile: ' + dump_file_name + '... ', end='',
           flush=True)
 
-    dump = PhantomDump(dump_file_name)
+    dump = Dump(dump_file_name)
 
     print('done')
 
