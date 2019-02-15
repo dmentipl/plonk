@@ -127,118 +127,145 @@ class PhantomDump:
         if not exists:
             raise FileNotFoundError('Cannot find dump file: ' + dump_file_name)
 
+        if dump_file_format == 'HDF5':
+
+            self._read_arrays_from_hdf5(dump_file_name, is_full_dump)
+
+        elif dump_file_format == 'ASCII':
+
+            self._read_arrays_from_ascii(dump_file_name, is_full_dump)
+
+    def _read_arrays_from_ascii(self, dump_file_name, is_full_dump):
+
         n_dust_types = self.parameters['ndustsmall'] + self.parameters['ndustlarge']
         n_dust_large = self.parameters['ndustlarge']
 
         n_sinks = self.parameters['nptmass']
         contains_sinks = bool(n_sinks > 0)
 
-        if dump_file_format == 'HDF5':
+        names = ['x', 'y', 'z', 'm', 'h', 'rho']
+        sink_drop = list()
+        if is_full_dump:
+            names += ['vx', 'vy', 'vz']
+        if n_dust_types > 0:
+            for n in range(n_dust_types):
+                names += ['dustfrac' + str(n+1)]
+                sink_drop += ['dustfrac' + str(n+1)]
+        if is_full_dump:
+            names += ['divv', 'dt', 'itype']
+            sink_drop += ['divv', 'dt', 'itype']
+        else:
+            names += ['itype']
+            sink_drop += ['itype']
 
-            f = h5py.File(dump_file_name, 'r')
+        data = pd.read_csv(dump_file_name, comment='#', names=names,
+                           delim_whitespace=True)
 
-            #--- Particles
+        particles = data[data['itype'] != I_SINK].reset_index(drop=True)
 
-            particles = f['particles']
+        particles.loc[
+            (particles['itype'] >= I_DUST_SPLASH) &
+            (particles['itype'] <= I_DUST_SPLASH + n_dust_large),
+            'itype'] -= I_DUST_SPLASH - I_DUST
 
-            self.particles = \
-                pd.DataFrame( particles['xyz'][:, 0], columns=['x'] )
-            self.particles['y'] = particles['xyz'][:, 1]
-            self.particles['z'] = particles['xyz'][:, 2]
-            self.particles['m'] = 1.
-            self.particles['h'] = particles['h']
+        self.particles = particles
 
-            self.particles['rho'] = density_from_smoothing_length(
-                self.particles['h'],
-                self.particles['m'],
-                hfact=self.parameters['hfact'])
+        if contains_sinks:
 
-            self.particles['P'] = particles['pressure']
+            sinks = data[data['itype'] == I_SINK].reset_index(drop=True)
+            sinks = sinks.drop(sink_drop, axis=1)
 
-            if is_full_dump:
-                self.particles['vx'] = particles['vxyz'][:, 0]
-                self.particles['vy'] = particles['vxyz'][:, 1]
-                self.particles['vz'] = particles['vxyz'][:, 2]
+            self.sinks = sinks
 
-            if n_dust_types > 0:
-                for n in range(n_dust_types):
-                    tag1 = 'dustfrac' + str(n+1)
-                    tag2 = 'tstop' + str(n+1)
-                    self.particles[tag1] = particles['dustfrac'][:, n]
-                    self.particles[tag2] = particles['tstop'][:, n]
+    def _read_arrays_from_hdf5(self, dump_file_name, is_full_dump):
 
-            if is_full_dump:
-                self.particles['divv']  = particles['divv']
-                self.particles['dt']    = particles['dt']
-                self.particles['itype'] = particles['itype']
+        n_dust_types = self.parameters['ndustsmall'] + self.parameters['ndustlarge']
 
-            #--- Sinks
+        n_sinks = self.parameters['nptmass']
+        contains_sinks = bool(n_sinks > 0)
 
-            if contains_sinks:
+        f = h5py.File(dump_file_name, 'r')
 
-                sinks = f['sinks']
+        #--- Particles
 
-                self.sinks = \
-                        pd.DataFrame( sinks['xyz'][:n_sinks, 0], columns=['x'] )
-                self.sinks['y'] = sinks['xyz'][:n_sinks, 1]
-                self.sinks['z'] = sinks['xyz'][:n_sinks, 2]
-                self.sinks['m'] = sinks['m'][:n_sinks]
-                self.sinks['h'] = sinks['h'][:n_sinks]
-                self.sinks['hsoft'] = sinks['hsoft'][:n_sinks]
-                self.sinks['macc'] = sinks['maccreted'][:n_sinks]
-                self.sinks['spinx'] = sinks['spinxyz'][:n_sinks, 0]
-                self.sinks['spiny'] = sinks['spinxyz'][:n_sinks, 1]
-                self.sinks['spinz'] = sinks['spinxyz'][:n_sinks, 2]
-                self.sinks['tlast'] = sinks['tlast'][:n_sinks]
+        particles = f['particles']
 
-            if is_full_dump:
-                self.sinks['vx'] = sinks['vxyz'][:n_sinks, 0]
-                self.sinks['vy'] = sinks['vxyz'][:n_sinks, 1]
-                self.sinks['vz'] = sinks['vxyz'][:n_sinks, 2]
+        self.particles = \
+            pd.DataFrame( particles['xyz'][:, 0], columns=['x'] )
+        self.particles['y'] = particles['xyz'][:, 1]
+        self.particles['z'] = particles['xyz'][:, 2]
 
-            f.close()
+        # TODO: set particle masses
+        self.particles['m'] = 1.
+        print_warning('Mass not set properly')
 
-        elif dump_file_format == 'ASCII':
+        self.particles['h'] = particles['h']
 
-            names = ['x', 'y', 'z', 'm', 'h', 'rho']
-            sink_drop = list()
-            if is_full_dump:
-                names += ['vx', 'vy', 'vz']
-            if n_dust_types > 0:
-                for n in range(n_dust_types):
-                    names += ['dustfrac' + str(n+1)]
-                    sink_drop += ['dustfrac' + str(n+1)]
-            if is_full_dump:
-                names += ['divv', 'dt', 'itype']
-                sink_drop += ['divv', 'dt', 'itype']
-            else:
-                names += ['itype']
-                sink_drop += ['itype']
+        self.particles['rho'] = density_from_smoothing_length(
+            self.particles['h'],
+            self.particles['m'],
+            hfact=self.parameters['hfact'])
 
-            data = pd.read_csv(dump_file_name, comment='#', names=names,
-                               delim_whitespace=True)
+        self.particles['P'] = particles['pressure']
 
-            particles = data[data['itype'] != I_SINK].reset_index(drop=True)
+        if is_full_dump:
+            self.particles['vx'] = particles['vxyz'][:, 0]
+            self.particles['vy'] = particles['vxyz'][:, 1]
+            self.particles['vz'] = particles['vxyz'][:, 2]
 
-            particles.loc[
-                (particles['itype'] >= I_DUST_SPLASH) &
-                (particles['itype'] <= I_DUST_SPLASH + n_dust_large),
-                'itype'] -= I_DUST_SPLASH - I_DUST
+        else:
+            self.particles['vx'] = np.nan
+            self.particles['vy'] = np.nan
+            self.particles['vz'] = np.nan
 
-            self.particles = particles
+        if n_dust_types > 0:
+            for n in range(n_dust_types):
+                tag1 = 'dustfrac' + str(n+1)
+                tag2 = 'tstop' + str(n+1)
+                self.particles[tag1] = particles['dustfrac'][:, n]
+                self.particles[tag2] = particles['tstop'][:, n]
 
-            if contains_sinks:
+        if is_full_dump:
+            self.particles['divv']  = particles['divv']
+            self.particles['dt']    = particles['dt']
+            self.particles['itype'] = particles['itype']
 
-                sinks = data[data['itype'] == I_SINK].reset_index(drop=True)
-                sinks = sinks.drop(sink_drop, axis=1)
+        #--- Sinks
 
-                self.sinks = sinks
+        if contains_sinks:
+
+            sinks = f['sinks']
+
+            self.sinks = \
+                    pd.DataFrame( sinks['xyz'][:n_sinks, 0], columns=['x'] )
+            self.sinks['y'] = sinks['xyz'][:n_sinks, 1]
+            self.sinks['z'] = sinks['xyz'][:n_sinks, 2]
+            self.sinks['m'] = sinks['m'][:n_sinks]
+            self.sinks['h'] = sinks['h'][:n_sinks]
+            self.sinks['hsoft'] = sinks['hsoft'][:n_sinks]
+            self.sinks['macc']  = sinks['maccreted'][:n_sinks]
+            self.sinks['spinx'] = sinks['spinxyz'][:n_sinks, 0]
+            self.sinks['spiny'] = sinks['spinxyz'][:n_sinks, 1]
+            self.sinks['spinz'] = sinks['spinxyz'][:n_sinks, 2]
+            self.sinks['tlast'] = sinks['tlast'][:n_sinks]
+
+        if is_full_dump:
+            self.sinks['vx'] = sinks['vxyz'][:n_sinks, 0]
+            self.sinks['vy'] = sinks['vxyz'][:n_sinks, 1]
+            self.sinks['vz'] = sinks['vxyz'][:n_sinks, 2]
+
+        else:
+            self.sinks['vx'] = np.nan
+            self.sinks['vy'] = np.nan
+            self.sinks['vz'] = np.nan
+
+        f.close()
 
 #--- Functions
 
-def _read_header_from_hdf5(header_file_name):
+def _read_header_from_hdf5(dump_file_name):
 
-    f = h5py.File(header_file_name, 'r')
+    f = h5py.File(dump_file_name, 'r')
 
     header_group = f['header']
 
