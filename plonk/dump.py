@@ -11,16 +11,13 @@ import numpy as np
 import pandas as pd
 
 from .particles import density_from_smoothing_length, I_GAS, I_DUST
+from .utils import print_warning
 from .units import Units
-
-# ---------------------------------------------------------------------------- #
 
 #--- Reading Phantom-Splash ACSII files
 
 I_SINK         = 3
 I_DUST_SPLASH  = 8
-
-# ---------------------------------------------------------------------------- #
 
 class Dump:
     '''
@@ -68,128 +65,54 @@ class Dump:
         file_extension = filename.split('.')[-1]
 
         if file_extension == 'h5':
-            dump_file_format = 'HDF5'
+            self._read_hdf5(file_prefix)
 
         elif file_extension == 'ascii':
-            dump_file_format = 'ASCII'
+            self._read_ascii(file_prefix)
 
         else:
             raise ValueError('Cannot determine dump file format')
 
-        is_full_dump = self._read_header(file_prefix, dump_file_format)
-        self._read_arrays(file_prefix, dump_file_format, is_full_dump)
+    #--- Read hdf5 dump
 
-    #--- Read header
+    def _read_hdf5(self, file_prefix):
 
-    def _read_header(self, file_prefix, dump_file_format):
+        #--- Open file
 
-        if dump_file_format == 'HDF5':
-            file_extension = 'h5'
-
-        elif dump_file_format == 'ASCII':
-            file_extension = 'header'
-
-        header_file_name = file_prefix + '.' + file_extension
-
-        exists = os.path.isfile(header_file_name)
-        if not exists:
-            raise FileNotFoundError('Cannot find header file: ' +
-                                    header_file_name)
-
-        if dump_file_format == 'HDF5':
-            header, is_full_dump = _read_header_from_hdf5(header_file_name)
-
-        elif dump_file_format == 'ASCII':
-            header, is_full_dump = _read_header_from_showheader(header_file_name)
-
-        self.parameters = header
-
-        self.units = Units(header['udist'], header['umass'],
-                           header['utime']).units
-
-        return is_full_dump
-
-    #--- Read arrays
-
-    def _read_arrays(self, file_prefix, dump_file_format, is_full_dump):
-
-        if dump_file_format == 'HDF5':
-            file_extension = 'h5'
-
-        elif dump_file_format == 'ASCII':
-            file_extension = 'ascii'
-
-        dump_file_name = file_prefix + '.' + file_extension
+        dump_file_name = file_prefix + '.h5'
 
         exists = os.path.isfile(dump_file_name)
+
         if not exists:
             raise FileNotFoundError('Cannot find dump file: ' + dump_file_name)
 
-        if dump_file_format == 'HDF5':
-
-            self._read_arrays_from_hdf5(dump_file_name)
-
-        elif dump_file_format == 'ASCII':
-
-            self._read_arrays_from_ascii(dump_file_name, is_full_dump)
-
-    def _read_arrays_from_ascii(self, dump_file_name, is_full_dump):
-
-        n_dust_types = self.parameters['ndustsmall'] + self.parameters['ndustlarge']
-        n_dust_large = self.parameters['ndustlarge']
-
-        n_sinks = self.parameters['nptmass']
-        contains_sinks = bool(n_sinks > 0)
-
-        names = ['x', 'y', 'z', 'm', 'h', 'rho']
-        sink_drop = list()
-        if is_full_dump:
-            names += ['vx', 'vy', 'vz']
-        if n_dust_types > 0:
-            for n in range(n_dust_types):
-                names += ['dustfrac' + str(n+1)]
-                sink_drop += ['dustfrac' + str(n+1)]
-        if is_full_dump:
-            names += ['divv', 'dt', 'itype']
-            sink_drop += ['divv', 'dt', 'itype']
-        else:
-            names += ['itype']
-            sink_drop += ['itype']
-
-        data = pd.read_csv(dump_file_name, comment='#', names=names,
-                           delim_whitespace=True)
-
-        particles = data[data['itype'] != I_SINK].reset_index(drop=True)
-
-        particles.loc[
-            (particles['itype'] >= I_DUST_SPLASH) &
-            (particles['itype'] <= I_DUST_SPLASH + n_dust_large),
-            'itype'] -= I_DUST_SPLASH - I_DUST
-
-        self.particles = particles
-
-        if contains_sinks:
-
-            sinks = data[data['itype'] == I_SINK].reset_index(drop=True)
-            sinks = sinks.drop(sink_drop, axis=1)
-
-            self.sinks = sinks
-
-    def _read_arrays_from_hdf5(self, dump_file_name):
-
-        n_dust_large = self.parameters['ndustlarge']
-        n_dust_types = self.parameters['ndustsmall'] + self.parameters['ndustlarge']
-
-        n_sinks = self.parameters['nptmass']
-        contains_sinks = bool(n_sinks > 0)
-
         f = h5py.File(dump_file_name, 'r')
 
-        is_full_dump = bool( 'vxyz' in f['particles'] )
+        #--- Header
+
+        header = f['header']
+
+        parameters = dict()
+        for key in header.keys():
+            parameters[key] = header[key].value
+
+        self.parameters = parameters
+
+        self.units = Units(parameters['udist'],
+                           parameters['umass'],
+                           parameters['utime']).units
+
+        n_dust_large = self.parameters['ndustlarge']
+        n_dust_types = self.parameters['ndustsmall'] + self.parameters['ndustlarge']
+
+        n_sinks = self.parameters['nptmass']
+        contains_sinks = bool(n_sinks > 0)
 
         #--- Particles
 
         particles = f['particles']
+
+        is_full_dump = bool( 'vxyz' in particles )
 
         self.particles = \
             pd.DataFrame( particles['xyz'][:, 0], columns=['x'] )
@@ -200,10 +123,7 @@ class Dump:
 
         self.particles['h'] = particles['h']
 
-        self.particles['rho'] = density_from_smoothing_length(
-            self.particles['h'],
-            self.particles['m'],
-            hfact=self.parameters['hfact'])
+        self.particles['rho'] = np.nan
 
         if is_full_dump:
             self.particles['P'] = particles['pressure']
@@ -223,12 +143,12 @@ class Dump:
         if n_dust_types > 0:
             for n in range(n_dust_types):
                 tag1 = 'dustfrac' + str(n+1)
-                tag2 = 'tstop' + str(n+1)
+                # tag2 = 'tstop' + str(n+1)
                 self.particles[tag1] = particles['dustfrac'][:, n]
-                if is_full_dump:
-                    self.particles[tag2] = particles['tstop'][:, n]
-                else:
-                    self.particles[tag2] = np.nan
+                # if is_full_dump:
+                #     self.particles[tag2] = particles['tstop'][:, n]
+                # else:
+                #     self.particles[tag2] = np.nan
 
         if is_full_dump:
             self.particles['divv']  = particles['divv']
@@ -242,6 +162,11 @@ class Dump:
 
         self.particles.loc[self.particles['itype']==I_GAS, 'm'] = \
             self.parameters['massoftype'][I_GAS-1]
+
+        self.particles['rho'] = density_from_smoothing_length(
+            self.particles['h'],
+            self.particles['m'],
+            hfact=self.parameters['hfact'])
 
         if n_dust_large  > 0:
             for n in range(n_dust_large):
@@ -279,21 +204,74 @@ class Dump:
 
         f.close()
 
+    #--- Read ascii dump
+
+    def _read_ascii(self, file_prefix):
+
+        header_file_name = file_prefix + '.header'
+        dump_file_name = file_prefix + '.ascii'
+
+        exists = os.path.isfile(header_file_name)
+        if not exists:
+            raise FileNotFoundError('Cannot find header file: ' +
+                                    header_file_name)
+
+        parameters, is_full_dump = _read_header_from_showheader(header_file_name)
+
+        self.parameters = parameters
+
+        self.units = Units(parameters['udist'],
+                           parameters['umass'],
+                           parameters['utime']).units
+
+        exists = os.path.isfile(dump_file_name)
+        if not exists:
+            raise FileNotFoundError('Cannot find dump file: ' + dump_file_name)
+
+        n_dust_types = self.parameters['ndustsmall'] + self.parameters['ndustlarge']
+        n_dust_large = self.parameters['ndustlarge']
+
+        n_sinks = self.parameters['nptmass']
+        contains_sinks = bool(n_sinks > 0)
+
+        names = ['x', 'y', 'z', 'm', 'h', 'rho']
+        sink_drop = list()
+        if is_full_dump:
+            names += ['vx', 'vy', 'vz']
+        if n_dust_types > 0:
+            for n in range(n_dust_types):
+                names += ['dustfrac' + str(n+1)]
+                sink_drop += ['dustfrac' + str(n+1)]
+        if is_full_dump:
+            names += ['divv', 'dt', 'itype']
+            sink_drop += ['divv', 'dt', 'itype']
+        else:
+            names += ['itype']
+            sink_drop += ['itype']
+
+        print_warning('Assuming ascii file columns are as follows:\n' + \
+                      ', '.join(names))
+
+        data = pd.read_csv(dump_file_name, comment='#', names=names,
+                           delim_whitespace=True)
+
+        particles = data[data['itype'] != I_SINK].reset_index(drop=True)
+
+        particles.loc[
+            (particles['itype'] >= I_DUST_SPLASH) &
+            (particles['itype'] <= I_DUST_SPLASH + n_dust_large),
+            'itype'] -= I_DUST_SPLASH - I_DUST
+
+        self.particles = particles
+
+        if contains_sinks:
+
+            sinks = data[data['itype'] == I_SINK].reset_index(drop=True)
+            sinks = sinks.drop(sink_drop, axis=1)
+
+            self.sinks = sinks
+
 #--- Functions
-
-def _read_header_from_hdf5(dump_file_name):
-
-    f = h5py.File(dump_file_name, 'r')
-
-    header_group = f['header']
-
-    header = dict()
-    for key in header_group.keys():
-        header[key] = header_group[key].value
-
-    f.close()
-
-    return header
 
 def _read_header_from_showheader(header_file_name):
 
