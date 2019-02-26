@@ -8,18 +8,22 @@ def print_warning(message):
     '''
     Print formatted warning message.
     '''
+    l = len(message)
+    l = min(l, 80)
     message = 'WARNING: ' + message
     print( '\n' \
-         + len(message)*'-' + '\n' \
+         + l*'-' + '\n' \
          + message + '\n' \
-         + len(message)*'-' )
+         + l*'-' )
 
 def print_error(message):
     '''
     Print formatted error message.
     '''
+    l = len(message)
+    l = min(l, 80)
     message = 'ERROR: ' + message
     print( '\n' \
-         + len(message)*'-' + '\n' \
+         + l*'-' + '\n' \
          + message + '\n' \
-         + len(message)*'-' )
+         + l*'-' )
