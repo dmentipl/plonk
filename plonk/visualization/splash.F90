@@ -36,9 +36,9 @@ module splash
  real :: dq2table = 4./maxcoltable
  real :: ddq2table = maxcoltable/4.
 
- real, parameter :: radkernel   = 2.
- real, parameter :: radkernel2  = 4.
- real, parameter :: cnormk3D    = 0.3183098862
+ real :: radkernel   = 2.
+ real :: radkernel2  = 4.
+ real :: cnormk3D    = 0.3183098862
 
 contains
 
