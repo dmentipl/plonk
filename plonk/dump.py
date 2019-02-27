@@ -14,6 +14,43 @@ from .particles import density_from_smoothing_length, I_GAS, I_DUST
 from .utils import print_warning
 from .units import Units
 
+#--- Possibly available arrays in Phantom dump
+
+POSSIBLE_ARRAYS = [
+        'itype',
+        'xyz',
+        'h',
+        'pressure',
+        'vxyz',
+        'u',
+        'dustfrac',
+        'tstop',
+        'deltavxyz',
+        'divv',
+        'curlvxyz',
+        'dt',
+        'alpha',
+        'poten',
+        'grainsize',
+        'graindens',
+        'vrel/vfrag',
+        'St',
+        'abundance',
+        'T',
+        'luminosity',
+        'beta_pr',
+        'Bxyz',
+        'psi',
+        'divB',
+        'curlBxyz',
+        'divBsymm',
+        'eta_{OR}',
+        'eta_{HE}',
+        'eta_{AD}',
+        'ne/n' ]
+
+NABUNDANCES = 5
+
 #--- Reading Phantom-Splash ACSII files
 
 I_SINK         = 3
@@ -114,64 +151,75 @@ class Dump:
 
         is_full_dump = bool( 'vxyz' in particles )
 
-        self.particles = \
-            pd.DataFrame( particles['xyz'][:, 0], columns=['x'] )
+        self.particles = pd.DataFrame( particles['itype'].value,
+                                       columns=['itype'])
+
+        self.particles['x'] = particles['xyz'][:, 0]
         self.particles['y'] = particles['xyz'][:, 1]
         self.particles['z'] = particles['xyz'][:, 2]
-
-        self.particles['m'] = np.nan
-
         self.particles['h'] = particles['h']
-
-        self.particles['rho'] = np.nan
-
-        if is_full_dump:
-            self.particles['P'] = particles['pressure']
-        else:
-            self.particles['P'] = np.nan
-
-        if is_full_dump:
-            self.particles['vx'] = particles['vxyz'][:, 0]
-            self.particles['vy'] = particles['vxyz'][:, 1]
-            self.particles['vz'] = particles['vxyz'][:, 2]
-
-        else:
-            self.particles['vx'] = np.nan
-            self.particles['vy'] = np.nan
-            self.particles['vz'] = np.nan
-
-        if n_dust_types > 0:
-            for n in range(n_dust_types):
-                tag1 = 'dustfrac' + str(n+1)
-                # tag2 = 'tstop' + str(n+1)
-                self.particles[tag1] = particles['dustfrac'][:, n]
-                # if is_full_dump:
-                #     self.particles[tag2] = particles['tstop'][:, n]
-                # else:
-                #     self.particles[tag2] = np.nan
-
-        if is_full_dump:
-            self.particles['divv']  = particles['divv']
-            self.particles['dt']    = particles['dt']
-
-        else:
-            self.particles['divv']  = np.nan
-            self.particles['dt']    = np.nan
-
-        self.particles['itype'] = particles['itype']
 
         self.particles.loc[self.particles['itype']==I_GAS, 'm'] = \
             self.parameters['massoftype'][I_GAS-1]
+
+        if n_dust_large  > 0:
+            for n in range(n_dust_large):
+                self.particles.loc[self.particles['itype']==I_DUST+n, 'm'] = \
+                    self.parameters['massoftype'][I_DUST+n-1]
 
         self.particles['rho'] = density_from_smoothing_length(
             self.particles['h'],
             self.particles['m'],
             hfact=self.parameters['hfact'])
 
-        if n_dust_large  > 0:
-            for n in range(n_dust_large):
-                self.particles.loc[self.particles['itype']==I_DUST+n, 'm'] = \
-                    self.parameters['massoftype'][I_DUST+n-1]
+        generator = (arr for arr in POSSIBLE_ARRAYS[3:] if arr in particles)
+
+        for array in generator:
+
+            if particles[array].size == 0:
+                break
+
+            elif particles[array].ndim == 1:
+                self.particles[array] = particles[array]
+
+            elif particles[array].ndim == 2:
+
+                if array[-3:] == 'xyz':
+                    columns = [array[:-3] + p for p in ['x', 'y', 'z']]
+
+                else:
+                    if n_dust_types > 1:
+                        columns = [array + str(i+1) for i in range(n_dust_types)]
+                    else:
+                        columns = [array]
+
+                for idx, column in enumerate(columns):
+                    self.particles[column] = particles[array][:, idx]
+
+            elif particles[array].ndim == 3:
+
+                if array[-3:] == 'xyz':
+                    columns_ = [array[:-3] + p for p in ['x', 'y', 'z']]
+
+                    if n_dust_types > 1:
+                        columns = list()
+                        for idx, column_ in enumerate(columns_):
+                            columns.append([column_ + str(i+1) for i in range(n_dust_types)])
+
+                    else:
+                        columns = list()
+                        for idx, column_ in enumerate(columns_):
+                            columns.append([column_])
+
+                    for ind_pos, column in enumerate(columns):
+                        for ind_grain, column_ in enumerate(column):
+                            self.particles[column_] = particles[array][:, ind_grain, ind_pos]
+
+                else:
+                    raise ValueError(f'Cannot read array: {array}')
+
+            else:
+                raise ValueError(f'Cannot read array: {array}')
 
         #--- Sinks
 
@@ -179,8 +227,15 @@ class Dump:
 
             sinks = f['sinks']
 
-            self.sinks = \
-                    pd.DataFrame( sinks['xyz'][:n_sinks, 0], columns=['x'] )
+            columns = ['x', 'y', 'z', 'm', 'h', 'hsoft', 'macc',
+                       'spinx', 'spiny', 'spinz', 'tlast']
+
+            if is_full_dump:
+                columns += ['vx', 'vy', 'vz']
+
+            self.sinks = pd.DataFrame(columns=columns)
+
+            self.sinks['x'] = sinks['xyz'][:n_sinks, 0]
             self.sinks['y'] = sinks['xyz'][:n_sinks, 1]
             self.sinks['z'] = sinks['xyz'][:n_sinks, 2]
             self.sinks['m'] = sinks['m'][:n_sinks]
@@ -196,11 +251,6 @@ class Dump:
             self.sinks['vx'] = sinks['vxyz'][:n_sinks, 0]
             self.sinks['vy'] = sinks['vxyz'][:n_sinks, 1]
             self.sinks['vz'] = sinks['vxyz'][:n_sinks, 2]
-
-        else:
-            self.sinks['vx'] = np.nan
-            self.sinks['vy'] = np.nan
-            self.sinks['vz'] = np.nan
 
         f.close()
 
