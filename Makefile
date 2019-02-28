@@ -1,15 +1,35 @@
-OPENMP=yes
-SYSTEM=gfortran
-DOUBLEPRECISION=no
-DEBUG=no
+OPENMP          = yes
+SYSTEM          = gfortran
+DOUBLEPRECISION = no
+DEBUG           = no
 
 ifeq ($(SYSTEM), gfortran)
-   FC= gfortran
-   FFLAGS= -O3
-   DBLFLAGS= -fdefault-real-8 -fdefault-double-8
-   DEBUGFLAG= -Wall -Wextra -pedantic -g -frange-check -fcheck=all -fbacktrace \
-              -finit-real=NaN #-ffpe-trap=invalid,zero,overflow
-   OMPFLAGS= -fopenmp
+    FC        = gfortran
+    FFLAGS    = -O3
+    DBLFLAGS  = -fdefault-real-8 -fdefault-double-8
+    DEBUGFLAG = -Wall -Wextra -pedantic -g -frange-check -fcheck=all \
+                -fbacktrace -finit-real=NaN #-ffpe-trap=invalid,zero,overflow
+    OMPFLAGS  = -fopenmp
+endif
+
+ifdef KERNEL
+    ifeq ($(KERNEL), cubic)
+        FFLAGS += -DKERNEL=1
+    else ifeq ($(KERNEL), quartic)
+        FFLAGS += -DKERNEL=2
+    else ifeq ($(KERNEL), quintic)
+        FFLAGS += -DKERNEL=3
+    else ifeq ($(KERNEL), quartic2h)
+        FFLAGS += -DKERNEL=4
+    else ifeq ($(KERNEL), wendlandc2)
+        FFLAGS += -DKERNEL=5
+    else ifeq ($(KERNEL), wendlandc4)
+        FFLAGS += -DKERNEL=6
+    else ifeq ($(KERNEL), wendlandc6)
+        FFLAGS += -DKERNEL=7
+    else
+        FFLAGS += -DKERNEL=99
+    endif
 endif
 
 ifeq ($(DOUBLEPRECISION), yes)

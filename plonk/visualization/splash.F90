@@ -85,7 +85,27 @@ subroutine setup_integratedkernel
     do j=1,npts
        z = (j-1)*dz
        q2 = rxy2 + z*z
+#ifdef KERNEL
+#if KERNEL==1
        wkern = w_cubic(q2)
+#elif KERNEL==2
+       wkern = w_quartic(q2)
+#elif KERNEL==3
+       wkern = w_quintic(q2)
+#elif KERNEL==4
+       wkern = w_quartic2h(q2)
+#elif KERNEL==5
+       wkern = w_wendlandc2(q2)
+#elif KERNEL==6
+       wkern = w_wendlandc4(q2)
+#elif KERNEL==7
+       wkern = w_wendlandc6(q2)
+#else
+       wkern = w_cubic(q2)
+#endif
+#else
+       wkern = w_cubic(q2)
+#endif
        if (j.eq.1 .or. j.eq.npts) then
           coldens = coldens + 0.5*wkern*dz ! trapezoidal rule
        else
