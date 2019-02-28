@@ -353,23 +353,23 @@ class Image:
         pixwidthy = (ymax - ymin) / npixy
 
         image_data = splash.interpolate3d_projection(x=horizontal_data,
-                                                    y=vertical_data,
-                                                    z=depth_data,
-                                                    hh=smoothing_length,
-                                                    weight=weights,
-                                                    dat=render_data,
-                                                    itype=itype,
-                                                    npart=npart,
-                                                    xmin=xmin,
-                                                    ymin=ymin,
-                                                    npixx=npixx,
-                                                    npixy=npixy,
-                                                    pixwidthx=pixwidthx,
-                                                    pixwidthy=pixwidthy,
-                                                    normalise=normalize,
-                                                    zobserver=zobserver,
-                                                    dscreen=dscreen,
-                                                    useaccelerate=accelerate)
+                                                     y=vertical_data,
+                                                     z=depth_data,
+                                                     hh=smoothing_length,
+                                                     weight=weights,
+                                                     dat=render_data,
+                                                     itype=itype,
+                                                     npart=npart,
+                                                     xmin=xmin,
+                                                     ymin=ymin,
+                                                     npixx=npixx,
+                                                     npixy=npixy,
+                                                     pixwidthx=pixwidthx,
+                                                     pixwidthy=pixwidthy,
+                                                     normalise=normalize,
+                                                     zobserver=zobserver,
+                                                     dscreen=dscreen,
+                                                     useaccelerate=accelerate)
 
         image_data = image_data.T
 
