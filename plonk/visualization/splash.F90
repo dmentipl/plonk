@@ -18,6 +18,8 @@
 !  Copyright (C) 2005-2017 Daniel Price. All rights reserved.
 !  Contact: daniel.price@monash.edu
 !
+!  CHANGES made by Daniel Mentiplay, starting on 25-01-2019.
+!
 !-----------------------------------------------------------------
 
 module splash
@@ -25,6 +27,9 @@ module splash
 
  public :: interpolate3D_projection
  public :: interpolate3D_proj_vec
+ public :: interpolate3D_fastxsec
+ public :: interpolate3D_xsec_vec
+ public :: interp3D_proj_opacity
  public :: setup_integratedkernel
  public :: w_cubic
  public :: wfromtable
@@ -39,14 +44,15 @@ module splash
  real :: radkernel   = 2.
  real :: radkernel2  = 4.
  real :: cnormk3D    = 0.3183098862
+ real :: weight_sink = -1
 
 contains
 
-subroutine setup_integratedkernel
 !-------------------------------------------------------------
 ! tabulates the integral through the cubic spline kernel
 ! tabulated in (r/h)**2 so that sqrt is not necessary
 !-------------------------------------------------------------
+subroutine setup_integratedkernel
 
  integer :: i,j
  real :: rxy2,deltaz,dz,z,q2,wkern,coldens
@@ -84,11 +90,11 @@ subroutine setup_integratedkernel
  return
 end subroutine setup_integratedkernel
 
-real function wfromtable(q2)
 !-------------------------------------------------------------
 ! This function interpolates from the table of integrated kernel values
 ! to give w(q)
 !-------------------------------------------------------------
+real function wfromtable(q2)
 
  real, intent(in) :: q2
  real :: dxx,dwdx
@@ -114,9 +120,6 @@ real function wfromtable(q2)
 
 end function wfromtable
 
-subroutine interpolate3D_projection(x,y,z,hh,weight,dat,itype,npart, &
-     xmin,ymin,datsmooth,npixx,npixy,pixwidthx,pixwidthy,normalise,zobserver,dscreen, &
-     useaccelerate)
 !--------------------------------------------------------------------------
 !     subroutine to interpolate from particle data to even grid of pixels
 !
@@ -151,6 +154,9 @@ subroutine interpolate3D_projection(x,y,z,hh,weight,dat,itype,npart, &
 !     Written by Daniel Price September 2003
 !     3D perspective added Nov 2005
 !--------------------------------------------------------------------------
+subroutine interpolate3D_projection(x,y,z,hh,weight,dat,itype,npart, &
+     xmin,ymin,datsmooth,npixx,npixy,pixwidthx,pixwidthy,normalise,zobserver,dscreen, &
+     useaccelerate)
 
   integer, intent(in) :: npart,npixx,npixy
   real, intent(in), dimension(npart) :: x,y,z,hh,weight,dat
@@ -477,8 +483,6 @@ subroutine interpolate3D_projection(x,y,z,hh,weight,dat,itype,npart, &
 
 end subroutine interpolate3D_projection
 
-subroutine interpolate3D_proj_vec(x,y,z,hh,weight,vecx,vecy,itype,npart,&
-     xmin,ymin,vecsmoothx,vecsmoothy,npixx,npixy,pixwidthx,pixwidthy,normalise,zobserver,dscreen)
 !--------------------------------------------------------------------------
 !
 !     Same as previous but for a vector quantity
@@ -494,6 +498,8 @@ subroutine interpolate3D_proj_vec(x,y,z,hh,weight,vecx,vecy,itype,npart,&
 !
 !     Daniel Price 23/12/04
 !--------------------------------------------------------------------------
+subroutine interpolate3D_proj_vec(x,y,z,hh,weight,vecx,vecy,itype,npart,&
+     xmin,ymin,vecsmoothx,vecsmoothy,npixx,npixy,pixwidthx,pixwidthy,normalise,zobserver,dscreen)
 
   integer, intent(in) :: npart,npixx,npixy
   real, intent(in), dimension(npart) :: x,y,z,hh,weight,vecx,vecy
@@ -629,10 +635,639 @@ subroutine interpolate3D_proj_vec(x,y,z,hh,weight,vecx,vecy,itype,npart,&
 
 end subroutine interpolate3D_proj_vec
 
-pure real function w_cubic(q2)
+!--------------------------------------------------------------------------
+!
+!     ** In this version 3D data is interpolated to a single 2D cross section
+!     ** This is much faster than interpolating to a 3D grid
+!     ** and is efficient if only one or two cross sections are needed.
+!
+!     ** Note that the cross section is always taken in the z co-ordinate
+!     ** so should submit the appropriate arrays as x, y and z.
+!
+!     Input: particle coordinates  : x,y,z (npart)
+!            particle masses       : pmass (npart)
+!            density on particles  : rho   (npart) - must be computed separately
+!            smoothing lengths     : hh    (npart) - could be computed from density
+!            scalar data to smooth : dat   (npart)
+!            cross section location: zslice
+!
+!     Output: smoothed data            : datsmooth (npixx,npixy)
+!
+!     Daniel Price, Institute of Astronomy, Cambridge, 23/9/03
+!--------------------------------------------------------------------------
+subroutine interpolate3D_fastxsec(x,y,z,hh,weight,dat,itype,npart,&
+     xmin,ymin,zslice,datsmooth,npixx,npixy,pixwidthx,pixwidthy,normalise)
+
+  implicit none
+  integer, intent(in) :: npart,npixx,npixy
+  real, intent(in), dimension(npart) :: x,y,z,hh,weight,dat
+  integer, intent(in), dimension(npart) :: itype
+  real, intent(in) :: xmin,ymin,pixwidthx,pixwidthy,zslice
+  real, intent(out), dimension(npixx,npixy) :: datsmooth
+  logical, intent(in) :: normalise
+  real, dimension(npixx,npixy) :: datnorm
+
+  integer :: i,ipix,jpix,ipixmin,ipixmax,jpixmin,jpixmax
+  real :: hi,hi1,radkern,q2,wab,const,xi,yi,hi21
+  real :: termnorm,term,dy,dy2,dz,dz2,ypix,rescalefac
+  real, dimension(npixx) :: dx2i
+
+  datsmooth = 0.
+  datnorm = 0.
+  if (normalise) then
+     print*,'taking fast cross section (normalised)...',zslice
+  else
+     print*,'taking fast cross section (non-normalised)...',zslice
+  endif
+  if (pixwidthx.le.0. .or. pixwidthy.le.0.) then
+     print*,'interpolate3D_xsec: error: pixel width <= 0'
+     return
+  elseif (npart.le.0) then
+     print*,'interpolate3D_xsec: error: npart = 0'
+     return
+  endif
+  if (any(hh(1:npart).le.tiny(hh))) then
+     print*,'interpolate3D_xsec: WARNING: ignoring some or all particles with h < 0'
+  endif
+  const = cnormk3D
+  !
+  !--renormalise dat array by first element to speed things up
+  !
+  if (dat(1).gt.tiny(dat)) then
+     rescalefac = dat(1)
+  else
+     rescalefac = 1.0
+  endif
+  !
+  !--loop over particles
+  !
+  over_parts: do i=1,npart
+     !
+     !--skip particles with itype < 0
+     !
+     if (itype(i).lt.0) cycle over_parts
+     !
+     !--set kernel related quantities
+     !
+     hi = hh(i)
+     if (hi.le.0.) cycle over_parts
+     hi1 = 1./hi
+     hi21 = hi1*hi1
+     radkern = radkernel*hi    ! radius of the smoothing kernel
+     !
+     !--for each particle, work out distance from the cross section slice.
+     !
+     dz = zslice - z(i)
+     dz2 = dz**2*hi21
+     !
+     !--if this is < 2h then add the particle's contribution to the pixels
+     !  otherwise skip all this and start on the next particle
+     !
+     if (dz2 .lt. radkernel2) then
+
+        xi = x(i)
+        yi = y(i)
+        termnorm = const*weight(i)
+        term = termnorm*dat(i)/rescalefac
+        !
+        !--for each particle work out which pixels it contributes to
+        !
+        ipixmin = int((xi - radkern - xmin)/pixwidthx)
+        jpixmin = int((yi - radkern - ymin)/pixwidthy)
+        ipixmax = int((xi + radkern - xmin)/pixwidthx) + 1
+        jpixmax = int((yi + radkern - ymin)/pixwidthy) + 1
+
+        if (ipixmin.lt.1) ipixmin = 1 ! make sure they only contribute
+        if (jpixmin.lt.1) jpixmin = 1 ! to pixels in the image
+        if (ipixmax.gt.npixx) ipixmax = npixx
+        if (jpixmax.gt.npixy) jpixmax = npixy
+        !
+        !--precalculate an array of dx2 for this particle (optimisation)
+        !
+        do ipix=ipixmin,ipixmax
+           dx2i(ipix) = ((xmin + (ipix-0.5)*pixwidthx - xi)**2)*hi21 + dz2
+        enddo
+        !
+        !--loop over pixels, adding the contribution from this particle
+        !
+        do jpix = jpixmin,jpixmax
+           ypix = ymin + (jpix-0.5)*pixwidthy
+           dy = ypix - yi
+           dy2 = dy*dy*hi21
+           do ipix = ipixmin,ipixmax
+              q2 = dx2i(ipix) + dy2
+              !
+              !--SPH kernel - standard cubic spline
+              !
+              if (q2.lt.radkernel2) then
+                 wab = w_cubic(q2)
+                 !
+                 !--calculate data value at this pixel using the summation interpolant
+                 !
+                 datsmooth(ipix,jpix) = datsmooth(ipix,jpix) + term*wab
+                 if (normalise) datnorm(ipix,jpix) = datnorm(ipix,jpix) + termnorm*wab
+
+              endif
+
+           enddo
+        enddo
+
+     endif                  ! if particle within 2h of slice
+  enddo over_parts                    ! over particles
+  !
+  !--normalise dat array
+  !
+  if (normalise) then
+     !--normalise everywhere (required if not using SPH weighting)
+     where (datnorm > tiny(datnorm))
+        datsmooth = datsmooth/datnorm
+     end where
+  endif
+  datsmooth = datsmooth*rescalefac
+
+  return
+
+end subroutine interpolate3D_fastxsec
+
+!--------------------------------------------------------------------------
+!     program to interpolate from particle data to even grid of pixels
+!
+!     The data is smoothed using the SPH summation interpolant,
+!     that is, we compute the smoothed array according to
+!
+!     datsmooth(pixel) = sum_b m_b dat_b/rho_b W(r-r_b, h_b)
+!
+!     where _b is the quantity at the neighbouring particle b and
+!     W is the smoothing kernel, for which we use the usual cubic spline
+!
+!     ** In this version 3D data is interpolated to a single 2D cross section
+!     ** This is much faster than interpolating to a 3D grid
+!     ** and is efficient if only one or two cross sections are needed.
+!
+!     ** Note that the cross section is always taken in the z co-ordinate
+!     ** so should submit the appropriate arrays as x, y and z.
+!
+!     Input: particle coordinates  : x,y,z (npart)
+!            particle masses       : pmass (npart)
+!            density on particles  : rho   (npart) - must be computed separately
+!            smoothing lengths     : hh    (npart) - could be computed from density
+!            vector data to smooth : vecx  (npart)
+!                                    vecy  (npart)
+!            cross section location: zslice
+!
+!     Output: smoothed vector field   : vecsmoothx (npixx,npixy)
+!                                     : vecsmoothy (npixx,npixy)
+!
+!     Daniel Price, Institute of Astronomy, Cambridge, 23/9/03
+!--------------------------------------------------------------------------
+subroutine interpolate3D_xsec_vec(x,y,z,hh,weight,vecx,vecy,itype,npart,&
+     xmin,ymin,zslice,vecsmoothx,vecsmoothy,npixx,npixy,pixwidthx,pixwidthy,normalise)
+
+  implicit none
+  integer, intent(in) :: npart,npixx,npixy
+  real, intent(in), dimension(npart) :: x,y,z,hh,weight,vecx,vecy
+  integer, intent(in), dimension(npart) :: itype
+  real, intent(in) :: xmin,ymin,pixwidthx,pixwidthy,zslice
+  real, intent(out), dimension(npixx,npixy) :: vecsmoothx, vecsmoothy
+  logical, intent(in) :: normalise
+  real, dimension(npixx,npixy) :: datnorm
+
+  integer :: i,ipix,jpix,ipixmin,ipixmax,jpixmin,jpixmax
+  real :: hi,hi1,radkern,q2,wab,const
+  real :: termx,termy,termnorm,dx,dy,dz,dz2,xpix,ypix
+
+  vecsmoothx = 0.
+  vecsmoothy = 0.
+  datnorm = 0.
+  if (normalise) then
+     print*,'taking fast cross section (normalised)...',zslice
+  else
+     print*,'taking fast cross section (non-normalised)...',zslice
+  endif
+  if (pixwidthx.le.0. .or. pixwidthy.le.0.) then
+     print*,'interpolate3D_xsec_vec: error: pixel width <= 0'
+     return
+  endif
+  if (any(hh(1:npart).le.tiny(hh))) then
+     print*,'interpolate3D_xsec_vec: WARNING: ignoring some or all particles with h < 0'
+  endif
+  const = cnormk3D ! normalisation constant (3D)
+  !
+  !--loop over particles
+  !
+  over_parts: do i=1,npart
+     !
+     !--skip particles with itype < 0
+     !
+     if (itype(i).lt.0) cycle over_parts
+     !
+     !--set kernel related quantities
+     !
+     hi = hh(i)
+     if (hi.le.0.) cycle over_parts
+     hi1 = 1./hi
+     radkern = radkernel*hi    ! radius of the smoothing kernel
+     !
+     !--for each particle, work out distance from the cross section slice.
+     !
+     dz = zslice - z(i)
+     dz2 = dz**2
+     !
+     !--if this is < 2h then add the particle's contribution to the pixels
+     !  otherwise skip all this and start on the next particle
+     !
+     if (abs(dz) .lt. radkern) then
+        termnorm = const*weight(i)
+        termx = termnorm*vecx(i)
+        termy = termnorm*vecy(i)
+        !
+        !--for each particle work out which pixels it contributes to
+        !
+        ipixmin = int((x(i) - radkern - xmin)/pixwidthx)
+        jpixmin = int((y(i) - radkern - ymin)/pixwidthy)
+        ipixmax = int((x(i) + radkern - xmin)/pixwidthx) + 1
+        jpixmax = int((y(i) + radkern - ymin)/pixwidthy) + 1
+
+        if (ipixmin.lt.1) ipixmin = 1 ! make sure they only contribute
+        if (jpixmin.lt.1) jpixmin = 1 ! to pixels in the image
+        if (ipixmax.gt.npixx) ipixmax = npixx
+        if (jpixmax.gt.npixy) jpixmax = npixy
+        !
+        !--loop over pixels, adding the contribution from this particle
+        !
+        do jpix = jpixmin,jpixmax
+           ypix = ymin + (jpix-0.5)*pixwidthy
+           dy = ypix - y(i)
+           do ipix = ipixmin,ipixmax
+              xpix = xmin + (ipix-0.5)*pixwidthx
+              dx = xpix - x(i)
+              q2 = (dx*dx + dy*dy + dz2)*hi1*hi1
+              !
+              !--SPH kernel - standard cubic spline
+              !
+              if (q2.lt.radkernel2) then
+                 wab = w_cubic(q2)
+                 !
+                 !--calculate data value at this pixel using the summation interpolant
+                 !
+                 vecsmoothx(ipix,jpix) = vecsmoothx(ipix,jpix) + termx*wab
+                 vecsmoothy(ipix,jpix) = vecsmoothy(ipix,jpix) + termy*wab
+                 if (normalise) datnorm(ipix,jpix) = datnorm(ipix,jpix) + termnorm*wab
+              endif
+
+           enddo
+        enddo
+
+     endif                  ! if particle within 2h of slice
+  enddo over_parts                    ! over particles
+  !
+  !--normalise dat array(s)
+  !
+  if (normalise) then
+     where (datnorm > tiny(datnorm))
+        vecsmoothx = vecsmoothx/datnorm
+        vecsmoothy = vecsmoothy/datnorm
+     end where
+  endif
+
+  return
+
+end subroutine interpolate3D_xsec_vec
+
+!--------------------------------------------------------------------------
+! $Id: interpolate3D_opacity.f90,v 1.16 2007/11/20 17:05:35 dprice Exp $
+!
+!     subroutine to do a ray trace through the particle data
+!
+!     we use the radiation transport equation along a ray, that is
+!     the change in intensity from one side of a particle to the other is
+!     given by:
+!
+!     I_nu = I_nu(0) exp(-tau_i) + S_nu (1 - exp(-tau_i))
+!
+!     where tau_i is the integrated optical depth through the particle,
+!     and S_nu is the colour calculated from a colour table for the rendered data.
+!     We calculate an intensity in red, green and blue for colour plots.
+!
+!     tau_i = kappa \int rho dz
+!
+!     this is calculated using the SPH kernel for rho, so for each pixel
+!     the optical depth is incremented as the sum
+!
+!     tau_i = kappa \sum_j m_j \int W dz
+!
+!     where \int W dz is the SPH kernel integrated along one spatial dimension.
+!     This is interpolated from a pre-calculated table (see module projections3D for this).
+!
+!     kappa is the monochromatic mass extinction coefficient
+!     (particle cross section per unit mass) and is a constant for all particles
+!     which must be given as input (although see below for calculations of a
+!     meaningful values for kappa in terms of "surface depth in units of smoothing lengths")
+!
+!     Input: particle coordinates  : x,y,z (npart) - note that z is only required for perspective
+!            particle masses       : pmass (npmass)
+!            smoothing lengths     : hh    (npart)
+!            weight                : m/(h^3 rho) (not used, but skips particles with w <= 0)
+!            scalar data to smooth : dat   (npart)
+!
+!     Particle masses can be sent in as either a single scalar (npmass = 1)
+!      or as an array of length npart (npmass=npart)
+!
+!     Settings: zobs, dz1 : settings for 3D projection
+!               rkappa    : particle cross section per unit mass
+!
+!     Output: smoothed data            : datsmooth (npixx,npixy)
+!             brightness array         : brightness (npixx,npixy)
+!
+!--------------------------------------------------------------------------
+subroutine interp3D_proj_opacity(x,y,z,pmass,npmass,hh,weight,dat,zorig,itype,npart, &
+     xmin,ymin,datsmooth,brightness,npixx,npixy,pixwidth,zobserver,dscreenfromobserver, &
+     rkappa,zcut)
+
+  implicit none
+  real, parameter :: pi=3.1415926536
+  integer, intent(in) :: npart,npixx,npixy,npmass
+  real, intent(in), dimension(npart) :: x,y,z,hh,weight,dat,zorig
+  real, intent(in), dimension(npmass) :: pmass
+  integer, intent(in), dimension(npart) :: itype
+  real, intent(in) :: xmin,ymin,pixwidth,zobserver,dscreenfromobserver, &
+                      zcut,rkappa
+  real, dimension(npixx,npixy), intent(out) :: datsmooth, brightness
+
+  integer :: i,ipix,jpix,ipixmin,ipixmax,jpixmin,jpixmax,nused,nsink
+  integer :: iprintinterval, iprintnext,itmin
+  integer, dimension(npart) :: iorder
+  integer(kind=selected_int_kind(12)) :: ipart
+  real :: hi,hi1,hi21,radkern,q2,wab,pmassav
+  real :: term,dy,dy2,ypix,zfrac,hav,zcutoff
+  real :: fopacity,tau,rkappatemp,termi,xi,yi
+  real :: t_start,t_end,t_used,tsec
+  logical :: iprintprogress,adjustzperspective,rendersink
+  real, dimension(npixx) :: xpix,dx2i
+  real :: xminpix,yminpix
+!#ifdef _OPENMP
+!  integer :: OMP_GET_NUM_THREADS
+!#else
+  integer(kind=selected_int_kind(12)) :: iprogress
+!#endif
+
+  datsmooth = 0.
+  term = 0.
+  brightness = 0.
+  print "(1x,a)",'ray tracing from particles to pixels...'
+  if (pixwidth.le.0.) then
+     print "(a)",'interpolate3D_opacity: error: pixel width <= 0'
+     return
+  endif
+  if (any(hh(1:npart).le.tiny(hh))) then
+     print*,'interpolate3D_opacity: warning: ignoring some or all particles with h < 0'
+  endif
+  !--check that npmass is sensible
+  if (npmass.lt.1 .or. npmass.gt.npart) then
+     print*,'interpolate3D_opacity: ERROR in input number of particle masses '
+     return
+  endif
+  !--these values for npmass are not sensible but the routine will still work
+  if (npmass.ne.1 .and. npmass.ne.npart) then
+     print*,'WARNING: interpolate3D_opacity: number of particle masses input =',npmass
+  endif
+
+  if (abs(dscreenfromobserver).gt.tiny(dscreenfromobserver)) then
+     adjustzperspective = .true.
+     zcutoff = zobserver
+  else
+     adjustzperspective = .false.
+     zcutoff = huge(zobserver)
+  endif
+
+!
+!--kappa is the opacity in units of length^2/mass
+!  sent as an input parameter as it should be kept constant throughout the simulation
+!
+!  However we compute a reasonable estimate below based on the current plot so that
+!  we can give the "actual" optical depth for the current frame in terms of number of
+!  smoothing lengths. This is purely for diagnostic purposes only.
+!
+!--calculate average h
+  hav = sum(hh(1:npart))/real(npart)
+!--average particle mass
+  pmassav = sum(pmass(1:npmass))/real(npmass)
+  rkappatemp = pi*hav*hav/(pmassav*coltable(0))
+  print*,'average h = ',hav,' average mass = ',pmassav
+  print "(1x,a,f6.2,a)",'typical surface optical depth is ~',rkappatemp/rkappa,' smoothing lengths'
+  !
+  !--print a progress report if it is going to take a long time
+  !  (a "long time" is, however, somewhat system dependent)
+  !
+  iprintprogress = (npart .ge. 100000) .or. (npixx*npixy .gt.100000)
+  !
+  !--loop over particles
+  !
+  iprintinterval = 25
+  if (npart.ge.1e6) iprintinterval = 10
+  iprintnext = iprintinterval
+!
+!--get starting CPU time
+!
+  call cpu_time(t_start)
+!
+!--first sort the particles in z so that we do the opacity in the correct order
+!
+  call indexx(npart,z,iorder)
+!
+!--store x value for each pixel (for optimisation)
+!
+  xminpix = xmin - 0.5*pixwidth
+  yminpix = ymin - 0.5*pixwidth
+  do ipix=1,npixx
+     xpix(ipix) = xminpix + ipix*pixwidth
+  enddo
+
+  nused = 0
+  nsink = 0
+
+!!$OMP PARALLEL default(none) &
+!!$OMP SHARED(hh,z,x,y,zorig,pmass,dat,itype,datsmooth,npmass,npart) &
+!!$OMP SHARED(xmin,ymin,xminpix,yminpix,xpix,pixwidth) &
+!!$OMP SHARED(npixx,npixy,dscreenfromobserver,zobserver,adjustzperspective) &
+!!$OMP SHARED(zcut,zcutoff,iorder,rkappa,brightness) &
+!!$OMP PRIVATE(hi,zfrac,xi,yi,radkern) &
+!!$OMP PRIVATE(hi1,hi21,term,termi) &
+!!$OMP PRIVATE(ipixmin,ipixmax,jpixmin,jpixmax) &
+!!$OMP PRIVATE(dx2i,q2,ypix,dy,dy2,wab) &
+!!$OMP PRIVATE(ipart,i,ipix,jpix,tau,fopacity) &
+!!$OMP REDUCTION(+:nused)
+!!$OMP MASTER
+!#ifdef _OPENMP
+!  print "(1x,a,i3,a)",'Using ',OMP_GET_NUM_THREADS(),' cpus'
+!#endif
+!!$OMP END MASTER
+
+!!$OMP DO ORDERED SCHEDULE(dynamic)
+  over_particles: do ipart=1,npart
+     !
+     !--report on progress
+     !
+!#ifndef _OPENMP
+     if (iprintprogress) then
+        iprogress = 100*(ipart/npart)
+        if (iprogress.ge.iprintnext) then
+           write(*,"('(',i3,'% -',i12,' particles done)')") iprogress,ipart
+           iprintnext = iprintnext + iprintinterval
+        endif
+     endif
+!#endif
+     !
+     !--render in order from back to front
+     !
+     i = iorder(ipart)
+     !
+     !--skip particles with itype < 0
+     !
+     if (itype(i) < 0) cycle over_particles
+
+     !
+     !--skip particles with weight < 0
+     !  but not if weight == weight_sink (=-1)
+     !
+     rendersink = .false.
+     if (abs(weight(i) - weight_sink) < tiny(0.)) then
+        rendersink = .true.
+     elseif (weight(i) <= 0.) then
+        cycle over_particles
+     endif
+
+     !
+     !--allow slicing [take only particles with z(unrotated) < zcut]
+     !
+     particle_within_zcut: if (zorig(i).lt.zcut .and. z(i).lt.zcutoff) then
+
+     !  count particles within slice
+     nused = nused + 1
+     !
+     !--adjust h according to 3D perspective
+     !  need to be careful -- the kernel quantities
+     !  change with z (e.g. radkern, r^2/h^2)
+     !  but *not* the 1/h^2 in tau (because the change in 1/h^2 in tau
+     !  would be cancelled by the corresponding change to h^2 in kappa)
+     !
+     hi = hh(i)
+     if (hi.le.0.) then
+        cycle over_particles
+     elseif (adjustzperspective) then
+        zfrac = abs(dscreenfromobserver/(z(i)-zobserver))
+        hi = hi*zfrac
+     endif
+
+     !--these are the quantities used in the kernel r^2/h^2
+     radkern = 2.*hi
+     hi1 = 1./hi
+     hi21 = hi1*hi1
+     !--this is the term which multiplies tau
+     if (npmass.eq.npart) then
+        term = pmass(i)/(hh(i)*hh(i))
+     else
+        term = pmass(1)/(hh(i)*hh(i))
+     endif
+     !
+     !--determine colour contribution of current point
+     !  (work out position in colour table)
+     !
+!     dati = dat(i)
+     xi = x(i)
+     yi = y(i)
+     termi = dat(i)
+     !
+     !--sink particles can have weight set to -1
+     !  indicating that we should include them in the rendering
+     !
+     if (rendersink) then
+        termi = pmass(i)/(4./3.*pi*hh(i)**3)  ! define "density" of a sink
+        nsink = nsink + 1
+     endif
+     !
+     !--for each particle work out which pixels it contributes to
+     !
+     ipixmin = int((xi - radkern - xmin)/pixwidth)
+     jpixmin = int((yi - radkern - ymin)/pixwidth)
+     ipixmax = int((xi + radkern - xmin)/pixwidth) + 1
+     jpixmax = int((yi + radkern - ymin)/pixwidth) + 1
+
+     if (ipixmin.lt.1) ipixmin = 1  ! make sure they only contribute
+     if (jpixmin.lt.1) jpixmin = 1  ! to pixels in the image
+     if (ipixmax.gt.npixx) ipixmax = npixx ! (note that this optimises
+     if (jpixmax.gt.npixy) jpixmax = npixy !  much better than using min/max)
+     !
+     !--precalculate an array of dx2 for this particle (optimisation)
+     !
+     do ipix=ipixmin,ipixmax
+        dx2i(ipix) = ((xpix(ipix) - xi)**2)*hi21
+     enddo
+
+     !
+     !--loop over pixels, adding the contribution from this particle
+     !
+     do jpix = jpixmin,jpixmax
+        ypix = yminpix + jpix*pixwidth
+        dy = ypix - yi
+        dy2 = dy*dy*hi21
+        do ipix = ipixmin,ipixmax
+           q2 = dx2i(ipix) + dy2
+           !
+           !--SPH kernel - integral through cubic spline
+           !  interpolate from a pre-calculated table
+           !
+           if (q2.lt.radkernel2) then
+              wab = wfromtable(q2)
+              !
+              !--get incremental tau for this pixel from the integrated SPH kernel
+              !
+              tau = rkappa*wab*term
+              fopacity = 1. - exp(-tau)
+              !
+              !--render, obscuring previously drawn pixels by relevant amount
+              !  also calculate total brightness (`transparency') of each pixel
+              !
+              datsmooth(ipix,jpix) = (1.-fopacity)*datsmooth(ipix,jpix) + fopacity*termi
+              brightness(ipix,jpix) = brightness(ipix,jpix) + fopacity
+           endif
+
+        enddo
+     enddo
+
+     endif particle_within_zcut
+
+  enddo over_particles
+!!$OMP END DO
+!!$OMP END PARALLEL
+
+!
+!--get ending CPU time
+!
+  if (nsink > 99) then
+     print*,'rendered ',nsink,' sink particles'
+  elseif (nsink > 0) then
+     print "(1x,a,i2,a)",'rendered ',nsink,' sink particles'
+  endif
+  call cpu_time(t_end)
+  t_used = t_end - t_start
+  if (t_used.gt.60.) then
+     itmin = int(t_used/60.)
+     tsec = t_used - (itmin*60.)
+     print "(1x,a,i4,a,f5.2,1x,a)",'completed in',itmin,' min ',tsec,'s'
+  else
+     print "(1x,a,f5.2,1x,a)",'completed in ',t_used,'s'
+  endif
+  if (zcut.lt.huge(zcut)) print*,'slice contains ',nused,' of ',npart,' particles'
+
+  return
+
+end subroutine interp3D_proj_opacity
+
 !---------------------------------------
 !  Cubic kernel
 !--------------------------------------
+pure real function w_cubic(q2)
 
  real, intent(in) :: q2
  real :: q
