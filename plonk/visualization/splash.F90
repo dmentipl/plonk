@@ -30,9 +30,17 @@ module splash
  public :: interpolate3D_fastxsec
  public :: interpolate3D_xsec_vec
  public :: interp3D_proj_opacity
+
  public :: setup_integratedkernel
- public :: w_cubic
  public :: wfromtable
+
+ public :: w_cubic
+ public :: w_quartic
+ public :: w_quintic
+ public :: w_quartic2h
+ public :: w_wendlandc2
+ public :: w_wendlandc4
+ public :: w_wendlandc6
 
  private
 
@@ -995,13 +1003,12 @@ subroutine interp3D_proj_opacity(x,y,z,pmass,npmass,hh,weight,dat,zorig,itype,np
   real, dimension(npixx,npixy), intent(out) :: datsmooth, brightness
 
   integer :: i,ipix,jpix,ipixmin,ipixmax,jpixmin,jpixmax,nused,nsink
-  integer :: iprintinterval, iprintnext,itmin
+  integer :: iprintinterval,iprintnext
   integer, dimension(npart) :: iorder
   integer(kind=selected_int_kind(12)) :: ipart
   real :: hi,hi1,hi21,radkern,q2,wab,pmassav
   real :: term,dy,dy2,ypix,zfrac,hav,zcutoff
   real :: fopacity,tau,rkappatemp,termi,xi,yi
-  real :: t_start,t_end,t_used,tsec
   logical :: iprintprogress,adjustzperspective,rendersink
   real, dimension(npixx) :: xpix,dx2i
   real :: xminpix,yminpix
@@ -1066,10 +1073,7 @@ subroutine interp3D_proj_opacity(x,y,z,pmass,npmass,hh,weight,dat,zorig,itype,np
   iprintinterval = 25
   if (npart.ge.1e6) iprintinterval = 10
   iprintnext = iprintinterval
-!
-!--get starting CPU time
-!
-  call cpu_time(t_start)
+
 !
 !--first sort the particles in z so that we do the opacity in the correct order
 !
@@ -1241,22 +1245,10 @@ subroutine interp3D_proj_opacity(x,y,z,pmass,npmass,hh,weight,dat,zorig,itype,np
 !!$OMP END DO
 !!$OMP END PARALLEL
 
-!
-!--get ending CPU time
-!
   if (nsink > 99) then
      print*,'rendered ',nsink,' sink particles'
   elseif (nsink > 0) then
      print "(1x,a,i2,a)",'rendered ',nsink,' sink particles'
-  endif
-  call cpu_time(t_end)
-  t_used = t_end - t_start
-  if (t_used.gt.60.) then
-     itmin = int(t_used/60.)
-     tsec = t_used - (itmin*60.)
-     print "(1x,a,i4,a,f5.2,1x,a)",'completed in',itmin,' min ',tsec,'s'
-  else
-     print "(1x,a,f5.2,1x,a)",'completed in ',t_used,'s'
   endif
   if (zcut.lt.huge(zcut)) print*,'slice contains ',nused,' of ',npart,' particles'
 
@@ -1265,10 +1257,12 @@ subroutine interp3D_proj_opacity(x,y,z,pmass,npmass,hh,weight,dat,zorig,itype,np
 end subroutine interp3D_proj_opacity
 
 !---------------------------------------
-!  Cubic kernel
+!
+!  Functional forms of various kernels
+!
 !--------------------------------------
 pure real function w_cubic(q2)
-
+ implicit none
  real, intent(in) :: q2
  real :: q
 
@@ -1283,5 +1277,104 @@ pure real function w_cubic(q2)
  endif
 
 end function w_cubic
+
+pure real function w_quartic(q2)
+ implicit none
+ real, intent(in) :: q2
+ real :: q
+
+ q = sqrt(q2)
+ if (q.lt.0.5) then
+    w_quartic = (2.5-q)**4 - 5.*(1.5-q)**4 + 10.*(0.5-q)**4
+ elseif (q.lt.1.5) then
+    w_quartic = (2.5-q)**4 - 5.*(1.5-q)**4
+ elseif (q.lt.2.5) then
+    w_quartic = (2.5-q)**4
+ else
+    w_quartic = 0.
+ endif
+
+end function w_quartic
+
+pure real function w_quintic(q2)
+ implicit none
+ real, intent(in) :: q2
+ real :: q,q4
+
+ if (q2.lt.1.0) then
+    q = sqrt(q2)
+    q4 = q2*q2
+    w_quintic = 66.-60.*q2 + 30.*q4 - 10.*q4*q
+ elseif ((q2.ge.1.0).and.(q2.lt.4.0)) then
+    q = sqrt(q2)
+    w_quintic = (3.-q)**5 - 6.*(2.-q)**5
+ elseif ((q2.ge.4.0).and.(q2.lt.9.0)) then
+    q = sqrt(q2)
+    w_quintic = (3.-q)**5
+ else
+    w_quintic = 0.0
+ endif
+
+end function w_quintic
+
+pure real function w_quartic2h(q2)
+ implicit none
+ real, intent(in) :: q2
+ real :: q
+
+ q = sqrt(q2)
+ if (q.lt.0.4) then
+    w_quartic2h = (2.-q)**4 - 5.*(1.2-q)**4 + 10.*(0.4-q)**4
+ elseif (q.lt.1.2) then
+    w_quartic2h = (2.-q)**4 - 5.*(1.2-q)**4
+ elseif (q.lt.2.) then
+    w_quartic2h = (2.-q)**4
+ else
+    w_quartic2h = 0.
+ endif
+
+end function w_quartic2h
+
+pure real function w_wendlandc2(q2)
+ implicit none
+ real, intent(in) :: q2
+ real :: q
+
+ if (q2.lt.4.) then
+    q = sqrt(q2)
+    w_wendlandc2 = (1. - 0.5*q)**4*(2.*q + 1.)
+ else
+    w_wendlandc2 = 0.
+ endif
+
+end function w_wendlandc2
+
+pure real function w_wendlandc4(q2)
+ implicit none
+ real, intent(in) :: q2
+ real :: q
+
+ if (q2.lt.4.) then
+    q = sqrt(q2)
+    w_wendlandc4 = (1. - 0.5*q)**6*(35./12.*q2 + 3.*q + 1.)
+ else
+    w_wendlandc4 = 0.
+ endif
+
+end function w_wendlandc4
+
+pure real function w_wendlandc6(q2)
+ implicit none
+ real, intent(in) :: q2
+ real :: q
+
+ if (q2.lt.4.) then
+    q = sqrt(q2)
+    w_wendlandc6 = (1. - 0.5*q)**8*(4.*q2*q + 25./4.*q2 + 4.*q + 1.)
+ else
+    w_wendlandc6 = 0.
+ endif
+
+end function w_wendlandc6
 
 end module splash
