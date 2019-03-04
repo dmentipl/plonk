@@ -177,7 +177,7 @@ class Dump:
         for array in generator:
 
             if particles[array].size == 0:
-                break
+                continue
 
             elif particles[array].ndim == 1:
                 self.particles[array] = particles[array]
