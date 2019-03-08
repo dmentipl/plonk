@@ -17,7 +17,7 @@ radius_out         = 200
 #--- Dump file names
 
 # TODO: get dump file names as input
-dump_file_names = ['data/disc_00000.ascii', 'data/disc_00006.ascii']
+dump_file_names = ['data/dust2_00000.h5']
 
 # ---------------------------------------------------------------------------- #
 
@@ -27,12 +27,9 @@ for dump_file_name in dump_file_names:
 
 #--- Read dump file
 
-    print('Reading in data from dumpfile: ' + dump_file_name + '... ', end='',
-          flush=True)
+    print('\nReading in data from dumpfile: ' + dump_file_name + '...')
 
     dump = Dump(dump_file_name)
-
-    print('done')
 
     dumps.append(dump)
 
@@ -44,7 +41,7 @@ sinks           = list()
 
 for dump in dumps:
 
-    print('Performing disc analysis')
+    print('\nPerforming disc analysis...')
     results = disc_analysis( radius_in          = radius_in,
                              radius_out         = radius_out,
                              number_radial_bins = number_radial_bins,

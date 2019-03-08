@@ -10,7 +10,7 @@ from plonk.plonk.visualization.image import Image
 #--- Dump file names
 
 # TODO: get dump file names as input
-dump_file_names = ['data/disc_00000.ascii', 'data/disc_00006.ascii']
+dump_file_names = ['data/disc_00000.h5']
 
 dumps = list()
 
@@ -18,18 +18,14 @@ for dump_file_name in dump_file_names:
 
 #--- Read dump file
 
-    print('Reading in data from dumpfile: ' + dump_file_name + '... ', end='',
-          flush=True)
+    print('\nReading in data from dumpfile: ' + dump_file_name + '...')
 
     dump = Dump(dump_file_name)
-
-    print('done')
-
     dumps.append(dump)
 
 #--- Plot image
 
-print('Creating Image objects for each dump file...', end='')
+print('\nCreating Image objects for each dump file...', end='')
 
 images = list()
 for dump in dumps:
