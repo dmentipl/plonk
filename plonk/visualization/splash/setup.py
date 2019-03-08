@@ -1,5 +1,7 @@
 '''
 setup.py
+
+Daniel Mentiplay, 2019.
 '''
 
 import os.path
