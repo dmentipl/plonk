@@ -11,7 +11,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 
 from ..particles import I_GAS, I_DUST
-from .splash import splash
+from .splash.splash import interpolate_to_pixelgrid
 
 options = ['accelerate',
            'colorbar',
@@ -156,6 +156,8 @@ class Image:
         # TODO: add docs
         # TODO: check if need to interpolate again
         # TODO: choose fluid type: gas, dust1, dust2, ...
+        # TODO: arbitrary rotations
+        # TODO: add interfaces to other interpolation routines
 
         if horizontal_axis is None:
             horizontal_axis = 'x'
@@ -197,11 +199,11 @@ class Image:
 
         pd = self.particles.loc[self.particles['itype'].isin(itypes)]
 
-        horizontal_data  = pd[horizontal_axis]
-        vertical_data    = pd[vertical_axis]
-        depth_data       = pd[depth_axis]
-        render_data      = pd[render]
-        smoothing_length = pd['h']
+        horizontal_data  = np.array(pd[horizontal_axis])
+        vertical_data    = np.array(pd[vertical_axis])
+        depth_data       = np.array(pd[depth_axis])
+        render_data      = np.array(pd[render])
+        smoothing_length = np.array(pd['h'])
 
         weights = _interpolation_weights(
             self.plot_options['density_weighted'], pd,
@@ -221,9 +223,15 @@ class Image:
         if vertical_range is None:
             vertical_range = [vertical_data.min(), vertical_data.max()]
 
-        image_data = self._interpolate_to_pixelgrid(
+        normalize  = self.plot_options['normalize']
+        zobserver  = self.plot_options['zobserver']
+        dscreen    = self.plot_options['dscreen']
+        accelerate = self.plot_options['accelerate']
+
+        image_data = interpolate_to_pixelgrid(
             horizontal_data, vertical_data, depth_data, smoothing_length,
-            weights, render_data, horizontal_range, vertical_range )
+            weights, render_data, horizontal_range, vertical_range, normalize,
+            zobserver, dscreen, accelerate )
 
         extent = horizontal_range + vertical_range
 
@@ -316,64 +324,6 @@ class Image:
             vmax = self._colorbar.vmax
 
         self._image.set_clim([vmin, vmax])
-
-    def _interpolate_to_pixelgrid(self, horizontal_data, vertical_data, depth_data,
-                                  smoothing_length, weights, render_data,
-                                  horizontal_range, vertical_range):
-
-        # TODO: set number of pixels based on smoothing length
-        npixx = 512
-        npixy = 512
-
-        normalize  = self.plot_options['normalize']
-        zobserver  = self.plot_options['zobserver']
-        dscreen    = self.plot_options['dscreen']
-        accelerate = self.plot_options['accelerate']
-
-        if zobserver is None:
-            zobserver = 1e10
-
-        if dscreen is None:
-            dscreen = 1e10
-
-        if normalize is None:
-            normalize = False
-
-        if accelerate is None:
-            accelerate = False
-
-        itype = np.ones_like(horizontal_data)
-        npart = len(smoothing_length)
-
-        xmax      = horizontal_range[1]
-        ymax      = vertical_range[1]
-        xmin      = horizontal_range[0]
-        ymin      = vertical_range[0]
-        pixwidthx = (xmax - xmin) / npixx
-        pixwidthy = (ymax - ymin) / npixy
-
-        image_data = splash.interpolate3d_projection(x=horizontal_data,
-                                                     y=vertical_data,
-                                                     z=depth_data,
-                                                     hh=smoothing_length,
-                                                     weight=weights,
-                                                     dat=render_data,
-                                                     itype=itype,
-                                                     npart=npart,
-                                                     xmin=xmin,
-                                                     ymin=ymin,
-                                                     npixx=npixx,
-                                                     npixy=npixy,
-                                                     pixwidthx=pixwidthx,
-                                                     pixwidthy=pixwidthy,
-                                                     normalise=normalize,
-                                                     zobserver=zobserver,
-                                                     dscreen=dscreen,
-                                                     useaccelerate=accelerate)
-
-        image_data = image_data.T
-
-        return image_data
 
 def _interpolation_weights(density_weighted, particles, hfact):
 

@@ -34,6 +34,7 @@ endif
 
 ifeq ($(DOUBLEPRECISION), yes)
     FFLAGS += ${DBLFLAGS}
+	@echo " DOUBLEPRECISION=yes will probably fail"
 endif
 
 ifeq ($(DEBUG),yes)
@@ -46,24 +47,23 @@ endif
 
 splash:
 	@echo
-	@echo " Compiling SPLASH interpolation routines with f2py"
+	@echo " Compiling SPLASH interpolation routines"
 	@echo
 	@echo "   Fortran compiler: $(FC)"
 	@echo "   Fortran flags:    $(FFLAGS)"
 	@echo
 	@echo " See Makefile for compile time options"
 	@echo
-	cd plonk/visualization; \
-	f2py -m _splash -c --fcompiler=$(FC) --opt='$(FFLAGS)' splash.F90; \
+	cd plonk/visualization/splash; \
+	$(FC) $(FFLAGS) -c splash.F90; \
+	$(FC) $(FFLAGS) -c splash_wrapper.f90; \
+	$(FC) -shared -fPIC $(FFLAGS) -o libsplashwrapper.so *.o; \
+	python setup.py build_ext --inplace; \
 	cd -
 
 clean:
-	@echo
-	@echo " Removing compiled Splash library"
-	@echo
-	@if [ -f plonk/visualization/_splash.*.so ]; then \
-		rm -r plonk/visualization/_splash.*.so; fi
-	@if [ -d plonk/visualization/_splash.*.so.dSYM ]; then \
-		rm -r plonk/visualization/_splash.*.so.dSYM; fi
-	@if [ -d plonk/visualization/__pycache__ ]; then \
-		rm -r plonk/visualization/__pycache__; fi
+	@rm plonk/visualization/splash/*.o;     \
+	rm plonk/visualization/splash/*.mod;    \
+	rm plonk/visualization/splash/*.so;     \
+	rm -r plonk/visualization/splash/build; \
+	rm plonk/visualization/splash/splash_wrapper.c

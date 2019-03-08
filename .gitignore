@@ -1,5 +1,3 @@
 data
-.f2py_f2cmap
 *.so
-*.so.dSYM
-plonk/visualization/interpolate3D_projection.py
+plonk/visualization/splash/splash_wrapper.c
