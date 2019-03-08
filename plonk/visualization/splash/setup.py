@@ -7,76 +7,58 @@ import subprocess
 
 from setuptools import setup, Extension
 from Cython.Distutils import build_ext
-import numpy as np
+from numpy import get_include
 
-OPENMP          = True
-SYSTEM          = 'gfortran'
-DOUBLEPRECISION = False
-DEBUG           = False
-KERNEL          = None
+OPENMP = True
+DOUBLE = False
+DEBUG  = False
+KERNEL = 'cubic'
 
-if SYSTEM == 'gfortran':
-    FC        = 'gfortran'
-    FFLAGS    = '-O3'
-    DBLFLAGS  = '-fdefault-real-8 -fdefault-double-8'
-    DEBUGFLAG = '-Wall -Wextra -pedantic -g -frange-check -fcheck=all \
-                -fbacktrace -finit-real=NaN #-ffpe-trap=invalid,zero,overflow'
-    OMPFLAGS  = '-fopenmp'
-else:
-    raise ValueError('Compiler not available; try gfortran')
+FSOURCES = ['splash.F90', 'splash_wrapper.f90']
+
+FC      = 'gfortran'
+FCFLAGS = ['-O3']
+FCLIBS  = ['-shared', '-fPIC', '-o libsplashwrapper.so', '*.o']
+
+KERNELS = ['cubic', 'quartic', 'quintic', 'quartic2h', 'wendlandc2',
+           'wendlandc4', 'wendlandc6']
 
 if KERNEL:
-    if KERNEL == 'cubic':
-        FFLAGS += ' -DKERNEL=1'
-    elif KERNEL == 'quartic':
-        FFLAGS += ' -DKERNEL=2'
-    elif KERNEL == 'quintic':
-        FFLAGS += ' -DKERNEL=3'
-    elif KERNEL == 'quartic2h':
-        FFLAGS += ' -DKERNEL=4'
-    elif KERNEL == 'wendlandc2':
-        FFLAGS += ' -DKERNEL=5'
-    elif KERNEL == 'wendlandc4':
-        FFLAGS += ' -DKERNEL=6'
-    elif KERNEL == 'wendlandc6':
-        FFLAGS += ' -DKERNEL=7'
-    else:
-        FFLAGS += ' -DKERNEL=99'
+    for idx, K in enumerate(KERNELS):
+        if K == KERNEL:
+            FCFLAGS += [f'-DKERNEL={idx+1}']
 else:
-    FFLAGS += ' -DKERNEL=99'
+    FCFLAGS += ['-DKERNEL=99']
 
-if DOUBLEPRECISION:
-    FFLAGS += ' ' + DBLFLAGS
-    print("DOUBLEPRECISION=yes will probably fail")
+if DOUBLE:
+    FCFLAGS += ['-fdefault-real-8', '-fdefault-double-8']
+    raise ValueError('DOUBLE=yes will probably fail')
 
 if DEBUG:
-    FFLAGS += ' ' + DEBUGFLAG
+    FCFLAGS += ['-Wall', '-Wextra', '-pedantic', '-g', '-frange-check',
+                '-fcheck=all', '-fbacktrace', '-finit-real=NaN']
 
 if OPENMP:
-    FFLAGS += ' ' + OMPFLAGS
+    FCFLAGS += ['-fopenmp']
 
 print()
-print(" Compiling SPLASH interpolation routines")
+print(' Compiling SPLASH interpolation routines')
 print()
-print(f"   Fortran compiler: {FC}")
-print(f"   Fortran flags:    {FFLAGS}")
+print(f'   Fortran compiler: {FC}')
+print(f'   Fortran flags:    {" ".join(FCFLAGS)}')
 print()
-print(" See Makefile for compile time options")
+print(' See Makefile for compile time options')
 print()
+
+for file in FSOURCES:
+    subprocess.run(' '.join([FC] + FCFLAGS + ['-c', file]), shell=True)
+
+subprocess.run(' '.join([FC] + FCFLAGS + FCLIBS), shell=True)
 
 local_dir = os.path.dirname(os.path.abspath(__file__))
 
-ffiles = ['splash.F90', 'splash_wrapper.f90']
-fc_command = FC + ' ' + FFLAGS + ' -c '
-fl_command = FC + ' -shared -fPIC ' + FFLAGS + ' -o libsplashwrapper.so *.o'
-
-for ffile in ffiles:
-    subprocess.run(fc_command + ffile, shell=True)
-
-subprocess.run(fl_command, shell=True)
-
-ext_modules = [Extension("_splash",
-                         ["splash_wrapper.pyx"],
+ext_modules = [Extension('_splash',
+                         ['splash_wrapper.pyx'],
                          libraries=['splashwrapper', 'gfortran'],
                          library_dirs=[local_dir],
                          runtime_library_dirs=[local_dir],
@@ -85,6 +67,6 @@ ext_modules = [Extension("_splash",
 setup(
     name = 'Splash',
     cmdclass = {'build_ext': build_ext},
-    include_dirs = [np.get_include()],
+    include_dirs = [get_include()],
     ext_modules = ext_modules
 )
