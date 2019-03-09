@@ -23,8 +23,8 @@ LIBSPLASH = 'libsplashwrapper.so'                # Splash library name
 local_dir = os.path.dirname(os.path.abspath(__file__))
 
 FC      = 'gfortran'
-FCFLAGS = ['-O3']
-FCLIBS  = ['-shared', '-fPIC', '-o '+LIBSPLASH, '*.o']
+FCFLAGS = ['-O3', '-fPIC']
+FLFLAGS = ['-shared', '-o '+LIBSPLASH, '*.o']
 
 KERNELS = ['cubic', 'quartic', 'quintic', 'quartic2h', 'wendlandc2',
            'wendlandc4', 'wendlandc6']
@@ -66,7 +66,7 @@ for file in FSOURCES:
     subprocess.run(' '.join([FC] + FCFLAGS + ['-c', file]), shell=True)
 
 # Link to make library
-subprocess.run(' '.join([FC] + FCFLAGS + FCLIBS), shell=True)
+subprocess.run(' '.join([FC] + FCFLAGS + FLFLAGS), shell=True)
 
 # Fix for macOS systems
 extra_link_args = list()
