@@ -17,7 +17,7 @@ radius_out         = 200
 #--- Dump file names
 
 # TODO: get dump file names as input
-dump_file_names = ['data/dust2_00000.h5']
+dump_file_names = ['data/disc_00000.h5']
 
 # ---------------------------------------------------------------------------- #
 
