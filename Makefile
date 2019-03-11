@@ -4,7 +4,7 @@
 splash:
 	@cd plonk/visualization/splash; \
 	python setup.py build_ext --inplace; \
-	cd -
+	cd - > /dev/null
 
 clean:
 	@rm plonk/visualization/splash/*.o;     \
