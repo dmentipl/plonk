@@ -63,9 +63,13 @@ print()
 
 # Compile
 for file in FSOURCES:
-    subprocess.run(' '.join([FC] + FCFLAGS + ['-c', file]), shell=True)
+    compile_command = ' '.join([FC] + FCFLAGS + ['-c', file])
+    print(compile_command)
+    subprocess.run(compile_command, shell=True)
 
 # Link to make library
+compile_command = ' '.join([FC] + FCFLAGS + FLFLAGS)
+print(compile_command)
 subprocess.run(' '.join([FC] + FCFLAGS + FLFLAGS), shell=True)
 
 # Fix for macOS systems

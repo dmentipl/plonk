@@ -9,8 +9,7 @@ import numpy as np
 try:
     from ._splash import interpolate3d_projection # pylint: disable-msg=no-name-in-module
 except ImportError:
-    raise Exception('Set LD_LIBRARY_PATH or DYLD_LIBRARY_PATH to contain ' + \
-                    'plonk/plonk/visualization/splash')
+    raise Exception('Cannot import Splash interpolation routines')
 
 def interpolate_to_pixelgrid(horizontal_data, vertical_data, depth_data,
                              smoothing_length, weights, render_data,

@@ -2,7 +2,7 @@
 # Daniel Mentiplay, 2019.
 
 splash:
-	cd plonk/visualization/splash; \
+	@cd plonk/visualization/splash; \
 	python setup.py build_ext --inplace; \
 	cd -
 
