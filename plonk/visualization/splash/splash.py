@@ -7,7 +7,9 @@ Daniel Mentiplay, 2019.
 import numpy as np
 
 try:
-    from ._splash import interpolate3d_projection # pylint: disable-msg=no-name-in-module
+    from ._splash import interpolate3d_projection, interpolate3d_proj_vec, \
+                         interpolate3d_fastxsec, interpolate3d_xsec_vec, \
+                         interp3d_proj_opacity
 except ImportError:
     raise Exception('Cannot import Splash interpolation routines')
 

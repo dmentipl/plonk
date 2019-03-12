@@ -31,22 +31,10 @@ module splash
  public :: interpolate3D_xsec_vec
  public :: interp3D_proj_opacity
 
- public :: setup_integratedkernel
- public :: wfromtable
- public :: indexx
-
- public :: w_cubic
- public :: w_quartic
- public :: w_quintic
- public :: w_quartic2h
- public :: w_wendlandc2
- public :: w_wendlandc4
- public :: w_wendlandc6
-
  private
 
  integer, parameter :: maxcoltable = 1000
- real, dimension(maxcoltable) :: coltable
+ real :: coltable(maxcoltable)
  real :: dq2table = 4./maxcoltable
  real :: ddq2table = maxcoltable/4.
 
