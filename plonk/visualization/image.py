@@ -236,26 +236,33 @@ class Image:
         cross_section = False
         opacity = False
         zslice = None
+
+        positions = np.stack((horizontal_data, vertical_data, depth_data))
+
+        npix = [512, 512]
 ################################################################################
 
         image_data = scalar_interpolation(
-            horizontal_data, vertical_data, depth_data, smoothing_length,
-            weights, render_data, particle_mass, horizontal_range,
-            vertical_range, cross_section, zslice, opacity, normalize,
-            zobserver, dscreen, accelerate )
+            positions, smoothing_length, weights, render_data, particle_mass,
+            horizontal_range, vertical_range, npix, cross_section, zslice,
+            opacity, normalize, zobserver, dscreen, accelerate )
 
         if vector:
 
 ################################################################################
 # TODO: temporary; testing phase
-            vecx_data = self.particles['vx']
-            vecy_data = self.particles['vy']
+            vecx_data = np.array(pd['vx'])
+            vecy_data = np.array(pd['vy'])
+            vector_data = np.stack((vecx_data, vecy_data))
 ################################################################################
 
-            xvector_data, yvector_data = vector_interpolation(
-                horizontal_data, vertical_data, depth_data, smoothing_length,
-                weights, vecx_data, vecy_data, horizontal_range, vertical_range,
-                cross_section, zslice, normalize, zobserver, dscreen )
+            vector_data = vector_interpolation(
+                positions, smoothing_length, weights, vector_data,
+                horizontal_range, vertical_range, npix, cross_section, zslice,
+                normalize, zobserver, dscreen )
+
+            xvector_data = vector_data[0]
+            yvector_data = vector_data[1]
 
         extent = horizontal_range + vertical_range
 

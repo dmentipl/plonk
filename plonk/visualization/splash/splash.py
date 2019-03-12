@@ -14,20 +14,22 @@ except ImportError:
     raise Exception('Cannot import Splash interpolation routines. See ' + \
                     'documentation.')
 
-def scalar_interpolation(horizontal_data, vertical_data, depth_data,
-                         smoothing_length, weights, render_data, particle_mass,
-                         horizontal_range, vertical_range, cross_section,
-                         zslice, opacity, normalize, zobserver, dscreen,
-                         accelerate):
+def scalar_interpolation(positions, smoothing_length, weights, scalar_data,
+                         particle_mass, horizontal_range, vertical_range, npix,
+                         cross_section, zslice, opacity, normalize, zobserver,
+                         dscreen, accelerate):
     '''
     Interpolate a scalar quantity to pixels by projection.
 
     TODO: add docs
     '''
 
-    # TODO: set number of pixels by options
-    npixx = 512
-    npixy = 512
+    if npix is None:
+        npixx = 512
+        npixy = 512
+    else:
+        npixx = npix[0]
+        npixy = npix[1]
 
     if cross_section is None:
         cross_section = False
@@ -50,30 +52,31 @@ def scalar_interpolation(horizontal_data, vertical_data, depth_data,
     if accelerate is None:
         accelerate = False
 
-    itype = np.ones_like(horizontal_data, dtype=np.int32)
     npart = len(smoothing_length)
+    itype = np.ones(npart, dtype=np.int32)
 
-    xmax      = horizontal_range[1]
-    ymax      = vertical_range[1]
     xmin      = horizontal_range[0]
     ymin      = vertical_range[0]
+    xmax      = horizontal_range[1]
+    ymax      = vertical_range[1]
     pixwidthx = (xmax - xmin) / npixx
     pixwidthy = (ymax - ymin) / npixy
 
-    # interpolate3d_projection expects single precision reals
-    x   = np.array(horizontal_data, dtype=np.single)
-    y   = np.array(vertical_data,   dtype=np.single)
-    z   = np.array(depth_data,      dtype=np.single)
-    dat = np.array(render_data,     dtype=np.single)
+    # Splash routines expect single precision
+    x      = np.array(positions[0, :],  dtype=np.single)
+    y      = np.array(positions[1, :],  dtype=np.single)
+    z      = np.array(positions[2, :],  dtype=np.single)
+    pmass  = np.array(particle_mass,    dtype=np.single)
+    hh     = np.array(smoothing_length, dtype=np.single)
+    dat    = np.array(scalar_data,      dtype=np.single)
+    weight = np.array(weights,          dtype=np.single)
 
-    hh            = smoothing_length
-    weight        = weights
     normalise     = normalize
     useaccelerate = accelerate
 
 ################################################################################
 # TODO: temporary; testing phase
-    pmass = np.array(particle_mass, dtype=np.single)
+    npmass = npart
     zorig = z
     pixwidth = pixwidthx
     dscreenfromobserver = dscreen
@@ -82,74 +85,76 @@ def scalar_interpolation(horizontal_data, vertical_data, depth_data,
 ################################################################################
 
     if cross_section:
-        image_data = interpolate3d_fastxsec(x=x,
-                                            y=y,
-                                            z=z,
-                                            hh=hh,
-                                            weight=weight,
-                                            dat=dat,
-                                            itype=itype,
-                                            npart=npart,
-                                            xmin=xmin,
-                                            ymin=ymin,
-                                            zslice=zslice,
-                                            npixx=npixx,
-                                            npixy=npixy,
-                                            pixwidthx=pixwidthx,
-                                            pixwidthy=pixwidthy,
-                                            normalise=normalise)
+        datsmooth = \
+            interpolate3d_fastxsec(x=x,
+                                   y=y,
+                                   z=z,
+                                   hh=hh,
+                                   weight=weight,
+                                   dat=dat,
+                                   itype=itype,
+                                   npart=npart,
+                                   xmin=xmin,
+                                   ymin=ymin,
+                                   zslice=zslice,
+                                   npixx=npixx,
+                                   npixy=npixy,
+                                   pixwidthx=pixwidthx,
+                                   pixwidthy=pixwidthy,
+                                   normalise=normalise)
     else:
         if opacity:
-            image_data = interp3d_proj_opacity(x=x,
-                                               y=y,
-                                               z=z,
-                                               hh=hh,
-                                               pmass=pmass,
-                                               npmass=npart,
-                                               weight=weight,
-                                               dat=dat,
-                                               zorig=zorig,
-                                               itype=itype,
-                                               npart=npart,
-                                               xmin=xmin,
-                                               ymin=ymin,
-                                               npixx=npixx,
-                                               npixy=npixy,
-                                               pixwidth=pixwidth,
-                                               zobserver=zobserver,
-                                               dscreenfromobserver=dscreenfromobserver,
-                                               rkappa=rkappa,
-                                               zcut=zcut)
+            datsmooth = \
+                interp3d_proj_opacity(x=x,
+                                      y=y,
+                                      z=z,
+                                      hh=hh,
+                                      pmass=pmass,
+                                      npmass=npmass,
+                                      weight=weight,
+                                      dat=dat,
+                                      zorig=zorig,
+                                      itype=itype,
+                                      npart=npart,
+                                      xmin=xmin,
+                                      ymin=ymin,
+                                      npixx=npixx,
+                                      npixy=npixy,
+                                      pixwidth=pixwidth,
+                                      zobserver=zobserver,
+                                      dscreenfromobserver=dscreenfromobserver,
+                                      rkappa=rkappa,
+                                      zcut=zcut)
         else:
-            image_data = interpolate3d_projection(x=x,
-                                                  y=y,
-                                                  z=z,
-                                                  hh=hh,
-                                                  weight=weight,
-                                                  dat=dat,
-                                                  itype=itype,
-                                                  npart=npart,
-                                                  xmin=xmin,
-                                                  ymin=ymin,
-                                                  npixx=npixx,
-                                                  npixy=npixy,
-                                                  pixwidthx=pixwidthx,
-                                                  pixwidthy=pixwidthy,
-                                                  normalise=normalise,
-                                                  zobserver=zobserver,
-                                                  dscreen=dscreen,
-                                                  useaccelerate=useaccelerate)
+            datsmooth = \
+                interpolate3d_projection(x=x,
+                                         y=y,
+                                         z=z,
+                                         hh=hh,
+                                         weight=weight,
+                                         dat=dat,
+                                         itype=itype,
+                                         npart=npart,
+                                         xmin=xmin,
+                                         ymin=ymin,
+                                         npixx=npixx,
+                                         npixy=npixy,
+                                         pixwidthx=pixwidthx,
+                                         pixwidthy=pixwidthy,
+                                         normalise=normalise,
+                                         zobserver=zobserver,
+                                         dscreen=dscreen,
+                                         useaccelerate=useaccelerate)
 
     # TODO: check whether we need to transpose: Fortran vs C array ordering
-    image_data = image_data.T
+    datsmooth = datsmooth.T
 
-    image_data = np.array(image_data)
+    smoothed_scalar = np.array(datsmooth)
 
-    return image_data
+    return smoothed_scalar
 
-def vector_interpolation(horizontal_data, vertical_data, depth_data,
-                         smoothing_length, weights, vecx, vecy,
-                         horizontal_range, vertical_range, cross_section,
+def vector_interpolation(positions, smoothing_length, weights, vector_data,
+                         horizontal_range, vertical_range, npix, cross_section,
                          zslice, normalize, zobserver, dscreen):
     '''
     Interpolate a vector quantity to pixels by projection.
@@ -157,9 +162,12 @@ def vector_interpolation(horizontal_data, vertical_data, depth_data,
     TODO: add docs
     '''
 
-    # TODO: set number of pixels by options
-    npixx = 512
-    npixy = 512
+    if npix is None:
+        npixx = 512
+        npixy = 512
+    else:
+        npixx = npix[0]
+        npixy = npix[1]
 
     if cross_section is None:
         cross_section = False
@@ -176,26 +184,26 @@ def vector_interpolation(horizontal_data, vertical_data, depth_data,
     if normalize is None:
         normalize = False
 
-    itype = np.ones_like(horizontal_data, dtype=np.int32)
     npart = len(smoothing_length)
+    itype = np.ones(npart, dtype=np.int32)
 
-    xmax      = horizontal_range[1]
-    ymax      = vertical_range[1]
     xmin      = horizontal_range[0]
     ymin      = vertical_range[0]
+    xmax      = horizontal_range[1]
+    ymax      = vertical_range[1]
     pixwidthx = (xmax - xmin) / npixx
     pixwidthy = (ymax - ymin) / npixy
 
-    # interpolate3d_projection expects single precision reals
-    x    = np.array(horizontal_data, dtype=np.single)
-    y    = np.array(vertical_data,   dtype=np.single)
-    z    = np.array(depth_data,      dtype=np.single)
-    vecx = np.array(vecx,            dtype=np.single)
-    vecy = np.array(vecy,            dtype=np.single)
+    # Splash routines expect single precision
+    x      = np.array(positions[0, :],   dtype=np.single)
+    y      = np.array(positions[1, :],   dtype=np.single)
+    z      = np.array(positions[2, :],   dtype=np.single)
+    hh     = np.array(smoothing_length,  dtype=np.single)
+    vecx   = np.array(vector_data[0, :], dtype=np.single)
+    vecy   = np.array(vector_data[1, :], dtype=np.single)
+    weight = np.array(weights,           dtype=np.single)
 
-    hh            = smoothing_length
-    weight        = weights
-    normalise     = normalize
+    normalise = normalize
 
     if cross_section:
         vecsmoothx, vecsmoothy = interpolate3d_xsec_vec(x=x,
@@ -235,7 +243,6 @@ def vector_interpolation(horizontal_data, vertical_data, depth_data,
                                                         zobserver=zobserver,
                                                         dscreen=dscreen)
 
-    vecsmoothx = np.array(vecsmoothx)
-    vecsmoothy = np.array(vecsmoothy)
+    smoothed_vector = np.stack((np.array(vecsmoothx), np.array(vecsmoothy)))
 
-    return vecsmoothx, vecsmoothy
+    return smoothed_vector
