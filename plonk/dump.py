@@ -105,6 +105,7 @@ class Dump:
             self._read_hdf5(file_prefix)
 
         elif file_extension == 'ascii':
+            print_warning('ASCII files are deprecated')
             self._read_ascii(file_prefix)
 
         else:
