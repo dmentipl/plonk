@@ -11,7 +11,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 
 from ..particles import I_GAS, I_DUST
-from .splash.splash import interpolate_to_pixelgrid
+from .splash.splash import scalar_interpolation, vector_interpolation
 
 options = ['accelerate',
            'colorbar',
@@ -43,6 +43,7 @@ class Image:
         self._axis     = None
         self._image    = None
         self._colorbar = None
+        self._quiver   = None
 
     def _default_plot_options(self):
         '''
@@ -133,6 +134,7 @@ class Image:
              horizontal_axis=None,
              vertical_axis=None,
              render=None,
+             vector=None,
              particle_types=None,
              itype=None,
              horizontal_range=None,
@@ -204,6 +206,7 @@ class Image:
         depth_data       = np.array(pd[depth_axis])
         render_data      = np.array(pd[render])
         smoothing_length = np.array(pd['h'])
+        particle_mass    = np.array(pd['m'])
 
         weights = _interpolation_weights(
             self.plot_options['density_weighted'], pd,
@@ -228,10 +231,31 @@ class Image:
         dscreen    = self.plot_options['dscreen']
         accelerate = self.plot_options['accelerate']
 
-        image_data = interpolate_to_pixelgrid(
+################################################################################
+# TODO: temporary; testing phase
+        cross_section = False
+        opacity = False
+        zslice = None
+################################################################################
+
+        image_data = scalar_interpolation(
             horizontal_data, vertical_data, depth_data, smoothing_length,
-            weights, render_data, horizontal_range, vertical_range, normalize,
+            weights, render_data, particle_mass, horizontal_range,
+            vertical_range, cross_section, zslice, opacity, normalize,
             zobserver, dscreen, accelerate )
+
+        if vector:
+
+################################################################################
+# TODO: temporary; testing phase
+            vecx_data = self.particles['vx']
+            vecy_data = self.particles['vy']
+################################################################################
+
+            xvector_data, yvector_data = vector_interpolation(
+                horizontal_data, vertical_data, depth_data, smoothing_length,
+                weights, vecx_data, vecy_data, horizontal_range, vertical_range,
+                cross_section, zslice, normalize, zobserver, dscreen )
 
         extent = horizontal_range + vertical_range
 
@@ -271,6 +295,22 @@ class Image:
         img = ax.imshow(image_data, norm=norm, origin='lower', extent=extent,
                         cmap=cmap)
 
+        if vector:
+            X, Y = np.meshgrid(np.linspace(*horizontal_range, len(xvector_data)),
+                               np.linspace(*vertical_range,   len(yvector_data)))
+
+################################################################################
+# TODO: temporary; testing phase
+# set stride such that number of vector arrows is ~ 15-25 x 15-25
+            stride = 25
+################################################################################
+
+            q = ax.quiver(X[::stride, ::stride],
+                          Y[::stride, ::stride],
+                          xvector_data[::stride, ::stride],
+                          yvector_data[::stride, ::stride],
+                          color='white')
+
         ax.set_xlabel(horizontal_axis)
         ax.set_ylabel(vertical_axis)
 
@@ -297,6 +337,8 @@ class Image:
         self._axis = ax
         self._image = img
         self._colorbar = cb
+        if vector:
+            self._quiver = q
 
     def _convert_units(self):
         '''
