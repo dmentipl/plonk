@@ -252,8 +252,6 @@ def interpolate3d_fastxsec(
 
     return datsmooth
 
-################################################################################
-# TODO
 def interpolate3d_xsec_vec(
     float[:] x,
     float[:] y,
