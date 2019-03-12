@@ -116,7 +116,6 @@ cdef extern:
         float *dscreenfromobserver,
         float *rkappa,
         float *zcut
-,
         )
 
 def interpolate3d_projection(
