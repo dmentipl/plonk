@@ -3,8 +3,7 @@
 
 splash:
 	@cd plonk/visualization/splash; \
-	python setup.py build_ext --inplace; \
-	cd - > /dev/null
+	python setup.py build_ext --inplace
 
 clean:
 	@rm plonk/visualization/splash/*.o;     \
