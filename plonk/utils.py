@@ -50,3 +50,13 @@ def rotate_vector_arbitrary_axis(u, v, theta):
     dot_kv = np.stack(3*[dot_kv]).T
 
     return u*np.cos(theta) + w*np.sin(theta) + k*dot_kv*(1-np.cos(theta))
+
+def normalize_vector(v):
+    '''
+    Normalize a single vector.
+    '''
+
+    norm = np.linalg.norm(v)
+    if np.isclose(norm, 0.):
+        return v
+    return v / norm
