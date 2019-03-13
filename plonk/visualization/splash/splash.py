@@ -146,9 +146,6 @@ def scalar_interpolation(positions, smoothing_length, weights, scalar_data,
                                          dscreen=dscreen,
                                          useaccelerate=useaccelerate)
 
-    # TODO: check whether we need to transpose: Fortran vs C array ordering
-    datsmooth = datsmooth.T
-
     smoothed_scalar = np.array(datsmooth)
 
     return smoothed_scalar
