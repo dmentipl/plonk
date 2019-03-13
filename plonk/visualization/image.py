@@ -41,10 +41,18 @@ class Image:
 
         self._default_plot_options()
 
-        self._axis     = None
-        self._image    = None
-        self._colorbar = None
-        self._quiver   = None
+        class Handles:
+            '''
+            Handles for plots produced by Image class.
+            '''
+
+        self.handles = Handles()
+
+        self.handles.axis     = None
+        self.handles.image    = None
+        self.handles.part     = None
+        self.handles.colorbar = None
+        self.handles.quiver   = None
 
     def _default_plot_options(self):
         '''
@@ -446,12 +454,14 @@ class Image:
 
         #--- Handles for Image object
 
-        self._axis = ax
+        self.handles.axis = ax
         if render:
-            self._image = img
-            self._colorbar = cb
+            self.handles.image = img
+            self.handles.colorbar = cb
+        if particles:
+            self.handles.part = part
         if vector:
-            self._quiver = q
+            self.handles.quiver = q
 
     def _convert_units(self):
         '''
