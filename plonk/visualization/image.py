@@ -142,6 +142,9 @@ class Image:
              rotation_angle=None,
              position_angle=None,
              inclination=None,
+             cross_section=None,
+             zslice=None,
+             opacity=None,
              number_pixels=None,
              image_range=-1,
              render_scale=None,
@@ -207,6 +210,17 @@ class Image:
         if inclination is not None and position_angle is None:
             raise ValueError('Must specify position_angle')
 
+        #--- Render type
+
+        if cross_section is None:
+            cross_section = False
+        if cross_section:
+            if zslice is None:
+                zslice = 0.
+
+        if opacity is None:
+            opacity = False
+
         #--- Particle type
 
         itypes = list()
@@ -246,12 +260,6 @@ class Image:
         zobserver  = self.plot_options['zobserver']
         dscreen    = self.plot_options['dscreen']
         accelerate = self.plot_options['accelerate']
-################################################################################
-# TODO: temporary; testing phase
-        cross_section = False
-        opacity = False
-        zslice = None
-################################################################################
 
         #--- Dataframe subsets
 
