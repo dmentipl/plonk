@@ -132,14 +132,17 @@ class Image:
         return None
 
     def plot(self,
-             horizontal_axis=None,
-             vertical_axis=None,
              render=None,
              vector=None,
              particle_types=None,
              itype=None,
              horizontal_range=None,
              vertical_range=None,
+             rotation_axis=None,
+             rotation_angle=None,
+             position_angle=None,
+             inclination=None,
+             number_pixels=None,
              image_range=-1,
              render_scale=None,
              render_min=None,
@@ -159,17 +162,46 @@ class Image:
         # TODO: add docs
         # TODO: check if need to interpolate again
         # TODO: choose fluid type: gas, dust1, dust2, ...
-        # TODO: arbitrary rotations
-        # TODO: add interfaces to other interpolation routines
 
-        if horizontal_axis is None:
-            horizontal_axis = 'x'
-
-        if vertical_axis is None:
-            vertical_axis = 'y'
-
-        if render is None:
+        if render is None and vector is None:
             render = 'rho'
+
+        if render not in self.particles:
+            raise ValueError(f'{render} not available for rendering')
+
+        if vector not in ['v', 'velocity']:
+            raise ValueError(f'{vector} not available for vector field overlay')
+
+        # TODO: add more checks on input
+        rotate = False
+
+        if (rotation_axis or rotation_angle) and \
+           (position_angle and inclination):
+            raise ValueError('Cannot set rotation_axis/rotation_angle and ' + \
+                             ' position_angle/inclination at the same time')
+
+        if rotation_axis is not None:
+            if rotation_angle is not None:
+                rotate = True
+            else:
+                raise ValueError('Must specify rotation_angle')
+            if isinstance(rotation_axis, list):
+                rotation_axis = np.array(rotation_axis)
+
+        if rotation_angle is not None and rotation_axis is None:
+            raise ValueError('Must specify rotation_axis')
+
+        if position_angle is not None:
+            if inclination is not None:
+                rotate = True
+                rotation_angle = inclination
+                rotation_axis = np.array([np.cos(position_angle),
+                                          np.sin(position_angle), 0])
+            else:
+                raise ValueError('Must specify inclination')
+
+        if inclination is not None and position_angle is None:
+            raise ValueError('Must specify position_angle')
 
         itypes = list()
 
@@ -195,19 +227,12 @@ class Image:
         if len(itypes) > 1:
             raise ValueError('plotting multiple types at once is not working')
 
-        print(f'Rendering {render} on [{horizontal_axis}, {vertical_axis}] window')
-
-        xyz = set(['x', 'y', 'z'])
-        depth_axis = xyz.difference([horizontal_axis, vertical_axis]).pop()
+        if number_pixels is None:
+            npix = [512, 512]
+        else:
+            npix = number_pixels
 
         pd = self.particles.loc[self.particles['itype'].isin(itypes)]
-
-        horizontal_data  = np.array(pd[horizontal_axis])
-        vertical_data    = np.array(pd[vertical_axis])
-        depth_data       = np.array(pd[depth_axis])
-        render_data      = np.array(pd[render])
-        smoothing_length = np.array(pd['h'])
-        particle_mass    = np.array(pd['m'])
 
         weights = _interpolation_weights(
             self.plot_options['density_weighted'], pd,
@@ -221,52 +246,56 @@ class Image:
             horizontal_range = [-image_range, image_range]
             vertical_range   = [-image_range, image_range]
 
-        if horizontal_range is None:
-            horizontal_range = [horizontal_data.min(), horizontal_data.max()]
-
-        if vertical_range is None:
-            vertical_range = [vertical_data.min(), vertical_data.max()]
-
         normalize  = self.plot_options['normalize']
         zobserver  = self.plot_options['zobserver']
         dscreen    = self.plot_options['dscreen']
         accelerate = self.plot_options['accelerate']
+
+        positions        = np.array(pd[['x', 'y', 'z']])
+        velocities       = np.array(pd[['vx', 'vy', 'vz']])
+        smoothing_length = np.array(pd['h'])
+        particle_mass    = np.array(pd['m'])
+
+        render_data      = np.array(pd[render])
+        vector_data      = velocities
+
+        if rotate:
+            positions = \
+                self._rotate_frame(positions, rotation_axis, rotation_angle)
+            velocities = \
+                self._rotate_frame(velocities, rotation_axis, rotation_angle)
+
+        if horizontal_range is None and vertical_range is None:
+            range_min = min(positions[:, 0].min(), positions[:, 1].min())
+            range_max = max(positions[:, 0].max(), positions[:, 1].max())
+            horizontal_range = [range_min, range_max]
+            vertical_range   = [range_min, range_max]
+
+        if horizontal_range is None:
+            horizontal_range = [positions[:, 0].min(), positions[:, 0].max()]
+
+        if vertical_range is None:
+            vertical_range = [positions[:, 1].min(), positions[:, 1].max()]
 
 ################################################################################
 # TODO: temporary; testing phase
         cross_section = False
         opacity = False
         zslice = None
-
-        positions = np.stack((horizontal_data, vertical_data, depth_data))
-
-        position_angle = 45 * np.pi/180
-        if position_angle:
-            axis = np.array([np.cos(position_angle), np.sin(position_angle), 0])
-        else:
-            axis = np.array([0, 0, 1])
-        theta = 45 * np.pi/180
-
-        if theta:
-            positions = rotate_vector_arbitrary_axis(positions.T, axis, theta)
-            positions = positions.T
-
-        npix = [512, 512]
 ################################################################################
 
-        image_data = scalar_interpolation(
-            positions, smoothing_length, weights, render_data, particle_mass,
-            horizontal_range, vertical_range, npix, cross_section, zslice,
-            opacity, normalize, zobserver, dscreen, accelerate )
+        if render:
+
+            print(f'Rendering {render}')
+
+            image_data = scalar_interpolation(
+                positions, smoothing_length, weights, render_data, particle_mass,
+                horizontal_range, vertical_range, npix, cross_section, zslice,
+                opacity, normalize, zobserver, dscreen, accelerate )
 
         if vector:
 
-################################################################################
-# TODO: temporary; testing phase
-            vecx_data = np.array(pd['vx'])
-            vecy_data = np.array(pd['vy'])
-            vector_data = np.stack((vecx_data, vecy_data))
-################################################################################
+            print(f'Vector field {vector}')
 
             vector_data = vector_interpolation(
                 positions, smoothing_length, weights, vector_data,
@@ -330,8 +359,9 @@ class Image:
                           yvector_data[::stride, ::stride],
                           color='white')
 
-        ax.set_xlabel(horizontal_axis)
-        ax.set_ylabel(vertical_axis)
+        if not rotate:
+            ax.set_xlabel('x')
+            ax.set_ylabel('y')
 
         ax.set_xlim(horizontal_range[0], horizontal_range[1])
         ax.set_ylim(vertical_range[0], vertical_range[1])
@@ -358,6 +388,13 @@ class Image:
         self._colorbar = cb
         if vector:
             self._quiver = q
+
+    def _rotate_frame(self, positions, axis, theta):
+        '''
+        Rotate around axis.
+        '''
+
+        return rotate_vector_arbitrary_axis(positions, axis, theta)
 
     def _convert_units(self):
         '''

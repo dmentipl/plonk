@@ -63,9 +63,9 @@ def scalar_interpolation(positions, smoothing_length, weights, scalar_data,
     pixwidthy = (ymax - ymin) / npixy
 
     # Splash routines expect single precision
-    x      = np.array(positions[0, :],  dtype=np.single)
-    y      = np.array(positions[1, :],  dtype=np.single)
-    z      = np.array(positions[2, :],  dtype=np.single)
+    x      = np.array(positions[:, 0],  dtype=np.single)
+    y      = np.array(positions[:, 1],  dtype=np.single)
+    z      = np.array(positions[:, 2],  dtype=np.single)
     pmass  = np.array(particle_mass,    dtype=np.single)
     hh     = np.array(smoothing_length, dtype=np.single)
     dat    = np.array(scalar_data,      dtype=np.single)
@@ -191,12 +191,12 @@ def vector_interpolation(positions, smoothing_length, weights, vector_data,
     pixwidthy = (ymax - ymin) / npixy
 
     # Splash routines expect single precision
-    x      = np.array(positions[0, :],   dtype=np.single)
-    y      = np.array(positions[1, :],   dtype=np.single)
-    z      = np.array(positions[2, :],   dtype=np.single)
+    x      = np.array(positions[:, 0],   dtype=np.single)
+    y      = np.array(positions[:, 1],   dtype=np.single)
+    z      = np.array(positions[:, 2],   dtype=np.single)
     hh     = np.array(smoothing_length,  dtype=np.single)
-    vecx   = np.array(vector_data[0, :], dtype=np.single)
-    vecy   = np.array(vector_data[1, :], dtype=np.single)
+    vecx   = np.array(vector_data[:, 0], dtype=np.single)
+    vecy   = np.array(vector_data[:, 1], dtype=np.single)
     weight = np.array(weights,           dtype=np.single)
 
     normalise = normalize
