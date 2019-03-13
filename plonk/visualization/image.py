@@ -175,8 +175,9 @@ class Image:
 
         #--- Render and vector field
 
+        particles = False
         if render is None and vector is None:
-            render = 'rho'
+            particles = True
 
         if render is not None and render not in self.particles:
             raise ValueError(f'{render} not available for rendering')
@@ -390,14 +391,24 @@ class Image:
             plt.clf()
             ax = plt.gca()
 
-        #--- Make rendered image
+        #--- Rendered image
 
         if render:
 
             img = ax.imshow(image_data, norm=norm, origin='lower', extent=extent,
                             cmap=cmap)
 
-        #--- Make vector field
+        #--- Plot particles
+
+        if particles:
+
+            print('Plotting particles')
+            marker_size = 0.01
+            part = ax.scatter(positions[:, 0], positions[:, 1],
+                              s=marker_size, c='k')
+            ax.set_aspect('equal', 'box')
+
+        #--- Vector field
 
         if vector:
 
