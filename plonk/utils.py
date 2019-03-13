@@ -46,7 +46,6 @@ def rotate_vector_arbitrary_axis(u, v, theta):
 
     w = np.cross(k, u)
 
-    k = np.stack(u.shape[0]*[k])
     dot_kv = np.sum(k*u, axis=1)
     dot_kv = np.stack(3*[dot_kv]).T
 
