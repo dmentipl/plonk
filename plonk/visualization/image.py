@@ -12,6 +12,7 @@ import numpy as np
 
 from ..particles import I_GAS, I_DUST
 from .splash.splash import scalar_interpolation, vector_interpolation
+from ..utils import rotate_vector_arbitrary_axis
 
 options = ['accelerate',
            'colorbar',
@@ -238,6 +239,17 @@ class Image:
         zslice = None
 
         positions = np.stack((horizontal_data, vertical_data, depth_data))
+
+        position_angle = 45 * np.pi/180
+        if position_angle:
+            axis = np.array([np.cos(position_angle), np.sin(position_angle), 0])
+        else:
+            axis = np.array([0, 0, 1])
+        theta = 45 * np.pi/180
+
+        if theta:
+            positions = rotate_vector_arbitrary_axis(positions.T, axis, theta)
+            positions = positions.T
 
         npix = [512, 512]
 ################################################################################
