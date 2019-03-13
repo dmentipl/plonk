@@ -74,16 +74,6 @@ def scalar_interpolation(positions, smoothing_length, weights, scalar_data,
     normalise     = normalize
     useaccelerate = accelerate
 
-################################################################################
-# TODO: temporary; testing phase
-    npmass = npart
-    zorig = z
-    pixwidth = pixwidthx
-    dscreenfromobserver = dscreen
-    rkappa = np.pi * hh.mean()**2 / pmass[0]
-    zcut = zobserver
-################################################################################
-
     if cross_section:
         datsmooth = \
             interpolate3d_fastxsec(x=x,
@@ -104,6 +94,15 @@ def scalar_interpolation(positions, smoothing_length, weights, scalar_data,
                                    normalise=normalise)
     else:
         if opacity:
+################################################################################
+# TODO: temporary; testing phase
+            npmass = npart
+            zorig = z
+            pixwidth = pixwidthx
+            dscreenfromobserver = dscreen
+            rkappa = np.pi * hh.mean()**2 / pmass[0]
+            zcut = zobserver
+################################################################################
             datsmooth = \
                 interp3d_proj_opacity(x=x,
                                       y=y,
@@ -203,42 +202,44 @@ def vector_interpolation(positions, smoothing_length, weights, vector_data,
     normalise = normalize
 
     if cross_section:
-        vecsmoothx, vecsmoothy = interpolate3d_xsec_vec(x=x,
-                                                        y=y,
-                                                        z=z,
-                                                        hh=hh,
-                                                        weight=weight,
-                                                        vecx=vecx,
-                                                        vecy=vecy,
-                                                        itype=itype,
-                                                        npart=npart,
-                                                        xmin=xmin,
-                                                        ymin=ymin,
-                                                        zslice=zslice,
-                                                        npixx=npixx,
-                                                        npixy=npixy,
-                                                        pixwidthx=pixwidthx,
-                                                        pixwidthy=pixwidthy,
-                                                        normalise=normalise)
+        vecsmoothx, vecsmoothy = \
+            interpolate3d_xsec_vec(x=x,
+                                   y=y,
+                                   z=z,
+                                   hh=hh,
+                                   weight=weight,
+                                   vecx=vecx,
+                                   vecy=vecy,
+                                   itype=itype,
+                                   npart=npart,
+                                   xmin=xmin,
+                                   ymin=ymin,
+                                   zslice=zslice,
+                                   npixx=npixx,
+                                   npixy=npixy,
+                                   pixwidthx=pixwidthx,
+                                   pixwidthy=pixwidthy,
+                                   normalise=normalise)
     else:
-        vecsmoothx, vecsmoothy = interpolate3d_proj_vec(x=x,
-                                                        y=y,
-                                                        z=z,
-                                                        hh=hh,
-                                                        weight=weight,
-                                                        vecx=vecx,
-                                                        vecy=vecy,
-                                                        itype=itype,
-                                                        npart=npart,
-                                                        xmin=xmin,
-                                                        ymin=ymin,
-                                                        npixx=npixx,
-                                                        npixy=npixy,
-                                                        pixwidthx=pixwidthx,
-                                                        pixwidthy=pixwidthy,
-                                                        normalise=normalise,
-                                                        zobserver=zobserver,
-                                                        dscreen=dscreen)
+        vecsmoothx, vecsmoothy = \
+            interpolate3d_proj_vec(x=x,
+                                   y=y,
+                                   z=z,
+                                   hh=hh,
+                                   weight=weight,
+                                   vecx=vecx,
+                                   vecy=vecy,
+                                   itype=itype,
+                                   npart=npart,
+                                   xmin=xmin,
+                                   ymin=ymin,
+                                   npixx=npixx,
+                                   npixy=npixy,
+                                   pixwidthx=pixwidthx,
+                                   pixwidthy=pixwidthy,
+                                   normalise=normalise,
+                                   zobserver=zobserver,
+                                   dscreen=dscreen)
 
     smoothed_vector = np.stack((np.array(vecsmoothx), np.array(vecsmoothy)))
 
