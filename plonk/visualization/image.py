@@ -177,8 +177,8 @@ class Image:
 
         rotate = False
 
-        if (rotation_axis is None or rotation_angle is None) and \
-           (position_angle is None and inclination is None):
+        if (rotation_axis is not None or rotation_angle is not None) and \
+           (position_angle is not None and inclination is not None):
             raise ValueError('Cannot set rotation_axis/rotation_angle and ' + \
                              ' position_angle/inclination at the same time')
 
