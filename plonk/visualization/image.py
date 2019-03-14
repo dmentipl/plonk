@@ -150,6 +150,7 @@ class Image:
              rotation_angle=None,
              position_angle=None,
              inclination=None,
+             stream=None,
              cross_section=None,
              zslice=None,
              opacity=None,
@@ -172,6 +173,8 @@ class Image:
         # TODO: add docs
         # TODO: choose fluid type: gas, dust1, dust2, ...
         # TODO: add more checks on input
+        # TODO: physical units
+        # TODO: calculated quantities
 
         #--- Render and vector field
 
@@ -184,6 +187,9 @@ class Image:
 
         if vector is not None and vector not in ['v', 'velocity']:
             raise ValueError(f'{vector} not available for vector field overlay')
+
+        if stream is None:
+            stream = False
 
         #--- Rotate frame
 
@@ -332,9 +338,10 @@ class Image:
             print(f'Rendering {render}')
 
             image_data = scalar_interpolation(
-                positions, smoothing_length, weights, render_data, particle_mass,
-                horizontal_range, vertical_range, npix, cross_section, zslice,
-                opacity, normalize, zobserver, dscreen, accelerate )
+                positions, smoothing_length, weights, render_data,
+                particle_mass, horizontal_range, vertical_range, npix,
+                cross_section, zslice, opacity, normalize, zobserver, dscreen,
+                accelerate )
 
         #--- Interpolate vector data
 
@@ -425,11 +432,20 @@ class Image:
                 vector_color = 'white'
 ################################################################################
 
-            q = ax.quiver(X[::stride, ::stride],
-                          Y[::stride, ::stride],
-                          xvector_data[::stride, ::stride],
-                          yvector_data[::stride, ::stride],
-                          color=vector_color)
+            if stream:
+                q = ax.streamplot(X[::stride, ::stride],
+                                  Y[::stride, ::stride],
+                                  xvector_data[::stride, ::stride],
+                                  yvector_data[::stride, ::stride],
+                                  color=vector_color)
+
+            else:
+                q = ax.quiver(X[::stride, ::stride],
+                              Y[::stride, ::stride],
+                              xvector_data[::stride, ::stride],
+                              yvector_data[::stride, ::stride],
+                              color=vector_color)
+
             ax.set_aspect('equal', 'box')
 
         #--- Axis labels/limits, title
