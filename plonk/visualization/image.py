@@ -278,7 +278,7 @@ class Image:
 
         #--- Dataframe subsets
 
-        pd = self.particles.loc[self.particles['itype'].isin(itypes)]
+        pd = self.particles.loc[self.particles['itype'].isin(itypes)].copy()
 
         positions        = np.array(pd[['x', 'y', 'z']])
         velocities       = np.array(pd[['vx', 'vy', 'vz']])
