@@ -6,6 +6,8 @@ Phantom analysis and visualization but with Python.
 + Docs: https://plonk.readthedocs.io/
 + Repo: https://www.github.com/dmentipl/plonk
 
+[![Build Status](https://travis-ci.com/dmentipl/plonk.svg?token=AL8sPDxCNprS78nBjSQh&branch=master)](https://travis-ci.com/dmentipl/plonk)
+
 Usage
 -----
 
