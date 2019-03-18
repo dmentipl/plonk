@@ -2,6 +2,7 @@
 test_dump.py
 '''
 
+import os
 import unittest
 
 import numpy as np
@@ -19,7 +20,8 @@ class TestDump(unittest.TestCase):
         Testing reading Phantom HDF5 dump file.
         """
 
-        test_dump = 'tests/test_data/disc_00000.h5'
+        file_dir = os.path.dirname(os.path.abspath(__file__))
+        test_dump = os.path.join(file_dir, 'test_data', 'disc_00000.h5')
         dump = Dump(test_dump)
         test_data = DumpTest()
 
