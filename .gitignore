@@ -4,3 +4,7 @@ examples/data
 build/
 dist/
 *.egg-info/
+
+_build
+_static
+_templates
