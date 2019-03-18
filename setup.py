@@ -127,7 +127,7 @@ setup(
     author_email='d.mentiplay@gmail.com',
     url='https://github.com/dmentipl/plonk',
     description='Phantom analysis and visualization but with Python.',
-    packages=['plonk', 'plonk.analysis', 'plonk.visualization'],
+    packages=['plonk', 'plonk.analysis', 'plonk.tests', 'plonk.visualization'],
     license='MIT',
     install_requires=install_requires,
     cmdclass=cmdclass,
