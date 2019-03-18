@@ -9,7 +9,11 @@ Phantom analysis and visualization but with Python.
 Usage
 -----
 
-Basic usage:
+Plonk requires Phantom output to be in HDF5 format. See the Phantom wiki for more information: https://bitbucket.org/danielprice/phantom/wiki/Home.
+
+### Basic usage
+
+To read in a collection of Phantom dump files:
 
 ```python
 from plonk.dump import Dump
