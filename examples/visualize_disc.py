@@ -4,8 +4,8 @@ visualize_disc.py
 Daniel Mentiplay, 2019.
 '''
 
-from plonk.plonk.dump import Dump
-from plonk.plonk.visualization.image import Image
+from plonk.dump import Dump
+from plonk.visualization.image import Image
 
 #--- Dump file names
 

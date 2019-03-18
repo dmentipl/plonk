@@ -17,10 +17,7 @@ from ..constants import constants
 def disc_analysis(radius_in=None,
                   radius_out=None,
                   number_radial_bins=None,
-                  particles=None,
-                  sinks=None,
-                  parameters=None,
-                  units=None,
+                  dump=None,
                   min_particle_average=None):
     '''
     Perform disc analysis.
@@ -31,14 +28,68 @@ def disc_analysis(radius_in=None,
         radius_in          : Inner disc radius for radial binning
         radius_out         : Outer disc radius for radial binning
         number_radial_bins : Number of radial bins
-        particles          : Particle data frame
-        sinks              : Sink data frame
+        dump               : Dump object
 
     Optional:
         min_particle_average : Minimum number of particles to compute averages
     '''
 
     # TODO: add to docs
+
+#--- Calculate extra quantities on particles
+
+    _calculate_extra_quantities(dump)
+
+#--- Calculate radially binned quantities
+
+    radial_data = _calculate_radially_binned_quantities( number_radial_bins,
+                                                         radius_in,
+                                                         radius_out,
+                                                         dump.particles,
+                                                         min_particle_average )
+
+#--- Dust
+
+    n_dust_small = dump.parameters['ndustsmall']
+    n_dust_large = dump.parameters['ndustlarge']
+
+    contains_small_dust = bool(n_dust_small > 0)
+    contains_large_dust = bool(n_dust_large > 0)
+    contains_dust = bool(contains_small_dust or contains_large_dust)
+
+    if contains_dust:
+        grain_size = dump.parameters['grainsize']
+        grain_dens = dump.parameters['graindens']
+
+    gamma = dump.parameters['gamma']
+
+#--- Stokes
+
+    # for idxi in range(len(radial_bins_disc)):
+    #     for idxj in range(n_dust_large):
+
+    #         Stokes[idxj][idxi] = \
+    #             np.sqrt(gamma*np.pi/8) * grain_dens[idxj] * grain_size[idxj] \
+    #             / ( scale_height_gas[idxi] \
+    #             * (midplane_density_gas[idxi] + midplane_density_dust[idxj][idxi]) )
+
+#--- Return
+
+    return radial_data
+
+# ---------------------------------------------------------------------------- #
+
+def _calculate_extra_quantities(dump):
+    '''
+    Calculate extra quantities on particles and sinks appropriate for a disc.
+    '''
+
+    print('Calculating extra quantities on the particles and sinks...')
+    print('And adding them to the DataFrame\n')
+    particles  = dump.particles
+    sinks      = dump.sinks
+    parameters = dump.parameters
+    units      = dump.units
 
 #--- Dump type
 
@@ -49,19 +100,6 @@ def disc_analysis(radius_in=None,
     u_dist = units['distance']
     u_time = units['time']
     u_mass = units['mass']
-
-#--- Dust
-
-    n_dust_small = parameters['ndustsmall']
-    n_dust_large = parameters['ndustlarge']
-
-    contains_small_dust = bool(n_dust_small > 0)
-    contains_large_dust = bool(n_dust_large > 0)
-    contains_dust = bool(contains_small_dust or contains_large_dust)
-
-    if contains_dust:
-        grain_size = parameters['grainsize']
-        grain_dens = parameters['graindens']
 
 #--- Spherical and cylindrical distance
 
@@ -171,30 +209,6 @@ def disc_analysis(radius_in=None,
 
         particles['e'] = np.nan
         sinks['e']     = np.nan
-
-#--- Calculate radially binned quantities
-
-    radial_data = _calculate_radially_binned_quantities( number_radial_bins,
-                                                         radius_in,
-                                                         radius_out,
-                                                         particles,
-                                                         min_particle_average )
-
-#--- Stokes
-
-    gamma = parameters['gamma']
-
-    # for idxi in range(len(radial_bins_disc)):
-    #     for idxj in range(n_dust_large):
-
-    #         Stokes[idxj][idxi] = \
-    #             np.sqrt(gamma*np.pi/8) * grain_dens[idxj] * grain_size[idxj] \
-    #             / ( scale_height_gas[idxi] \
-    #             * (midplane_density_gas[idxi] + midplane_density_dust[idxj][idxi]) )
-
-#--- Return
-
-    return radial_data, particles, sinks
 
 # ---------------------------------------------------------------------------- #
 

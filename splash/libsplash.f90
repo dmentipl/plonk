@@ -1,4 +1,4 @@
-module splash_wrapper
+module libsplash
 
   use splash,        only: interpolate3d_projection, &
                            interpolate3d_proj_vec,   &
@@ -191,4 +191,4 @@ subroutine c_interp3d_proj_opacity(                                         &
 
 end subroutine c_interp3d_proj_opacity
 
-end module splash_wrapper
+end module libsplash

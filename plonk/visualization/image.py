@@ -11,7 +11,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 
 from ..particles import I_GAS, I_DUST
-from .splash.splash import scalar_interpolation, vector_interpolation
+from .splash import scalar_interpolation, vector_interpolation
 from ..utils import normalize_vector, rotate_vector_arbitrary_axis
 
 options = ['accelerate',
@@ -356,6 +356,19 @@ class Image:
 
             xvector_data = vector_data[0]
             yvector_data = vector_data[1]
+
+        #--- Physical units
+
+################################################################################
+# TODO: temporary; testing phase
+        physical_units = False
+
+        if physical_units:
+            extent           = [val * self.units['distance'] for val in extent]
+            horizontal_range = [val * self.units['distance'] for val in horizontal_range]
+            vertical_range   = [val * self.units['distance'] for val in vertical_range]
+            image_data       *= self.units['surface_density']
+################################################################################
 
         #--- Render settings
 
