@@ -1,35 +1,64 @@
 '''
 visualize_disc.py
 
+Produces similar rendering to Splash.
+
 Daniel Mentiplay, 2019.
 '''
+
+import os
+
+import matplotlib.pyplot as plt
 
 from plonk.dump import Dump
 from plonk.visualization.image import Image
 
-#--- Dump file names
+# ---------------------------------------------------------------------------- #
 
-# TODO: get dump file names as input
-dump_file_names = ['data/disc_00000.h5']
+#--- Options for plotting
+
+RENDER              = 'rho'
+RENDER_FRACTION_MAX = 0.05
+IMAGE_RANGE         = 150
+
+#--- Dump file names: e.g. disc_00000.h5, ...
+
+DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
+
+PREFIX = 'disc'
+FILE_NUMBERS = range(1)
+
+dumpfiles = [PREFIX + f'_{i:05}.h5' for i in FILE_NUMBERS]
+
+# ---------------------------------------------------------------------------- #
 
 dumps = list()
 
-for dump_file_name in dump_file_names:
+for dumpfile in dumpfiles:
 
-#--- Read dump file
+#--- Read dump files
 
-    print('\nReading in data from dumpfile: ' + dump_file_name + '...')
+    file = os.path.join(DATA_PATH, dumpfile)
 
-    dump = Dump(dump_file_name)
+    print('\nReading in data from dumpfile: ' + file + '...')
+
+    dump = Dump(file)
+
     dumps.append(dump)
 
-#--- Plot image
+# ---------------------------------------------------------------------------- #
 
-print('\nCreating Image objects for each dump file...', end='')
+#--- Plot image
 
 images = list()
 for dump in dumps:
     images.append(Image(dump))
 
-print('done')
-print('\n\nTo plot the ith dump:  images[i].plot()')
+print(f'\nPlotting dump files...\n')
+
+for image in images:
+    plt.figure()
+    image.plot(render=RENDER, render_fraction_max=RENDER_FRACTION_MAX,
+               image_range=IMAGE_RANGE)
+
+plt.show()
