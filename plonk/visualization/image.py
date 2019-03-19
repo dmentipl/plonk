@@ -281,9 +281,11 @@ class Image:
         pd = self.particles.loc[self.particles['itype'].isin(itypes)].copy()
 
         positions        = np.array(pd[['x', 'y', 'z']])
-        velocities       = np.array(pd[['vx', 'vy', 'vz']])
         smoothing_length = np.array(pd['h'])
         particle_mass    = np.array(pd['m'])
+
+        if 'vx' in pd:
+            velocities   = np.array(pd[['vx', 'vy', 'vz']])
 
         if render:
             render_data = np.array(pd[render])
