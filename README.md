@@ -15,12 +15,13 @@ Plonk requires Phantom output to be in HDF5 format. See the Phantom wiki for mor
 
 ### Basic usage
 
-To read in a collection of Phantom dump files:
+To read in a collection of Phantom dump files with names like `disc_00000.h5`, ...
 
 ```python
 from plonk.dump import Dump
 
-files = [f'data/disc_{idx:05}.h5' for idx in range(50)]
+n_files = 100
+files = [f'disc_{idx:05}.h5' for idx in range(n_files)]
 
 dumps = list()
 for file in files:
