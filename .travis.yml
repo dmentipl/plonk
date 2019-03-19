@@ -19,8 +19,8 @@ install:
   # We just set up a conda environment with the right Python version. This
   # should not need changing.
 
-  - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION
-  - source activate test
+  - conda env create -f environment.yml
+  - source activate plonk
 
   # This should using the environment.yml file in the repository to install all
   # dependencies.
