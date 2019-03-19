@@ -13,6 +13,8 @@ from numpy import get_include
 # ---------------------------------------------------------------------------- #
 # --- Splash ---
 
+FORCE_RECOMPILE_SPLASH = False
+
 LIBSPLASH      = 'libsplash.so'
 LIBSPLASH_DIR  = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               'splash')
@@ -89,7 +91,7 @@ def compile_splash():
 
 #--- Compile Splash source
 
-if not os.path.isfile(LIBSPLASH_PATH):
+if not os.path.isfile(LIBSPLASH_PATH) or FORCE_RECOMPILE_SPLASH:
     compile_splash()
 
 # Fix for macOS systems
