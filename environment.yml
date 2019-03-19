@@ -1,0 +1,9 @@
+name: plonk
+
+dependencies:
+    - python=3
+    - cython
+    - h5py
+    - matplotlib
+    - numpy
+    - pandas
