@@ -19,8 +19,8 @@ install:
   # We just set up a conda environment with the right Python version. This
   # should not need changing.
 
-  - conda env create -f environment.yml
-  - source activate plonk
+  - conda env create --name plonk_dev --file environment.yml
+  - conda activate plonk_dev
 
   # This should using the environment.yml file in the repository to install all
   # dependencies.
@@ -30,4 +30,4 @@ script:
 
 notifications:
   email:
-    - daniel.mentiplay@monash.edu
+    - d.mentiplay@gmail.com
