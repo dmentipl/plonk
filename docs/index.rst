@@ -3,6 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+=================================
 Welcome to Plonk's documentation!
 =================================
 
@@ -13,12 +14,14 @@ Welcome to Plonk's documentation!
    overview
    installation
    usage
+   examples
    contributions
 
 .. role:: math(raw)
    :format: html latex
 ..
 
+========================
 About this documentation
 ========================
 
