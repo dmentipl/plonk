@@ -119,8 +119,14 @@ cmdclass = dict()
 cmdclass.update({'build_ext': build_ext})
 include_dirs = [get_include()]
 
-with open(os.path.join(os.path.dirname(__file__), 'requirements.txt')) as fp:
-    install_requires = fp.read()
+install_requires = \
+'''
+cython
+h5py
+matplotlib
+numpy
+pandas
+'''
 
 setup(
     name='Plonk',
