@@ -13,6 +13,7 @@ Welcome to Plonk's documentation!
    overview
    installation
    usage
+   contributions
 
 .. role:: math(raw)
    :format: html latex
