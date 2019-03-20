@@ -11,7 +11,7 @@ Phantom analysis and visualization but with Python.
 Usage
 -----
 
-Plonk requires Phantom output to be in HDF format.
+Plonk requires Phantom output to be in [HDF](https://en.wikipedia.org/wiki/Hierarchical_Data_Format) format.
 
 *You can convert old dumps to HDF.* See the Phantom wiki for more information (https://bitbucket.org/danielprice/phantom/wiki).
 
@@ -32,7 +32,7 @@ for file in files:
 
 Now you have a list of Dump objects with access to, e.g., the particle arrays stored as a Pandas DataFrame, and other quantities.
 
-For further usage, see `examples` folder.
+For further usage, see `examples` folder and documentation.
 
 Install
 -------
