@@ -75,131 +75,8 @@ The particle data is stored as a Pandas DataFrame. Every particle has a type (``
 
 *Output:*
 
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>itype</th>
-          <th>x</th>
-          <th>y</th>
-          <th>z</th>
-          <th>h</th>
-          <th>m</th>
-          <th>rho</th>
-          <th>pressure</th>
-          <th>vx</th>
-          <th>vy</th>
-          <th>vz</th>
-          <th>dustfrac</th>
-          <th>divv</th>
-          <th>dt</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>0</th>
-          <td>1</td>
-          <td>-31.269099</td>
-          <td>-35.027568</td>
-          <td>-11.247553</td>
-          <td>1.629258</td>
-          <td>1.000000e-07</td>
-          <td>2.312227e-08</td>
-          <td>8.319090e-12</td>
-          <td>0.106367</td>
-          <td>-0.095378</td>
-          <td>0.0</td>
-          <td>0.002055</td>
-          <td>0.001085</td>
-          <td>9.017928</td>
-        </tr>
-        <tr>
-          <th>1</th>
-          <td>1</td>
-          <td>18.982811</td>
-          <td>130.934768</td>
-          <td>23.591143</td>
-          <td>2.426354</td>
-          <td>1.000000e-07</td>
-          <td>7.000633e-09</td>
-          <td>1.509708e-12</td>
-          <td>-0.082555</td>
-          <td>0.011762</td>
-          <td>0.0</td>
-          <td>0.001227</td>
-          <td>0.000152</td>
-          <td>18.035856</td>
-        </tr>
-        <tr>
-          <th>2</th>
-          <td>1</td>
-          <td>109.807836</td>
-          <td>-48.332495</td>
-          <td>3.099149</td>
-          <td>2.261923</td>
-          <td>1.000000e-07</td>
-          <td>8.641047e-09</td>
-          <td>1.971924e-12</td>
-          <td>0.035373</td>
-          <td>0.080244</td>
-          <td>0.0</td>
-          <td>0.010808</td>
-          <td>-0.000184</td>
-          <td>18.035856</td>
-        </tr>
-        <tr>
-          <th>3</th>
-          <td>1</td>
-          <td>-87.225447</td>
-          <td>-35.186138</td>
-          <td>-4.220097</td>
-          <td>1.752120</td>
-          <td>1.000000e-07</td>
-          <td>1.859126e-08</td>
-          <td>4.790044e-12</td>
-          <td>0.037253</td>
-          <td>-0.092721</td>
-          <td>0.0</td>
-          <td>0.006507</td>
-          <td>-0.000011</td>
-          <td>18.035856</td>
-        </tr>
-        <tr>
-          <th>4</th>
-          <td>1</td>
-          <td>-83.974547</td>
-          <td>4.328364</td>
-          <td>4.179969</td>
-          <td>1.609641</td>
-          <td>1.000000e-07</td>
-          <td>2.397799e-08</td>
-          <td>6.533154e-12</td>
-          <td>-0.005529</td>
-          <td>-0.105704</td>
-          <td>0.0</td>
-          <td>0.014254</td>
-          <td>-0.000158</td>
-          <td>18.035856</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
+.. csv-table::
+   :file: _static/part.csv
 
 Similarly we have access to the sink particle data stored as a Pandas DataFrame.
 
@@ -209,63 +86,8 @@ Similarly we have access to the sink particle data stored as a Pandas DataFrame.
 
 *Output:*
 
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>x</th>
-          <th>y</th>
-          <th>z</th>
-          <th>m</th>
-          <th>h</th>
-          <th>hsoft</th>
-          <th>macc</th>
-          <th>spinx</th>
-          <th>spiny</th>
-          <th>spinz</th>
-          <th>tlast</th>
-          <th>vx</th>
-          <th>vy</th>
-          <th>vz</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>0</th>
-          <td>-3.827373e-15</td>
-          <td>-4.042294e-14</td>
-          <td>-8.654111e-15</td>
-          <td>1.0</td>
-          <td>1.0</td>
-          <td>1.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>1.529900e-17</td>
-          <td>-8.085516e-17</td>
-          <td>0.0</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
+.. csv-table::
+   :file: _static/sink.csv
 
 ----------------------
 Analyzing Phantom data
@@ -323,7 +145,7 @@ Now we can use the data in radial_averages to plot radially averaged quantities 
     ax[1].set_ylabel('scale height')
 
 
-.. image:: images/examples1.png
+.. image:: _static/examples1.png
 
 ------------------------
 Visualizing Phantom data
@@ -349,7 +171,7 @@ Then we plot, for example, the column density:
 
     images[0].plot(render='rho', render_fraction_max=0.05)
 
-.. image:: images/examples2.png
+.. image:: _static/examples2.png
 
 We can overlay vector fields:
 
@@ -357,7 +179,7 @@ We can overlay vector fields:
 
     images[0].plot(render='rho', vector='v', render_fraction_max=0.05)
 
-.. image:: images/examples3.png
+.. image:: _static/examples3.png
 
 We can rotate about an arbitrary axis:
 
@@ -366,7 +188,7 @@ We can rotate about an arbitrary axis:
     images[0].plot(render='rho', rotation_angle=np.pi/3, rotation_axis=[1, 1, 0],
                    render_fraction_max=0.05)
 
-.. image:: images/examples4.png
+.. image:: _static/examples4.png
 
 We can take a cross-section:
 
@@ -375,7 +197,7 @@ We can take a cross-section:
     images[0].plot(render='rho', rotation_angle=np.pi/2, rotation_axis=[1, 0, 0],
                    cross_section=True, render_fraction_max=0.01)
 
-.. image:: images/examples5.png
+.. image:: _static/examples5.png
 
 We can plot the particles. (This is somewhat slow.)
 
@@ -383,4 +205,4 @@ We can plot the particles. (This is somewhat slow.)
 
     images[0].plot(horizontal_range=[50, 150], vertical_range=[50, 150])
 
-.. image:: images/examples6.png
+.. image:: _static/examples6.png
