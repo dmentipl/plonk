@@ -35,8 +35,12 @@ FSOURCES = splash.F90 libsplash.f90
 OBJECTS1 = $(FSOURCES:.f90=.o)
 OBJECTS  = $(OBJECTS1:.F90=.o)
 
+LIBRARY_DIR = $(CONDA_PREFIX)/lib
+
 libsplash: $(OBJECTS)
 	$(FC) $(FCFLAGS) $(FLFLAGS) $(OBJECTS) -o $@.so
+	mv $@.so $(LIBRARY_DIR)
+	install_name_tool -id @rpath/$@.so $(LIBRARY_DIR)/$@.so
 
 .PHONY: clean
 clean:

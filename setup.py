@@ -16,8 +16,6 @@ LIBRARY_DIR = os.path.dirname(sysconfig.get_path('stdlib'))
 SOURCES     = ['splash/libsplash.pyx']
 LIBRARIES   = ['splash', 'gfortran']
 
-#--- Splash extension module
-
 ext_modules = [Extension('splash.splash',
                          sources=SOURCES,
                          libraries=LIBRARIES,
