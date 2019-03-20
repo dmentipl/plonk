@@ -3,6 +3,8 @@
 # Daniel Mentiplay, 2018
 #
 
+UNAME=${shell uname}
+
 OPENMP = yes
 DOUBLE = no
 DEBUG  = no
@@ -40,7 +42,9 @@ LIBRARY_DIR = $(CONDA_PREFIX)/lib
 libsplash: $(OBJECTS)
 	$(FC) $(FCFLAGS) $(FLFLAGS) $(OBJECTS) -o $@.so
 	mv $@.so $(LIBRARY_DIR)
+ifeq ($(UNAME), Darwin)
 	install_name_tool -id @rpath/$@.so $(LIBRARY_DIR)/$@.so
+endif
 
 .PHONY: clean
 clean:
