@@ -7,7 +7,7 @@
 
 #--- Compile Splash Fortran source
 
-cd splash && make && cp libsplash.so "$CONDA_PREFIX/lib"; cd - || return
+make
 
 #--- Python package
 
