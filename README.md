@@ -37,7 +37,7 @@ For further usage, see `examples` folder.
 Install
 -------
 
-*Note that Plonk is a Python 3 only package.*
+*Plonk is a Python 3 only package.*
 
 ### Conda
 
@@ -46,6 +46,8 @@ The easiest and recommended way to install Plonk is via the package manager Cond
 ```
 conda install -c dmentipl plonk
 ```
+
+*Note*: Using this method you don't need to have this repository on your machine.
 
 This will install the required dependencies. For details on Conda, see https://docs.conda.io/.
 
