@@ -64,6 +64,7 @@ cd plonk && conda develop .
 There is also a compiled Fortran component to Plonk which is derived from Splash. This needs to be compiled during development.
 
 ```
+cd splash && make && cp libsplash.so "$CONDA_PREFIX/lib"; cd - || return
 python setup.py build_ext --inplace
 ```
 
@@ -73,9 +74,9 @@ You need to make sure the required dependencies are installed (via Conda). To sa
 git clone https://github.com/<user>/plonk && cd plonk
 conda env create --name plonk_dev --file environment.yml
 conda activate plonk_dev
-conda develop .
-python setup.py build_ext --inplace
 ```
+
+and then follow the instructions above.
 
 After you have committed and pushed your changes to your forked repository you
 can issue a pull request: https://github.com/dmentipl/plonk/pull/new/master.

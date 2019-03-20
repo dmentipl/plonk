@@ -40,4 +40,4 @@ libsplash: $(OBJECTS)
 
 .PHONY: clean
 clean:
-	rm -f *.o *.mod libsplash.so libsplash.c
+	rm -f *.o *.mod *.so libsplash.c

@@ -18,7 +18,7 @@ LIBRARIES   = ['splash', 'gfortran']
 
 #--- Splash extension module
 
-ext_modules = [Extension('splash',
+ext_modules = [Extension('splash.splash',
                          sources=SOURCES,
                          libraries=LIBRARIES,
                          library_dirs=[LIBRARY_DIR],
