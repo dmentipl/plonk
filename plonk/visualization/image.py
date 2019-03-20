@@ -11,7 +11,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 
 from ..particles import I_GAS, I_DUST
-from .splash import scalar_interpolation, vector_interpolation
+from .interpolation import scalar_interpolation, vector_interpolation
 from ..utils import normalize_vector, rotate_vector_arbitrary_axis
 
 options = ['accelerate',

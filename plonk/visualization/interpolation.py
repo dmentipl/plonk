@@ -1,5 +1,5 @@
 '''
-splash.py
+interpolation.py
 
 Daniel Mentiplay, 2019.
 '''
