@@ -39,6 +39,8 @@ OBJECTS  = $(OBJECTS1:.F90=.o)
 
 LIBRARY_DIR = $(CONDA_PREFIX)/lib
 
+default: libsplash
+
 libsplash: $(OBJECTS)
 	$(FC) $(FCFLAGS) $(FLFLAGS) $(OBJECTS) -o $@.so
 	mv $@.so $(LIBRARY_DIR)

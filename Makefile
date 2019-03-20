@@ -1,6 +1,5 @@
-libsplash:
+default:
 	@cd splash; $(MAKE) $(MAKECMDGOALS)
 
-clean:
-	@cd splash; $(MAKE) clean
-
+%::
+	@cd splash; $(MAKE) $(MAKECMDGOALS)
