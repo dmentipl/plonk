@@ -110,6 +110,7 @@ To do
 - [ ] Put conda package on https://anaconda.org.
 - [ ] Add pip install instructions. Add to PyPI.
 - [ ] Pull request template.
+- [ ] Add versioning and releases.
 
 **Features**
 
