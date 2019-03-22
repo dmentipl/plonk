@@ -76,9 +76,9 @@ class Dump:
         '''
         Read a Phantom dump file.
 
-        Two file types can be read: ASCII or HDF5.
+        Two file types can be read: ASCII or HDF.
 
-        1. For HDF5 only one file is required and it must have the extension h5,
+        1. For HDF only one file is required and it must have the extension h5,
         e.g. 'disc_00000.h5'.
 
         2. For ASCII dumps two files are required:
@@ -87,11 +87,9 @@ class Dump:
             'disc_00000.header'
 
         Arguments:
-            filename : e.g. 'disc_00000.h5' for HDF5 or 'disc_00000.ascii' for
+            filename : e.g. 'disc_00000.h5' for HDF or 'disc_00000.ascii' for
             ASCII
         '''
-
-        # TODO: keep working on HDF5 Phantom output
 
         exists = os.path.isfile(filename)
 
@@ -102,7 +100,7 @@ class Dump:
         file_extension = filename.split('.')[-1]
 
         if file_extension == 'h5':
-            self._read_hdf5(file_prefix)
+            self._read_hdf(file_prefix)
 
         elif file_extension == 'ascii':
             print_warning('ASCII files are deprecated')
@@ -111,9 +109,9 @@ class Dump:
         else:
             raise ValueError('Cannot determine dump file format')
 
-    #--- Read hdf5 dump
+    #--- Read HDF dump
 
-    def _read_hdf5(self, file_prefix):
+    def _read_hdf(self, file_prefix):
 
         #--- Open file
 

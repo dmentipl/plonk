@@ -12,12 +12,12 @@ from .test_data.disc_00000 import DumpTest
 
 class TestDump(unittest.TestCase):
     """
-    Test reading Phantom dump files.
+    Test reading Phantom HDF dump files.
     """
 
     def test_read_dump(self):
         """
-        Testing reading Phantom HDF5 dump file.
+        Testing reading Phantom HDF dump file.
         """
 
         file_dir = os.path.dirname(os.path.abspath(__file__))

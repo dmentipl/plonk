@@ -7,22 +7,22 @@
 Plonk
 =====
 
-**Phantom analysis and visualization but with Python.**
+Smoothed particle hydrodynamics analysis and visualization with Python.
 
 * Docs: https://plonk.readthedocs.io/
 * Repo: https://www.github.com/dmentipl/plonk
+
+.. warning:: Plonk is under development. It may contain bugs. The authors do not take responsibility for use of Plonk.
 
 --------
 Overview
 --------
 
-Plonk is a Python tool for analysis and visualization of Phantom data.
+Plonk is a Python tool for analysis and visualization of smoothed particle hydrodynamics data.
 
-Plonk aims to provide an alternative to PhantomAnalysis and Splash. PhantomAnalysis, which is distributed with Phantom itself, and Splash are both written in Fortran, and thus, as compiled binary programs, are somewhat less flexible and scriptable than an interpreted Python program.
+Plonk aims to provide an alternative to the Phantom analysis tools and Splash. Both are compiled codes, and as such they are less flexible and scriptable than interpreted Python code.
 
-Plonk contains Fortran interpolation subroutines from Splash as part of the visualization module.
-
-.. warning:: Plonk is under development. It may contain bugs. The authors do not take responsibility for use of Plonk.
+.. note:: Plonk contains Fortran interpolation subroutines from Splash as part of the visualization module.
 
 .. toctree::
    :maxdepth: 2
@@ -63,3 +63,5 @@ License
 Copyright 2019 Daniel Mentiplay and contributors.
 
 Plonk is available under the MIT license. For details see the `LICENSE <https://github.com/dmentipl/plonk/blob/master/LICENSE>`_ file.
+
+Splash is available at https://github.com/danieljprice/splash.

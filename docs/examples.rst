@@ -2,11 +2,11 @@
 Examples
 ========
 
---------------------------
-Reading Phantom HDF5 dumps
---------------------------
+----------------
+Reading SPH data
+----------------
 
-Here we demonstrate reading in a collection of Phantom HDF5 dump files, on which we will perform visualization and analysis.
+Here we demonstrate reading in a collection of Phantom HDF dump files, on which we will perform visualization and analysis.
 
 .. code:: ipython3
 
@@ -89,11 +89,11 @@ Similarly we have access to the sink particle data stored as a Pandas DataFrame.
 .. csv-table::
    :file: _static/sink.csv
 
-----------------------
-Analyzing Phantom data
-----------------------
+------------------
+Analyzing SPH data
+------------------
 
-We can perform analysis on Phantom data. Currently available is a function ``disc_analysis`` which is equivalent to the Phantom analysis module in ``analysis_disc.f90``.
+We can perform analysis on the SPH data. The function ``disc_analysis`` is equivalent to the Phantom analysis module available in ``analysis_disc.f90``.
 
 .. code:: ipython3
 
@@ -147,11 +147,11 @@ Now we can use the data in radial_averages to plot radially averaged quantities 
 
 .. image:: _static/examples1.png
 
-------------------------
-Visualizing Phantom data
-------------------------
+--------------------
+Visualizing SPH data
+--------------------
 
-We can use highly-optimized Splash interpolation routines to visualize Phantom data.
+We can use highly-optimized Splash interpolation routines to visualize SPH data.
 
 .. code:: ipython3
 

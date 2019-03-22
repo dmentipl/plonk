@@ -39,13 +39,16 @@ numpy
 pandas
 '''
 
+description = \
+    'Smoothed particle hydrodynamics analysis and visualization with Python.'
+
 setup(
     name='Plonk',
     version='0.1',
     author='Daniel Mentiplay',
     author_email='d.mentiplay@gmail.com',
     url='https://github.com/dmentipl/plonk',
-    description='Phantom analysis and visualization but with Python.',
+    description=description,
     packages=['plonk', 'plonk.analysis', 'plonk.tests', 'plonk.visualization'],
     license='MIT',
     install_requires=install_requires,

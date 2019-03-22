@@ -1,7 +1,7 @@
 Plonk
 =====
 
-Phantom analysis and visualization but with Python.
+Smoothed particle hydrodynamics analysis and visualization with Python.
 
 + Docs: https://plonk.readthedocs.io/
 + Repo: https://www.github.com/dmentipl/plonk
@@ -11,13 +11,15 @@ Phantom analysis and visualization but with Python.
 Usage
 -----
 
-Plonk requires Phantom output to be in [HDF](https://en.wikipedia.org/wiki/Hierarchical_Data_Format) format.
+Plonk supports the following SPH file formats:
 
-*You can convert old dumps to HDF.* See the Phantom wiki for more information (https://bitbucket.org/danielprice/phantom/wiki).
+* Phantom output in [HDF](https://en.wikipedia.org/wiki/Hierarchical_Data_Format) format.
+
+*Note: you can convert Phantom binary dumps to HDF.* See the [Phantom wiki](https://bitbucket.org/danielprice/phantom/wiki) for more information.
 
 ### Basic usage
 
-To read in a collection of Phantom dump files with names like `disc_00000.h5`, ...
+To read in a collection of dump files with names like `disc_00000.h5`, ...
 
 ```python
 from plonk.dump import Dump

@@ -1,7 +1,7 @@
 '''
 analyze_disc.py
 
-Produces similar output to the PhantomAnalysis module in analysis_disc.f90.
+Produces similar output to the phantomanalysis module in analysis_disc.f90.
 
 Daniel Mentiplay, 2019.
 '''

@@ -1,7 +1,7 @@
 '''
 disc_00000.py
 
-Test data for reading in Phantom dump file.
+Test data for reading in Phantom HDF dump file.
 '''
 
 import numpy as np

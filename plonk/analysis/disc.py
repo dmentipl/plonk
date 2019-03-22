@@ -1,7 +1,7 @@
 '''
 disc.py
 
-Phantom analysis for dusty discs.
+Analysis for dusty discs.
 
 Daniel Mentiplay, 2019.
 '''
