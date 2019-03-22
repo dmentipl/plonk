@@ -1,4 +1,4 @@
-libsplash.c
+splash.c
 examples/data
 *.so
 build/
