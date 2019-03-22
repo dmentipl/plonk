@@ -1,12 +1,14 @@
 module libsplash
 
-  use splash,        only: interpolate3d_projection, &
-                           interpolate3d_proj_vec,   &
-                           interpolate3d_fastxsec,   &
-                           interpolate3d_xsec_vec,   &
-                           interp3d_proj_opacity
+  use projections3D,         only: interpolate3d_projection, &
+                                   interpolate3d_proj_vec
 
-  use iso_c_binding, only: c_float, c_int, c_bool
+  use xsections3D,           only: interpolate3d_fastxsec,   &
+                                   interpolate3d_xsec_vec
+
+  use interpolate3D_opacity, only: interp3d_proj_opacity
+
+  use iso_c_binding,         only: c_float, c_int, c_bool
 
   implicit none
 

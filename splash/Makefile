@@ -10,8 +10,8 @@ DOUBLE = no
 DEBUG  = no
 
 FC      = gfortran
-FCFLAGS = -O3 -fPIC
-FLFLAGS = -shared
+FCFLAGS = -O3
+FLFLAGS = -fPIC -shared
 
 ifeq ($(DOUBLE), yes)
     FCFLAGS += -fdefault-real-8 -fdefault-double-8
@@ -32,7 +32,9 @@ endif
 %.o : %.F90
 	$(FC) -c $(FCFLAGS) $< -o $@
 
-FSOURCES = splash.F90 libsplash.f90
+FSOURCES = sort.f90 asciiutils.f90 kernels.f90 timing.f90 globaldata.f90 \
+           labels.f90 interpolation.f90 interpolate3D_projection.F90 \
+           interpolate3D_opacity.f90 interpolate3D_xsec.f90 libsplash.f90
 
 OBJECTS1 = $(FSOURCES:.f90=.o)
 OBJECTS  = $(OBJECTS1:.F90=.o)
