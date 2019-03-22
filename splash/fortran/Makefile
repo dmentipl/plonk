@@ -1,9 +1,15 @@
 #
 # Compile Splash Fortran source to produce libsplash.so.
-# Daniel Mentiplay, 2018
+# And copy the library to INSTALL_DIR.
+#
+# Daniel Mentiplay, 2019
 #
 
-UNAME=${shell uname}
+LIBSPLASH = libsplash.so
+
+INSTALL_DIR = $(CONDA_PREFIX)/lib
+
+UNAME = ${shell uname}
 
 OPENMP = yes
 DOUBLE = no
@@ -13,6 +19,7 @@ FC      = gfortran
 FCFLAGS = -O3
 FLFLAGS = -fPIC -shared
 
+# DOUBLE will break Cython
 ifeq ($(DOUBLE), yes)
     FCFLAGS += -fdefault-real-8 -fdefault-double-8
 endif
@@ -39,21 +46,34 @@ FSOURCES = sort.f90 asciiutils.f90 kernels.f90 timing.f90 globaldata.f90 \
 OBJECTS1 = $(FSOURCES:.f90=.o)
 OBJECTS  = $(OBJECTS1:.F90=.o)
 
-LIBRARY_DIR = $(CONDA_PREFIX)/lib
+default: install
 
-default: libsplash
+print:
+	@echo
+	@echo " Compiling Splash modules"
+	@echo
 
-libsplash: $(OBJECTS)
-	$(FC) $(FCFLAGS) $(FLFLAGS) $(OBJECTS) -o $@.so
-	mv $@.so $(LIBRARY_DIR)
+libsplash: print $(OBJECTS)
+	@echo
+	@echo " Linking Splash into a shared object library"
+	@echo
+	$(FC) $(FCFLAGS) $(FLFLAGS) $(OBJECTS) -o $(LIBSPLASH)
+
+install: libsplash
+	@echo
+	@echo " Copying libsplash.so to INSTALL_DIR=$(INSTALL_DIR)"
+	@echo
+	cp -f $(LIBSPLASH) $(INSTALL_DIR)
 ifeq ($(UNAME), Darwin)
-	install_name_tool -id @rpath/$@.so $(LIBRARY_DIR)/$@.so
+	@echo
+	@echo " Fixing macOS library path issues with install_name_tool"
+	@echo
+	install_name_tool -id @rpath/$(LIBSPLASH) $(INSTALL_DIR)/$(LIBSPLASH)
 endif
 
 .PHONY: clean
 clean:
-	rm -f *.o *.mod
-
-.PHONY: cleanall
-cleanall:
-	rm -f *.o *.mod *.so libsplash.c
+	@echo
+	@echo " Removing Fortran build files"
+	@echo
+	@rm -f *.o *.mod *.so *.dSYM
