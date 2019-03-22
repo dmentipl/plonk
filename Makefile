@@ -1,5 +1,5 @@
 default:
-	@cd splash; $(MAKE) $(MAKECMDGOALS)
+	@cd splash/fortran; $(MAKE) $(MAKECMDGOALS)
 
 %::
-	@cd splash; $(MAKE) $(MAKECMDGOALS)
+	@cd splash/fortran; $(MAKE) $(MAKECMDGOALS)

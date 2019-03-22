@@ -1,122 +1,9 @@
 # cython: language_level=3
 # cython: boundscheck=False
 
-from numpy cimport ndarray
 import numpy as np
 
-cdef extern:
-
-    void c_interpolate3d_projection(
-        float *x,
-        float *y,
-        float *z,
-        float *hh,
-        float *weight,
-        float *dat,
-        int   *itype,
-        int   *npart,
-        float *xmin,
-        float *ymin,
-        float *datsmooth,
-        int   *npixx,
-        int   *npixy,
-        float *pixwidthx,
-        float *pixwidthy,
-        bint  *normalise,
-        float *zobserver,
-        float *dscreen,
-        bint  *useaccelerate
-        )
-
-    void c_interpolate3d_proj_vec(
-        float *x,
-        float *y,
-        float *z,
-        float *hh,
-        float *weight,
-        float *vecx,
-        float *vecy,
-        int   *itype,
-        int   *npart,
-        float *xmin,
-        float *ymin,
-        float *vectsmoothx,
-        float *vectsmoothy,
-        int   *npixx,
-        int   *npixy,
-        float *pixwidthx,
-        float *pixwidthy,
-        bint  *normalise,
-        float *zobserver,
-        float *dscreen
-        )
-
-    void c_interpolate3d_fastxsec(
-        float *x,
-        float *y,
-        float *z,
-        float *hh,
-        float *weight,
-        float *dat,
-        int   *itype,
-        int   *npart,
-        float *xmin,
-        float *ymin,
-        float *zslice,
-        float *datsmooth,
-        int   *npixx,
-        int   *npixy,
-        float *pixwidthx,
-        float *pixwidthy,
-        bint  *normalise
-        )
-
-    void c_interpolate3d_xsec_vec(
-        float *x,
-        float *y,
-        float *z,
-        float *hh,
-        float *weight,
-        float *vecx,
-        float *vecy,
-        int   *itype,
-        int   *npart,
-        float *xmin,
-        float *ymin,
-        float *zslice,
-        float *vectsmoothx,
-        float *vectsmoothy,
-        int   *npixx,
-        int   *npixy,
-        float *pixwidthx,
-        float *pixwidthy,
-        bint  *normalise
-        )
-
-    void c_interp3d_proj_opacity(
-        float *x,
-        float *y,
-        float *z,
-        float *pmass,
-        int   *npmass,
-        float *hh,
-        float *weight,
-        float *dat,
-        float *zorig,
-        int   *itype,
-        int   *npart,
-        float *xmin,
-        float *ymin,
-        float *datsmooth,
-        float *brightness,
-        int   *npixx,
-        int   *npixy,
-        float *pixwidth,
-        float *zobserver,
-        float *dscreenfromobserver,
-        float *rkappa,
-        float *zcut
-        )
+cimport libsplash
 
 def interpolate3d_projection(
     float[:] x,
@@ -140,7 +27,7 @@ def interpolate3d_projection(
 
     cdef float[:, ::1] datsmooth = np.empty((npixx, npixy), dtype=np.single)
 
-    c_interpolate3d_projection(
+    libsplash.c_interpolate3d_projection(
         &x[0],
         &y[0],
         &z[0],
@@ -186,7 +73,7 @@ def interpolate3d_proj_vec(
     cdef float[:, ::1] vecsmoothx = np.empty((npixx, npixy), dtype=np.single)
     cdef float[:, ::1] vecsmoothy = np.empty((npixx, npixy), dtype=np.single)
 
-    c_interpolate3d_proj_vec(
+    libsplash.c_interpolate3d_proj_vec(
         &x[0],
         &y[0],
         &z[0],
@@ -230,7 +117,7 @@ def interpolate3d_fastxsec(
 
     cdef float[:, ::1] datsmooth = np.empty((npixx, npixy), dtype=np.single)
 
-    c_interpolate3d_fastxsec(
+    libsplash.c_interpolate3d_fastxsec(
         &x[0],
         &y[0],
         &z[0],
@@ -273,7 +160,7 @@ def interpolate3d_xsec_vec(
     cdef float[:, ::1] vecsmoothx = np.empty((npixx, npixy), dtype=np.single)
     cdef float[:, ::1] vecsmoothy = np.empty((npixx, npixy), dtype=np.single)
 
-    c_interpolate3d_xsec_vec(
+    libsplash.c_interpolate3d_xsec_vec(
         &x[0],
         &y[0],
         &z[0],
@@ -321,7 +208,7 @@ def interp3d_proj_opacity(
     cdef float[:, ::1] datsmooth  = np.empty((npixx, npixy), dtype=np.single)
     cdef float[:, ::1] brightness = np.empty((npixx, npixy), dtype=np.single)
 
-    c_interp3d_proj_opacity(
+    libsplash.c_interp3d_proj_opacity(
         &x[0],
         &y[0],
         &z[0],
