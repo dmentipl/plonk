@@ -16,8 +16,8 @@ DOUBLE = no
 DEBUG  = no
 
 FC      = gfortran
-FCFLAGS = -O3
-FLFLAGS = -fPIC -shared
+FCFLAGS = -O3 -fPIC
+FLFLAGS = -shared
 
 # DOUBLE will break Cython
 ifeq ($(DOUBLE), yes)
