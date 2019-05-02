@@ -1,6 +1,6 @@
-'''
+"""
 Install Plonk.
-'''
+"""
 
 import os
 import sysconfig
@@ -13,15 +13,15 @@ from numpy import get_include
 # --- Splash ---
 
 LIBRARY_DIR = os.path.dirname(sysconfig.get_path('stdlib'))
-SOURCES     = ['splash/splash.pyx']
-LIBRARIES   = ['splash', 'gfortran']
+SOURCES = ['splash/splash.pyx']
+LIBRARIES = ['splash', 'gfortran']
 
 ext_modules = [Extension('splash.splash',
                          sources=SOURCES,
                          libraries=LIBRARIES,
                          library_dirs=[LIBRARY_DIR],
                          runtime_library_dirs=[LIBRARY_DIR],
-                        )]
+                         )]
 
 # ---------------------------------------------------------------------------- #
 # --- Plonk ---
@@ -30,14 +30,7 @@ cmdclass = dict()
 cmdclass.update({'build_ext': build_ext})
 include_dirs = [get_include()]
 
-install_requires = \
-'''
-cython
-h5py
-matplotlib
-numpy
-pandas
-'''
+install_requires = ['cython', 'h5py', 'matplotlib', 'numpy', 'pandas']
 
 description = \
     'Smoothed particle hydrodynamics analysis and visualization with Python.'

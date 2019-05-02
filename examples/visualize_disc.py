@@ -1,10 +1,10 @@
-'''
+"""
 visualize_disc.py
 
 Produces similar rendering to Splash.
 
 Daniel Mentiplay, 2019.
-'''
+"""
 
 import os
 
@@ -15,13 +15,13 @@ from plonk.visualization.image import plot
 
 # ---------------------------------------------------------------------------- #
 
-#--- Options for plotting
+# --- Options for plotting
 
-RENDER              = 'rho'           # Render density
-RENDER_FRACTION_MAX = 0.05            # Colour bar scaled to % of max.
-IMAGE_RANGE         = 150             # Figure width in code units
+RENDER = 'rho'              # Render density
+RENDER_FRACTION_MAX = 0.05  # Colour bar scaled to % of max.
+IMAGE_RANGE = 150           # Figure width in code units
 
-#--- Dump file names: e.g. disc_00000.h5, ...
+# --- Dump file names: e.g. disc_00000.h5, ...
 
 DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
 
@@ -32,7 +32,7 @@ dumpfiles = [PREFIX + f'_{i:05}.h5' for i in FILE_NUMBERS]
 
 # ---------------------------------------------------------------------------- #
 
-#--- Read dump files
+# --- Read dump files
 
 dumps = list()
 for dumpfile in dumpfiles:
@@ -42,7 +42,7 @@ for dumpfile in dumpfiles:
 
 # ---------------------------------------------------------------------------- #
 
-#--- Plot images
+# --- Plot images
 
 print(f'\nPlotting dump files...\n')
 for dump in dumps:

@@ -1,15 +1,16 @@
-'''
+"""
 disc_00000.py
 
 Test data for reading in Phantom HDF dump file.
-'''
+"""
 
 import numpy as np
 
+
 class DumpTest:
-    '''
+    """
     Test Phantom dump.
-    '''
+    """
 
     def __init__(self):
 

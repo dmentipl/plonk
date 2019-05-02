@@ -1,8 +1,8 @@
-'''
+"""
 dump.py
 
 Daniel Mentiplay, 2019.
-'''
+"""
 
 import os
 
@@ -14,7 +14,7 @@ from .particles import density_from_smoothing_length, I_GAS, I_DUST
 from .utils import print_warning
 from .units import Units
 
-#--- Possibly available arrays in Phantom dump
+# --- Possibly available arrays in Phantom dump
 
 POSSIBLE_ARRAYS = [
         'itype',
@@ -47,33 +47,32 @@ POSSIBLE_ARRAYS = [
         'eta_{OR}',
         'eta_{HE}',
         'eta_{AD}',
-        'ne/n' ]
+        'ne/n']
 
 NABUNDANCES = 5
 
-#--- Reading Phantom-Splash ACSII files
+# --- Reading Phantom-Splash ACSII files
 
-I_SINK         = 3
-I_DUST_SPLASH  = 8
+I_SINK = 3
+I_DUST_SPLASH = 8
+
 
 class Dump:
-    '''
-    Phantom dump.
-    '''
+    """Phantom dump."""
 
     def __init__(self, filename):
 
-        self.particles  = None
-        self.sinks      = None
+        self.particles = None
+        self.sinks = None
         self.parameters = None
-        self.units      = None
+        self.units = None
 
         self._read_dump(filename)
 
-    #--- Read dump
+    # --- Read dump
 
     def _read_dump(self, filename):
-        '''
+        """
         Read a Phantom dump file.
 
         Two file types can be read: ASCII or HDF.
@@ -89,14 +88,14 @@ class Dump:
         Arguments:
             filename : e.g. 'disc_00000.h5' for HDF or 'disc_00000.ascii' for
             ASCII
-        '''
+        """
 
         exists = os.path.isfile(filename)
 
         if not exists:
             raise FileNotFoundError('Cannot find dump file')
 
-        file_prefix    = filename.split('.')[0]
+        file_prefix = filename.split('.')[0]
         file_extension = filename.split('.')[-1]
 
         if file_extension == 'h5':
@@ -109,11 +108,11 @@ class Dump:
         else:
             raise ValueError('Cannot determine dump file format')
 
-    #--- Read HDF dump
+    # --- Read HDF dump
 
     def _read_hdf(self, file_prefix):
 
-        #--- Open file
+        # --- Open file
 
         dump_file_name = file_prefix + '.h5'
 
@@ -124,7 +123,7 @@ class Dump:
 
         f = h5py.File(dump_file_name, 'r')
 
-        #--- Header
+        # --- Header
 
         header = f['header']
 
@@ -139,31 +138,32 @@ class Dump:
                            parameters['utime']).units
 
         n_dust_large = self.parameters['ndustlarge']
-        n_dust_types = self.parameters['ndustsmall'] + self.parameters['ndustlarge']
+        n_dust_types = \
+            self.parameters['ndustsmall'] + self.parameters['ndustlarge']
 
         n_sinks = self.parameters['nptmass']
         contains_sinks = bool(n_sinks > 0)
 
-        #--- Particles
+        # --- Particles
 
         particles = f['particles']
 
-        is_full_dump = bool( 'vxyz' in particles )
+        is_full_dump = bool('vxyz' in particles)
 
-        self.particles = pd.DataFrame( particles['itype'].value,
-                                       columns=['itype'])
+        self.particles = pd.DataFrame(particles['itype'].value,
+                                      columns=['itype'])
 
         self.particles['x'] = particles['xyz'][:, 0]
         self.particles['y'] = particles['xyz'][:, 1]
         self.particles['z'] = particles['xyz'][:, 2]
         self.particles['h'] = particles['h']
 
-        self.particles.loc[self.particles['itype']==I_GAS, 'm'] = \
+        self.particles.loc[self.particles['itype'] == I_GAS, 'm'] = \
             self.parameters['massoftype'][I_GAS-1]
 
-        if n_dust_large  > 0:
+        if n_dust_large > 0:
             for n in range(n_dust_large):
-                self.particles.loc[self.particles['itype']==I_DUST+n, 'm'] = \
+                self.particles.loc[self.particles['itype'] == I_DUST+n, 'm'] = \
                     self.parameters['massoftype'][I_DUST+n-1]
 
         self.particles['rho'] = density_from_smoothing_length(
@@ -188,7 +188,8 @@ class Dump:
 
                 else:
                     if n_dust_types > 1:
-                        columns = [array + str(i+1) for i in range(n_dust_types)]
+                        columns = \
+                                [array + str(i+1) for i in range(n_dust_types)]
                     else:
                         columns = [array]
 
@@ -202,8 +203,9 @@ class Dump:
 
                     if n_dust_types > 1:
                         columns = list()
-                        for idx, column_ in enumerate(columns_):
-                            columns.append([column_ + str(i+1) for i in range(n_dust_types)])
+                        for idx, col_ in enumerate(columns_):
+                            columns.append(
+                                [col_ + str(i+1) for i in range(n_dust_types)])
 
                     else:
                         columns = list()
@@ -212,7 +214,8 @@ class Dump:
 
                     for ind_pos, column in enumerate(columns):
                         for ind_grain, column_ in enumerate(column):
-                            self.particles[column_] = particles[array][:, ind_grain, ind_pos]
+                            self.particles[column_] = \
+                                    particles[array][:, ind_grain, ind_pos]
 
                 else:
                     raise ValueError(f'Cannot read array: {array}')
@@ -220,7 +223,7 @@ class Dump:
             else:
                 raise ValueError(f'Cannot read array: {array}')
 
-        #--- Sinks
+        # --- Sinks
 
         if contains_sinks:
 
@@ -240,7 +243,7 @@ class Dump:
             self.sinks['m'] = sinks['m'][:n_sinks]
             self.sinks['h'] = sinks['h'][:n_sinks]
             self.sinks['hsoft'] = sinks['hsoft'][:n_sinks]
-            self.sinks['macc']  = sinks['maccreted'][:n_sinks]
+            self.sinks['macc'] = sinks['maccreted'][:n_sinks]
             self.sinks['spinx'] = sinks['spinxyz'][:n_sinks, 0]
             self.sinks['spiny'] = sinks['spinxyz'][:n_sinks, 1]
             self.sinks['spinz'] = sinks['spinxyz'][:n_sinks, 2]
@@ -253,7 +256,7 @@ class Dump:
 
         f.close()
 
-    #--- Read ascii dump
+    # --- Read ascii dump
 
     def _read_ascii(self, file_prefix):
 
@@ -265,7 +268,8 @@ class Dump:
             raise FileNotFoundError('Cannot find header file: ' +
                                     header_file_name)
 
-        parameters, is_full_dump = _read_header_from_showheader(header_file_name)
+        parameters, is_full_dump = \
+            _read_header_from_showheader(header_file_name)
 
         self.parameters = parameters
 
@@ -277,7 +281,8 @@ class Dump:
         if not exists:
             raise FileNotFoundError('Cannot find dump file: ' + dump_file_name)
 
-        n_dust_types = self.parameters['ndustsmall'] + self.parameters['ndustlarge']
+        n_dust_types = \
+            self.parameters['ndustsmall'] + self.parameters['ndustlarge']
         n_dust_large = self.parameters['ndustlarge']
 
         n_sinks = self.parameters['nptmass']
@@ -298,7 +303,7 @@ class Dump:
             names += ['itype']
             sink_drop += ['itype']
 
-        print_warning('Assuming ascii file columns are as follows:\n' + \
+        print_warning('Assuming ascii file columns are as follows:\n' +
                       ', '.join(names))
 
         data = pd.read_csv(dump_file_name, comment='#', names=names,
@@ -320,7 +325,8 @@ class Dump:
 
             self.sinks = sinks
 
-#--- Functions
+
+# --- Functions
 
 def _read_header_from_showheader(header_file_name):
 
