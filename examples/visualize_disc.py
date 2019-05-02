@@ -11,15 +11,15 @@ import os
 import matplotlib.pyplot as plt
 
 from plonk.dump import Dump
-from plonk.visualization.image import Image
+from plonk.visualization.image import plot
 
 # ---------------------------------------------------------------------------- #
 
 #--- Options for plotting
 
-RENDER              = 'rho'
-RENDER_FRACTION_MAX = 0.05
-IMAGE_RANGE         = 150
+RENDER              = 'rho'           # Render density
+RENDER_FRACTION_MAX = 0.05            # Colour bar scaled to % of max.
+IMAGE_RANGE         = 150             # Figure width in code units
 
 #--- Dump file names: e.g. disc_00000.h5, ...
 
@@ -32,33 +32,22 @@ dumpfiles = [PREFIX + f'_{i:05}.h5' for i in FILE_NUMBERS]
 
 # ---------------------------------------------------------------------------- #
 
-dumps = list()
-
-for dumpfile in dumpfiles:
-
 #--- Read dump files
 
+dumps = list()
+for dumpfile in dumpfiles:
     file = os.path.join(DATA_PATH, dumpfile)
-
     print('\nReading in data from dumpfile: ' + file + '...')
-
-    dump = Dump(file)
-
-    dumps.append(dump)
+    dumps.append(Dump(file))
 
 # ---------------------------------------------------------------------------- #
 
-#--- Plot image
-
-images = list()
-for dump in dumps:
-    images.append(Image(dump))
+#--- Plot images
 
 print(f'\nPlotting dump files...\n')
-
-for image in images:
+for dump in dumps:
     plt.figure()
-    image.plot(render=RENDER, render_fraction_max=RENDER_FRACTION_MAX,
-               image_range=IMAGE_RANGE)
+    plot(dump, render=RENDER, render_fraction_max=RENDER_FRACTION_MAX,
+         image_range=IMAGE_RANGE)
 
 plt.show()
