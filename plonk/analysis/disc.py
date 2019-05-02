@@ -254,7 +254,7 @@ def _calculate_radially_binned_quantities(number_radial_bins=None,
 
     radial_averages = pd.DataFrame(radial_bins, columns=['R'])
     radial_averages['area'] = \
-        np.pi * ((radial_bins + radial_bin_width/2)**2
+        np.pi * ((radial_bins + radial_bin_width/2)**2 -
                  (radial_bins - radial_bin_width/2)**2)
 
     radial_averages = radial_averages.reindex(
