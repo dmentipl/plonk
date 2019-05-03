@@ -57,16 +57,87 @@ def plot(dump,
          colorbar=None,
          colormap=None):
     """
-    Visualize dump.
-
-    Examples
-    --------
-    plot(dump, render='rho')
-    plot(dump, vector='velocity')
+    Visualize a dump as a particle plot, a rendered plot, or a vector
+    plot.
 
     Parameters
     ----------
+    dump : Dump object
+        The Plonk ``Dump`` object to visualize.
+    render : str, default ``None``
+        Scalar quantity to render. Associated options are:
+        ``cross_section``, ``zslice``, ``opacity``, ``render_scale``,
+        ``render_min``, ``render_max``, ``render_fraction_max``.
+    vector : str, default ``None``
+        Vector quantity to be represented as arrows or stream function.
+        See also: ``stream``.
+    particle_types : list of str, default ``None``
+        Particle types to plot. See also: ``itype``.
+    itype : int, default ``None``
+        Particle type to plot, represented as an integer type.
+    horizontal_range : list of float (len=2), default ``None``
+        The range of values for the horizontal (x) axis.
+    vertical_range : list of float (len=2), default ``None``
+        The range of values for the vertical (y) axis.
+    rotation_axis : list of float (len=3), default ``None``
+        A 3-dimensional vector specifying an axis around which to
+        rotate the reference frame. Must also specify ``rotation_angle``.
+    rotation_angle : float, default ``None``
+        An angle (radians) to rotate the reference frame around a
+        ``rotation_axis``.
+    position_angle : float, default ``None``
+        An angle (radians) East of North specifying an axis around
+        which to incline the reference frame as specified by
+        ``inclination``.
+    inclination : float, default ``None``
+        An angle (radians) of inclination specified relative to a
+        ``position_angle``.
+    stream : bool, default ``None``
+        If true, plot vector plots as stream functions.
+    cross_section : bool, default ``None``
+        If true, plot a cross section rather than column density with
+        slice thickness specified by ``zslice``.
+    zslice : float, default ``None``
+        Thickness of a cross sectional slice.
+    opacity : float, default ``None``
+        Opacity for opacity plots.
+    number_pixels : list of float (len=2), default ``None``
+        The number of pixels in the horizontal and vertical directions,
+        like [npixx, npixy], for interpolation. This determines the
+        resolution of the image.
+    image_range : float, default ``None``
+        Specify the horizontal and vertical image range to both equal
+        ``image_range``.
+    render_scale : str, default ``None``
+        Render scale options include: 'log', 'linear'.
+    render_min : float, default ``None``
+        Minimum value of the rendered quantity.
+    render_max : float, default ``None``
+        Maximum value of the rendered quantity.
+    render_fraction_max : float, default ``None``
+        Maximum value of the rendered quantity specified as a fraction
+        of the maximum in the data.
+    title : str, default ``None``
+        Plot title.
+    ax : Axes, default ``None``
+        Matplotlib Axes object to plot to.
+    newfig : bool, default ``None``
+        If true, create new figure using Matplotlib.
+    colorbar : bool, default ``None``
+        If true, plot colorbar.
+    colormap : str, default ``None``
+        Specify the colormap.
 
+    Returns
+    -------
+
+    Examples
+    --------
+    Rendering density.
+    >>> plonk.plot(dump, render='rho')
+
+    Plotting velocity vectors.
+    >>> plonk.plot(dump, vector='velocity')
     """
 
     # TODO: add options

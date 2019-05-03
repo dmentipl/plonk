@@ -33,7 +33,23 @@ I_DUST_SPLASH = 8
 
 
 class Dump:
-    """Phantom dump."""
+    """
+    Smoothed particle hydrodynamics dump file data. The main data stored
+    in this object is the particle data, e.g. positions, velocities,
+    density, smoothing length, and so on, stored as a Pandas DataFrame.
+
+    Parameters
+    ----------
+    name : str
+        Path to dump file.
+
+    Examples
+    --------
+    Reading a dump file into a Dump object.
+
+    >>> file_name = 'dumpfile.ext'
+    >>> dump = plonk.Dump(file_name)
+    """
 
     def __init__(self, filename):
 
