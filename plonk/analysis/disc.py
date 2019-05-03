@@ -12,8 +12,8 @@ import pandas as pd
 
 from ..constants import constants
 
-
 # ---------------------------------------------------------------------------- #
+
 
 def disc_analysis(radius_in=None,
                   radius_out=None,
@@ -37,19 +37,17 @@ def disc_analysis(radius_in=None,
 
     # TODO: add to docs
 
-# --- Calculate extra quantities on particles
+    # --- Calculate extra quantities on particles
 
     _calculate_extra_quantities(dump)
 
-# --- Calculate radially binned quantities
+    # --- Calculate radially binned quantities
 
-    radial_data = _calculate_radially_binned_quantities(number_radial_bins,
-                                                        radius_in,
-                                                        radius_out,
-                                                        dump.particles,
-                                                        min_particle_average)
+    radial_data = _calculate_radially_binned_quantities(
+        number_radial_bins, radius_in, radius_out, dump.particles,
+        min_particle_average)
 
-# --- Dust
+    # --- Dust
 
     n_dust_small = dump.parameters['ndustsmall']
     n_dust_large = dump.parameters['ndustlarge']
@@ -64,7 +62,7 @@ def disc_analysis(radius_in=None,
 
     gamma = dump.parameters['gamma']
 
-# --- Stokes
+    # --- Stokes
 
     # for idxi in range(len(radial_bins_disc)):
     #     for idxj in range(n_dust_large):
@@ -74,12 +72,13 @@ def disc_analysis(radius_in=None,
     #             / (scale_height_gas[idxi] \
     #             * (midplane_density_gas[idxi] + midplane_density_dust[idxj][idxi]))
 
-# --- Return
+    # --- Return
 
     return radial_data
 
 
 # ---------------------------------------------------------------------------- #
+
 
 def _calculate_extra_quantities(dump):
     """
@@ -93,22 +92,22 @@ def _calculate_extra_quantities(dump):
     parameters = dump.parameters
     units = dump.units
 
-# --- Dump type
+    # --- Dump type
 
     is_full_dump = 'vx' in particles.columns
 
-# --- Units
+    # --- Units
 
     u_dist = units['distance']
     u_time = units['time']
     u_mass = units['mass']
 
-# --- Spherical and cylindrical distance
+    # --- Spherical and cylindrical distance
 
     particles['r'] = norm(particles[['x', 'y', 'z']], axis=1)
     particles['R'] = norm(particles[['x', 'y']], axis=1)
 
-# --- Momentum and angular momentum
+    # --- Momentum and angular momentum
 
     if is_full_dump:
 
@@ -189,8 +188,8 @@ def _calculate_extra_quantities(dump):
 
     if is_full_dump:
 
-        kinetic_energy = 1/2 * particles['|v|']**2
-        gravitational_energy = - gravitational_parameter / particles['r']
+        kinetic_energy = 1 / 2 * particles['|v|']**2
+        gravitational_energy = -gravitational_parameter / particles['r']
 
         energy = kinetic_energy + gravitational_energy
         term = 2 * energy * (particles['|L|']/particles['m'])**2 \
@@ -198,8 +197,8 @@ def _calculate_extra_quantities(dump):
 
         particles['e'] = np.sqrt(1 + term)
 
-        kinetic_energy = 1/2 * sinks['|v|']**2
-        gravitational_energy = - gravitational_parameter / sinks['r']
+        kinetic_energy = 1 / 2 * sinks['|v|']**2
+        gravitational_energy = -gravitational_parameter / sinks['r']
 
         energy = kinetic_energy + gravitational_energy
         term = 2 * energy * (sinks['|L|']/sinks['m'])**2 \
@@ -214,6 +213,7 @@ def _calculate_extra_quantities(dump):
 
 
 # ---------------------------------------------------------------------------- #
+
 
 def _calculate_radially_binned_quantities(number_radial_bins=None,
                                           radius_in=None,
@@ -258,13 +258,13 @@ def _calculate_radially_binned_quantities(number_radial_bins=None,
                  (radial_bins - radial_bin_width/2)**2)
 
     radial_averages = radial_averages.reindex(
-        columns=radial_averages.columns.tolist()
-        + ['sigma', 'h', 'H', 'Lx', 'Ly', 'Lz', '|L|', 'tilt', 'twist', 'e'])
+        columns=radial_averages.columns.tolist() +
+        ['sigma', 'h', 'H', 'Lx', 'Ly', 'Lz', '|L|', 'tilt', 'twist', 'e'])
 
     for index, radius in enumerate(radial_bins):
 
-        radius_left = radius - radial_bin_width/2
-        radius_right = radius + radial_bin_width/2
+        radius_left = radius - radial_bin_width / 2
+        radius_right = radius + radial_bin_width / 2
 
         particles_in_bin = \
             particles.loc[(particles['R'] >= radius_left)

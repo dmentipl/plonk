@@ -16,17 +16,17 @@ from ..utils import normalize_vector, rotate_vector_arbitrary_axis
 
 # --- Set default plot option dictionary.
 plot_options = {
-    'accelerate':      False,
-    'colorbar':        True,
-    'colormap':        'gist_heat',
-    'colorscale':      'linear',
+    'accelerate': False,
+    'colorbar': True,
+    'colormap': 'gist_heat',
+    'colorscale': 'linear',
     'density_weighted': False,
-    'dscreen':         None,
-    'fontfamily':      'sans-serif',
-    'fontsize':        12,
-    'normalize':       False,
-    'zobserver':       None
-    }
+    'dscreen': None,
+    'fontfamily': 'sans-serif',
+    'fontsize': 12,
+    'normalize': False,
+    'zobserver': None
+}
 
 
 # --- Main plotting function.
@@ -117,8 +117,9 @@ def plot(dump,
         if inclination is not None:
             rotate = True
             rotation_angle = inclination
-            rotation_axis = np.array([np.cos(position_angle),
-                                      np.sin(position_angle), 0])
+            rotation_axis = np.array(
+                [np.cos(position_angle),
+                 np.sin(position_angle), 0])
         else:
             raise ValueError('Must specify inclination')
 
@@ -195,10 +196,8 @@ def plot(dump,
 
     # --- Interpolation weights
 
-    weights = _interpolation_weights(
-        plot_options['density_weighted'], pd,
-        dump.parameters['hfact']
-        )
+    weights = _interpolation_weights(plot_options['density_weighted'], pd,
+                                     dump.parameters['hfact'])
 
     # --- Rotate frame
 
@@ -207,10 +206,8 @@ def plot(dump,
               f'[{rotation_axis[0]:.2f},'
               f' {rotation_axis[1]:.2f},'
               f' {rotation_axis[2]:.2f}]')
-        positions, velocities = _rotate_frame(positions,
-                                              velocities,
-                                              rotation_axis,
-                                              rotation_angle)
+        positions, velocities = _rotate_frame(positions, velocities,
+                                              rotation_axis, rotation_angle)
 
     # --- Image window range
 
@@ -241,11 +238,12 @@ def plot(dump,
 
         print(f'Rendering {render}')
 
-        image_data = scalar_interpolation(
-            positions, smoothing_length, weights, render_data,
-            particle_mass, horizontal_range, vertical_range, npix,
-            cross_section, zslice, opacity, normalize, zobserver, dscreen,
-            accelerate)
+        image_data = scalar_interpolation(positions, smoothing_length, weights,
+                                          render_data, particle_mass,
+                                          horizontal_range, vertical_range,
+                                          npix, cross_section, zslice, opacity,
+                                          normalize, zobserver, dscreen,
+                                          accelerate)
 
     # --- Interpolate vector data
 
@@ -253,18 +251,19 @@ def plot(dump,
 
         print(f'Vector field {vector}')
 
-        vector_data = vector_interpolation(
-            positions, smoothing_length, weights, vector_data,
-            horizontal_range, vertical_range, npix, cross_section, zslice,
-            normalize, zobserver, dscreen)
+        vector_data = vector_interpolation(positions, smoothing_length,
+                                           weights, vector_data,
+                                           horizontal_range, vertical_range,
+                                           npix, cross_section, zslice,
+                                           normalize, zobserver, dscreen)
 
         xvector_data = vector_data[0]
         yvector_data = vector_data[1]
 
     # --- Physical units
 
-################################################################################
-# TODO: temporary; testing phase
+    ############################################################################
+    # TODO: temporary; testing phase
     physical_units = False
 
     if physical_units:
@@ -274,9 +273,9 @@ def plot(dump,
         vertical_range = \
             [val * dump.units['distance'] for val in vertical_range]
         image_data *= dump.units['surface_density']
-################################################################################
+    ############################################################################
 
-    # --- Render settings
+# --- Render settings
 
     if render:
 
@@ -297,7 +296,7 @@ def plot(dump,
             render_scale = plot_options['colorscale']
 
         if render_scale == 'log':
-            norm = colors.Sym_log_norm(1e-1*vmax, clip=True)
+            norm = colors.Sym_log_norm(1e-1 * vmax, clip=True)
         elif render_scale == 'linear':
             norm = colors.Normalize(vmin=vmin, vmax=vmax, clip=True)
         else:
@@ -320,7 +319,10 @@ def plot(dump,
 
     if render:
 
-        img = ax.imshow(image_data, norm=norm, origin='lower', extent=extent,
+        img = ax.imshow(image_data,
+                        norm=norm,
+                        origin='lower',
+                        extent=extent,
                         cmap=cmap)
 
     # --- Plot particles
@@ -337,17 +339,17 @@ def plot(dump,
     if vector:
 
         X, Y = np.meshgrid(np.linspace(*horizontal_range, len(xvector_data)),
-                           np.linspace(*vertical_range,   len(yvector_data)))
+                           np.linspace(*vertical_range, len(yvector_data)))
 
-################################################################################
-# TODO: temporary; testing phase
-# set stride such that number of vector arrows is ~ 15-25 x 15-25
+        ########################################################################
+        # TODO: temporary; testing phase
+        # set stride such that number of vector arrows is ~ 15-25 x 15-25
         stride = 25
 
         vector_color = 'black'
         if render:
             vector_color = 'white'
-################################################################################
+        ########################################################################
 
         if stream:
             ax.streamplot(X[::stride, ::stride],
@@ -427,7 +429,7 @@ def _interpolation_weights(density_weighted, particles, hfact):
     if density_weighted:
         return np.array(particles['m'] / particles['h']**2)
 
-    return np.full_like(particles['h'], 1/hfact)
+    return np.full_like(particles['h'], 1 / hfact)
 
 
 def _rotate_frame(positions, velocities, axis, theta):

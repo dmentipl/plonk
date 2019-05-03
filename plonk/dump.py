@@ -17,37 +17,12 @@ from .units import Units
 # --- Possibly available arrays in Phantom dump
 
 POSSIBLE_ARRAYS = [
-        'itype',
-        'xyz',
-        'h',
-        'pressure',
-        'vxyz',
-        'u',
-        'dustfrac',
-        'tstop',
-        'deltavxyz',
-        'divv',
-        'curlvxyz',
-        'dt',
-        'alpha',
-        'poten',
-        'grainsize',
-        'graindens',
-        'vrel/vfrag',
-        'St',
-        'abundance',
-        'T',
-        'luminosity',
-        'beta_pr',
-        'Bxyz',
-        'psi',
-        'divB',
-        'curlBxyz',
-        'divBsymm',
-        'eta_{OR}',
-        'eta_{HE}',
-        'eta_{AD}',
-        'ne/n']
+    'itype', 'xyz', 'h', 'pressure', 'vxyz', 'u', 'dustfrac', 'tstop',
+    'deltavxyz', 'divv', 'curlvxyz', 'dt', 'alpha', 'poten', 'grainsize',
+    'graindens', 'vrel/vfrag', 'St', 'abundance', 'T', 'luminosity', 'beta_pr',
+    'Bxyz', 'psi', 'divB', 'curlBxyz', 'divBsymm', 'eta_{OR}', 'eta_{HE}',
+    'eta_{AD}', 'ne/n'
+]
 
 NABUNDANCES = 5
 
@@ -133,8 +108,7 @@ class Dump:
 
         self.parameters = parameters
 
-        self.units = Units(parameters['udist'],
-                           parameters['umass'],
+        self.units = Units(parameters['udist'], parameters['umass'],
                            parameters['utime']).units
 
         n_dust_large = self.parameters['ndustlarge']
@@ -204,8 +178,9 @@ class Dump:
                     if n_dust_types > 1:
                         columns = list()
                         for idx, col_ in enumerate(columns_):
-                            columns.append(
-                                [col_ + str(i+1) for i in range(n_dust_types)])
+                            columns.append([
+                                col_ + str(i + 1) for i in range(n_dust_types)
+                            ])
 
                     else:
                         columns = list()
@@ -229,8 +204,10 @@ class Dump:
 
             sinks = f['sinks']
 
-            columns = ['x', 'y', 'z', 'm', 'h', 'hsoft', 'macc',
-                       'spinx', 'spiny', 'spinz', 'tlast']
+            columns = [
+                'x', 'y', 'z', 'm', 'h', 'hsoft', 'macc', 'spinx', 'spiny',
+                'spinz', 'tlast'
+            ]
 
             if is_full_dump:
                 columns += ['vx', 'vy', 'vz']
@@ -273,8 +250,7 @@ class Dump:
 
         self.parameters = parameters
 
-        self.units = Units(parameters['udist'],
-                           parameters['umass'],
+        self.units = Units(parameters['udist'], parameters['umass'],
                            parameters['utime']).units
 
         exists = os.path.isfile(dump_file_name)
@@ -294,8 +270,8 @@ class Dump:
             names += ['vx', 'vy', 'vz']
         if n_dust_types > 0:
             for n in range(n_dust_types):
-                names += ['dustfrac' + str(n+1)]
-                sink_drop += ['dustfrac' + str(n+1)]
+                names += ['dustfrac' + str(n + 1)]
+                sink_drop += ['dustfrac' + str(n + 1)]
         if is_full_dump:
             names += ['divv', 'dt', 'itype']
             sink_drop += ['divv', 'dt', 'itype']
@@ -306,15 +282,16 @@ class Dump:
         print_warning('Assuming ascii file columns are as follows:\n' +
                       ', '.join(names))
 
-        data = pd.read_csv(dump_file_name, comment='#', names=names,
+        data = pd.read_csv(dump_file_name,
+                           comment='#',
+                           names=names,
                            delim_whitespace=True)
 
         particles = data[data['itype'] != I_SINK].reset_index(drop=True)
 
-        particles.loc[
-            (particles['itype'] >= I_DUST_SPLASH) &
-            (particles['itype'] <= I_DUST_SPLASH + n_dust_large),
-            'itype'] -= I_DUST_SPLASH - I_DUST
+        particles.loc[(particles['itype'] >= I_DUST_SPLASH) &
+                      (particles['itype'] <= I_DUST_SPLASH +
+                       n_dust_large), 'itype'] -= I_DUST_SPLASH - I_DUST
 
         self.particles = particles
 
@@ -327,6 +304,7 @@ class Dump:
 
 
 # --- Functions
+
 
 def _read_header_from_showheader(header_file_name):
 
@@ -373,12 +351,12 @@ def _read_header_from_showheader(header_file_name):
         if key == prev_key:
 
             if first_multiple_key:
-                new_values[idxj-1] = list()
-                new_values[idxj-1].append(values[idxi-1])
-                new_values[idxj-1].append(values[idxi])
+                new_values[idxj - 1] = list()
+                new_values[idxj - 1].append(values[idxi - 1])
+                new_values[idxj - 1].append(values[idxi])
                 first_multiple_key = False
             else:
-                new_values[idxj-1].append(values[idxi])
+                new_values[idxj - 1].append(values[idxi])
 
         else:
 
