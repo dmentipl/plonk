@@ -15,11 +15,13 @@ from ..constants import constants
 # ---------------------------------------------------------------------------- #
 
 
-def disc_analysis(radius_in=None,
-                  radius_out=None,
-                  number_radial_bins=None,
-                  dump=None,
-                  min_particle_average=None):
+def disc_analysis(
+    radius_in=None,
+    radius_out=None,
+    number_radial_bins=None,
+    dump=None,
+    min_particle_average=None,
+):
     """
     Perform disc analysis.
 
@@ -44,8 +46,12 @@ def disc_analysis(radius_in=None,
     # --- Calculate radially binned quantities
 
     radial_data = _calculate_radially_binned_quantities(
-        number_radial_bins, radius_in, radius_out, dump.particles,
-        min_particle_average)
+        number_radial_bins,
+        radius_in,
+        radius_out,
+        dump.particles,
+        min_particle_average,
+    )
 
     # --- Dust
 
@@ -117,8 +123,9 @@ def _calculate_extra_quantities(dump):
         particles['py'] = particles['m'] * particles['vy']
         particles['pz'] = particles['m'] * particles['vz']
 
-        angular_momentum = np.cross(particles[['x', 'y', 'z']],
-                                    particles[['px', 'py', 'pz']])
+        angular_momentum = np.cross(
+            particles[['x', 'y', 'z']], particles[['px', 'py', 'pz']]
+        )
 
         particles['Lx'] = angular_momentum[:, 0]
         particles['Ly'] = angular_momentum[:, 1]
@@ -136,7 +143,7 @@ def _calculate_extra_quantities(dump):
         particles['Lz'] = np.nan
         particles['|L|'] = np.nan
 
-# --- Sinks
+    # --- Sinks
 
     n_sinks = parameters['nptmass']
     contains_sinks = bool(n_sinks > 0)
@@ -150,9 +157,11 @@ def _calculate_extra_quantities(dump):
         stellar_mass = sinks['m'][0]
         print('Assuming the first sink particle is the central star')
 
-        gravitational_parameter = \
-            constants.gravitational_constant \
-            / (u_dist**3 / u_time**2 / u_mass) * stellar_mass
+        gravitational_parameter = (
+            constants.gravitational_constant
+            / (u_dist ** 3 / u_time ** 2 / u_mass)
+            * stellar_mass
+        )
     else:
 
         raise Exception('Must have at least one sink to do disc analysis')
@@ -165,8 +174,9 @@ def _calculate_extra_quantities(dump):
         sinks['py'] = sinks['m'] * sinks['vy']
         sinks['pz'] = sinks['m'] * sinks['vz']
 
-        angular_momentum = np.cross(sinks[['x', 'y', 'z']],
-                                    sinks[['px', 'py', 'pz']])
+        angular_momentum = np.cross(
+            sinks[['x', 'y', 'z']], sinks[['px', 'py', 'pz']]
+        )
 
         sinks['Lx'] = angular_momentum[:, 0]
         sinks['Ly'] = angular_momentum[:, 1]
@@ -184,25 +194,33 @@ def _calculate_extra_quantities(dump):
         sinks['Lz'] = np.nan
         sinks['|L|'] = np.nan
 
-# --- Eccentricity
+    # --- Eccentricity
 
     if is_full_dump:
 
-        kinetic_energy = 1 / 2 * particles['|v|']**2
+        kinetic_energy = 1 / 2 * particles['|v|'] ** 2
         gravitational_energy = -gravitational_parameter / particles['r']
 
         energy = kinetic_energy + gravitational_energy
-        term = 2 * energy * (particles['|L|']/particles['m'])**2 \
-            / gravitational_parameter**2
+        term = (
+            2
+            * energy
+            * (particles['|L|'] / particles['m']) ** 2
+            / gravitational_parameter ** 2
+        )
 
         particles['e'] = np.sqrt(1 + term)
 
-        kinetic_energy = 1 / 2 * sinks['|v|']**2
+        kinetic_energy = 1 / 2 * sinks['|v|'] ** 2
         gravitational_energy = -gravitational_parameter / sinks['r']
 
         energy = kinetic_energy + gravitational_energy
-        term = 2 * energy * (sinks['|L|']/sinks['m'])**2 \
-            / gravitational_parameter**2
+        term = (
+            2
+            * energy
+            * (sinks['|L|'] / sinks['m']) ** 2
+            / gravitational_parameter ** 2
+        )
 
         sinks['e'] = np.sqrt(1 + term)
 
@@ -215,11 +233,13 @@ def _calculate_extra_quantities(dump):
 # ---------------------------------------------------------------------------- #
 
 
-def _calculate_radially_binned_quantities(number_radial_bins=None,
-                                          radius_in=None,
-                                          radius_out=None,
-                                          particles=None,
-                                          min_particle_average=None):
+def _calculate_radially_binned_quantities(
+    number_radial_bins=None,
+    radius_in=None,
+    radius_out=None,
+    particles=None,
+    min_particle_average=None,
+):
     """
     Calculate averaged radially binned quantities:
         - radial bins
@@ -253,25 +273,28 @@ def _calculate_radially_binned_quantities(number_radial_bins=None,
     radial_bins = np.linspace(radius_in, radius_out, number_radial_bins)
 
     radial_averages = pd.DataFrame(radial_bins, columns=['R'])
-    radial_averages['area'] = \
-        np.pi * ((radial_bins + radial_bin_width/2)**2 -
-                 (radial_bins - radial_bin_width/2)**2)
+    radial_averages['area'] = np.pi * (
+        (radial_bins + radial_bin_width / 2) ** 2
+        - (radial_bins - radial_bin_width / 2) ** 2
+    )
 
     radial_averages = radial_averages.reindex(
-        columns=radial_averages.columns.tolist() +
-        ['sigma', 'h', 'H', 'Lx', 'Ly', 'Lz', '|L|', 'tilt', 'twist', 'e'])
+        columns=radial_averages.columns.tolist()
+        + ['sigma', 'h', 'H', 'Lx', 'Ly', 'Lz', '|L|', 'tilt', 'twist', 'e']
+    )
 
     for index, radius in enumerate(radial_bins):
 
         radius_left = radius - radial_bin_width / 2
         radius_right = radius + radial_bin_width / 2
 
-        particles_in_bin = \
-            particles.loc[(particles['R'] >= radius_left)
-                          & (particles['R'] <= radius_right)]
+        particles_in_bin = particles.loc[
+            (particles['R'] >= radius_left) & (particles['R'] <= radius_right)
+        ]
 
-        radial_averages['sigma'].iloc[index] = \
+        radial_averages['sigma'].iloc[index] = (
             particles_in_bin['m'].sum() / radial_averages['area'].iloc[index]
+        )
 
         if len(particles_in_bin) > min_particle_average:
 
@@ -285,23 +308,27 @@ def _calculate_radially_binned_quantities(number_radial_bins=None,
 
             radial_averages['e'].iloc[index] = particles_in_bin['e'].mean()
 
-    radial_averages['tilt'] = \
-        np.arccos(radial_averages['Lz'] / radial_averages['|L|'])
+    radial_averages['tilt'] = np.arccos(
+        radial_averages['Lz'] / radial_averages['|L|']
+    )
 
-    radial_averages['twist'] = \
-        np.arctan2(radial_averages['Ly'] / radial_averages['|L|'],
-                   radial_averages['Lx'] / radial_averages['|L|'])
+    radial_averages['twist'] = np.arctan2(
+        radial_averages['Ly'] / radial_averages['|L|'],
+        radial_averages['Lx'] / radial_averages['|L|'],
+    )
 
-    radial_averages['rho'] = \
-        radial_averages['sigma'] / radial_averages['H'] / np.sqrt(2*np.pi)
+    radial_averages['rho'] = (
+        radial_averages['sigma'] / radial_averages['H'] / np.sqrt(2 * np.pi)
+    )
 
     lx = radial_averages['Lx'] / radial_averages['|L|']
     ly = radial_averages['Ly'] / radial_averages['|L|']
     lz = radial_averages['Lz'] / radial_averages['|L|']
 
     radial_averages['psi'] = radial_bins * np.sqrt(
-        np.gradient(lx, radial_bin_width)**2 +
-        np.gradient(ly, radial_bin_width)**2 +
-        np.gradient(lz, radial_bin_width)**2)
+        np.gradient(lx, radial_bin_width) ** 2
+        + np.gradient(ly, radial_bin_width) ** 2
+        + np.gradient(lz, radial_bin_width) ** 2
+    )
 
     return radial_averages

@@ -25,37 +25,39 @@ plot_options = {
     'fontfamily': 'sans-serif',
     'fontsize': 12,
     'normalize': False,
-    'zobserver': None
+    'zobserver': None,
 }
 
 
 # --- Main plotting function.
-def plot(dump,
-         render=None,
-         vector=None,
-         particle_types=None,
-         itype=None,
-         horizontal_range=None,
-         vertical_range=None,
-         rotation_axis=None,
-         rotation_angle=None,
-         position_angle=None,
-         inclination=None,
-         stream=None,
-         cross_section=None,
-         zslice=None,
-         opacity=None,
-         number_pixels=None,
-         image_range=-1,
-         render_scale=None,
-         render_min=None,
-         render_max=None,
-         render_fraction_max=None,
-         title=None,
-         ax=None,
-         newfig=None,
-         colorbar=None,
-         colormap=None):
+def plot(
+    dump,
+    render=None,
+    vector=None,
+    particle_types=None,
+    itype=None,
+    horizontal_range=None,
+    vertical_range=None,
+    rotation_axis=None,
+    rotation_angle=None,
+    position_angle=None,
+    inclination=None,
+    stream=None,
+    cross_section=None,
+    zslice=None,
+    opacity=None,
+    number_pixels=None,
+    image_range=-1,
+    render_scale=None,
+    render_min=None,
+    render_max=None,
+    render_fraction_max=None,
+    title=None,
+    ax=None,
+    newfig=None,
+    colorbar=None,
+    colormap=None,
+):
     """
     Visualize a dump as a particle plot, a rendered plot, or a vector
     plot.
@@ -166,10 +168,13 @@ def plot(dump,
 
     rotate = False
 
-    if (rotation_axis is not None or rotation_angle is not None) and \
-       (position_angle is not None and inclination is not None):
-        raise ValueError('Cannot set rotation_axis/rotation_angle and ' +
-                         ' position_angle/inclination at the same time')
+    if (rotation_axis is not None or rotation_angle is not None) and (
+        position_angle is not None and inclination is not None
+    ):
+        raise ValueError(
+            'Cannot set rotation_axis/rotation_angle and '
+            + ' position_angle/inclination at the same time'
+        )
 
     if rotation_axis is not None:
         if rotation_angle is not None:
@@ -189,8 +194,8 @@ def plot(dump,
             rotate = True
             rotation_angle = inclination
             rotation_axis = np.array(
-                [np.cos(position_angle),
-                 np.sin(position_angle), 0])
+                [np.cos(position_angle), np.sin(position_angle), 0]
+            )
         else:
             raise ValueError('Must specify inclination')
 
@@ -203,7 +208,7 @@ def plot(dump,
         cross_section = False
     if cross_section:
         if zslice is None:
-            zslice = 0.
+            zslice = 0.0
 
     if opacity is None:
         opacity = False
@@ -267,25 +272,31 @@ def plot(dump,
 
     # --- Interpolation weights
 
-    weights = _interpolation_weights(plot_options['density_weighted'], pd,
-                                     dump.parameters['hfact'])
+    weights = _interpolation_weights(
+        plot_options['density_weighted'], pd, dump.parameters['hfact']
+    )
 
     # --- Rotate frame
 
     if rotate:
-        print(f'Rotating {rotation_angle*180/np.pi:.0f} deg around '
-              f'[{rotation_axis[0]:.2f},'
-              f' {rotation_axis[1]:.2f},'
-              f' {rotation_axis[2]:.2f}]')
-        positions, velocities = _rotate_frame(positions, velocities,
-                                              rotation_axis, rotation_angle)
+        print(
+            f'Rotating {rotation_angle*180/np.pi:.0f} deg around '
+            f'[{rotation_axis[0]:.2f},'
+            f' {rotation_axis[1]:.2f},'
+            f' {rotation_axis[2]:.2f}]'
+        )
+        positions, velocities = _rotate_frame(
+            positions, velocities, rotation_axis, rotation_angle
+        )
 
     # --- Image window range
 
     if image_range > 0:
         if horizontal_range is not None or vertical_range is not None:
-            raise ValueError('Cannot set image_range and horizontal_range ' +
-                             '(or vertical_range) at the same time')
+            raise ValueError(
+                'Cannot set image_range and horizontal_range '
+                + '(or vertical_range) at the same time'
+            )
         horizontal_range = [-image_range, image_range]
         vertical_range = [-image_range, image_range]
 
@@ -309,12 +320,23 @@ def plot(dump,
 
         print(f'Rendering {render}')
 
-        image_data = scalar_interpolation(positions, smoothing_length, weights,
-                                          render_data, particle_mass,
-                                          horizontal_range, vertical_range,
-                                          npix, cross_section, zslice, opacity,
-                                          normalize, zobserver, dscreen,
-                                          accelerate)
+        image_data = scalar_interpolation(
+            positions,
+            smoothing_length,
+            weights,
+            render_data,
+            particle_mass,
+            horizontal_range,
+            vertical_range,
+            npix,
+            cross_section,
+            zslice,
+            opacity,
+            normalize,
+            zobserver,
+            dscreen,
+            accelerate,
+        )
 
     # --- Interpolate vector data
 
@@ -322,11 +344,20 @@ def plot(dump,
 
         print(f'Vector field {vector}')
 
-        vector_data = vector_interpolation(positions, smoothing_length,
-                                           weights, vector_data,
-                                           horizontal_range, vertical_range,
-                                           npix, cross_section, zslice,
-                                           normalize, zobserver, dscreen)
+        vector_data = vector_interpolation(
+            positions,
+            smoothing_length,
+            weights,
+            vector_data,
+            horizontal_range,
+            vertical_range,
+            npix,
+            cross_section,
+            zslice,
+            normalize,
+            zobserver,
+            dscreen,
+        )
 
         xvector_data = vector_data[0]
         yvector_data = vector_data[1]
@@ -339,14 +370,16 @@ def plot(dump,
 
     if physical_units:
         extent = [val * dump.units['distance'] for val in extent]
-        horizontal_range = \
-            [val * dump.units['distance'] for val in horizontal_range]
-        vertical_range = \
-            [val * dump.units['distance'] for val in vertical_range]
+        horizontal_range = [
+            val * dump.units['distance'] for val in horizontal_range
+        ]
+        vertical_range = [
+            val * dump.units['distance'] for val in vertical_range
+        ]
         image_data *= dump.units['surface_density']
     ############################################################################
 
-# --- Render settings
+    # --- Render settings
 
     if render:
 
@@ -390,11 +423,9 @@ def plot(dump,
 
     if render:
 
-        img = ax.imshow(image_data,
-                        norm=norm,
-                        origin='lower',
-                        extent=extent,
-                        cmap=cmap)
+        img = ax.imshow(
+            image_data, norm=norm, origin='lower', extent=extent, cmap=cmap
+        )
 
     # --- Plot particles
 
@@ -409,8 +440,10 @@ def plot(dump,
 
     if vector:
 
-        X, Y = np.meshgrid(np.linspace(*horizontal_range, len(xvector_data)),
-                           np.linspace(*vertical_range, len(yvector_data)))
+        X, Y = np.meshgrid(
+            np.linspace(*horizontal_range, len(xvector_data)),
+            np.linspace(*vertical_range, len(yvector_data)),
+        )
 
         ########################################################################
         # TODO: temporary; testing phase
@@ -423,18 +456,22 @@ def plot(dump,
         ########################################################################
 
         if stream:
-            ax.streamplot(X[::stride, ::stride],
-                          Y[::stride, ::stride],
-                          xvector_data[::stride, ::stride],
-                          yvector_data[::stride, ::stride],
-                          color=vector_color)
+            ax.streamplot(
+                X[::stride, ::stride],
+                Y[::stride, ::stride],
+                xvector_data[::stride, ::stride],
+                yvector_data[::stride, ::stride],
+                color=vector_color,
+            )
 
         else:
-            ax.quiver(X[::stride, ::stride],
-                      Y[::stride, ::stride],
-                      xvector_data[::stride, ::stride],
-                      yvector_data[::stride, ::stride],
-                      color=vector_color)
+            ax.quiver(
+                X[::stride, ::stride],
+                Y[::stride, ::stride],
+                xvector_data[::stride, ::stride],
+                yvector_data[::stride, ::stride],
+                color=vector_color,
+            )
 
         ax.set_aspect('equal', 'box')
 
@@ -498,7 +535,7 @@ def _interpolation_weights(density_weighted, particles, hfact):
     """Calculate interpolation weights."""
 
     if density_weighted:
-        return np.array(particles['m'] / particles['h']**2)
+        return np.array(particles['m'] / particles['h'] ** 2)
 
     return np.full_like(particles['h'], 1 / hfact)
 
@@ -506,6 +543,7 @@ def _interpolation_weights(density_weighted, particles, hfact):
 def _rotate_frame(positions, velocities, axis, theta):
     """Rotate around axis."""
 
-    return \
-        rotate_vector_arbitrary_axis(positions, axis, theta), \
-        rotate_vector_arbitrary_axis(velocities, axis, theta)
+    return (
+        rotate_vector_arbitrary_axis(positions, axis, theta),
+        rotate_vector_arbitrary_axis(velocities, axis, theta),
+    )

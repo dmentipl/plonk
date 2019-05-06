@@ -12,8 +12,14 @@ def print_warning(message):
     message_length = len(message)
     message_length = min(message_length, 80)
     message = 'WARNING: ' + message
-    print('\n' + message_length * '-' + '\n' + message + '\n' +
-          message_length * '-')
+    print(
+        '\n'
+        + message_length * '-'
+        + '\n'
+        + message
+        + '\n'
+        + message_length * '-'
+    )
 
 
 def print_error(message):
@@ -21,8 +27,14 @@ def print_error(message):
     message_length = len(message)
     message_length = min(message_length, 80)
     message = 'ERROR: ' + message
-    print('\n' + message_length * '-' + '\n' + message + '\n' +
-          message_length * '-')
+    print(
+        '\n'
+        + message_length * '-'
+        + '\n'
+        + message
+        + '\n'
+        + message_length * '-'
+    )
 
 
 def rotate_vector_arbitrary_axis(u, v, theta):
@@ -34,7 +46,7 @@ def rotate_vector_arbitrary_axis(u, v, theta):
     """
 
     norm = np.linalg.norm(v)
-    if np.isclose(norm, 0.):
+    if np.isclose(norm, 0.0):
         k = v
     else:
         k = v / norm
@@ -43,14 +55,15 @@ def rotate_vector_arbitrary_axis(u, v, theta):
     dot_kv = np.sum(k * u, axis=1)
     dot_kv = np.stack(3 * [dot_kv]).T
 
-    return u * np.cos(theta) + w * np.sin(theta) + k * dot_kv * (1 -
-                                                                 np.cos(theta))
+    return (
+        u * np.cos(theta) + w * np.sin(theta) + k * dot_kv * (1 - np.cos(theta))
+    )
 
 
 def normalize_vector(v):
     """Normalize a single vector."""
 
     norm = np.linalg.norm(v)
-    if np.isclose(norm, 0.):
+    if np.isclose(norm, 0.0):
         return v
     return v / norm

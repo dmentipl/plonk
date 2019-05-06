@@ -9,14 +9,28 @@ import numpy as np
 try:
     from splash import splash
 except ImportError:
-    raise Exception('Cannot import Splash interpolation routines. See ' +
-                    'documentation.')
+    raise Exception(
+        'Cannot import Splash interpolation routines. See ' + 'documentation.'
+    )
 
 
-def scalar_interpolation(positions, smoothing_length, weights, scalar_data,
-                         particle_mass, horizontal_range, vertical_range, npix,
-                         cross_section, zslice, opacity, normalize, zobserver,
-                         dscreen, accelerate):
+def scalar_interpolation(
+    positions,
+    smoothing_length,
+    weights,
+    scalar_data,
+    particle_mass,
+    horizontal_range,
+    vertical_range,
+    npix,
+    cross_section,
+    zslice,
+    opacity,
+    normalize,
+    zobserver,
+    dscreen,
+    accelerate,
+):
     """
     Interpolate a scalar quantity to pixels by projection.
 
@@ -34,7 +48,7 @@ def scalar_interpolation(positions, smoothing_length, weights, scalar_data,
         cross_section = False
 
     if cross_section and zslice is None:
-        zslice = 0.
+        zslice = 0.0
 
     if opacity is None:
         opacity = False
@@ -74,8 +88,59 @@ def scalar_interpolation(positions, smoothing_length, weights, scalar_data,
     useaccelerate = accelerate
 
     if cross_section:
-        datsmooth = \
-            splash.interpolate3d_fastxsec(
+        datsmooth = splash.interpolate3d_fastxsec(
+            x=x,
+            y=y,
+            z=z,
+            hh=hh,
+            weight=weight,
+            dat=dat,
+            itype=itype,
+            npart=npart,
+            xmin=xmin,
+            ymin=ymin,
+            zslice=zslice,
+            npixx=npixx,
+            npixy=npixy,
+            pixwidthx=pixwidthx,
+            pixwidthy=pixwidthy,
+            normalise=normalise,
+        )
+    else:
+        if opacity:
+            ####################################################################
+            # TODO: temporary; testing phase
+            npmass = npart
+            zorig = z
+            pixwidth = pixwidthx
+            dscreenfromobserver = dscreen
+            rkappa = np.pi * hh.mean() ** 2 / pmass[0]
+            zcut = zobserver
+            ####################################################################
+            datsmooth = splash.interp3d_proj_opacity(
+                x=x,
+                y=y,
+                z=z,
+                hh=hh,
+                pmass=pmass,
+                npmass=npmass,
+                weight=weight,
+                dat=dat,
+                zorig=zorig,
+                itype=itype,
+                npart=npart,
+                xmin=xmin,
+                ymin=ymin,
+                npixx=npixx,
+                npixy=npixy,
+                pixwidth=pixwidth,
+                zobserver=zobserver,
+                dscreenfromobserver=dscreenfromobserver,
+                rkappa=rkappa,
+                zcut=zcut,
+            )
+        else:
+            datsmooth = splash.interpolate3d_projection(
                 x=x,
                 y=y,
                 z=z,
@@ -86,75 +151,35 @@ def scalar_interpolation(positions, smoothing_length, weights, scalar_data,
                 npart=npart,
                 xmin=xmin,
                 ymin=ymin,
-                zslice=zslice,
                 npixx=npixx,
                 npixy=npixy,
                 pixwidthx=pixwidthx,
                 pixwidthy=pixwidthy,
-                normalise=normalise)
-    else:
-        if opacity:
-            ####################################################################
-            # TODO: temporary; testing phase
-            npmass = npart
-            zorig = z
-            pixwidth = pixwidthx
-            dscreenfromobserver = dscreen
-            rkappa = np.pi * hh.mean()**2 / pmass[0]
-            zcut = zobserver
-            ####################################################################
-            datsmooth = \
-                splash.interp3d_proj_opacity(
-                    x=x,
-                    y=y,
-                    z=z,
-                    hh=hh,
-                    pmass=pmass,
-                    npmass=npmass,
-                    weight=weight,
-                    dat=dat,
-                    zorig=zorig,
-                    itype=itype,
-                    npart=npart,
-                    xmin=xmin,
-                    ymin=ymin,
-                    npixx=npixx,
-                    npixy=npixy,
-                    pixwidth=pixwidth,
-                    zobserver=zobserver,
-                    dscreenfromobserver=dscreenfromobserver,
-                    rkappa=rkappa,
-                    zcut=zcut)
-        else:
-            datsmooth = \
-                splash.interpolate3d_projection(
-                    x=x,
-                    y=y,
-                    z=z,
-                    hh=hh,
-                    weight=weight,
-                    dat=dat,
-                    itype=itype,
-                    npart=npart,
-                    xmin=xmin,
-                    ymin=ymin,
-                    npixx=npixx,
-                    npixy=npixy,
-                    pixwidthx=pixwidthx,
-                    pixwidthy=pixwidthy,
-                    normalise=normalise,
-                    zobserver=zobserver,
-                    dscreen=dscreen,
-                    useaccelerate=useaccelerate)
+                normalise=normalise,
+                zobserver=zobserver,
+                dscreen=dscreen,
+                useaccelerate=useaccelerate,
+            )
 
     smoothed_scalar = np.array(datsmooth)
 
     return smoothed_scalar
 
 
-def vector_interpolation(positions, smoothing_length, weights, vector_data,
-                         horizontal_range, vertical_range, npix, cross_section,
-                         zslice, normalize, zobserver, dscreen):
+def vector_interpolation(
+    positions,
+    smoothing_length,
+    weights,
+    vector_data,
+    horizontal_range,
+    vertical_range,
+    npix,
+    cross_section,
+    zslice,
+    normalize,
+    zobserver,
+    dscreen,
+):
     """
     Interpolate a vector quantity to pixels by projection.
 
@@ -172,7 +197,7 @@ def vector_interpolation(positions, smoothing_length, weights, vector_data,
         cross_section = False
 
     if cross_section and zslice is None:
-        zslice = 0.
+        zslice = 0.0
 
     if zobserver is None:
         zobserver = 1e10
@@ -205,46 +230,46 @@ def vector_interpolation(positions, smoothing_length, weights, vector_data,
     normalise = normalize
 
     if cross_section:
-        vecsmoothx, vecsmoothy = \
-            splash.interpolate3d_xsec_vec(
-                x=x,
-                y=y,
-                z=z,
-                hh=hh,
-                weight=weight,
-                vecx=vecx,
-                vecy=vecy,
-                itype=itype,
-                npart=npart,
-                xmin=xmin,
-                ymin=ymin,
-                zslice=zslice,
-                npixx=npixx,
-                npixy=npixy,
-                pixwidthx=pixwidthx,
-                pixwidthy=pixwidthy,
-                normalise=normalise)
+        vecsmoothx, vecsmoothy = splash.interpolate3d_xsec_vec(
+            x=x,
+            y=y,
+            z=z,
+            hh=hh,
+            weight=weight,
+            vecx=vecx,
+            vecy=vecy,
+            itype=itype,
+            npart=npart,
+            xmin=xmin,
+            ymin=ymin,
+            zslice=zslice,
+            npixx=npixx,
+            npixy=npixy,
+            pixwidthx=pixwidthx,
+            pixwidthy=pixwidthy,
+            normalise=normalise,
+        )
     else:
-        vecsmoothx, vecsmoothy = \
-            splash.interpolate3d_proj_vec(
-                x=x,
-                y=y,
-                z=z,
-                hh=hh,
-                weight=weight,
-                vecx=vecx,
-                vecy=vecy,
-                itype=itype,
-                npart=npart,
-                xmin=xmin,
-                ymin=ymin,
-                npixx=npixx,
-                npixy=npixy,
-                pixwidthx=pixwidthx,
-                pixwidthy=pixwidthy,
-                normalise=normalise,
-                zobserver=zobserver,
-                dscreen=dscreen)
+        vecsmoothx, vecsmoothy = splash.interpolate3d_proj_vec(
+            x=x,
+            y=y,
+            z=z,
+            hh=hh,
+            weight=weight,
+            vecx=vecx,
+            vecy=vecy,
+            itype=itype,
+            npart=npart,
+            xmin=xmin,
+            ymin=ymin,
+            npixx=npixx,
+            npixy=npixy,
+            pixwidthx=pixwidthx,
+            pixwidthy=pixwidthy,
+            normalise=normalise,
+            zobserver=zobserver,
+            dscreen=dscreen,
+        )
 
     smoothed_vector = np.stack((np.array(vecsmoothx), np.array(vecsmoothy)))
 

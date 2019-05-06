@@ -17,11 +17,37 @@ from .units import Units
 # --- Possibly available arrays in Phantom dump
 
 POSSIBLE_ARRAYS = [
-    'itype', 'xyz', 'h', 'pressure', 'vxyz', 'u', 'dustfrac', 'tstop',
-    'deltavxyz', 'divv', 'curlvxyz', 'dt', 'alpha', 'poten', 'grainsize',
-    'graindens', 'vrel/vfrag', 'St', 'abundance', 'T', 'luminosity', 'beta_pr',
-    'Bxyz', 'psi', 'divB', 'curlBxyz', 'divBsymm', 'eta_{OR}', 'eta_{HE}',
-    'eta_{AD}', 'ne/n'
+    'itype',
+    'xyz',
+    'h',
+    'pressure',
+    'vxyz',
+    'u',
+    'dustfrac',
+    'tstop',
+    'deltavxyz',
+    'divv',
+    'curlvxyz',
+    'dt',
+    'alpha',
+    'poten',
+    'grainsize',
+    'graindens',
+    'vrel/vfrag',
+    'St',
+    'abundance',
+    'T',
+    'luminosity',
+    'beta_pr',
+    'Bxyz',
+    'psi',
+    'divB',
+    'curlBxyz',
+    'divBsymm',
+    'eta_{OR}',
+    'eta_{HE}',
+    'eta_{AD}',
+    'ne/n',
 ]
 
 NABUNDANCES = 5
@@ -124,12 +150,14 @@ class Dump:
 
         self.parameters = parameters
 
-        self.units = Units(parameters['udist'], parameters['umass'],
-                           parameters['utime']).units
+        self.units = Units(
+            parameters['udist'], parameters['umass'], parameters['utime']
+        ).units
 
         n_dust_large = self.parameters['ndustlarge']
-        n_dust_types = \
+        n_dust_types = (
             self.parameters['ndustsmall'] + self.parameters['ndustlarge']
+        )
 
         n_sinks = self.parameters['nptmass']
         contains_sinks = bool(n_sinks > 0)
@@ -140,26 +168,30 @@ class Dump:
 
         is_full_dump = bool('vxyz' in particles)
 
-        self.particles = pd.DataFrame(particles['itype'].value,
-                                      columns=['itype'])
+        self.particles = pd.DataFrame(
+            particles['itype'].value, columns=['itype']
+        )
 
         self.particles['x'] = particles['xyz'][:, 0]
         self.particles['y'] = particles['xyz'][:, 1]
         self.particles['z'] = particles['xyz'][:, 2]
         self.particles['h'] = particles['h']
 
-        self.particles.loc[self.particles['itype'] == I_GAS, 'm'] = \
-            self.parameters['massoftype'][I_GAS-1]
+        self.particles.loc[
+            self.particles['itype'] == I_GAS, 'm'
+        ] = self.parameters['massoftype'][I_GAS - 1]
 
         if n_dust_large > 0:
             for n in range(n_dust_large):
-                self.particles.loc[self.particles['itype'] == I_DUST+n, 'm'] = \
-                    self.parameters['massoftype'][I_DUST+n-1]
+                self.particles.loc[
+                    self.particles['itype'] == I_DUST + n, 'm'
+                ] = self.parameters['massoftype'][I_DUST + n - 1]
 
         self.particles['rho'] = density_from_smoothing_length(
             self.particles['h'],
             self.particles['m'],
-            hfact=self.parameters['hfact'])
+            hfact=self.parameters['hfact'],
+        )
 
         generator = (arr for arr in POSSIBLE_ARRAYS[3:] if arr in particles)
 
@@ -178,8 +210,9 @@ class Dump:
 
                 else:
                     if n_dust_types > 1:
-                        columns = \
-                                [array + str(i+1) for i in range(n_dust_types)]
+                        columns = [
+                            array + str(i + 1) for i in range(n_dust_types)
+                        ]
                     else:
                         columns = [array]
 
@@ -194,9 +227,9 @@ class Dump:
                     if n_dust_types > 1:
                         columns = list()
                         for idx, col_ in enumerate(columns_):
-                            columns.append([
-                                col_ + str(i + 1) for i in range(n_dust_types)
-                            ])
+                            columns.append(
+                                [col_ + str(i + 1) for i in range(n_dust_types)]
+                            )
 
                     else:
                         columns = list()
@@ -205,8 +238,9 @@ class Dump:
 
                     for ind_pos, column in enumerate(columns):
                         for ind_grain, column_ in enumerate(column):
-                            self.particles[column_] = \
-                                    particles[array][:, ind_grain, ind_pos]
+                            self.particles[column_] = particles[array][
+                                :, ind_grain, ind_pos
+                            ]
 
                 else:
                     raise ValueError(f'Cannot read array: {array}')
@@ -221,8 +255,17 @@ class Dump:
             sinks = f['sinks']
 
             columns = [
-                'x', 'y', 'z', 'm', 'h', 'hsoft', 'macc', 'spinx', 'spiny',
-                'spinz', 'tlast'
+                'x',
+                'y',
+                'z',
+                'm',
+                'h',
+                'hsoft',
+                'macc',
+                'spinx',
+                'spiny',
+                'spinz',
+                'tlast',
             ]
 
             if is_full_dump:
@@ -258,23 +301,27 @@ class Dump:
 
         exists = os.path.isfile(header_file_name)
         if not exists:
-            raise FileNotFoundError('Cannot find header file: ' +
-                                    header_file_name)
+            raise FileNotFoundError(
+                'Cannot find header file: ' + header_file_name
+            )
 
-        parameters, is_full_dump = \
-            _read_header_from_showheader(header_file_name)
+        parameters, is_full_dump = _read_header_from_showheader(
+            header_file_name
+        )
 
         self.parameters = parameters
 
-        self.units = Units(parameters['udist'], parameters['umass'],
-                           parameters['utime']).units
+        self.units = Units(
+            parameters['udist'], parameters['umass'], parameters['utime']
+        ).units
 
         exists = os.path.isfile(dump_file_name)
         if not exists:
             raise FileNotFoundError('Cannot find dump file: ' + dump_file_name)
 
-        n_dust_types = \
+        n_dust_types = (
             self.parameters['ndustsmall'] + self.parameters['ndustlarge']
+        )
         n_dust_large = self.parameters['ndustlarge']
 
         n_sinks = self.parameters['nptmass']
@@ -295,19 +342,21 @@ class Dump:
             names += ['itype']
             sink_drop += ['itype']
 
-        print_warning('Assuming ascii file columns are as follows:\n' +
-                      ', '.join(names))
+        print_warning(
+            'Assuming ascii file columns are as follows:\n' + ', '.join(names)
+        )
 
-        data = pd.read_csv(dump_file_name,
-                           comment='#',
-                           names=names,
-                           delim_whitespace=True)
+        data = pd.read_csv(
+            dump_file_name, comment='#', names=names, delim_whitespace=True
+        )
 
         particles = data[data['itype'] != I_SINK].reset_index(drop=True)
 
-        particles.loc[(particles['itype'] >= I_DUST_SPLASH) &
-                      (particles['itype'] <= I_DUST_SPLASH +
-                       n_dust_large), 'itype'] -= I_DUST_SPLASH - I_DUST
+        particles.loc[
+            (particles['itype'] >= I_DUST_SPLASH)
+            & (particles['itype'] <= I_DUST_SPLASH + n_dust_large),
+            'itype',
+        ] -= (I_DUST_SPLASH - I_DUST)
 
         self.particles = particles
 

@@ -24,11 +24,13 @@ class TestDump(unittest.TestCase):
 
         for para in dump.parameters:
             if isinstance(dump.parameters[para], np.ndarray):
-                np.testing.assert_allclose(dump.parameters[para],
-                                           test_data.parameters[para])
+                np.testing.assert_allclose(
+                    dump.parameters[para], test_data.parameters[para]
+                )
             else:
-                self.assertEqual(dump.parameters[para],
-                                 test_data.parameters[para])
+                self.assertEqual(
+                    dump.parameters[para], test_data.parameters[para]
+                )
 
 
 if __name__ == '__main__':

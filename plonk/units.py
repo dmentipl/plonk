@@ -19,7 +19,7 @@ class Units:
 
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, udist=1., umass=1., utime=1.):
+    def __init__(self, udist=1.0, umass=1.0, utime=1.0):
 
         self.units = dict()
 
@@ -30,31 +30,43 @@ class Units:
         self.units['frequency'] = 1 / self.units['time']
         self.units['velocity'] = self.units['distance'] / self.units['time']
 
-        self.units['momentum'] = \
+        self.units['momentum'] = (
             self.units['mass'] * self.units['distance'] / self.units['time']
+        )
 
-        self.units['force'] = \
-            self.units['mass'] * self.units['distance'] / self.units['time']**2
+        self.units['force'] = (
+            self.units['mass']
+            * self.units['distance']
+            / self.units['time'] ** 2
+        )
 
-        self.units['pressure'] = \
-            self.units['mass'] \
-            / (self.units['distance'] * self.units['time']**2)
+        self.units['pressure'] = self.units['mass'] / (
+            self.units['distance'] * self.units['time'] ** 2
+        )
 
-        self.units['energy'] = \
-            self.units['mass'] * self.units['distance'] / self.units['time']**2
+        self.units['energy'] = (
+            self.units['mass']
+            * self.units['distance']
+            / self.units['time'] ** 2
+        )
 
-        self.units['density'] = \
-            self.units['mass'] / self.units['distance']**3
+        self.units['density'] = self.units['mass'] / self.units['distance'] ** 3
 
-        self.units['surface_density'] = \
-            self.units['mass'] / self.units['distance']**2
+        self.units['surface_density'] = (
+            self.units['mass'] / self.units['distance'] ** 2
+        )
 
-        self.units['angular_momentum'] = \
-            self.units['mass'] * self.units['distance']**2 / self.units['time']
+        self.units['angular_momentum'] = (
+            self.units['mass']
+            * self.units['distance'] ** 2
+            / self.units['time']
+        )
 
-        self.units['torque'] = \
-            self.units['mass'] * self.units['distance']**2 \
-            / self.units['time']**2
+        self.units['torque'] = (
+            self.units['mass']
+            * self.units['distance'] ** 2
+            / self.units['time'] ** 2
+        )
 
 
 def convert(quantity, unit_from, unit_to):

@@ -5,7 +5,7 @@ Daniel Mentiplay, 2019.
 """
 
 
-class Simulation():
+class Simulation:
     """
     Smoothed particle hydrodynamics simulation data. Aggregates dump
     files and other extra data.

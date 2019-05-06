@@ -21,9 +21,9 @@ FILE_NUMBERS = range(1)
 
 # --- Options
 
-RENDER = 'rho'              # Render density
+RENDER = 'rho'  # Render density
 RENDER_FRACTION_MAX = 0.05  # Colour bar scaled to % of max.
-IMAGE_RANGE = 150           # Figure width in code units
+IMAGE_RANGE = 150  # Figure width in code units
 
 # ---------------------------------------------------------------------------- #
 
@@ -43,7 +43,11 @@ for dumpfile in DUMPFILES:
 print(f'\nPlotting dump files...\n')
 for dump in DUMPS:
     plt.figure()
-    plonk.plot(dump, render=RENDER, render_fraction_max=RENDER_FRACTION_MAX,
-               image_range=IMAGE_RANGE)
+    plonk.plot(
+        dump,
+        render=RENDER,
+        render_fraction_max=RENDER_FRACTION_MAX,
+        image_range=IMAGE_RANGE,
+    )
 
 plt.show()

@@ -69,7 +69,7 @@ class _Constants:
 
         # --- Time scales
 
-        self.seconds = 1.e0
+        self.seconds = 1.0e0
         self.minutes = 6.0e1
         self.hours = 3.6e3
         self.days = 8.64e4
@@ -80,9 +80,9 @@ class _Constants:
         self.astronomical_unit = 1.496e13
         self.light_year = 9.4605e17
         self.parsec = 3.086e18
-        self.kilometer = 1.e5
-        self.micron = 1.e-4
-        self.millimeter = 1.e-1
+        self.kilometer = 1.0e5
+        self.micron = 1.0e-4
+        self.millimeter = 1.0e-1
 
         # --- Solar system
 
