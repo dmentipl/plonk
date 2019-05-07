@@ -28,7 +28,7 @@ install:
 
   - make
   - python setup.py build_ext --inplace
-  - cd plonk && conda develop .
+  - python setup.py
 
 script:
   - python -m unittest discover
