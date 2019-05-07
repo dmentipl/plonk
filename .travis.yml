@@ -28,7 +28,7 @@ install:
 
   - make
   - python setup.py build_ext --inplace
-  - python setup.py
+  - python setup.py install
 
 script:
   - python -m unittest discover
