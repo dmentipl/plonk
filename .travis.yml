@@ -1,11 +1,11 @@
 language: python
 
 python:
-- 3.6
+  - 3.6
 
 before_install:
 
-  # Here we just install Miniconda, which you shouldn't have to change.
+  # Install Miniconda.
 
   - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
   - bash miniconda.sh -b -p $HOME/miniconda
@@ -14,19 +14,18 @@ before_install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
 
-install:
-
-  # We just set up a conda environment with the right Python version. This
-  # should not need changing.
+  # Install Python dependencies with conda using environment.yml.
 
   - conda env create --name plonk_dev --file environment.yml
   - source activate plonk_dev
 
-  # This should using the environment.yml file in the repository to install all
-  # dependencies.
+install:
+
+  - python setup.py build_ext --inplace
+  - python setup.py
 
 script:
-- python -m unittest discover
+  - python -m unittest discover
 
 notifications:
   email:
