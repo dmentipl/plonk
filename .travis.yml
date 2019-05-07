@@ -23,12 +23,13 @@ before_install:
 
   - conda env create --name plonk_dev --file environment.yml
   - source activate plonk_dev
+  - conda install conda-build
 
 install:
 
   - make
   - python setup.py build_ext --inplace
-  - python setup.py install
+  - conda develop .
 
 script:
   - python -m unittest discover
