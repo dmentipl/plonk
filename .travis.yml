@@ -1,20 +1,16 @@
 language: python
 
+dist: xenial
+
 python:
   - 3.6
-
-os:
-  - linux
-  - osx
+  - 3.7
 
 # Install Fortran compiler.
 addons:
   apt:
     packages:
       - gfortran
-  homebrew:
-    packages:
-      - gcc
 
 before_install:
 
