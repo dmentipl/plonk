@@ -21,8 +21,9 @@ before_install:
 
 install:
 
+  - make
   - python setup.py build_ext --inplace
-  - python setup.py
+  - cd plonk && conda develop .
 
 script:
   - python -m unittest discover
