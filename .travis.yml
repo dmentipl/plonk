@@ -21,9 +21,9 @@ before_install:
 
   # Install Python dependencies with conda using environment.yml.
 
+  - conda install conda-build
   - conda env create --name plonk_dev --file environment.yml
   - source activate plonk_dev
-  - conda install conda-build
 
 install:
 
