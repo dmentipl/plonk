@@ -5,7 +5,8 @@ Install Plonk.
 import os
 import sysconfig
 
-from setuptools import setup, Extension
+from setuptools import Extension, setup
+
 from Cython.Distutils import build_ext
 from numpy import get_include
 

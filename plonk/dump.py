@@ -10,9 +10,9 @@ import h5py
 import numpy as np
 import pandas as pd
 
-from .particles import density_from_smoothing_length, I_GAS, I_DUST
-from .utils import print_warning
+from .particles import I_DUST, I_GAS, density_from_smoothing_length
 from .units import Units
+from .utils import print_warning
 
 # --- Possibly available arrays in Phantom dump
 

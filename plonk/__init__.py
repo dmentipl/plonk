@@ -18,10 +18,9 @@ See https://plonk.readthedocs.io/ for documentation. Code is available at
 https://github.com/dmentipl/plonk.
 """
 
+from . import analysis
 from .dump import Dump
 from .simulation import Simulation
 from .visualization.image import plot
-
-from . import analysis
 
 __all__ = ['Dump', 'Simulation', 'analysis', 'plot']

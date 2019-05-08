@@ -5,14 +5,14 @@ Daniel Mentiplay, 2019.
 """
 
 import matplotlib as mpl
-import matplotlib.pyplot as plt
 import matplotlib.colors as colors
-from mpl_toolkits.axes_grid1 import make_axes_locatable
+import matplotlib.pyplot as plt
 import numpy as np
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from ..particles import I_GAS, I_DUST
-from .interpolation import scalar_interpolation, vector_interpolation
+from ..particles import I_DUST, I_GAS
 from ..utils import normalize_vector, rotate_vector_arbitrary_axis
+from .interpolation import scalar_interpolation, vector_interpolation
 
 # --- Set default plot option dictionary.
 plot_options = {
