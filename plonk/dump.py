@@ -60,7 +60,7 @@ I_DUST_SPLASH = 8
 
 class Dump:
     """
-    Smoothed particle hydrodynamics dump file data. The main data stored
+    Smoothed particle hydrodynamics dump file object. The main data stored
     in this object is the particle data, e.g. positions, velocities,
     density, smoothing length, and so on, stored as a Pandas DataFrame.
 
@@ -84,7 +84,43 @@ class Dump:
         self.parameters = None
         self.units = None
 
+        self._filename = filename.split('/')[-1]
+        self._filepath = os.path.abspath(filename)
+
+        # TODO: only Phantom works currently
+        self._simulation_code = 'Phantom'
+
         self._read_dump(filename)
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+
+        prefix = os.path.splitext(self._filename)[0]
+        filename = self._filename
+        directory = os.path.dirname(self._filepath)
+        size = _file_size(self._filepath)
+        time = self.parameters['time']
+        ntotal = self.particles.shape[0] + self.sinks.shape[0]
+        ngas = self.particles[self.particles['itype'] == 1].shape[0]
+        ndust = self.particles[self.particles['itype'] > 1].shape[0]
+        nsinks = self.sinks.shape[0]
+
+        return (
+            f'--- {prefix} ---\n\n'
+            + f'filename:  {filename}'.join(['  ', '\n'])
+            + f'directory: {directory}'.join(['  ', '\n'])
+            + f'size:      {size}'.join(['  ', '\n'])
+            + f'time:      {time}'.join(['  ', '\n'])
+            + '\n'
+            + 'particles'.join(['  ', '\n'])
+            + '---------'.join(['  ', '\n'])
+            + f'total: {ntotal}'.join(['  ', '\n'])
+            + f'gas:   {ngas}'.join(['  ', '\n'])
+            + f'dust:  {ndust}'.join(['  ', '\n'])
+            + f'sinks: {nsinks}'.join(['  ', '\n'])
+        )
 
     # --- Read dump
 
@@ -439,3 +475,18 @@ def _read_header_from_showheader(header_file_name):
             header[key] = np.array(header[key])
 
     return header, is_full_dump
+
+
+def _file_size(filepath):
+    """Get file size. Returns tuple (size (int), unit (str))."""
+
+    size_names = ('B', 'KB', 'MB', 'GB', 'TB', 'PB')
+    size_maxes = (1e3, 1e6, 1e9, 1e12, 1e15)
+
+    size_in_bytes = os.stat(filepath).st_size
+
+    for size_name, size_max in zip(size_names, size_maxes):
+        if size_in_bytes < size_max:
+            return (int(size_in_bytes * 1e3 / size_max), size_name)
+
+    return (int(size_in_bytes / size_maxes[-1]), size_names[-1])
