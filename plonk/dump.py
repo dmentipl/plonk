@@ -182,7 +182,7 @@ class Dump:
 
         parameters = dict()
         for key in header.keys():
-            parameters[key] = header[key].value
+            parameters[key] = header[key][()]
 
         self.parameters = parameters
 
@@ -205,7 +205,7 @@ class Dump:
         is_full_dump = bool('vxyz' in particles)
 
         self.particles = pd.DataFrame(
-            particles['itype'].value, columns=['itype']
+            particles['itype'][()], columns=['itype']
         )
 
         self.particles['x'] = particles['xyz'][:, 0]
