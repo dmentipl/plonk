@@ -119,3 +119,12 @@ class Simulation:
         for ft in FILE_TYPES:
             if file_ext == ft.extension:
                 return ft.filetype, ft.extension
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        return (
+            f'<plonk.Simulation: "{self._prefix}", '
+            f'data_dir="{self._path}">'
+        )

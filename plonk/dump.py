@@ -161,4 +161,7 @@ class Dump(DumpFile):
         return self.__str__()
 
     def __str__(self):
-        return str(self._file_handle)
+        return (
+            f'<plonk.Dump: "{self._file_name}", '
+            f'path="{self._file_path}">'
+        )
