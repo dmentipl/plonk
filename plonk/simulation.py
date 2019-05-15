@@ -6,7 +6,7 @@ Daniel Mentiplay, 2019.
 
 from pathlib import Path
 
-from .dump import FILE_TYPES
+from .dump import Dump, FILE_TYPES
 
 
 class Simulation:
@@ -17,8 +17,8 @@ class Simulation:
     Parameters
     ----------
     prefix : str
-        Simulation prefix, e.g. 'disc', if files are like disc_00000.h5,
-        disc01.ev, etc.
+        Simulation prefix, e.g. 'disc', if files are named like
+        disc_00000.h5, disc01.ev, etc.
     data_dir : str
         Directory containing simulation dump files and auxiliary files.
 
@@ -26,8 +26,9 @@ class Simulation:
     --------
     Reading simulation data into a Simulation object.
 
-    >>> data_dir = 'simulation'
-    >>> simulation = plonk.Simulation(data_dir)
+    >>> prefix = 'disc'
+    >>> data_dir = '2019-01-01'
+    >>> simulation = plonk.Simulation(prefix, data_dir)
     """
 
     # TODO: implement
@@ -41,19 +42,28 @@ class Simulation:
             self._get_dump_file_type()
         )
         self._dump_files = self._get_dump_files()
+        self._ev_files = self._get_ev_files()
+
+    def _get_ev_files(self):
+        """Get time evolution files, i.e. with '.ev' extension."""
+
+        return sorted(list(self._path.glob(self._prefix + '*.ev')))
 
     def _get_dump_files(self):
         """Get dump files."""
 
-        return list(
-            self._path.glob(
-                self._prefix + '_[0-9]*.' + self._dump_file_extension
+        return sorted(
+            list(
+                self._path.glob(
+                    self._prefix + '_[0-9]*.' + self._dump_file_extension
+                )
             )
         )
 
     def _get_dump_file_type(self):
         """
-        Determine dump file type assuming file names like 'prefix_123.ext'.
+        Determine dump file type assuming file names like
+        'prefix_123.ext'.
         """
 
         file_types = set(
