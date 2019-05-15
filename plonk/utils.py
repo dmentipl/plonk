@@ -4,6 +4,8 @@ utils.py
 Daniel Mentiplay, 2019.
 """
 
+import os
+
 import numpy as np
 
 
@@ -67,3 +69,52 @@ def normalize_vector(v):
     if np.isclose(norm, 0.0):
         return v
     return v / norm
+
+
+def file_size(filepath):
+    """
+    Get file size.
+
+    Parameters
+    ----------
+    filepath : str
+        Path to file. Can be relative.
+
+    Returns
+    -------
+    size : int
+        Size of file in units specified by `unit`.
+    unit : str
+        Unit of `size` return.
+    """
+
+    size_in_bytes = os.stat(filepath).st_size
+
+    return nbytes_to_human(size_in_bytes)
+
+
+def nbytes_to_human(size_in_bytes):
+    """
+    Convert a number of bytes to human readable form.
+
+    Parameters
+    ----------
+    size_in_bytes : int
+        Number of bytes.
+
+    Returns
+    -------
+    size : int
+        Size of file in units specified by `unit`.
+    unit : str
+        Unit of `size` return.
+    """
+
+    size_names = ('B', 'KB', 'MB', 'GB', 'TB', 'PB')
+    size_maxes = (1e3, 1e6, 1e9, 1e12, 1e15)
+
+    for size_name, size_max in zip(size_names, size_maxes):
+        if size_in_bytes < size_max:
+            return (int(size_in_bytes * 1e3 / size_max), size_name)
+
+    return int(size_in_bytes / size_maxes[-1]), size_names[-1]
