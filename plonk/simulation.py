@@ -6,7 +6,7 @@ Daniel Mentiplay, 2019.
 
 from pathlib import Path
 
-from .dump import Dump, FILE_TYPES
+from .dump import FILE_TYPES, Dump
 
 
 class Simulation:
@@ -43,6 +43,25 @@ class Simulation:
         )
         self._dump_files = self._get_dump_files()
         self._ev_files = self._get_ev_files()
+
+        self._dumps = None
+
+    @property
+    def dumps(self):
+        """List of Dump objects associated with the simulation."""
+
+        if self._dumps is None:
+            self._get_dumps()
+
+        return self._dumps
+
+    def _get_dumps(self):
+        """Get list of Dump objects."""
+
+        dumps = list()
+        for dump in self._dump_files:
+            dumps.append(Dump(dump))
+        self._dumps = dumps
 
     def _get_ev_files(self):
         """Get time evolution files, i.e. with '.ev' extension."""
