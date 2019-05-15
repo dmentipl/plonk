@@ -81,6 +81,9 @@ class Dump(DumpFile):
             key: val for key, val in self._file_handle['header'].items()
         }
 
+        self._particles = None
+        self._sinks = None
+
         self._header = {
             key: val[()] for key, val in self._header_handle.items()
         }
@@ -89,38 +92,42 @@ class Dump(DumpFile):
         self._sinks_loaded = False
 
     def _load_arrays(self, array):
+        """Load arrays into memory."""
 
         _array = '_' + array
-        array_loaded = getattr(self, _array + '_loaded')
+        setattr(self, _array, self._read_arrays(array))
+        setattr(self, _array + '_loaded', True)
+
+    def _read_arrays(self, array):
+        """Read arrays into structured Numpy array."""
+
+        _array = '_' + array
         array_handle = getattr(self, _array + '_handle')
 
-        if not array_loaded:
+        dtypes = []
+        nvals = None
+        for key, val in array_handle.items():
+            if val.size > 0:
+                if nvals is None:
+                    nvals = val.shape[0]
+                if val.ndim == 1:
+                    dtypes.append((key, val.dtype))
+                elif val.ndim > 1:
+                    dtypes.append((key, val.dtype, val.shape[1:]))
 
-            dtypes = []
-            nvals = None
-            for key, val in array_handle.items():
-                if val.size > 0:
-                    if nvals is None:
-                        nvals = val.shape[0]
-                    if val.ndim == 1:
-                        dtypes.append((key, val.dtype))
-                    elif val.ndim > 1:
-                        dtypes.append((key, val.dtype, val.shape[1:]))
+        struct_array = np.zeros(nvals, dtype=dtypes)
+        for key in struct_array.dtype.fields:
+            struct_array[key] = array_handle[key][()]
 
-            setattr(self, _array, np.zeros(nvals, dtype=dtypes))
-            keys = getattr(self, _array).dtype.fields
-
-            for key in keys:
-                getattr(self, _array)[key] = array_handle[key][()]
-
-            setattr(self, _array + '_loaded', True)
+        return struct_array
 
     @property
     def particles(self):
         """
         Particle arrays, e.g. position, velocity, smoothing length.
         """
-        self._load_arrays('particles')
+        if not self._particles_loaded:
+            self._load_arrays('particles')
         return self._particles
 
     @property
@@ -128,7 +135,8 @@ class Dump(DumpFile):
         """
         Sink arrays, e.g. mass, position, velocity, spin, mass accreted.
         """
-        self._load_arrays('sinks')
+        if not self._sinks_loaded:
+            self._load_arrays('sinks')
         return self._sinks
 
     @property
