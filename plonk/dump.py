@@ -81,7 +81,9 @@ class Dump(DumpFile):
             key: val for key, val in self._file_handle['header'].items()
         }
 
-        self.header = {key: val[()] for key, val in self._header_handle.items()}
+        self._header = {
+            key: val[()] for key, val in self._header_handle.items()
+        }
 
         self._particles_loaded = False
         self._sinks_loaded = False
@@ -115,15 +117,27 @@ class Dump(DumpFile):
 
     @property
     def particles(self):
-        """Particle arrays."""
+        """
+        Particle arrays, e.g. position, velocity, smoothing length.
+        """
         self._load_arrays('particles')
         return self._particles
 
     @property
     def sinks(self):
-        """Sink arrays."""
+        """
+        Sink arrays, e.g. mass, position, velocity, spin, mass accreted.
+        """
         self._load_arrays('sinks')
         return self._sinks
+
+    @property
+    def header(self):
+        """
+        File header, e.g. units, number of particles, numerical
+        parameters.
+        """
+        return self._header
 
     def __repr__(self):
         return self.__str__()
