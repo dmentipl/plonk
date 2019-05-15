@@ -17,6 +17,8 @@ FILE_TYPES = [FileTypes(filetype='HDF5', extension='h5')]
 class DumpFile:
     def __init__(self, filename):
 
+        if not isinstance(filename, str):
+            raise TypeError('filename must be str')
         path = Path(filename)
         self._file_path = path.resolve()
         self._file_name = path.name
@@ -57,6 +59,8 @@ class Dump(DumpFile):
     ----------
     filename : str
         Path to dump file.
+    cache_arrays : bool (False)
+        Load arrays into memory, otherwise read from file.
 
     Examples
     --------
@@ -66,30 +70,62 @@ class Dump(DumpFile):
     >>> dump = plonk.Dump(file_name)
     """
 
-    def __init__(self, filename):
+    def __init__(self, filename, cache_arrays=None):
         super().__init__(filename)
 
-        self._particles_handle = {
-            key: val for key, val in self._file_handle['particles'].items()
-        }
-
-        self._sinks_handle = {
-            key: val for key, val in self._file_handle['sinks'].items()
-        }
-
-        self._header_handle = {
-            key: val for key, val in self._file_handle['header'].items()
-        }
-
-        self._particles = None
-        self._sinks = None
-
         self._header = {
-            key: val[()] for key, val in self._header_handle.items()
+            key: val[()] for key, val in self._file_handle['header'].items()
         }
 
-        self._particles_loaded = False
-        self._sinks_loaded = False
+        if cache_arrays is None:
+            self._cache_arrays = False
+        else:
+            if not isinstance(cache_arrays, bool):
+                raise TypeError('cache_array must be bool')
+            self._cache_arrays = cache_arrays
+
+        if self._cache_arrays:
+            self.cache_arrays()
+        else:
+            self._particles = None
+            self._sinks = None
+
+    @property
+    def particles(self):
+        """
+        Particle arrays, e.g. position, velocity, smoothing length.
+        """
+        if self._cache_arrays:
+            if self._particles is None:
+                self._load_arrays('particles')
+            return self._particles
+        else:
+            return self._read_arrays('particles')
+
+    @property
+    def sinks(self):
+        """
+        Sink arrays, e.g. mass, position, velocity, spin, mass accreted.
+        """
+        if self._cache_arrays:
+            if self._sinks is None:
+                self._load_arrays('sinks')
+            return self._sinks
+        else:
+            return self._read_arrays('sinks')
+
+    @property
+    def header(self):
+        """
+        File header, e.g. units, number of particles, numerical
+        parameters.
+        """
+        return self._header
+
+    def cache_arrays(self):
+        self._load_arrays('particles')
+        self._load_arrays('sinks')
+        self._cache_arrays = True
 
     def _load_arrays(self, array):
         """Load arrays into memory."""
@@ -101,8 +137,7 @@ class Dump(DumpFile):
     def _read_arrays(self, array):
         """Read arrays into structured Numpy array."""
 
-        _array = '_' + array
-        array_handle = getattr(self, _array + '_handle')
+        array_handle = self._file_handle[array]
 
         dtypes = []
         nvals = None
@@ -120,32 +155,6 @@ class Dump(DumpFile):
             struct_array[key] = array_handle[key][()]
 
         return struct_array
-
-    @property
-    def particles(self):
-        """
-        Particle arrays, e.g. position, velocity, smoothing length.
-        """
-        if not self._particles_loaded:
-            self._load_arrays('particles')
-        return self._particles
-
-    @property
-    def sinks(self):
-        """
-        Sink arrays, e.g. mass, position, velocity, spin, mass accreted.
-        """
-        if not self._sinks_loaded:
-            self._load_arrays('sinks')
-        return self._sinks
-
-    @property
-    def header(self):
-        """
-        File header, e.g. units, number of particles, numerical
-        parameters.
-        """
-        return self._header
 
     def __repr__(self):
         return self.__str__()
