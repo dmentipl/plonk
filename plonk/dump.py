@@ -4,18 +4,27 @@ dump.py
 Daniel Mentiplay, 2019.
 """
 
-import os
+import collections
+from pathlib import Path
 
 import h5py
 import numpy as np
+
+FileTypes = collections.namedtuple('FileTypes', 'filetype extension')
+FILE_TYPES = [FileTypes(filetype='HDF5', extension='h5')]
 
 
 class DumpFile:
     def __init__(self, filename):
 
-        self._file_path = os.path.abspath(filename)
-        self._file_name = filename.split('/')[-1]
-        self._file_extension = self._file_name.split('.')[-1]
+        path = Path(filename)
+        self._file_path = path.resolve()
+        self._file_name = path.name
+        self._file_extension = path.suffix[1:]
+
+        for ft in FILE_TYPES:
+            if self._file_extension == ft.extension:
+                self._file_type = ft.filetype
 
         self._open_file()
 
@@ -27,13 +36,14 @@ class DumpFile:
 
     def _open_file(self):
 
-        if not os.path.isfile(self._file_path):
+        if not self._file_path.is_file():
             raise FileNotFoundError('Cannot find dump file')
 
-        if not self._file_extension == 'h5':
+        if self._file_type not in [ft.filetype for ft in FILE_TYPES]:
             raise ValueError('Unknown file type')
         else:
-            self._file_handle = h5py.File(self._file_path, mode='r')
+            if self._file_type == 'HDF5':
+                self._file_handle = h5py.File(self._file_path, mode='r')
 
     def _close_file(self):
         self._file_handle.close()
@@ -45,7 +55,7 @@ class Dump(DumpFile):
 
     Parameters
     ----------
-    name : str
+    filename : str
         Path to dump file.
 
     Examples
