@@ -17,8 +17,9 @@ FILE_TYPES = [FileTypes(filetype='HDF5', extension='h5')]
 class DumpFile:
     def __init__(self, filename):
 
-        if not isinstance(filename, str):
-            raise TypeError('filename must be str')
+        if not isinstance(filename, str) and not isinstance(filename, Path):
+            raise TypeError('filename must be str or pathlib.Path')
+
         path = Path(filename)
         self._file_path = path.resolve()
         self._file_name = path.name

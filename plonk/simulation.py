@@ -19,7 +19,7 @@ class Simulation:
     prefix : str
         Simulation prefix, e.g. 'disc', if files are named like
         disc_00000.h5, disc01.ev, etc.
-    data_dir : str
+    data_dir : str, optional
         Directory containing simulation dump files and auxiliary files.
 
     Examples
@@ -34,13 +34,27 @@ class Simulation:
     # TODO: implement
     # TODO: add documentation
 
-    def __init__(self, prefix, data_dir):
+    def __init__(self, prefix, data_dir=None):
+
+        if not isinstance(prefix, str):
+            raise TypeError('prefix must be str')
+
+        if data_dir is None:
+            data_dir = '.'
+        else:
+            if not isinstance(data_dir, str):
+                raise TypeError('data_dir must be str')
 
         self._prefix = prefix
         self._path = Path(data_dir).resolve()
+
+        if not list(self._path.glob(self._prefix + '*')):
+            raise FileNotFoundError(f'No files with prefix: {prefix}')
+
         self._dump_file_type, self._dump_file_extension = (
             self._get_dump_file_type()
         )
+
         self._dump_files = self._get_dump_files()
         self._ev_files = self._get_ev_files()
 
