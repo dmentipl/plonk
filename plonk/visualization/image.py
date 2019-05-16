@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from ..particles import I_DUST, I_GAS
+from ..particles import I_DUST, I_GAS, density_from_smoothing_length
 from ..utils import normalize_vector, rotate_vector_arbitrary_axis
 from .interpolation import scalar_interpolation, vector_interpolation
 
@@ -34,7 +34,6 @@ def plot(
     dump,
     render=None,
     vector=None,
-    particle_types=None,
     itype=None,
     horizontal_range=None,
     vertical_range=None,
@@ -73,8 +72,6 @@ def plot(
     vector : str, default ``None``
         Vector quantity to be represented as arrows or stream function.
         See also: ``stream``.
-    particle_types : list of str, default ``None``
-        Particle types to plot. See also: ``itype``.
     itype : int, default ``None``
         Particle type to plot, represented as an integer type.
     horizontal_range : list of float (len=2), default ``None``
@@ -149,22 +146,12 @@ def plot(
     # TODO: physical units
     # TODO: calculated quantities
 
-    # --- Render and vector field
-
-    particles = False
+    particle_plot = False
     if render is None and vector is None:
-        particles = True
-
-    if render is not None and render not in dump.particles:
-        raise ValueError(f'{render} not available for rendering')
-
-    if vector is not None and vector not in ['v', 'velocity']:
-        raise ValueError(f'{vector} not available for vector field overlay')
+        particle_plot = True
 
     if stream is None:
         stream = False
-
-    # --- Rotate frame
 
     rotate = False
 
@@ -202,8 +189,6 @@ def plot(
     if inclination is not None and position_angle is None:
         raise ValueError('Must specify position_angle')
 
-    # --- Render type
-
     if cross_section is None:
         cross_section = False
     if cross_section:
@@ -213,59 +198,52 @@ def plot(
     if opacity is None:
         opacity = False
 
-    # --- Particle type
-
-    itypes = list()
-
-    if itype is not None and particle_types is not None:
-        raise ValueError('Cannot set itype and particle_types together')
-
-    if particle_types is None and itype is None:
-        itypes = [I_GAS]
-
-    if itype is not None:
-        itypes = [itype]
-
-    if particle_types is not None:
-
-        if 'gas' in particle_types:
-            itypes.append(I_GAS)
-
-        # TODO: can only plot one type at the moment
-        if 'dust' in particle_types:
-            for i in range(dump.parameters['ndustlarge']):
-                itypes.append(I_DUST + i)
-
-    if len(itypes) > 1:
-        raise ValueError('plotting multiple types at once is not working')
-
-    # --- Number of pixels
+    if itype is None:
+        itype = I_GAS
+    else:
+        if not isinstance(itype, int):
+            raise ValueError('itype must be int')
 
     if number_pixels is None:
         npix = [512, 512]
     else:
         npix = number_pixels
 
-    # --- Get options
-
     normalize = plot_options['normalize']
     zobserver = plot_options['zobserver']
     dscreen = plot_options['dscreen']
     accelerate = plot_options['accelerate']
 
-    # --- Dataframe subsets
+    particles = dump.particles[dump.particles['itype'] == itype]
+    positions = particles['xyz']
+    smoothing_length = particles['h']
+    particle_mass = dump.header['massoftype'][itype - 1]
 
-    pd = dump.particles.loc[dump.particles['itype'].isin(itypes)].copy()
-
-    positions = np.array(pd[['x', 'y', 'z']])
-    smoothing_length = np.array(pd['h'])
-    particle_mass = np.array(pd['m'])
-
-    if 'vx' in pd:
-        velocities = np.array(pd[['vx', 'vy', 'vz']])
+    if 'vxyz' in list(dump.particles.dtype.fields):
+        velocities = dump.particles['vxyz']
 
     if render:
-        render_data = np.array(pd[render])
+        if render == 'rho':
+            render_data = density_from_smoothing_length(
+                smoothing_length, particle_mass
+            )
+        elif render == 'x':
+            render_data = particles['xyz'][:, 0]
+        elif render == 'y':
+            render_data = particles['xyz'][:, 1]
+        elif render == 'z':
+            render_data = particles['xyz'][:, 2]
+        elif render == 'vx':
+            render_data = particles['vxyz'][:, 0]
+        elif render == 'vy':
+            render_data = particles['vxyz'][:, 1]
+        elif render == 'vz':
+            render_data = particles['vxyz'][:, 2]
+        else:
+            try:
+                render_data = particles[render]
+            except:
+                raise ValueError(f'Cannot render {render}')
 
     if vector:
         vector_data = velocities
@@ -273,7 +251,10 @@ def plot(
     # --- Interpolation weights
 
     weights = _interpolation_weights(
-        plot_options['density_weighted'], pd, dump.parameters['hfact']
+        plot_options['density_weighted'],
+        smoothing_length,
+        dump.header['massoftype'],
+        dump.header['hfact'],
     )
 
     # --- Rotate frame
@@ -389,6 +370,8 @@ def plot(
 
         if render_max is None:
             vmax = image_data.max()
+        else:
+            vmax = render_max
 
         if render_fraction_max is not None:
             vmax = image_data.max() * render_fraction_max
@@ -429,7 +412,7 @@ def plot(
 
     # --- Plot particles
 
-    if particles:
+    if particle_plot:
 
         print('Plotting particles')
         marker_size = 0.01
@@ -531,13 +514,13 @@ def set_colorbar(cb, vmin=None, vmax=None):
     cb._image.set_clim([vmin, vmax])
 
 
-def _interpolation_weights(density_weighted, particles, hfact):
+def _interpolation_weights(density_weighted, smoothing_length, mass, hfact):
     """Calculate interpolation weights."""
 
     if density_weighted:
-        return np.array(particles['m'] / particles['h'] ** 2)
+        return np.array(mass / smoothing_length ** 2)
 
-    return np.full_like(particles['h'], 1 / hfact)
+    return np.full_like(smoothing_length, 1 / hfact)
 
 
 def _rotate_frame(positions, velocities, axis, theta):
