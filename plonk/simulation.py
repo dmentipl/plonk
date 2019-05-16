@@ -22,7 +22,7 @@ class Simulation:
     ----------
     prefix : str
         Simulation prefix, e.g. 'disc', if files are named like
-        disc_00000.h5, disc01.ev, etc.
+        disc_00000.h5, disc01.ev, discSink0001N01.ev, etc.
     data_dir : str, optional
         Directory containing simulation dump files and auxiliary files.
 
@@ -34,9 +34,6 @@ class Simulation:
     >>> data_dir = '2019-01-01'
     >>> simulation = plonk.Simulation(prefix, data_dir)
     """
-
-    # TODO: implement
-    # TODO: add documentation
 
     def __init__(self, prefix, data_dir=None):
 
@@ -60,7 +57,8 @@ class Simulation:
         )
 
         self._dump_files = self._get_dump_files()
-        self._ev_files = self._get_ev_files()
+        self._global_ev_files = self._get_global_ev_files()
+        self._sink_ev_files = self._get_sink_ev_files()
 
         self._dumps = None
 
@@ -69,42 +67,64 @@ class Simulation:
         """List of Dump objects associated with the simulation."""
 
         if self._dumps is None:
-            self._get_dumps()
+            self._generate_dump_objects()
 
         return self._dumps
 
-    def _get_dumps(self):
-        """Get list of Dump objects."""
+    def _generate_dump_objects(self):
+        """Generate nump objects."""
 
         dumps = list()
         for dump in self._dump_files:
             dumps.append(Dump(dump))
         self._dumps = dumps
 
-    def _get_ev_files(self):
-        """Get time evolution files, i.e. with '.ev' extension."""
+    def _get_global_ev_files(self, glob=None):
+        """Get global time evolution files."""
 
-        return sorted(list(self._path.glob(self._prefix + '*.ev')))
+        if glob is None:
+            # Phantom ev file name format
+            glob = self._prefix + '[0-9][0-9].ev'
 
-    def _get_dump_files(self):
+        return sorted(list(self._path.glob(glob)))
+
+    def _get_sink_ev_files(self, glob=None):
+        """Get time evolution files for sinks."""
+
+        if glob is None:
+            # Phantom ev file name format
+            glob = self._prefix + 'Sink[0-9][0-9][0-9][0-9]N[0-9][0-9].ev'
+
+        return sorted(list(self._path.glob(glob)))
+
+    def _get_dump_files(self, glob=None):
         """Get dump files."""
 
-        return sorted(
-            list(
-                self._path.glob(
-                    self._prefix + '_[0-9]*.' + self._dump_file_extension
-                )
+        if glob is None:
+            # Phantom dump file name format
+            glob = (
+                self._prefix
+                + '_[0-9][0-9][0-9][0-9][0-9].'
+                + self._dump_file_extension
             )
-        )
 
-    def _get_dump_file_type(self):
+        return sorted(list(self._path.glob(glob)))
+
+    def _get_dump_file_type(self, glob=None):
         """
-        Determine dump file type assuming file names like
-        'prefix_123.ext'.
+        Determine dump file type from extension assuming file names
+        follow a glob pattern.
         """
+
+        if glob is None:
+            # Phantom dump file name format
+            glob = (
+                self._prefix
+                + '_[0-9][0-9][0-9][0-9][0-9].*'
+            )
 
         file_types = set(
-            [f.suffix for f in self._path.glob(self._prefix + '_[0-9]*.*')]
+            [f.suffix for f in self._path.glob(glob)]
         )
 
         if len(file_types) > 1:
