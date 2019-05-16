@@ -24,13 +24,14 @@ class Evolution:
     Parameters
     ----------
     filename(s) : list of str
-        Path to evolution file(s).
+        List of paths to evolution file(s) in chronological order.
+        These should all contain the same columns.
 
     Examples
     --------
     Reading a single evolution file into an Evolution object.
 
-    >>> file_name = 'simulation01.ev'
+    >>> file_name = 'simulation.ev'
     >>> evol = plonk.Evolution(file_name)
 
     Reading a list of evolution files into an Evolution object.
@@ -43,21 +44,31 @@ class Evolution:
     >>> evol.plot('ekin', 'etherm')
     """
 
-    def __init__(self, filename):
+    def __init__(self, filenames):
 
-        if not isinstance(filename, str) and not isinstance(filename, Path):
-            raise TypeError('filename must be str or pathlib.Path')
+        if isinstance(filenames, str):
+            filenames = [filenames]
 
-        path = Path(filename)
-        self._file_path = path.resolve()
-        self._file_name = path.name
+        self._file_paths = list()
+        self._file_names = list()
+        for filename in filenames:
+            if not isinstance(filename, str) and not isinstance(filename, Path):
+                raise TypeError(
+                    'filenames must be a list of str or pathlib.Path'
+                )
+            path = Path(filename)
+            self._file_paths.append(path.resolve())
+            self._file_names.append(path.name)
 
-        self._columns = self._get_columns()
+        _check_file_consistency(filenames)
+        self._columns = _get_columns(filenames[0])
+
+        self._data = self._get_data()
 
     @property
     def data(self):
         """Evolution data, e.g. time, energy, momentum."""
-        return self._get_data()
+        return self._data
 
     def plot(self, *args, **kwargs):
         """
@@ -85,26 +96,52 @@ class Evolution:
         for ydat in ydata:
             plt.plot(xdat, ydat, **kwargs)
 
-    def _get_columns(self):
+    def _get_data(self):
 
-        with open(self._file_name) as f:
-            column_line = f.readline().strip('\n')
+        times = list()
+        for filename in self._file_names:
+            times.append(np.loadtxt(filename, usecols=0))
 
-        column_line = [
-            item.strip('] ')[2:].strip(' ') for item in column_line.split('[')
+        final_row_index = [
+            np.where(t1 < t2[0])[0][-1] for t1, t2 in zip(times, times[1:])
         ]
 
-        return column_line[1:]
-
-    def _get_data(self):
         dtype = [(column, FLOAT_TYPE) for column in self._columns]
-        return np.loadtxt(self._file_name, dtype=dtype)
+
+        arr = [np.loadtxt(filename)[: final_row_index[idx]]
+               for idx, filename in enumerate(self._file_names[:-1])]
+        arr.append(np.loadtxt(self._file_names[-1]))
+        arr = np.concatenate(arr)
+
+        return np.core.records.fromarrays(arr.T, dtype=dtype)
 
     def __repr__(self):
         return self.__str__()
 
     def __str__(self):
         return (
-            f'<plonk.Evolution: "{self._file_name}", '
-            f'path="{self._file_path}">'
+            f'<plonk.Evolution: "{self._file_names}", '
+            f'path="{self._file_paths}">'
         )
+
+
+def _get_columns(filename):
+
+    with open(filename) as f:
+        column_line = f.readline().strip('\n')
+
+    column_line = [
+        item.strip('] ')[2:].strip(' ') for item in column_line.split('[')
+    ]
+
+    return column_line[1:]
+
+
+def _check_file_consistency(filenames):
+
+    columns = _get_columns(filenames[0])
+    for filename in filenames:
+        columns_previous = columns
+        columns = _get_columns(filename)
+        if columns != columns_previous:
+            raise ValueError('files have different columns')
