@@ -20,7 +20,8 @@ https://github.com/dmentipl/plonk.
 
 from . import analysis
 from .dump import Dump
+from .evolution import Evolution
 from .simulation import Simulation
 from .visualization.image import plot
 
-__all__ = ['Dump', 'Simulation', 'analysis', 'plot']
+__all__ = ['Dump', 'Evolution', 'Simulation', 'analysis', 'plot']
