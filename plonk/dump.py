@@ -56,11 +56,22 @@ class Dump(DumpFile):
     """
     Smoothed particle hydrodynamics dump file object.
 
+    Dump files contain the state of the simulation at a point in time.
+    Typical minimum data from a smoothed particle hydrodynamics
+    simulation include the particle positions and smoothing length, from
+    which the density field can be reconstructed, as well as the
+    particle type. In addition, the particle velocities are required to
+    restart the simulation.
+
+    Other data stored in the dump file include equation of state, dust,
+    and magnetic field information, as well as numerical quantities
+    related to time-stepping.
+
     Parameters
     ----------
     filename : str
         Path to dump file.
-    cache_arrays : bool (False)
+    cache_arrays : bool, optional (False)
         Load arrays into memory, otherwise read from file.
 
     Examples
@@ -69,6 +80,21 @@ class Dump(DumpFile):
 
     >>> file_name = 'dumpfile.ext'
     >>> dump = plonk.Dump(file_name)
+
+    Accessing the particle arrays.
+
+    >>> dump.particles
+    >>> dump.particles['xyz']
+
+    Accessing the sink arrays.
+
+    >>> dump.sinks
+    >>> dump.sinks['spinxyz']
+
+    Accessing the dump header.
+
+    >>> dump.header
+    >>> dump.header['time']
     """
 
     def __init__(self, filename, cache_arrays=None):
@@ -124,6 +150,7 @@ class Dump(DumpFile):
         return self._header
 
     def cache_arrays(self):
+        """Load particle and sink arrays into memory."""
         self._load_arrays('particles')
         self._load_arrays('sinks')
         self._cache_arrays = True

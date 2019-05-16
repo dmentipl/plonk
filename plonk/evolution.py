@@ -14,19 +14,29 @@ FLOAT_TYPE = '<f8'
 
 class Evolution:
     """
-    Smoothed particle hydrodynamics evolution (time series) file object.
+    Smoothed particle hydrodynamics simulation time evolution object.
+
+    Evolution files track global quantities, such as energy, momentum,
+    and density, over time. The time increments in these files is
+    smaller than the dump file output time. These files are typically
+    stored as text files.
 
     Parameters
     ----------
-    filename : str
-        Path to evolution file.
+    filename(s) : list of str
+        Path to evolution file(s).
 
     Examples
     --------
-    Reading an evolution file into an Evolution object.
+    Reading a single evolution file into an Evolution object.
 
     >>> file_name = 'simulation01.ev'
     >>> evol = plonk.Evolution(file_name)
+
+    Reading a list of evolution files into an Evolution object.
+
+    >>> file_names = ['sim01.ev', 'sim02.ev', 'sim03.ev']
+    >>> evol = plonk.Evolution(file_names)
 
     Plotting kinetic and thermal energy against time.
 

@@ -11,8 +11,12 @@ from .dump import FILE_TYPES, Dump
 
 class Simulation:
     """
-    Smoothed particle hydrodynamics simulation data object. Aggregates
-    dump files and auxiliary data.
+    Smoothed particle hydrodynamics simulation object.
+
+    This class aggregates dump files and time evolution data. Dump files
+    contain a snapshot of the simulation at a particular time. Time
+    evolution files contain time series of global quantities such as
+    energy and momentum.
 
     Parameters
     ----------
