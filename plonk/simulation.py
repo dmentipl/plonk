@@ -7,6 +7,7 @@ Daniel Mentiplay, 2019.
 from pathlib import Path
 
 from .dump import FILE_TYPES, Dump
+from .evolution import Evolution
 
 
 class Simulation:
@@ -61,6 +62,8 @@ class Simulation:
         self._sink_ev_files = self._get_sink_ev_files()
 
         self._dumps = None
+        self._evolution = None
+        self._sinks_evolution = None
 
     @property
     def dumps(self):
@@ -71,13 +74,44 @@ class Simulation:
 
         return self._dumps
 
+    @property
+    def evolution(self):
+        """Global time evolution data."""
+
+        if self._evolution is None:
+            self._generate_evolution_object()
+
+        return self._evolution
+
+    @property
+    def sink_evolution(self):
+        """Sink time evolution data."""
+
+        if self._sinks_evolution is None:
+            self._generate_sink_evolution_objects()
+
+        return self._sinks_evolution
+
     def _generate_dump_objects(self):
-        """Generate nump objects."""
+        """Generate dump objects."""
 
         dumps = list()
         for dump in self._dump_files:
             dumps.append(Dump(dump))
         self._dumps = dumps
+
+    def _generate_evolution_object(self):
+        """Generate global evolution object."""
+        self._evolution = Evolution(self._global_ev_files)
+
+    def _generate_sink_evolution_objects(self):
+        """Generate sink evolution objects."""
+
+        self._sinks_evolution = list()
+        [
+            self._sinks_evolution.append(Evolution(files))
+            for files in self._sink_ev_files
+        ]
 
     def _get_global_ev_files(self, glob=None):
         """Get global time evolution files."""
@@ -89,13 +123,34 @@ class Simulation:
         return sorted(list(self._path.glob(glob)))
 
     def _get_sink_ev_files(self, glob=None):
-        """Get time evolution files for sinks."""
+        """Get time evolution files for sinks.
+
+        Returns a list of list of pathlib.Path objects. The inner lists
+        contain each sink evolution file for each sink.
+        """
 
         if glob is None:
             # Phantom ev file name format
             glob = self._prefix + 'Sink[0-9][0-9][0-9][0-9]N[0-9][0-9].ev'
 
-        return sorted(list(self._path.glob(glob)))
+        n = len(self._prefix) + len('Sink')
+        n_sinks = len(
+            set([p.name[n : n + 4] for p in list(self._path.glob(glob))])
+        )
+
+        sinks = list()
+        for idx in range(1, n_sinks + 1):
+            sinks.append(
+                sorted(
+                    list(
+                        self._path.glob(
+                            self._prefix + f'Sink{idx:04}N[0-9][0-9].ev'
+                        )
+                    )
+                )
+            )
+
+        return sinks
 
     def _get_dump_files(self, glob=None):
         """Get dump files."""
@@ -118,14 +173,9 @@ class Simulation:
 
         if glob is None:
             # Phantom dump file name format
-            glob = (
-                self._prefix
-                + '_[0-9][0-9][0-9][0-9][0-9].*'
-            )
+            glob = self._prefix + '_[0-9][0-9][0-9][0-9][0-9].*'
 
-        file_types = set(
-            [f.suffix for f in self._path.glob(glob)]
-        )
+        file_types = set([f.suffix for f in self._path.glob(glob)])
 
         if len(file_types) > 1:
             raise ValueError(

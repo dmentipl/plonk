@@ -66,13 +66,18 @@ class Evolution:
             self._file_names.append(path.name)
 
         _check_file_consistency(filenames)
-        self._columns = _get_columns(filenames[0])
 
+        self._columns = _get_columns(filenames[0])
         self._data = self._get_data()
 
     @property
+    def columns(self):
+        """List of available time evolution data."""
+        return self._columns
+
+    @property
     def data(self):
-        """Evolution data, e.g. time, energy, momentum."""
+        """Time evolution data as a Numpy recarray."""
         return self._data
 
     def plot(self, *args, **kwargs):
