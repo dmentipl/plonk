@@ -108,8 +108,10 @@ class Evolution:
 
         dtype = [(column, FLOAT_TYPE) for column in self._columns]
 
-        arr = [np.loadtxt(filename)[: final_row_index[idx]]
-               for idx, filename in enumerate(self._file_names[:-1])]
+        arr = [
+            np.loadtxt(filename)[: final_row_index[idx]]
+            for idx, filename in enumerate(self._file_names[:-1])
+        ]
         arr.append(np.loadtxt(self._file_names[-1]))
         arr = np.concatenate(arr)
 

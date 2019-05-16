@@ -129,6 +129,5 @@ class Simulation:
 
     def __str__(self):
         return (
-            f'<plonk.Simulation: "{self._prefix}", '
-            f'data_dir="{self._path}">'
+            f'<plonk.Simulation: "{self._prefix}", ' f'data_dir="{self._path}">'
         )
