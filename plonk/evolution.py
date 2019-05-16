@@ -39,6 +39,11 @@ class Evolution:
     >>> file_names = ['sim01.ev', 'sim02.ev', 'sim03.ev']
     >>> evol = plonk.Evolution(file_names)
 
+    Accessing the data.
+
+    >>> evol.data['time']
+    >>> evol.data['etherm']
+
     Plotting kinetic and thermal energy against time.
 
     >>> evol.plot('ekin', 'etherm')
