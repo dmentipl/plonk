@@ -104,6 +104,8 @@ class Dump(DumpFile):
             key: val[()] for key, val in self._file_handle['header'].items()
         }
 
+        self.is_full_dump = self._determine_if_full_dump()
+
         if cache_arrays is None:
             self._cache_arrays = False
         else:
@@ -183,6 +185,10 @@ class Dump(DumpFile):
             struct_array[key] = array_handle[key][()]
 
         return struct_array
+
+    def _determine_if_full_dump(self):
+        # TODO: works for Phantom HDF dumps, maybe not others
+        return 'fulldump' in str(self.header['fileident'])
 
     def __repr__(self):
         return self.__str__()
