@@ -9,36 +9,6 @@ import os
 import numpy as np
 
 
-def print_warning(message):
-    """Print formatted warning message."""
-    message_length = len(message)
-    message_length = min(message_length, 80)
-    message = 'WARNING: ' + message
-    print(
-        '\n'
-        + message_length * '-'
-        + '\n'
-        + message
-        + '\n'
-        + message_length * '-'
-    )
-
-
-def print_error(message):
-    """Print formatted error message."""
-    message_length = len(message)
-    message_length = min(message_length, 80)
-    message = 'ERROR: ' + message
-    print(
-        '\n'
-        + message_length * '-'
-        + '\n'
-        + message
-        + '\n'
-        + message_length * '-'
-    )
-
-
 def rotate_vector_arbitrary_axis(u, v, theta):
     """Rotate a 3d vector (u) around an axis defined by another 3d
     vector (v) by an angle (theta) using the Rodrigues rotation formula.

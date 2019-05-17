@@ -6,6 +6,8 @@ Disc analysis.
 Daniel Mentiplay, 2019.
 """
 
+import warnings
+
 import numpy as np
 import pandas as pd
 
@@ -71,6 +73,12 @@ def disc_analysis(
 
     if sink_index is None:
         sink_index = 1
+
+    if np.unique(dump.particles['itype']).size > 1:
+        warnings.warn(
+            'Dump contains multiple particle types, analysis.disc treats all '
+            'particles the same.'
+        )
 
     return _calculate_radially_binned_quantities(
         dump, number_radial_bins, radius_in, radius_out, sink_index
