@@ -132,24 +132,25 @@ def _calculate_radially_binned_quantities(
             cylindrical_radius <= radius_right
         )
 
-        n_particles_in_bin = len(particles[mask])
+        part = particles[mask]
+        pmass = particle_masses[mask]
+        ecc = eccentricity[mask]
+
+        n_particles_in_bin = len(part)
         averages['npart'].iloc[index] = n_particles_in_bin
 
         if n_particles_in_bin < _MIN_PARTICLES_IN_BIN:
             continue
 
         averages['sigma'].iloc[index] = (
-            np.sum(n_particles_in_bin * particle_masses[mask])
-            / surface_area[index]
+            np.sum(n_particles_in_bin * pmass) / surface_area[index]
         )
 
-        averages['h'].iloc[index] = particles[mask]['h'].mean()
-        averages['H'].iloc[index] = particles[mask]['xyz'][:, 2].std()
+        averages['h'].iloc[index] = part['h'].mean()
+        averages['H'].iloc[index] = part['xyz'][:, 2].std()
 
         angular_momentum = _angular_momentum(
-            particles[mask]['xyz'],
-            particles[mask]['vxyz'],
-            particle_masses[mask],
+            part['xyz'], part['vxyz'], pmass
         ).mean(axis=0)
 
         averages['Lx'].iloc[index] = angular_momentum[0]
@@ -157,7 +158,7 @@ def _calculate_radially_binned_quantities(
         averages['Lz'].iloc[index] = angular_momentum[2]
         averages['|L|'].iloc[index] = np.linalg.norm(angular_momentum)
 
-        averages['e'].iloc[index] = eccentricity[mask].mean()
+        averages['e'].iloc[index] = ecc.mean()
 
     lx = averages['Lx'] / averages['|L|']
     ly = averages['Ly'] / averages['|L|']
