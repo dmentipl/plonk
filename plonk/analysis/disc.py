@@ -48,6 +48,7 @@ def disc_analysis(
         The DataFrame contains the following quantities averaged over
         the disc:
             - cyclindrical radius ['R']
+            - number of particles ['npart']
             - surface density ['sigma']
             - midplane density ['rho']
             - scale height ['H']
@@ -83,7 +84,7 @@ def _calculate_radially_binned_quantities(
     particles = dump.particles
     particle_masses = dump.mass_from_itype()
 
-    cylindrical_radius = _cylindrical_radius(particles['xyz'])
+    radius = _cylindrical_radius(particles['xyz'])
 
     radial_bin_width = (radius_out - radius_in) / (number_radial_bins - 1)
     radial_bins = np.linspace(radius_in, radius_out, number_radial_bins)
@@ -123,14 +124,15 @@ def _calculate_radially_binned_quantities(
         ]
     )
 
-    for index, radius in enumerate(radial_bins):
+    radius_left = radial_bins - radial_bin_width / 2
+    radius_right = radial_bins + radial_bin_width / 2
 
-        radius_left = radius - radial_bin_width / 2
-        radius_right = radius + radial_bin_width / 2
+    masks = [
+        (radius >= radius_left) & (radius <= radius_right)
+        for radius_left, radius_right in zip(radius_left, radius_right)
+    ]
 
-        mask = (cylindrical_radius >= radius_left) & (
-            cylindrical_radius <= radius_right
-        )
+    for index, mask in enumerate(masks):
 
         part = particles[mask]
         pmass = particle_masses[mask]
