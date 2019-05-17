@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from ..particles import I_DUST, I_GAS, density_from_smoothing_length
+from ..particles import I_DUST, I_GAS
 from ..utils import normalize_vector, rotate_vector_arbitrary_axis
 from .interpolation import scalar_interpolation, vector_interpolation
 
@@ -224,9 +224,7 @@ def plot(
 
     if render:
         if render == 'rho':
-            render_data = density_from_smoothing_length(
-                smoothing_length, particle_mass
-            )
+            render_data = dump.density_from_smoothing_length()
         elif render == 'x':
             render_data = particles['xyz'][:, 0]
         elif render == 'y':
