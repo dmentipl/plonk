@@ -46,10 +46,10 @@ for dump in DUMPS:
     print('\nPerforming disc analysis...\n')
     RADIAL_AVERAGES.append(
         plonk.analysis.disc(
+            dump=dump,
             radius_in=RADIUS_IN,
             radius_out=RADIUS_OUT,
             number_radial_bins=NUMBER_RADIAL_BINS,
-            dump=dump,
         )
     )
 
