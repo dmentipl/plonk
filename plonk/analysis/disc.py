@@ -12,6 +12,8 @@ import pandas as pd
 from ..constants import constants
 from ..particles import _angular_momentum, _cylindrical_radius, _eccentricity
 
+_MIN_PARTICLES_IN_BIN = 5
+
 
 def disc_analysis(
     dump,
@@ -98,14 +100,27 @@ def _calculate_radially_binned_quantities(
     )
 
     averages = pd.DataFrame(radial_bins, columns=['R'])
-    averages['area'] = np.pi * (
+
+    surface_area = np.pi * (
         (radial_bins + radial_bin_width / 2) ** 2
         - (radial_bins - radial_bin_width / 2) ** 2
     )
 
     averages = averages.reindex(
         columns=averages.columns.tolist()
-        + ['sigma', 'h', 'H', 'Lx', 'Ly', 'Lz', '|L|', 'tilt', 'twist', 'e']
+        + [
+            'npart',
+            'sigma',
+            'h',
+            'H',
+            'Lx',
+            'Ly',
+            'Lz',
+            '|L|',
+            'tilt',
+            'twist',
+            'e',
+        ]
     )
 
     for index, radius in enumerate(radial_bins):
@@ -118,10 +133,14 @@ def _calculate_radially_binned_quantities(
         )
 
         n_particles_in_bin = len(particles[mask])
+        averages['npart'].iloc[index] = n_particles_in_bin
+
+        if n_particles_in_bin < _MIN_PARTICLES_IN_BIN:
+            continue
 
         averages['sigma'].iloc[index] = (
             np.sum(n_particles_in_bin * particle_masses[mask])
-            / averages['area'].iloc[index]
+            / surface_area[index]
         )
 
         averages['h'].iloc[index] = particles[mask]['h'].mean()
