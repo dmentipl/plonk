@@ -157,6 +157,26 @@ class Dump(DumpFile):
         self._load_arrays('sinks')
         self._cache_arrays = True
 
+    def density_from_smoothing_length(self, hfact=1.2):
+        """
+        Calculate density from particle mass and smoothing length.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        """
+
+        # TODO: docs
+
+        return (
+            self.mass_from_itype() * (hfact / np.abs(self.particles['h'])) ** 3
+        )
+
+    def mass_from_itype(self):
+        return self.header['massoftype'][self.particles['itype'] - 1]
+
     def _load_arrays(self, array):
         """Load arrays into memory."""
 
