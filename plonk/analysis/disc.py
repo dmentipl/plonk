@@ -75,10 +75,7 @@ def disc_analysis(
         sink_index = 1
 
     if np.unique(dump.particles['itype']).size > 1:
-        warnings.warn(
-            'Dump contains multiple particle types, analysis.disc treats all '
-            'particles the same.'
-        )
+        warnings.warn('Disc analysis uses all particle itypes.')
 
     return _calculate_radially_binned_quantities(
         dump, number_radial_bins, radius_in, radius_out, sink_index
