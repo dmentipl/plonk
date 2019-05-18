@@ -22,6 +22,8 @@ from . import analysis
 from .dump import Dump
 from .evolution import Evolution
 from .simulation import Simulation
-from .visualization.image import plot
+from .visualization.image import Visualisation
+
+plot = Visualisation().plot
 
 __all__ = ['Dump', 'Evolution', 'Simulation', 'analysis', 'plot']
