@@ -171,10 +171,14 @@ class Dump(DumpFile):
         # TODO: docs
 
         return (
-            self.mass_from_itype() * (hfact / np.abs(self.particles['h'])) ** 3
+            self.particle_mass * (hfact / np.abs(self.particles['h'])) ** 3
         )
 
-    def mass_from_itype(self):
+    @property
+    def particle_mass(self):
+        return self._mass_from_itype()
+
+    def _mass_from_itype(self):
         return self.header['massoftype'][self.particles['itype'] - 1]
 
     def _load_arrays(self, array):
