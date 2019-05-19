@@ -10,10 +10,99 @@ I_GAS = 1
 I_DUST = 7
 
 
-def calculate_extra_quantity(particles, quantity):
-    if quantity in ['momentum']:
-        return
-    pass
+def calculate_extra_quantity(dump, quantity, **kwargs):
+    """
+    Calculate extra quantity.
+
+    Computes an extra quantity on the dump specified by a string.
+
+    Parameters
+    ----------
+    dump : plonk.Dump
+        The plonk dump object.
+
+    quantity : str
+        A string specifying the extra quantity to calculate.
+
+    **kwargs
+        Extra arguments to functions to calculate specific quantites.
+
+    Examples
+    --------
+    Calculating the angular momentum.
+
+    >>> quantity = 'angular momentum'
+    >>> calculate_extra_quantity(dump, quantity)
+    """
+
+    quantities = [
+        'spherical radius',
+        'cylindrical radius',
+        'velocity magnitude',
+        'momentum',
+        'momentum magnitude',
+        'angular velocity',
+        'angular momentum',
+        'angular momentum magnitude',
+        'specific angular momentum',
+        'specific angular momentum magnitude',
+    ]
+
+    if quantity not in quantities:
+        print(f'{quantity} not available')
+        return None
+
+    if quantity in ['spherical radius']:
+        data = (dump.particles['xyz'],)
+        func = _spherical_radius
+        kwargs = {}
+
+    elif quantity in ['cylindrical radius']:
+        data = (dump.particles['xyz'],)
+        func = _cylindrical_radius
+        kwargs = {}
+
+    elif quantity in ['velocity magnitude']:
+        data = (dump.particles['vxyz'],)
+        func = _velocity_magnitude
+        kwargs = {}
+
+    elif quantity in ['momentum']:
+        data = dump.particles['vxyz'], dump.particle_mass
+        func = _momentum
+        kwargs = {}
+
+    elif quantity in ['momentum magnitude']:
+        data = dump.particles['vxyz'], dump.particle_mass
+        func = _momentum_magnitude
+        kwargs = {}
+
+    elif quantity in ['angular velocity']:
+        data = dump.particles['xyz'], dump.particles['vxyz']
+        func = _angular_velocity
+        kwargs = {}
+
+    elif quantity in ['angular momentum']:
+        data = dump.particles['xyz'], dump.particles['vxyz'], dump.particle_mass
+        func = _angular_momentum
+        kwargs = {}
+
+    elif quantity in ['angular momentum magnitude']:
+        data = dump.particles['xyz'], dump.particles['vxyz'], dump.particle_mass
+        func = _angular_momentum
+        kwargs = {}
+
+    elif quantity in ['specific angular momentum']:
+        data = dump.particles['xyz'], dump.particles['vxyz']
+        func = _specific_angular_momentum
+        kwargs = {}
+
+    elif quantity in ['specific angular momentum magnitude']:
+        data = dump.particles['xyz'], dump.particles['vxyz']
+        func = _specific_angular_momentum_magnitude
+        kwargs = {}
+
+    return _call_function_on_data(*data, func=func, **kwargs)
 
 
 def _call_function_on_data(*data, func, **kwargs):
