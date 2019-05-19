@@ -259,7 +259,19 @@ class Visualisation:
             )
 
         if vector:
-            self._vector_image(dump, vector, weights, vector_options)
+            self._vector_image(
+                dump,
+                render,
+                vector,
+                positions,
+                weights,
+                particle_mask,
+                horizontal_range,
+                vertical_range,
+                vector_options,
+                interpolation_options,
+                axis,
+            )
 
         if particle_plot:
             self._plot_particles(positions, axis)
@@ -447,25 +459,62 @@ class Visualisation:
             if render_label:
                 cb.set_label(render_label)
 
-    def _vector_image(self, dump, vector, weights, vector_options):
+    def _vector_image(
+        self,
+        dump,
+        render,
+        vector,
+        positions,
+        weights,
+        particle_mask,
+        horizontal_range,
+        vertical_range,
+        vector_options,
+        interpolation_options,
+        axis,
+    ):
 
         stream = vector_options.pop('stream', None)
-
         if stream is None:
             stream = False
 
-        vector_data = velocities
+        cross_section = interpolation_options.pop(
+            'cross_section', _cross_section
+        )
+        dscreen = interpolation_options.pop('dscreen', _dscreen)
+        normalize = interpolation_options.pop('normalize', _normalize)
+        number_pixels = interpolation_options.pop(
+            'number_pixels', [_npixx, _npixy]
+        )
+        slice_thickness = interpolation_options.pop(
+            'slice_thickness', _slice_thickness
+        )
+        zobserver = interpolation_options.pop('zobserver', _zobserver)
+
+        if vector in ['v', 'velocity']:
+            vector_data = dump.particles['vxyz'][particle_mask]
+        else:
+            try:
+                vector_data = dump.particles[vector][particle_mask]
+                if vector_data.ndim != 2 and vector_data.shape[1] != 3:
+                    raise ValueError(
+                        f'{vector} does not have appropriate dimensions'
+                    )
+            except Exception:
+                raise ValueError(
+                    f'Cannot determine vector quantity to render: {vector}'
+                )
 
         print(f'Plotting vector field {vector} using Splash')
 
         vector_data = vector_interpolation(
             positions,
-            smoothing_length,
+            dump.particles['h'][particle_mask],
             weights,
             vector_data,
             horizontal_range,
             vertical_range,
-            npix,
+            number_pixels,
             cross_section,
             slice_thickness,
             normalize,
