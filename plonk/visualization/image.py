@@ -432,7 +432,7 @@ class Visualisation:
             render_scale = _colorscale
 
         if render_scale == 'log':
-            norm = colors.Sym_log_norm(1e-1 * vmax, clip=True)
+            norm = colors.SymLogNorm(1e-1 * vmax, clip=True)
         elif render_scale == 'linear':
             norm = colors.Normalize(vmin=vmin, vmax=vmax, clip=True)
         else:
