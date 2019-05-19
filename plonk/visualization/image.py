@@ -17,6 +17,7 @@ _accelerate = False
 _colorbar = True
 _colormap = 'gist_heat'
 _colorscale = 'linear'
+_cross_section = False
 _density_weighted = False
 _dscreen = None
 _fontfamily = 'sans-serif'
@@ -24,6 +25,8 @@ _fontsize = 12
 _normalize = False
 _npixx = 512
 _npixy = 512
+_opacity = False
+_slice_thickness = 0.0
 _stride = 25
 _vector_color = 'black'
 _zobserver = None
@@ -241,16 +244,29 @@ class Visualisation:
 
         if render:
             self._render_image(
-                dump, render, weights, interpolation_options, render_options
+                dump,
+                render,
+                positions,
+                weights,
+                particle_mask,
+                particle_mass,
+                horizontal_range,
+                vertical_range,
+                interpolation_options,
+                render_options,
+                figure_options,
+                axis,
             )
 
         if vector:
             self._vector_image(dump, vector, weights, vector_options)
 
         if particle_plot:
-            self._plot_particles()
+            self._plot_particles(positions, axis)
 
-        self._set_axis_title(axis, figure_options)
+        self._set_axis_title(
+            axis, horizontal_range, vertical_range, figure_options
+        )
 
     def _set_image_size(self, positions, range_options):
         """Set image size."""
@@ -282,15 +298,99 @@ class Visualisation:
 
         return horizontal_range, vertical_range
 
+    def _render_image(
+        self,
+        dump,
+        render,
+        positions,
+        weights,
+        particle_mask,
+        particle_mass,
+        horizontal_range,
+        vertical_range,
+        interpolation_options,
+        render_options,
+        figure_options,
+        axis,
+    ):
+
+        accelerate = interpolation_options.pop('accelerate', _accelerate)
+        cross_section = interpolation_options.pop(
+            'cross_section', _cross_section
+        )
+        dscreen = interpolation_options.pop('dscreen', _dscreen)
+        normalize = interpolation_options.pop('normalize', _normalize)
+        number_pixels = interpolation_options.pop(
+            'number_pixels', [_npixx, _npixy]
+        )
+        opacity = interpolation_options.pop('opacity', _opacity)
+        slice_thickness = interpolation_options.pop(
+            'slice_thickness', _slice_thickness
+        )
+        zobserver = interpolation_options.pop('zobserver', _zobserver)
+
+        if render == 'rho':
+            render_data = dump.density_from_smoothing_length()
+        elif render == 'x':
+            render_data = dump.particles['xyz'][particle_mask][:, 0]
+        elif render == 'y':
+            render_data = dump.particles['xyz'][particle_mask][:, 1]
+        elif render == 'z':
+            render_data = dump.particles['xyz'][particle_mask][:, 2]
+        elif render == 'vx':
+            render_data = dump.particles['vxyz'][particle_mask][:, 0]
+        elif render == 'vy':
+            render_data = dump.particles['vxyz'][particle_mask][:, 1]
+        elif render == 'vz':
+            render_data = dump.particles['vxyz'][particle_mask][:, 2]
+        else:
+            try:
+                render_data = dump.particles[render][particle_mask]
+                if render_data.ndim != 1:
+                    raise ValueError(f'{render} is not 1-dimensional')
+            except Exception:
+                raise ValueError(
+                    f'Cannot determine quantity to render: {render}'
+                )
+
+        print(f'Rendering {render} using Splash')
+
+        image_data = scalar_interpolation(
+            positions,
+            dump.particles['h'][particle_mask],
+            weights,
+            render_data,
+            particle_mass,
+            horizontal_range,
+            vertical_range,
+            number_pixels,
+            cross_section,
+            slice_thickness,
+            opacity,
+            normalize,
+            zobserver,
+            dscreen,
+            accelerate,
+        )
+
+        self._render_image_matplotlib(
+            image_data,
+            render,
+            horizontal_range,
+            vertical_range,
+            render_options,
+            figure_options,
+            axis,
+        )
+
     def _render_image_matplotlib(
         self,
         image_data,
         render,
-        render_options,
         horizontal_range,
         vertical_range,
-        colormap,
-        colorbar,
+        render_options,
+        figure_options,
         axis,
     ):
 
@@ -298,7 +398,8 @@ class Visualisation:
         render_min = render_options.pop('render_min', None)
         render_max = render_options.pop('render_max', None)
         render_fraction_max = render_options.pop('render_fraction_max', None)
-        colormap = render_options.pop('colormap', None)
+        colormap = render_options.pop('colormap', _colormap)
+        colorbar = figure_options.pop('colorbar', _colorbar)
 
         cmap = _colormap
         if colormap is not None:
@@ -345,85 +446,6 @@ class Visualisation:
             cb = plt.colorbar(img, cax=cax)
             if render_label:
                 cb.set_label(render_label)
-
-    def _render_image(
-        self, dump, render, interpolation_options, render_options
-    ):
-
-        opacity = interpolation_options.pop('opacity', None)
-        normalize = interpolation_options.pop('normalize', None)
-        zobserver = interpolation_options.pop('zobserver', None)
-        dscreen = interpolation_options.pop('dscreen', None)
-        accelerate = interpolation_options.pop('accelerate', None)
-        cross_section = interpolation_options.pop('cross_section', None)
-        slice_thickness = interpolation_options.pop('slice_thickness', None)
-        number_pixels = interpolation_options.pop('number_pixels', None)
-
-        if cross_section is None:
-            cross_section = False
-        if cross_section:
-            if slice_thickness is None:
-                slice_thickness = 0.0
-
-        if number_pixels is None:
-            npix = [_npixx, _npixy]
-        else:
-            npix = number_pixels
-
-        if render == 'rho':
-            render_data = dump.density_from_smoothing_length()
-        elif render == 'x':
-            render_data = dump.particles['xyz'][particle_mask][:, 0]
-        elif render == 'y':
-            render_data = dump.particles['xyz'][particle_mask][:, 1]
-        elif render == 'z':
-            render_data = dump.particles['xyz'][particle_mask][:, 2]
-        elif render == 'vx':
-            render_data = dump.particles['vxyz'][particle_mask][:, 0]
-        elif render == 'vy':
-            render_data = dump.particles['vxyz'][particle_mask][:, 1]
-        elif render == 'vz':
-            render_data = dump.particles['vxyz'][particle_mask][:, 2]
-        else:
-            try:
-                render_data = dump.particles[render][particle_mask]
-                if render_data.ndim != 1:
-                    raise ValueError(f'{render} is not 1-dimensional')
-            except Exception:
-                raise ValueError(
-                    f'Cannot determine quantity to render: {render}'
-                )
-
-        print(f'Rendering {render} using Splash')
-
-        image_data = scalar_interpolation(
-            positions,
-            smoothing_length,
-            weights,
-            render_data,
-            particle_mass,
-            horizontal_range,
-            vertical_range,
-            npix,
-            cross_section,
-            slice_thickness,
-            opacity,
-            normalize,
-            zobserver,
-            dscreen,
-            accelerate,
-        )
-
-        self._render_image_matplotlib(
-            image_data,
-            render,
-            render_options,
-            horizontal_range,
-            vertical_range,
-            colormap,
-            colorbar,
-            axis,
-        )
 
     def _vector_image(self, dump, vector, weights, vector_options):
 
@@ -483,7 +505,7 @@ class Visualisation:
 
         axis.set_aspect('equal', 'box')
 
-    def _plot_particles(self):
+    def _plot_particles(self, positions, axis):
         print('Plotting particles')
         marker_size = 0.01
         axis.scatter(positions[:, 0], positions[:, 1], s=marker_size, c='k')
@@ -551,7 +573,9 @@ class Visualisation:
 
         return positions, velocities
 
-    def _set_axis_title(self, axis, figure_options):
+    def _set_axis_title(
+        self, axis, horizontal_range, vertical_range, figure_options
+    ):
 
         title = figure_options.pop('title', None)
 
