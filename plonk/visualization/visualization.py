@@ -272,8 +272,9 @@ class Visualization:
             positions, range_options
         )
 
+        image = None
         if render:
-            self._render_image(
+            image = self._render_image(
                 dump,
                 render,
                 positions,
@@ -309,6 +310,8 @@ class Visualization:
         self._set_axis_title(
             axis, horizontal_range, vertical_range, figure_options
         )
+
+        return {'axis': axis, 'image': image}
 
     def _set_image_size(self, positions, range_options):
         """Set image size."""
@@ -425,7 +428,7 @@ class Visualization:
             accelerate,
         )
 
-        self._render_image_matplotlib(
+        image = self._render_image_matplotlib(
             image_data,
             render,
             horizontal_range,
@@ -434,6 +437,8 @@ class Visualization:
             figure_options,
             axis,
         )
+
+        return image
 
     def _render_image_matplotlib(
         self,
@@ -453,7 +458,7 @@ class Visualization:
         render_max = render_options.pop('render_max', None)
         render_fraction_max = render_options.pop('render_fraction_max', None)
         cmap = render_options.pop('colormap', _DEFAULT_OPTS.colormap)
-        colorbar = figure_options.pop('colorbar', _DEFAULT_OPTS.colorbar)
+        colorbar_ = figure_options.pop('colorbar', _DEFAULT_OPTS.colorbar)
 
         if render_max is None:
             vmax = image_data.max()
@@ -477,20 +482,22 @@ class Visualization:
 
         extent = horizontal_range + vertical_range
 
-        img = axis.imshow(
+        image = axis.imshow(
             image_data, norm=norm, origin='lower', extent=extent, cmap=cmap
         )
 
         # TODO: make render_label respond to settings/options
         render_label = r'$\int$ ' + f'{render}' + ' dz'
 
-        cb = None
-        if colorbar:
+        colorbar = None
+        if colorbar_:
             divider = make_axes_locatable(axis)
             cax = divider.append_axes("right", size="5%", pad=0.05)
-            cb = plt.colorbar(img, cax=cax)
+            colorbar = plt.colorbar(image, cax=cax)
             if render_label:
-                cb.set_label(render_label)
+                colorbar.set_label(render_label)
+
+        return image
 
     def _vector_image(
         self,
