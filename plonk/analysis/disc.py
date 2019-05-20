@@ -87,7 +87,7 @@ def _calculate_radially_binned_quantities(
 ):
 
     particles = dump.particles.arrays
-    particle_masses = dump.particle_mass
+    particle_masses = dump.particles.mass
 
     radius = _cylindrical_radius(particles['xyz'])
 

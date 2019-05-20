@@ -12,7 +12,7 @@ I_DUST = 7
 
 class Arrays:
     """
-    Smoothed particle hydrodynamics arrays object.
+    Smoothed particle hydrodynamics particle arrays object.
 
     Used for accessing the particle arrays and sinks arrays from the
     dump file handle, i.e. with lazy loading.
@@ -46,6 +46,7 @@ class Arrays:
         self._arrays_handle = file_handle[arrays_label]
         self._fields = None
         self._datatypes = None
+        self._mass = None
 
         if cache_arrays is None:
             self._cache_arrays = False
@@ -57,15 +58,21 @@ class Arrays:
             if cache_arrays:
                 self.cache_arrays()
 
-    def _get_array(self, array):
-        return self._arrays_handle[array]
-
     @property
     def arrays(self):
         """Arrays in the form of a structured Numpy array."""
         if self._arrays is None:
             return self._read_arrays()
         return self._arrays
+
+    @property
+    def mass(self):
+        """Particle masses."""
+        return self._mass
+
+    @mass.setter
+    def mass(self, value):
+        self._mass = value
 
     @property
     def fields(self):
@@ -124,11 +131,10 @@ class Arrays:
 
         Examples
         --------
-        Calculating the angular momentum.
+        Calculating the angular momentum two ways.
 
-        >>> quantity = 'angular momentum'
-        >>> particle_mass = dump.particle_mass
-        >>> calculate_extra_quantity(quantity, mass=particle_mass)
+        >>> calculate_extra_quantity('angular momentum')
+        >>> calculate_extra_quantity('L')
         """
 
         quantities = [
@@ -143,6 +149,8 @@ class Arrays:
             ('|l|', 'specific angular momentum magnitude'),
         ]
 
+        require_mass = False
+
         if quantity not in [element for tupl in quantities for element in tupl]:
             print(f'{quantity} not available')
             return None
@@ -156,51 +164,40 @@ class Arrays:
             func = _cylindrical_radius
 
         elif quantity in ['|v|', 'velocity magnitude']:
+            require_mass = True
             data = (self.arrays['vxyz'],)
             func = _velocity_magnitude
 
         elif quantity in ['p', 'momentum']:
-            if 'mass' not in kwargs:
-                raise ValueError(
-                    'Need particle mass as keyword arg to calculate momentum'
-                )
-            data = (self.arrays['vxyz'],)
+            require_mass = True
+            data = (self.arrays['vxyz'], self.mass)
             func = _momentum
 
         elif quantity in ['|p|', 'momentum magnitude']:
-            if 'mass' not in kwargs:
-                raise ValueError(
-                    'Need particle mass as keyword arg to calculate momentum '
-                    'magnitude'
-                )
-            data = self.arrays['vxyz']
+            require_mass = True
+            data = (self.arrays['vxyz'], self.mass)
             func = _momentum_magnitude
 
         elif quantity in ['L', 'angular momentum']:
-            if 'mass' not in kwargs:
-                raise ValueError(
-                    'Need particle mass as keyword arg to calculate angular '
-                    'momentum'
-                )
-            data = self.arrays['xyz'], self.arrays['vxyz']
+            require_mass = True
+            data = (self.arrays['xyz'], self.arrays['vxyz'], self.mass)
             func = _angular_momentum
 
         elif quantity in ['|L|', 'angular momentum magnitude']:
-            if 'mass' not in kwargs:
-                raise ValueError(
-                    'Need particle mass as keyword arg to calculate angular '
-                    'momentum magnitude'
-                )
-            data = self.arrays['xyz'], self.arrays['vxyz']
+            require_mass = True
+            data = (self.arrays['xyz'], self.arrays['vxyz'], self.mass)
             func = _angular_momentum
 
         elif quantity in ['l', 'specific angular momentum']:
-            data = self.arrays['xyz'], self.arrays['vxyz']
+            data = (self.arrays['xyz'], self.arrays['vxyz'])
             func = _specific_angular_momentum
 
         elif quantity in ['|l|', 'specific angular momentum magnitude']:
             data = self.arrays['xyz'], self.arrays['vxyz']
             func = _specific_angular_momentum_magnitude
+
+        if self.mass is None and require_mass:
+            raise ValueError('Particle masses required but not available')
 
         return _call_function_on_data(*data, func=func, **kwargs)
 

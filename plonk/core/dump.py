@@ -125,6 +125,7 @@ class Dump(DumpFile):
         self.particles = Arrays(
             'particles', self._file_handle, cache_arrays=cache_arrays
         )
+        self.particles.mass = self._mass_from_itype()
         self.sinks = Arrays('sinks', self._file_handle)
 
     @property
@@ -148,11 +149,10 @@ class Dump(DumpFile):
 
         # TODO: docs
 
-        return self.particle_mass * (hfact / np.abs(self.particles.arrays['h'])) ** 3
-
-    @property
-    def particle_mass(self):
-        return self._mass_from_itype()
+        return (
+            self.particles.mass
+            * (hfact / np.abs(self.particles.arrays['h'])) ** 3
+        )
 
     def _mass_from_itype(self):
         return self.header['massoftype'][self.particles.arrays['itype'] - 1]
