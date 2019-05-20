@@ -2,20 +2,20 @@
 Plonk
 =====
 
-**Plonk** is a Python package for analyzing and visualizing smoothed particle
-hydrodynamics simulation data.
+**Plonk** is a Python package for analyzing and visualizing smoothed
+particle hydrodynamics simulation data.
 
 Features
 --------
 
   - Read in Phantom HDF dump files.
-  - Access particle arrays as pandas DataFrame objects.
+  - Access particle and sink arrays as Numpy structured arrays.
   - Access simulation parameters and units.
   - Compute extra quantities on particles.
   - Visualize data using interpolation provided by Splash.
 
-See https://plonk.readthedocs.io/ for documentation. Code is available at
-https://github.com/dmentipl/plonk.
+See https://plonk.readthedocs.io/ for documentation. The source code is
+available at https://github.com/dmentipl/plonk.
 """
 
 from . import analysis

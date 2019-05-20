@@ -1,18 +1,11 @@
-"""
-disc.py
-
-Disc analysis.
-
-Daniel Mentiplay, 2019.
-"""
-
 import warnings
 
 import numpy as np
 import pandas as pd
 
 from ..core.constants import constants
-from ..core.particles import _angular_momentum, _cylindrical_radius, _eccentricity
+from ..core.particles import (_angular_momentum, _cylindrical_radius,
+                              _eccentricity)
 
 _MIN_PARTICLES_IN_BIN = 5
 

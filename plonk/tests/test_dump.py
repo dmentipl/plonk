@@ -1,5 +1,5 @@
 """
-test_dump.py
+Testing reading and writing dumps.
 """
 
 import os

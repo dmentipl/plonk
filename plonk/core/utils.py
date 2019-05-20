@@ -1,7 +1,7 @@
 """
-utils.py
+Miscellaneous utilites.
 
-Daniel Mentiplay, 2019.
+For example, transformations on vectors.
 """
 
 import os

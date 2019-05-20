@@ -1,75 +1,68 @@
 """
-units.py
-
-D. Mentiplay, 2019.
+This module contains functions for physical units.
 """
 
+from collections import namedtuple
 
-class Units:
+
+def units_in_cgs(udist=1.0, umass=1.0, utime=1.0):
     """
-    This class represents the dump file units.
+    Physical units in cgs.
 
     Each value is the cgs value of the underlying physical unit.
 
-    Arguments:
-        udist : dist unit [cgs]
-        umass : mass unit [cgs]
-        utime : time unit [cgs]
+    Parameters
+    ----------
+    udist : float
+        The distance unit [cgs].
+    umass : float
+        The mass unit [cgs].
+    utime : float
+        The time unit [cgs].
+
+    Returns
+    -------
+    namedtuple
+        This contains the units of different physical quantities in cgs.
     """
 
-    # pylint: disable=too-many-instance-attributes
+    quantities = [
+        'angular_momentum',
+        'distance',
+        'energy',
+        'force',
+        'frequency',
+        'mass',
+        'mass_density',
+        'momentum',
+        'pressure',
+        'surface_density',
+        'time',
+        'torque',
+        'velocity',
+    ]
 
-    def __init__(self, udist=1.0, umass=1.0, utime=1.0):
+    Units = namedtuple('Units', quantities)
 
-        self.units = dict()
+    units = dict()
+    units['distance'] = udist
+    units['time'] = utime
+    units['mass'] = umass
+    units['angular_momentum'] = umass * udist ** 2 / utime
+    units['energy'] = umass * udist / utime ** 2
+    units['force'] = umass * udist / utime ** 2
+    units['frequency'] = 1 / utime
+    units['mass_density'] = umass / udist ** 3
+    units['momentum'] = umass * udist / utime
+    units['pressure'] = umass / (udist * utime ** 2)
+    units['surface_density'] = umass / udist ** 2
+    units['torque'] = umass * udist ** 2 / utime ** 2
+    units['velocity'] = udist / utime
 
-        self.units['distance'] = udist
-        self.units['mass'] = umass
-        self.units['time'] = utime
-
-        self.units['frequency'] = 1 / self.units['time']
-        self.units['velocity'] = self.units['distance'] / self.units['time']
-
-        self.units['momentum'] = (
-            self.units['mass'] * self.units['distance'] / self.units['time']
-        )
-
-        self.units['force'] = (
-            self.units['mass']
-            * self.units['distance']
-            / self.units['time'] ** 2
-        )
-
-        self.units['pressure'] = self.units['mass'] / (
-            self.units['distance'] * self.units['time'] ** 2
-        )
-
-        self.units['energy'] = (
-            self.units['mass']
-            * self.units['distance']
-            / self.units['time'] ** 2
-        )
-
-        self.units['density'] = self.units['mass'] / self.units['distance'] ** 3
-
-        self.units['surface_density'] = (
-            self.units['mass'] / self.units['distance'] ** 2
-        )
-
-        self.units['angular_momentum'] = (
-            self.units['mass']
-            * self.units['distance'] ** 2
-            / self.units['time']
-        )
-
-        self.units['torque'] = (
-            self.units['mass']
-            * self.units['distance'] ** 2
-            / self.units['time'] ** 2
-        )
+    return Units(**units)
 
 
-def convert(quantity, unit_from, unit_to):
+def convert_units(quantity, unit_from, unit_to):
     """
     Convert a quantity from one unit to another:
 
@@ -78,10 +71,19 @@ def convert(quantity, unit_from, unit_to):
     e.g. mass_in_earth_mass =
             mass_in_code_units * units['mass'] / constants.earth_mass
 
-    Arguments:
-        quantity  : quantity to be converted
-        unit_from : current value of unit
-        unit_to   : unit to convert quantity to
+    Parameters
+    ----------
+    quantity : float
+        The quantity to be converted.
+    unit_from : float
+        The current value of unit in cgs.
+    unit_to : float
+        The unit to convert quantity to in cgs.
+
+    Returns
+    -------
+    float
+        The original quantity in the new units.
     """
 
     return quantity * unit_from / unit_to

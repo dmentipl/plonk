@@ -1,7 +1,9 @@
 """
-simulation.py
+Simulation class for smoothed particle hydrodynamics simulations.
 
-Daniel Mentiplay, 2019.
+This class contains all information associated with a simulation. It
+contains the dumps as a list of Dump objects, and the global and sink
+evolution files an Evolution objects.
 """
 
 from pathlib import Path

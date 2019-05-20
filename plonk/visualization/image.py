@@ -1,7 +1,8 @@
 """
-image.py
+This module contains the Visualization class.
 
-Daniel Mentiplay, 2019.
+This class contains methods for visualizing smoothed particle
+hydrodynamics simulations.
 """
 
 from collections import namedtuple
@@ -694,32 +695,25 @@ def plot_options(**kwargs):
 
 def _convert_units():
     """Convert units."""
-
     # TODO: write this
 
 
 def _calculate_quantity():
     """Calculate an extra quantity."""
-
     # TODO: write this
 
 
 def set_colorbar(cb, vmin=None, vmax=None):
     """Set colorbar limits."""
-
     if vmin is None:
         vmin = cb._colorbar.vmin
-
     if vmax is None:
         vmax = cb._colorbar.vmax
-
     cb._image.set_clim([vmin, vmax])
 
 
 def _interpolation_weights(density_weighted, smoothing_length, mass, hfact):
     """Calculate interpolation weights."""
-
     if density_weighted:
         return np.array(mass / smoothing_length ** 2)
-
     return np.full_like(smoothing_length, 1 / hfact)

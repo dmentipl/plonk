@@ -1,7 +1,8 @@
 """
-dump.py
+Dump class for dump files.
 
-Daniel Mentiplay, 2019.
+The Dump class contains all information related to a smoothed particle
+hydrodynamics simulation dump file.
 """
 
 import collections

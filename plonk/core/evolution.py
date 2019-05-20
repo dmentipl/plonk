@@ -1,15 +1,14 @@
 """
-evolution.py
+Evolution class for global quantites.
 
-Daniel Mentiplay, 2019.
+This module contains the Evolution class for tracking global quantities
+in smoothed particle hydrodynamics simulations as time series.
+Evolution files track quantities more frequently than dump file output.
 """
-
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-
-FLOAT_TYPE = '<f8'
 
 
 class Evolution:
@@ -48,6 +47,8 @@ class Evolution:
 
     >>> evol.plot('ekin', 'etherm')
     """
+
+    FLOAT_TYPE = '<f8'
 
     def __init__(self, filenames):
 

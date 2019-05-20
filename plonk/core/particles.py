@@ -1,7 +1,5 @@
 """
-particles.py
-
-Daniel Mentiplay, 2019.
+Variables and functions related to the particle arrays.
 """
 
 import numpy as np

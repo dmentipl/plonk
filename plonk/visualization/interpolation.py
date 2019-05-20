@@ -1,7 +1,9 @@
 """
-interpolation.py
+Splash interpolation wrapper routines.
 
-Daniel Mentiplay, 2019.
+There are two main routines. One for interpolation of scalar fields and
+one for interpolation of vector fields. They both make calls to the
+Splash Fortran libraries via cython.
 """
 
 import numpy as np
@@ -12,6 +14,8 @@ except ImportError:
     raise Exception(
         'Cannot import Splash interpolation routines. See ' + 'documentation.'
     )
+
+# TODO: add docs
 
 
 def scalar_interpolation(
@@ -31,11 +35,7 @@ def scalar_interpolation(
     dscreen,
     accelerate,
 ):
-    """
-    Interpolate a scalar quantity to pixels by projection.
-
-    TODO: add docs
-    """
+    """Interpolate a scalar quantity to pixels by projection."""
 
     if npix is None:
         npixx = 512
@@ -180,11 +180,7 @@ def vector_interpolation(
     zobserver,
     dscreen,
 ):
-    """
-    Interpolate a vector quantity to pixels by projection.
-
-    TODO: add docs
-    """
+    """Interpolate a vector quantity to pixels by projection."""
 
     if npix is None:
         npixx = 512
