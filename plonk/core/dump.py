@@ -11,6 +11,8 @@ from pathlib import Path
 import h5py
 import numpy as np
 
+from .particles import Arrays
+
 FileTypes = collections.namedtuple('FileTypes', 'filetype extension')
 FILE_TYPES = [FileTypes(filetype='HDF5', extension='h5')]
 
@@ -72,6 +74,7 @@ class Dump(DumpFile):
     ----------
     filename : str
         Path to dump file.
+
     cache_arrays : bool, optional (False)
         Load arrays into memory, otherwise read from file.
 
@@ -82,20 +85,25 @@ class Dump(DumpFile):
     >>> file_name = 'dumpfile.ext'
     >>> dump = plonk.Dump(file_name)
 
-    Accessing the particle arrays.
+    Accessing the particle arrays object, available particle arrays, and
+    particle positions.
 
     >>> dump.particles
-    >>> dump.particles['xyz']
+    >>> dump.particles.fields
+    >>> dump.particles.arrays['xyz']
 
-    Accessing the sink arrays.
+    Accessing the sink arrays object, array data types, and sink spin.
 
     >>> dump.sinks
-    >>> dump.sinks['spinxyz']
+    >>> dump.sinks.datatypes
+    >>> dump.sinks.arrays['spinxyz']
 
-    Accessing the dump header.
+    Accessing the dump header dictionary, dump simulation time, and
+    particle mass for each type.
 
     >>> dump.header
     >>> dump.header['time']
+    >>> dump.header['massoftype']
     """
 
     def __init__(self, filename, cache_arrays=None):
@@ -114,35 +122,10 @@ class Dump(DumpFile):
                 raise TypeError('cache_array must be bool')
             self._cache_arrays = cache_arrays
 
-        if self._cache_arrays:
-            self.cache_arrays()
-        else:
-            self._particles = None
-            self._sinks = None
-
-    @property
-    def particles(self):
-        """
-        Particle arrays, e.g. position, velocity, smoothing length.
-        """
-        if self._cache_arrays:
-            if self._particles is None:
-                self._load_arrays('particles')
-            return self._particles
-        else:
-            return self._read_arrays('particles')
-
-    @property
-    def sinks(self):
-        """
-        Sink arrays, e.g. mass, position, velocity, spin, mass accreted.
-        """
-        if self._cache_arrays:
-            if self._sinks is None:
-                self._load_arrays('sinks')
-            return self._sinks
-        else:
-            return self._read_arrays('sinks')
+        self.particles = Arrays(
+            'particles', self._file_handle, cache_arrays=cache_arrays
+        )
+        self.sinks = Arrays('sinks', self._file_handle)
 
     @property
     def header(self):
@@ -151,12 +134,6 @@ class Dump(DumpFile):
         parameters.
         """
         return self._header
-
-    def cache_arrays(self):
-        """Load particle and sink arrays into memory."""
-        self._load_arrays('particles')
-        self._load_arrays('sinks')
-        self._cache_arrays = True
 
     def density_from_smoothing_length(self, hfact=1.2):
         """
@@ -171,14 +148,14 @@ class Dump(DumpFile):
 
         # TODO: docs
 
-        return self.particle_mass * (hfact / np.abs(self.particles['h'])) ** 3
+        return self.particle_mass * (hfact / np.abs(self.particles.arrays['h'])) ** 3
 
     @property
     def particle_mass(self):
         return self._mass_from_itype()
 
     def _mass_from_itype(self):
-        return self.header['massoftype'][self.particles['itype'] - 1]
+        return self.header['massoftype'][self.particles.arrays['itype'] - 1]
 
     def _load_arrays(self, array):
         """Load arrays into memory."""

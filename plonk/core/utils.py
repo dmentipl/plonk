@@ -52,9 +52,9 @@ def file_size(filepath):
 
     Returns
     -------
-    size : int
+    int
         Size of file in units specified by `unit`.
-    unit : str
+    str
         Unit of `size` return.
     """
 
@@ -74,9 +74,9 @@ def nbytes_to_human(size_in_bytes):
 
     Returns
     -------
-    size : int
+    int
         Size of file in units specified by `unit`.
-    unit : str
+    str
         Unit of `size` return.
     """
 

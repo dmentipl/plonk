@@ -26,6 +26,7 @@ class Simulation:
     prefix : str
         Simulation prefix, e.g. 'disc', if files are named like
         disc_00000.h5, disc01.ev, discSink0001N01.ev, etc.
+
     directory : str, optional
         Directory containing simulation dump files and auxiliary files.
 
@@ -36,6 +37,16 @@ class Simulation:
     >>> prefix = 'disc'
     >>> directory = '2019-01-01'
     >>> simulation = plonk.Simulation(prefix, directory)
+
+    Accessing the particles object, and particles arrays.
+
+    >>> simulation.particles
+    >>> simulation.particles.arrays
+
+    Accessing the global time evolution and sink time evolution objects.
+
+    >>> simulation.evolution
+    >>> simulation.sink_evolution
     """
 
     def __init__(self, prefix, directory=None):

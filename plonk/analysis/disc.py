@@ -30,12 +30,16 @@ def disc_analysis(
     ----------
     dump : Dump
         Dump object.
+
     radius_in : float
         Inner disc radius for radial binning.
+
     radius_out : float
         Outer disc radius for radial binning.
+
     number_radial_bins : int (default 200)
         Number of radial bins.
+
     sink_index : int (default 1)
         Index (counting from 1) of the sink representing the central
         star.
@@ -45,17 +49,17 @@ def disc_analysis(
     averages : pandas.DataFrame
         The DataFrame contains the following quantities averaged over
         the disc:
-            - cyclindrical radius ['R']
-            - number of particles ['npart']
-            - surface density ['sigma']
-            - midplane density ['rho']
-            - scale height ['H']
-            - average smoothing length ['h']
-            - angular momentum ['Lx', 'Ly', 'Lz', '|L|']
-            - eccentricity ['e']
-            - tilt ['tilt']
-            - twist ['twist']
-            - psi ['psi']
+            cyclindrical radius ['R']
+            number of particles ['npart']
+            surface density ['sigma']
+            midplane density ['rho']
+            scale height ['H']
+            average smoothing length ['h']
+            angular momentum ['Lx', 'Ly', 'Lz', '|L|']
+            eccentricity ['e']
+            tilt ['tilt']
+            twist ['twist']
+            psi ['psi']
     """
 
     if radius_in is None:
@@ -70,7 +74,7 @@ def disc_analysis(
     if sink_index is None:
         sink_index = 1
 
-    if np.unique(dump.particles['itype']).size > 1:
+    if np.unique(dump.particles.arrays['itype']).size > 1:
         warnings.warn('Disc analysis uses all particle itypes.')
 
     return _calculate_radially_binned_quantities(
@@ -82,7 +86,7 @@ def _calculate_radially_binned_quantities(
     dump, number_radial_bins, radius_in, radius_out, sink_index
 ):
 
-    particles = dump.particles
+    particles = dump.particles.arrays
     particle_masses = dump.particle_mass
 
     radius = _cylindrical_radius(particles['xyz'])
@@ -95,7 +99,7 @@ def _calculate_radially_binned_quantities(
         / dump.header['umass']
         / dump.header['utime'] ** 2
     )
-    stellar_mass = dump.sinks[sink_index - 1]['m']
+    stellar_mass = dump.sinks.arrays[sink_index - 1]['m']
     gravitational_parameter = gravitational_constant * stellar_mass
     eccentricity = _eccentricity(
         particles['xyz'], particles['vxyz'], gravitational_parameter

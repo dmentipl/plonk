@@ -89,6 +89,7 @@ class Evolution:
         ----------
         *args : str
             The evolution data to plot against time.
+
         **kwargs
             Keyword arguments to pass to matplotlib.pyplot.plot.
         """

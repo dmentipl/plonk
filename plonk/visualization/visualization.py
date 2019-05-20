@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from ..core.particles import I_GAS, calculate_extra_quantity
+from ..core.particles import I_GAS
 from ..core.utils import normalize_vector, rotate_vector_arbitrary_axis
 from .interpolation import scalar_interpolation, vector_interpolation
 
@@ -246,13 +246,13 @@ class Visualization:
             if not isinstance(particle_type, int):
                 raise ValueError('particle_type must be int')
 
-        particle_mask = dump.particles['itype'] == particle_type
+        particle_mask = dump.particles.arrays['itype'] == particle_type
 
-        positions = dump.particles['xyz'][particle_mask]
-        smoothing_length = dump.particles['h'][particle_mask]
+        positions = dump.particles.arrays['xyz'][particle_mask]
+        smoothing_length = dump.particles.arrays['h'][particle_mask]
         particle_mass = dump.header['massoftype'][particle_type - 1]
         try:
-            velocities = dump.particles['vxyz']
+            velocities = dump.particles.arrays['vxyz']
         except Exception:
             velocities = None
 
@@ -383,24 +383,24 @@ class Visualization:
         if render in ['rho', 'dens', 'density']:
             render_data = dump.density_from_smoothing_length()
         elif render == 'x':
-            render_data = dump.particles['xyz'][particle_mask][:, 0]
+            render_data = dump.particles.arrays['xyz'][particle_mask][:, 0]
         elif render == 'y':
-            render_data = dump.particles['xyz'][particle_mask][:, 1]
+            render_data = dump.particles.arrays['xyz'][particle_mask][:, 1]
         elif render == 'z':
-            render_data = dump.particles['xyz'][particle_mask][:, 2]
+            render_data = dump.particles.arrays['xyz'][particle_mask][:, 2]
         elif render == 'vx':
-            render_data = dump.particles['vxyz'][particle_mask][:, 0]
+            render_data = dump.particles.arrays['vxyz'][particle_mask][:, 0]
         elif render == 'vy':
-            render_data = dump.particles['vxyz'][particle_mask][:, 1]
+            render_data = dump.particles.arrays['vxyz'][particle_mask][:, 1]
         elif render == 'vz':
-            render_data = dump.particles['vxyz'][particle_mask][:, 2]
+            render_data = dump.particles.arrays['vxyz'][particle_mask][:, 2]
         elif render in ['v', 'velocity']:
             render_data = calculate_extra_quantity(dump, 'velocity magnitude')[
                 particle_mask
             ]
         else:
             try:
-                render_data = dump.particles[render][particle_mask]
+                render_data = dump.particles.arrays[render][particle_mask]
             except Exception:
                 raise ValueError(
                     f'Cannot determine quantity to render: {render}'
@@ -412,7 +412,7 @@ class Visualization:
 
         image_data = scalar_interpolation(
             positions,
-            dump.particles['h'][particle_mask],
+            dump.particles.arrays['h'][particle_mask],
             weights,
             render_data,
             particle_mass,
@@ -536,12 +536,12 @@ class Visualization:
 
         if vector in ['v', 'vel', 'velocity']:
             try:
-                vector_data = dump.particles['vxyz'][particle_mask]
+                vector_data = dump.particles.arrays['vxyz'][particle_mask]
             except Exception:
                 raise ValueError('Velocity not available in dump')
         else:
             try:
-                vector_data = dump.particles[vector][particle_mask]
+                vector_data = dump.particles.arrays[vector][particle_mask]
                 if vector_data.ndim != 2 and vector_data.shape[1] != 3:
                     raise ValueError(
                         f'{vector} does not have appropriate dimensions'
@@ -555,7 +555,7 @@ class Visualization:
 
         vector_data = vector_interpolation(
             positions,
-            dump.particles['h'][particle_mask],
+            dump.particles.arrays['h'][particle_mask],
             weights,
             vector_data,
             horizontal_range,

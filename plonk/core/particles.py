@@ -1,4 +1,6 @@
 """
+This module contains the Particles class.
+
 Variables and functions related to the particle arrays.
 """
 
@@ -8,99 +10,199 @@ I_GAS = 1
 I_DUST = 7
 
 
-def calculate_extra_quantity(dump, quantity, **kwargs):
+class Arrays:
     """
-    Calculate extra quantity.
+    Smoothed particle hydrodynamics arrays object.
 
-    Computes an extra quantity on the dump specified by a string.
+    Used for accessing the particle arrays and sinks arrays from the
+    dump file handle, i.e. with lazy loading.
 
     Parameters
     ----------
-    dump : plonk.Dump
-        The plonk dump object.
+    arrays_label : str
+        Label for the arrays to load corresponding to the group inside
+        the file specified by file_handle, e.g. 'particles' or 'sinks'.
 
-    quantity : str
-        A string specifying the extra quantity to calculate.
-
-    **kwargs
-        Extra arguments to functions to calculate specific quantites.
+    file_handle : h5py File
+        File handle to the dump file containing the arrays.
 
     Examples
     --------
-    Calculating the angular momentum.
+    Creating the particle arrays object.
 
-    >>> quantity = 'angular momentum'
-    >>> calculate_extra_quantity(dump, quantity)
+    >>> file_handle = h5py.File(filename)
+    >>> particles = Arrays('particles', file_handle)
+
+    Accessing particle position array, available arrays, and array data
+    types.
+
+    >>> particles.arrays['xyz']
+    >>> particles.arrays.fields
+    >>> particles.arrays.datatypes
     """
 
-    quantities = [
-        'spherical radius',
-        'cylindrical radius',
-        'velocity magnitude',
-        'momentum',
-        'momentum magnitude',
-        'angular velocity',
-        'angular momentum',
-        'angular momentum magnitude',
-        'specific angular momentum',
-        'specific angular momentum magnitude',
-    ]
+    def __init__(self, arrays_label, file_handle, cache_arrays=None):
 
-    if quantity not in quantities:
-        print(f'{quantity} not available')
-        return None
+        self._arrays_handle = file_handle[arrays_label]
+        self._fields = None
+        self._datatypes = None
 
-    if quantity in ['spherical radius']:
-        data = (dump.particles['xyz'],)
-        func = _spherical_radius
-        kwargs = {}
+        if cache_arrays is None:
+            self._cache_arrays = False
+            self._arrays = None
+        else:
+            if not isinstance(cache_arrays, bool):
+                raise TypeError('cache_array must be bool')
+            self._cache_arrays = cache_arrays
+            if cache_arrays:
+                self.cache_arrays()
 
-    elif quantity in ['cylindrical radius']:
-        data = (dump.particles['xyz'],)
-        func = _cylindrical_radius
-        kwargs = {}
+    def _get_array(self, array):
+        return self._arrays_handle[array]
 
-    elif quantity in ['velocity magnitude']:
-        data = (dump.particles['vxyz'],)
-        func = _velocity_magnitude
-        kwargs = {}
+    @property
+    def arrays(self):
+        """Arrays in the form of a structured Numpy array."""
+        if self._arrays is None:
+            return self._read_arrays()
+        return self._arrays
 
-    elif quantity in ['momentum']:
-        data = dump.particles['vxyz'], dump.particle_mass
-        func = _momentum
-        kwargs = {}
+    @property
+    def fields(self):
+        """List of available fields (array names)."""
+        if self._fields is None:
+            self._fields = list(self.arrays.dtype.fields)
+        return self._fields
 
-    elif quantity in ['momentum magnitude']:
-        data = dump.particles['vxyz'], dump.particle_mass
-        func = _momentum_magnitude
-        kwargs = {}
+    @property
+    def datatypes(self):
+        """List of array data types."""
+        if self._datatypes is None:
+            self._datatypes = [
+                items[:-1][0] for key, items in self.arrays.dtype.fields.items()
+            ]
+        return self._datatypes
 
-    elif quantity in ['angular velocity']:
-        data = dump.particles['xyz'], dump.particles['vxyz']
-        func = _angular_velocity
-        kwargs = {}
+    def _read_arrays(self):
+        """Read arrays into structured Numpy array."""
 
-    elif quantity in ['angular momentum']:
-        data = dump.particles['xyz'], dump.particles['vxyz'], dump.particle_mass
-        func = _angular_momentum
-        kwargs = {}
+        dtypes = []
+        nvals = None
+        for key, val in self._arrays_handle.items():
+            if val.size > 0:
+                if nvals is None:
+                    nvals = val.shape[0]
+                if val.ndim == 1:
+                    dtypes.append((key, val.dtype))
+                elif val.ndim > 1:
+                    dtypes.append((key, val.dtype, val.shape[1:]))
 
-    elif quantity in ['angular momentum magnitude']:
-        data = dump.particles['xyz'], dump.particles['vxyz'], dump.particle_mass
-        func = _angular_momentum
-        kwargs = {}
+        struct_array = np.zeros(nvals, dtype=dtypes)
+        for key in struct_array.dtype.fields:
+            struct_array[key] = self._arrays_handle[key][()]
 
-    elif quantity in ['specific angular momentum']:
-        data = dump.particles['xyz'], dump.particles['vxyz']
-        func = _specific_angular_momentum
-        kwargs = {}
+        return struct_array
 
-    elif quantity in ['specific angular momentum magnitude']:
-        data = dump.particles['xyz'], dump.particles['vxyz']
-        func = _specific_angular_momentum_magnitude
-        kwargs = {}
+    def cache_arrays(self):
+        """Load arrays into memory."""
+        setattr(self, '_arrays', self._read_arrays())
+        self._cache_arrays = True
 
-    return _call_function_on_data(*data, func=func, **kwargs)
+    def extra_quantity(self, quantity, **kwargs):
+        """
+        Calculate extra quantity.
+
+        Computes an extra quantity on the arrays specified by a string.
+
+        Parameters
+        ----------
+        quantity : str
+            A string specifying the extra quantity to calculate.
+
+        **kwargs
+            Extra arguments to functions to calculate specific quantites.
+
+        Examples
+        --------
+        Calculating the angular momentum.
+
+        >>> quantity = 'angular momentum'
+        >>> particle_mass = dump.particle_mass
+        >>> calculate_extra_quantity(quantity, mass=particle_mass)
+        """
+
+        quantities = [
+            ('r', 'spherical radius'),
+            ('R', 'cylindrical radius'),
+            ('|v|', 'velocity magnitude'),
+            ('p', 'momentum'),
+            ('|p|', 'momentum magnitude'),
+            ('L', 'angular momentum'),
+            ('|L|', 'angular momentum magnitude'),
+            ('l', 'specific angular momentum'),
+            ('|l|', 'specific angular momentum magnitude'),
+        ]
+
+        if quantity not in [element for tupl in quantities for element in tupl]:
+            print(f'{quantity} not available')
+            return None
+
+        if quantity in ['r', 'spherical radius']:
+            data = (self.arrays['xyz'],)
+            func = _spherical_radius
+
+        elif quantity in ['R', 'cylindrical radius']:
+            data = (self.arrays['xyz'],)
+            func = _cylindrical_radius
+
+        elif quantity in ['|v|', 'velocity magnitude']:
+            data = (self.arrays['vxyz'],)
+            func = _velocity_magnitude
+
+        elif quantity in ['p', 'momentum']:
+            if 'mass' not in kwargs:
+                raise ValueError(
+                    'Need particle mass as keyword arg to calculate momentum'
+                )
+            data = (self.arrays['vxyz'],)
+            func = _momentum
+
+        elif quantity in ['|p|', 'momentum magnitude']:
+            if 'mass' not in kwargs:
+                raise ValueError(
+                    'Need particle mass as keyword arg to calculate momentum '
+                    'magnitude'
+                )
+            data = self.arrays['vxyz']
+            func = _momentum_magnitude
+
+        elif quantity in ['L', 'angular momentum']:
+            if 'mass' not in kwargs:
+                raise ValueError(
+                    'Need particle mass as keyword arg to calculate angular '
+                    'momentum'
+                )
+            data = self.arrays['xyz'], self.arrays['vxyz']
+            func = _angular_momentum
+
+        elif quantity in ['|L|', 'angular momentum magnitude']:
+            if 'mass' not in kwargs:
+                raise ValueError(
+                    'Need particle mass as keyword arg to calculate angular '
+                    'momentum magnitude'
+                )
+            data = self.arrays['xyz'], self.arrays['vxyz']
+            func = _angular_momentum
+
+        elif quantity in ['l', 'specific angular momentum']:
+            data = self.arrays['xyz'], self.arrays['vxyz']
+            func = _specific_angular_momentum
+
+        elif quantity in ['|l|', 'specific angular momentum magnitude']:
+            data = self.arrays['xyz'], self.arrays['vxyz']
+            func = _specific_angular_momentum_magnitude
+
+        return _call_function_on_data(*data, func=func, **kwargs)
 
 
 def _call_function_on_data(*data, func, **kwargs):
@@ -151,12 +253,6 @@ def _specific_angular_momentum_magnitude(position, velocity):
     return np.linalg.norm(
         _specific_angular_momentum(position, velocity), axis=1
     )
-
-
-def _angular_velocity(position, velocity):
-    return _specific_angular_momentum_magnitude(
-        position, velocity
-    ) / _spherical_radius(position)
 
 
 def _angular_momentum(position, velocity, mass):

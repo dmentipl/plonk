@@ -15,8 +15,10 @@ def units_in_cgs(udist=1.0, umass=1.0, utime=1.0):
     ----------
     udist : float
         The distance unit [cgs].
+
     umass : float
         The mass unit [cgs].
+
     utime : float
         The time unit [cgs].
 
@@ -75,8 +77,10 @@ def convert_units(quantity, unit_from, unit_to):
     ----------
     quantity : float
         The quantity to be converted.
+
     unit_from : float
         The current value of unit in cgs.
+
     unit_to : float
         The unit to convert quantity to in cgs.
 
