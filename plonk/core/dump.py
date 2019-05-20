@@ -171,9 +171,7 @@ class Dump(DumpFile):
 
         # TODO: docs
 
-        return (
-            self.particle_mass * (hfact / np.abs(self.particles['h'])) ** 3
-        )
+        return self.particle_mass * (hfact / np.abs(self.particles['h'])) ** 3
 
     @property
     def particle_mass(self):
