@@ -26,7 +26,7 @@ class Simulation:
     prefix : str
         Simulation prefix, e.g. 'disc', if files are named like
         disc_00000.h5, disc01.ev, discSink0001N01.ev, etc.
-    data_dir : str, optional
+    directory : str, optional
         Directory containing simulation dump files and auxiliary files.
 
     Examples
@@ -34,23 +34,23 @@ class Simulation:
     Reading simulation data into a Simulation object.
 
     >>> prefix = 'disc'
-    >>> data_dir = '2019-01-01'
-    >>> simulation = plonk.Simulation(prefix, data_dir)
+    >>> directory = '2019-01-01'
+    >>> simulation = plonk.Simulation(prefix, directory)
     """
 
-    def __init__(self, prefix, data_dir=None):
+    def __init__(self, prefix, directory=None):
 
         if not isinstance(prefix, str):
             raise TypeError('prefix must be str')
 
-        if data_dir is None:
-            data_dir = '.'
+        if directory is None:
+            directory = '.'
         else:
-            if not isinstance(data_dir, str):
-                raise TypeError('data_dir must be str')
+            if not isinstance(directory, str):
+                raise TypeError('directory must be str')
 
         self._prefix = prefix
-        self._path = Path(data_dir).resolve()
+        self._path = Path(directory).resolve()
 
         if not list(self._path.glob(self._prefix + '*')):
             raise FileNotFoundError(f'No files with prefix: {prefix}')
@@ -201,5 +201,6 @@ class Simulation:
 
     def __str__(self):
         return (
-            f'<plonk.Simulation: "{self._prefix}", ' f'data_dir="{self._path}">'
+            f'<plonk.Simulation: "{self._prefix}", '
+            f'directory="{self._path}">'
         )
