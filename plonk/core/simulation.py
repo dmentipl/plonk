@@ -104,7 +104,9 @@ class Simulation:
 
     def _generate_evolution_object(self):
         """Generate global evolution object."""
-        self._evolution = Evolution(self._global_ev_files)
+        self._evolution = None
+        if self._global_ev_files:
+            self._evolution = Evolution(self._global_ev_files)
 
     def _generate_sink_evolution_objects(self):
         """Generate sink evolution objects."""
