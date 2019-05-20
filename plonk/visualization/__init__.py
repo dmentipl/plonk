@@ -19,7 +19,7 @@ using any software derived from Splash for academic purposes you should
 cite: Price, 2007, Publ. Astron. Soc. Aust., 24, 159-173.
 """
 
-from .image import Visualization
+from .visualization import Visualization
 
 visualization = Visualization()
 plot = visualization.plot
