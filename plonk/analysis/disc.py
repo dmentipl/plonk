@@ -11,8 +11,8 @@ import warnings
 import numpy as np
 import pandas as pd
 
-from ..constants import constants
-from ..particles import _angular_momentum, _cylindrical_radius, _eccentricity
+from ..core.constants import constants
+from ..core.particles import _angular_momentum, _cylindrical_radius, _eccentricity
 
 _MIN_PARTICLES_IN_BIN = 5
 

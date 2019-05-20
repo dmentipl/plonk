@@ -11,8 +11,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from ..particles import I_GAS, calculate_extra_quantity
-from ..utils import normalize_vector, rotate_vector_arbitrary_axis
+from ..core.particles import I_GAS, calculate_extra_quantity
+from ..core.utils import normalize_vector, rotate_vector_arbitrary_axis
 from .interpolation import scalar_interpolation, vector_interpolation
 
 PlotOptions = namedtuple(
@@ -61,9 +61,9 @@ _DEFAULT_OPTS = PlotOptions(
 )
 
 
-class Visualisation:
+class Visualization:
     """
-    Plonk visualisation class.
+    Plonk visualization class.
     """
 
     def __init__(self):

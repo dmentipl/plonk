@@ -43,7 +43,7 @@ for dumpfile in DUMPFILES:
 print(f'\nPlotting dump files...\n')
 for dump in DUMPS:
     plt.figure()
-    plonk.plot(
+    plonk.visualization.plot(
         dump,
         render=RENDER,
         render_fraction_max=RENDER_FRACTION_MAX,

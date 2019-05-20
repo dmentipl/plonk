@@ -19,11 +19,9 @@ https://github.com/dmentipl/plonk.
 """
 
 from . import analysis
-from .dump import Dump
-from .evolution import Evolution
-from .simulation import Simulation
-from .visualization.image import Visualisation
+from .core.dump import Dump
+from .core.evolution import Evolution
+from .core.simulation import Simulation
+from . import visualization
 
-plot = Visualisation().plot
-
-__all__ = ['Dump', 'Evolution', 'Simulation', 'analysis', 'plot']
+__all__ = ['Dump', 'Evolution', 'Simulation', 'analysis', 'visualization']
