@@ -4,32 +4,61 @@ image.py
 Daniel Mentiplay, 2019.
 """
 
+from collections import namedtuple
+
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from ..particles import I_GAS
+from ..particles import I_GAS, calculate_extra_quantity
 from ..utils import normalize_vector, rotate_vector_arbitrary_axis
 from .interpolation import scalar_interpolation, vector_interpolation
 
-_accelerate = False
-_colorbar = True
-_colormap = 'gist_heat'
-_colorscale = 'linear'
-_cross_section = False
-_density_weighted = False
-_dscreen = None
-_fontfamily = 'sans-serif'
-_fontsize = 12
-_normalize = False
-_npixx = 512
-_npixy = 512
-_opacity = False
-_slice_thickness = 0.0
-_stride = 25
-_vector_color = 'black'
-_zobserver = None
+PlotOptions = namedtuple(
+    'PlotOptions',
+    [
+        'accelerate',
+        'colorbar',
+        'colormap',
+        'colorscale',
+        'cross_section',
+        'density_weighted',
+        'dscreen',
+        'fontfamily',
+        'fontsize',
+        'normalize',
+        'npixx',
+        'npixy',
+        'opacity',
+        'slice_thickness',
+        'stream',
+        'stride',
+        'vector_color',
+        'zobserver',
+    ],
+)
+
+_DEFAULT_OPTS = PlotOptions(
+    accelerate=False,
+    colorbar=True,
+    colormap='gist_heat',
+    colorscale='linear',
+    cross_section=False,
+    density_weighted=False,
+    dscreen=None,
+    fontfamily='sans-serif',
+    fontsize=12,
+    normalize=False,
+    npixx=512,
+    npixy=512,
+    opacity=False,
+    slice_thickness=0.0,
+    stream=False,
+    stride=25,
+    vector_color='black',
+    zobserver=None,
+)
 
 
 class Visualisation:
@@ -326,22 +355,28 @@ class Visualisation:
         axis,
     ):
 
-        accelerate = interpolation_options.pop('accelerate', _accelerate)
+        accelerate = interpolation_options.pop(
+            'accelerate', _DEFAULT_OPTS.accelerate
+        )
         cross_section = interpolation_options.pop(
-            'cross_section', _cross_section
+            'cross_section', _DEFAULT_OPTS.cross_section
         )
-        dscreen = interpolation_options.pop('dscreen', _dscreen)
-        normalize = interpolation_options.pop('normalize', _normalize)
+        dscreen = interpolation_options.pop('dscreen', _DEFAULT_OPTS.dscreen)
+        normalize = interpolation_options.pop(
+            'normalize', _DEFAULT_OPTS.normalize
+        )
         number_pixels = interpolation_options.pop(
-            'number_pixels', [_npixx, _npixy]
+            'number_pixels', [_DEFAULT_OPTS.npixx, _DEFAULT_OPTS.npixy]
         )
-        opacity = interpolation_options.pop('opacity', _opacity)
+        opacity = interpolation_options.pop('opacity', _DEFAULT_OPTS.opacity)
         slice_thickness = interpolation_options.pop(
-            'slice_thickness', _slice_thickness
+            'slice_thickness', _DEFAULT_OPTS.slice_thickness
         )
-        zobserver = interpolation_options.pop('zobserver', _zobserver)
+        zobserver = interpolation_options.pop(
+            'zobserver', _DEFAULT_OPTS.zobserver
+        )
 
-        if render == 'rho':
+        if render in ['rho', 'dens', 'density']:
             render_data = dump.density_from_smoothing_length()
         elif render == 'x':
             render_data = dump.particles['xyz'][particle_mask][:, 0]
@@ -355,15 +390,19 @@ class Visualisation:
             render_data = dump.particles['vxyz'][particle_mask][:, 1]
         elif render == 'vz':
             render_data = dump.particles['vxyz'][particle_mask][:, 2]
+        elif render in ['v', 'velocity']:
+            render_data = calculate_extra_quantity(dump, 'velocity magnitude')[
+                particle_mask
+            ]
         else:
             try:
                 render_data = dump.particles[render][particle_mask]
-                if render_data.ndim != 1:
-                    raise ValueError(f'{render} is not 1-dimensional')
             except Exception:
                 raise ValueError(
                     f'Cannot determine quantity to render: {render}'
                 )
+            if render_data.ndim != 1:
+                raise ValueError(f'{render} is not 1-dimensional')
 
         print(f'Rendering {render} using Splash')
 
@@ -406,16 +445,14 @@ class Visualisation:
         axis,
     ):
 
-        render_scale = render_options.pop('render_scale', None)
+        render_scale = render_options.pop(
+            'render_scale', _DEFAULT_OPTS.colorscale
+        )
         render_min = render_options.pop('render_min', None)
         render_max = render_options.pop('render_max', None)
         render_fraction_max = render_options.pop('render_fraction_max', None)
-        colormap = render_options.pop('colormap', _colormap)
-        colorbar = figure_options.pop('colorbar', _colorbar)
-
-        cmap = _colormap
-        if colormap is not None:
-            cmap = colormap
+        cmap = render_options.pop('colormap', _DEFAULT_OPTS.colormap)
+        colorbar = figure_options.pop('colorbar', _DEFAULT_OPTS.colorbar)
 
         if render_max is None:
             vmax = image_data.max()
@@ -427,9 +464,8 @@ class Visualisation:
 
         if render_min is None:
             vmin = image_data.min()
-
-        if render_scale is None:
-            render_scale = _colorscale
+        else:
+            vmin = render_min
 
         if render_scale == 'log':
             norm = colors.SymLogNorm(1e-1 * vmax, clip=True)
@@ -448,11 +484,7 @@ class Visualisation:
         render_label = r'$\int$ ' + f'{render}' + ' dz'
 
         cb = None
-        if colorbar is not None:
-            colorbar_ = colorbar
-        else:
-            colorbar_ = _colorbar
-        if colorbar_:
+        if colorbar:
             divider = make_axes_locatable(axis)
             cax = divider.append_axes("right", size="5%", pad=0.05)
             cb = plt.colorbar(img, cax=cax)
@@ -474,25 +506,31 @@ class Visualisation:
         axis,
     ):
 
-        stream = vector_options.pop('stream', None)
-        if stream is None:
-            stream = False
+        stream = vector_options.pop('stream', _DEFAULT_OPTS.stream)
+        stride = vector_options.pop('stride', _DEFAULT_OPTS.stride)
 
         cross_section = interpolation_options.pop(
-            'cross_section', _cross_section
+            'cross_section', _DEFAULT_OPTS.cross_section
         )
-        dscreen = interpolation_options.pop('dscreen', _dscreen)
-        normalize = interpolation_options.pop('normalize', _normalize)
+        dscreen = interpolation_options.pop('dscreen', _DEFAULT_OPTS.dscreen)
+        normalize = interpolation_options.pop(
+            'normalize', _DEFAULT_OPTS.normalize
+        )
         number_pixels = interpolation_options.pop(
-            'number_pixels', [_npixx, _npixy]
+            'number_pixels', [_DEFAULT_OPTS.npixx, _DEFAULT_OPTS.npixy]
         )
         slice_thickness = interpolation_options.pop(
-            'slice_thickness', _slice_thickness
+            'slice_thickness', _DEFAULT_OPTS.slice_thickness
         )
-        zobserver = interpolation_options.pop('zobserver', _zobserver)
+        zobserver = interpolation_options.pop(
+            'zobserver', _DEFAULT_OPTS.zobserver
+        )
 
-        if vector in ['v', 'velocity']:
-            vector_data = dump.particles['vxyz'][particle_mask]
+        if vector in ['v', 'vel', 'velocity']:
+            try:
+                vector_data = dump.particles['vxyz'][particle_mask]
+            except Exception:
+                raise ValueError('Velocity not available in dump')
         else:
             try:
                 vector_data = dump.particles[vector][particle_mask]
@@ -530,8 +568,7 @@ class Visualisation:
             np.linspace(*vertical_range, len(yvector_data)),
         )
 
-        stride = _stride
-        vector_color = _vector_color
+        vector_color = _DEFAULT_OPTS.vector_color
         if render:
             vector_color = 'white'
 
@@ -637,6 +674,22 @@ class Visualisation:
 
         if title is not None:
             axis.set_title(title)
+
+
+def plot_options(**kwargs):
+    """
+    Create a dictionary with plot options.
+
+    Returns
+    -------
+    """
+
+    options = dict(_DEFAULT_OPTS._asdict())
+    for key, item in kwargs.items():
+        if key in options:
+            options[key] = item
+
+    return options
 
 
 def _convert_units():
