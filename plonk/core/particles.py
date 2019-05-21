@@ -120,6 +120,8 @@ class Arrays:
         Calculate extra quantity.
 
         Computes an extra quantity on the arrays specified by a string.
+        For some quantities the particle masses are required. These may
+        not be available by default.
 
         Parameters
         ----------
@@ -133,8 +135,9 @@ class Arrays:
         --------
         Calculating the angular momentum two ways.
 
-        >>> calculate_extra_quantity('angular momentum')
-        >>> calculate_extra_quantity('L')
+        >>> arrays = Arrays(label, handle)
+        >>> arrays.extra_quantity('angular momentum')
+        >>> arrays.extra_quantity('L')
         """
 
         quantities = [

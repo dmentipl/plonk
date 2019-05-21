@@ -395,7 +395,7 @@ class Visualization:
         elif render == 'vz':
             render_data = dump.particles.arrays['vxyz'][particle_mask][:, 2]
         elif render in ['v', 'velocity']:
-            render_data = calculate_extra_quantity(dump, 'velocity magnitude')[
+            render_data = dump.particles.extra_quantity('velocity magnitude')[
                 particle_mask
             ]
         else:
