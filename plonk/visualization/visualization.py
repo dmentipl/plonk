@@ -32,7 +32,7 @@ PlotOptions = namedtuple(
         'npixx',
         'npixy',
         'opacity',
-        'slice_thickness',
+        'slice_position',
         'stream',
         'stride',
         'vector_color',
@@ -54,7 +54,7 @@ _DEFAULT_OPTS = PlotOptions(
     npixx=512,
     npixy=512,
     opacity=False,
-    slice_thickness=0.0,
+    slice_position=0.0,
     stream=False,
     stride=25,
     vector_color='black',
@@ -119,9 +119,9 @@ class Visualization:
             If true, plot vector plots as stream functions.
         cross_section : bool, default ``None``
             If true, plot a cross section rather than column density
-            with slice thickness specified by ``slice_thickness``.
-        slice_thickness : float, default ``None``
-            Thickness of a cross sectional slice.
+            with slice position specified by ``slice_position``.
+        slice_position : float, default ``None``
+            Position of the cross sectional slice.
         number_pixels : list of float (len=2), default ``None``
             The number of pixels in the horizontal and vertical
             directions, like [npixx, npixy], for interpolation. This
@@ -220,7 +220,7 @@ class Visualization:
                 'normalize',
                 'number_pixels',
                 'opacity',
-                'slice_thickness',
+                'slice_position',
                 'zobserver',
             ]
         }
@@ -373,8 +373,8 @@ class Visualization:
             'number_pixels', [_DEFAULT_OPTS.npixx, _DEFAULT_OPTS.npixy]
         )
         opacity = interpolation_options.pop('opacity', _DEFAULT_OPTS.opacity)
-        slice_thickness = interpolation_options.pop(
-            'slice_thickness', _DEFAULT_OPTS.slice_thickness
+        slice_position = interpolation_options.pop(
+            'slice_position', _DEFAULT_OPTS.slice_position
         )
         zobserver = interpolation_options.pop(
             'zobserver', _DEFAULT_OPTS.zobserver
@@ -420,7 +420,7 @@ class Visualization:
             vertical_range,
             number_pixels,
             cross_section,
-            slice_thickness,
+            slice_position,
             opacity,
             normalize,
             zobserver,
@@ -527,8 +527,8 @@ class Visualization:
         number_pixels = interpolation_options.pop(
             'number_pixels', [_DEFAULT_OPTS.npixx, _DEFAULT_OPTS.npixy]
         )
-        slice_thickness = interpolation_options.pop(
-            'slice_thickness', _DEFAULT_OPTS.slice_thickness
+        slice_position = interpolation_options.pop(
+            'slice_position', _DEFAULT_OPTS.slice_position
         )
         zobserver = interpolation_options.pop(
             'zobserver', _DEFAULT_OPTS.zobserver
@@ -562,7 +562,7 @@ class Visualization:
             vertical_range,
             number_pixels,
             cross_section,
-            slice_thickness,
+            slice_position,
             normalize,
             zobserver,
             dscreen,
