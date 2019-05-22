@@ -31,7 +31,7 @@ class Arrays:
     Creating the particle arrays object.
 
     >>> file_handle = h5py.File(filename)
-    >>> particles = Arrays('particles', file_handle)
+    >>> particles = Arrays(file_handle=file_handle, arrays_label='particles')
 
     Accessing particle position array (two ways), available arrays, and
     array data types.
@@ -42,13 +42,28 @@ class Arrays:
     >>> particles.arrays.dtype
     """
 
-    def __init__(self, arrays_label, file_handle, cache_arrays=None):
+    def __init__(
+        self,
+        *,
+        file_handle=None,
+        arrays_label=None,
+        particle_type=None,
+        cache_arrays=None,
+    ):
 
         self._arrays_handle = file_handle[arrays_label]
+
+        _CAN_COMPUTE_DENSITY_LABELS = ['fluid', 'sph fluid', 'sph_fluid']
+        self._can_compute_density = False
+        if particle_type in _CAN_COMPUTE_DENSITY_LABELS:
+            self._can_compute_density = True
+
         self._fields = None
         self._dtype = None
         self._shape = None
+
         self._mass = None
+        self._rho = None
 
         self._arrays = {
             field: self._get_array_handle(field) for field in self.fields
@@ -87,6 +102,15 @@ class Arrays:
     @mass.setter
     def mass(self, value):
         self._mass = value
+
+    @property
+    def rho(self):
+        """Mass density."""
+        return self._rho
+
+    @rho.setter
+    def rho(self, value):
+        self._rho = value
 
     @property
     def fields(self):

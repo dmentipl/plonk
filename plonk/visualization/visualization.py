@@ -381,7 +381,7 @@ class Visualization:
         )
 
         if render in ['rho', 'dens', 'density']:
-            render_data = dump.density_from_smoothing_length()
+            render_data = dump.particles.rho
         elif render == 'x':
             render_data = dump.particles.xyz[()][particle_mask][:, 0]
         elif render == 'y':

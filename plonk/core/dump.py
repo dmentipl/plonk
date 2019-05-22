@@ -125,10 +125,17 @@ class Dump(DumpFile):
             self._cache_arrays = cache_arrays
 
         self.particles = Arrays(
-            'particles', self._file_handle, cache_arrays=cache_arrays
+            arrays_label='particles',
+            file_handle=self._file_handle,
+            particle_type='fluid',
+            cache_arrays=cache_arrays,
         )
         self.particles.mass = self._mass_from_itype()
-        self.sinks = Arrays('sinks', self._file_handle)
+        self.particles.rho = self._density_from_smoothing_length(
+            self.header['hfact']
+        )
+
+        self.sinks = Arrays(arrays_label='sinks', file_handle=self._file_handle)
 
     @property
     def header(self):
@@ -138,23 +145,14 @@ class Dump(DumpFile):
         """
         return self._header
 
-    def density_from_smoothing_length(self, hfact=1.2):
-        """
-        Calculate density from particle mass and smoothing length.
+    def _density_from_smoothing_length(self, hfact=1.2):
+        """Calculate density from particle mass and smoothing length."""
 
-        Parameters
-        ----------
-
-        Returns
-        -------
-        """
-
-        # TODO: docs
-
-        return (
-            self.particles.mass
-            * (hfact / np.abs(self.particles.arrays['h'])) ** 3
-        )
+        if self.particles._can_compute_density:
+            return self.particles.mass * (hfact / np.abs(self.particles.h)) ** 3
+        else:
+            print(f'Cannot compute density on {self.particles}')
+            return None
 
     def _mass_from_itype(self):
         return self.header['massoftype'][self.particles.itype[()] - 1]
