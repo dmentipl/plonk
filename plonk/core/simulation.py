@@ -30,6 +30,9 @@ class Simulation:
     directory : str, optional
         Directory containing simulation dump files and auxiliary files.
 
+    **kwargs
+        Arguments to pass to Dump.
+
     Examples
     --------
     Reading simulation data into a Simulation object.
@@ -49,7 +52,9 @@ class Simulation:
     >>> simulation.sink_evolution
     """
 
-    def __init__(self, prefix, directory=None):
+    def __init__(self, prefix, directory=None, **kwargs):
+
+        self._init_kwargs = kwargs
 
         if not isinstance(prefix, str):
             raise TypeError('prefix must be str')
@@ -110,7 +115,7 @@ class Simulation:
 
         dumps = list()
         for dump in self._dump_files:
-            dumps.append(Dump(dump))
+            dumps.append(Dump(dump, **self._init_kwargs))
         self._dumps = dumps
 
     def _generate_evolution_object(self):

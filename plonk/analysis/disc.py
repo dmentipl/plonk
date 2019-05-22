@@ -86,7 +86,7 @@ def _calculate_radially_binned_quantities(
     dump, number_radial_bins, radius_in, radius_out, sink_index
 ):
 
-    particles = dump.particles.arrays
+    particles = dump.particles.to_structured_array()
     particle_masses = dump.particles.mass
 
     radius = _cylindrical_radius(particles['xyz'])
@@ -99,7 +99,7 @@ def _calculate_radially_binned_quantities(
         / dump.header['umass']
         / dump.header['utime'] ** 2
     )
-    stellar_mass = dump.sinks.arrays[sink_index - 1]['m']
+    stellar_mass = dump.sinks.arrays['m'][sink_index - 1]
     gravitational_parameter = gravitational_constant * stellar_mass
     eccentricity = _eccentricity(
         particles['xyz'], particles['vxyz'], gravitational_parameter

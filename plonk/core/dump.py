@@ -155,7 +155,7 @@ class Dump(DumpFile):
         )
 
     def _mass_from_itype(self):
-        return self.header['massoftype'][self.particles.arrays['itype'] - 1]
+        return self.header['massoftype'][self.particles.arrays['itype'][()] - 1]
 
     def _load_arrays(self, array):
         """Load arrays into memory."""

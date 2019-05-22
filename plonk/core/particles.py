@@ -45,25 +45,42 @@ class Arrays:
 
         self._arrays_handle = file_handle[arrays_label]
         self._fields = None
-        self._datatypes = None
+        self._dtype = None
+        self._shape = None
         self._mass = None
 
+        self._arrays = {
+            field: self._get_array_handle(field) for field in self.fields
+        }
+
         if cache_arrays is None:
-            self._cache_arrays = False
-            self._arrays = None
+            cache_arrays = False
         else:
             if not isinstance(cache_arrays, bool):
                 raise TypeError('cache_array must be bool')
-            self._cache_arrays = cache_arrays
+        if not cache_arrays:
+            self._cache_arrays = False
+        else:
+            self.cache_arrays()
+
+        for field in self.fields:
             if cache_arrays:
-                self.cache_arrays()
+                setattr(self, field, self.arrays[field])
+            else:
+                setattr(self, field, self._get_array_handle(field))
 
     @property
     def arrays(self):
-        """Arrays in the form of a structured Numpy array."""
-        if self._arrays is None:
-            return self._read_arrays()
+        if self._cache_arrays:
+            return self._arrays_cached
         return self._arrays
+
+    def _get_field_from_cache(self, field):
+        return getattr(self, '_' + field)
+
+    def _get_array_handle(self, array):
+        """Get one array from file."""
+        return self._arrays_handle[array]
 
     @property
     def mass(self):
@@ -78,33 +95,47 @@ class Arrays:
     def fields(self):
         """List of available fields (array names)."""
         if self._fields is None:
-            self._fields = list(self.arrays.dtype.fields)
+            self._fields = tuple(self._arrays_handle)
         return self._fields
 
     @property
-    def datatypes(self):
+    def dtype(self):
         """List of array data types."""
-        if self._datatypes is None:
-            self._datatypes = [
-                items[:-1][0] for key, items in self.arrays.dtype.fields.items()
-            ]
-        return self._datatypes
+        if self._dtype is None:
+            self._dtype = tuple(
+                [item.dtype for _, item in self._arrays_handle.items()]
+            )
+        return self._dtype
+
+    @property
+    def shape(self):
+        """List of array shapes."""
+        if self._shape is None:
+            self._shape = tuple(
+                [item.shape for _, item in self._arrays_handle.items()]
+            )
+        return self._shape
+
+    def to_structured_array(self):
+        """Return arrays as Numpy structured array."""
+        if self._cache_arrays:
+            return self._arrays_cached
+        return self._read_arrays()
 
     def _read_arrays(self):
         """Read arrays into structured Numpy array."""
 
-        dtypes = []
+        dtype = []
         nvals = None
         for key, val in self._arrays_handle.items():
-            if val.size > 0:
-                if nvals is None:
-                    nvals = val.shape[0]
-                if val.ndim == 1:
-                    dtypes.append((key, val.dtype))
-                elif val.ndim > 1:
-                    dtypes.append((key, val.dtype, val.shape[1:]))
+            if nvals is None:
+                nvals = val.shape[0]
+            if val.ndim == 1:
+                dtype.append((key, val.dtype))
+            elif val.ndim > 1:
+                dtype.append((key, val.dtype, val.shape[1:]))
 
-        struct_array = np.zeros(nvals, dtype=dtypes)
+        struct_array = np.zeros(nvals, dtype=dtype)
         for key in struct_array.dtype.fields:
             struct_array[key] = self._arrays_handle[key][()]
 
@@ -112,7 +143,7 @@ class Arrays:
 
     def cache_arrays(self):
         """Load arrays into memory."""
-        setattr(self, '_arrays', self._read_arrays())
+        self._arrays_cached = self._read_arrays()
         self._cache_arrays = True
 
     def extra_quantity(self, quantity, **kwargs):
