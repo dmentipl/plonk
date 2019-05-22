@@ -86,16 +86,18 @@ class Dump(DumpFile):
     >>> dump = plonk.Dump(file_name)
 
     Accessing the particle arrays object, available particle arrays, and
-    particle positions.
+    particle positions (in two ways).
 
     >>> dump.particles
     >>> dump.particles.fields
+    >>> dump.particles.xyz[()]
     >>> dump.particles.arrays['xyz']
 
     Accessing the sink arrays object, array data types, and sink spin.
 
     >>> dump.sinks
-    >>> dump.sinks.datatypes
+    >>> dump.sinks.dtype
+    >>> dump.sinks.spinxyz[()]
     >>> dump.sinks.arrays['spinxyz']
 
     Accessing the dump header dictionary, dump simulation time, and
@@ -155,7 +157,7 @@ class Dump(DumpFile):
         )
 
     def _mass_from_itype(self):
-        return self.header['massoftype'][self.particles.arrays['itype'][()] - 1]
+        return self.header['massoftype'][self.particles.itype[()] - 1]
 
     def _load_arrays(self, array):
         """Load arrays into memory."""

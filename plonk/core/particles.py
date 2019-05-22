@@ -33,12 +33,13 @@ class Arrays:
     >>> file_handle = h5py.File(filename)
     >>> particles = Arrays('particles', file_handle)
 
-    Accessing particle position array, available arrays, and array data
-    types.
+    Accessing particle position array (two ways), available arrays, and
+    array data types.
 
+    >>> particles.xyz[()]
     >>> particles.arrays['xyz']
     >>> particles.arrays.fields
-    >>> particles.arrays.datatypes
+    >>> particles.arrays.dtype
     """
 
     def __init__(self, arrays_label, file_handle, cache_arrays=None):
