@@ -274,7 +274,7 @@ class Visualization:
 
         image = None
         if render:
-            image = self._render_image(
+            image, colorbar = self._render_image(
                 dump,
                 render,
                 positions,
@@ -311,7 +311,7 @@ class Visualization:
             axis, horizontal_range, vertical_range, figure_options
         )
 
-        return {'axis': axis, 'image': image}
+        return {'axis': axis, 'image': image, 'colorbar': colorbar}
 
     def _set_image_size(self, positions, range_options):
         """Set image size."""
@@ -428,7 +428,7 @@ class Visualization:
             accelerate,
         )
 
-        image = self._render_image_matplotlib(
+        image, colorbar = self._render_image_matplotlib(
             image_data,
             render,
             horizontal_range,
@@ -438,7 +438,7 @@ class Visualization:
             axis,
         )
 
-        return image
+        return image, colorbar
 
     def _render_image_matplotlib(
         self,
@@ -497,7 +497,7 @@ class Visualization:
             if render_label:
                 colorbar.set_label(render_label)
 
-        return image
+        return image, colorbar
 
     def _vector_image(
         self,
