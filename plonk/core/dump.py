@@ -24,13 +24,13 @@ class DumpFile:
             raise TypeError('filename must be str or pathlib.Path')
 
         path = Path(filename)
-        self._file_path = path.resolve()
-        self._file_name = path.name
-        self._file_extension = path.suffix[1:]
+        self.file_path = path.resolve()
+        self.file_name = path.name
+        self.file_extension = path.suffix[1:]
 
         for ft in FILE_TYPES:
-            if self._file_extension == ft.extension:
-                self._file_type = ft.filetype
+            if self.file_extension == ft.extension:
+                self.file_type = ft.filetype
 
         self._open_file()
 
@@ -38,21 +38,21 @@ class DumpFile:
         return self.__str__()
 
     def __str__(self):
-        return str(self._file_handle)
+        return str(self.file_handle)
 
     def _open_file(self):
 
-        if not self._file_path.is_file():
+        if not self.file_path.is_file():
             raise FileNotFoundError('Cannot find dump file')
 
-        if self._file_type not in [ft.filetype for ft in FILE_TYPES]:
+        if self.file_type not in [ft.filetype for ft in FILE_TYPES]:
             raise ValueError('Unknown file type')
         else:
-            if self._file_type == 'HDF5':
-                self._file_handle = h5py.File(self._file_path, mode='r')
+            if self.file_type == 'HDF5':
+                self.file_handle = h5py.File(self.file_path, mode='r')
 
     def _close_file(self):
-        self._file_handle.close()
+        self.file_handle.close()
 
 
 class Dump(DumpFile):
@@ -112,7 +112,7 @@ class Dump(DumpFile):
         super().__init__(filename)
 
         self._header = {
-            key: val[()] for key, val in self._file_handle['header'].items()
+            key: val[()] for key, val in self.file_handle['header'].items()
         }
 
         self.is_full_dump = self._determine_if_full_dump()
@@ -126,7 +126,7 @@ class Dump(DumpFile):
 
         self.particles = Arrays(
             arrays_label='particles',
-            file_handle=self._file_handle,
+            file_handle=self.file_handle,
             particle_type='fluid',
             cache_arrays=cache_arrays,
         )
@@ -135,7 +135,7 @@ class Dump(DumpFile):
             self.header['hfact']
         )
 
-        self.sinks = Arrays(arrays_label='sinks', file_handle=self._file_handle)
+        self.sinks = Arrays(arrays_label='sinks', file_handle=self.file_handle)
 
     @property
     def header(self):
@@ -167,7 +167,7 @@ class Dump(DumpFile):
     def _read_arrays(self, array):
         """Read arrays into structured Numpy array."""
 
-        array_handle = self._file_handle[array]
+        array_handle = self.file_handle[array]
 
         dtypes = []
         nvals = None
@@ -195,5 +195,5 @@ class Dump(DumpFile):
 
     def __str__(self):
         return (
-            f'<plonk.Dump: "{self._file_name}", ' f'path="{self._file_path}">'
+            f'<plonk.Dump: "{self.file_name}">'
         )

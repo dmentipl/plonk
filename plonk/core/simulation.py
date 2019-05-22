@@ -65,10 +65,10 @@ class Simulation:
             if not isinstance(directory, str):
                 raise TypeError('directory must be str')
 
-        self._prefix = prefix
-        self._path = Path(directory).resolve()
+        self.prefix = prefix
+        self.path = Path(directory).resolve()
 
-        if not list(self._path.glob(self._prefix + '*')):
+        if not list(self.path.glob(self.prefix + '*')):
             raise FileNotFoundError(f'No files with prefix: {prefix}')
 
         self._dump_file_type, self._dump_file_extension = (
@@ -138,9 +138,9 @@ class Simulation:
 
         if glob is None:
             # Phantom ev file name format
-            glob = self._prefix + '[0-9][0-9].ev'
+            glob = self.prefix + '[0-9][0-9].ev'
 
-        return sorted(list(self._path.glob(glob)))
+        return sorted(list(self.path.glob(glob)))
 
     def _get_sink_ev_files(self, glob=None):
         """Get time evolution files for sinks.
@@ -151,11 +151,11 @@ class Simulation:
 
         if glob is None:
             # Phantom ev file name format
-            glob = self._prefix + 'Sink[0-9][0-9][0-9][0-9]N[0-9][0-9].ev'
+            glob = self.prefix + 'Sink[0-9][0-9][0-9][0-9]N[0-9][0-9].ev'
 
-        n = len(self._prefix) + len('Sink')
+        n = len(self.prefix) + len('Sink')
         n_sinks = len(
-            set([p.name[n : n + 4] for p in list(self._path.glob(glob))])
+            set([p.name[n : n + 4] for p in list(self.path.glob(glob))])
         )
 
         sinks = list()
@@ -163,8 +163,8 @@ class Simulation:
             sinks.append(
                 sorted(
                     list(
-                        self._path.glob(
-                            self._prefix + f'Sink{idx:04}N[0-9][0-9].ev'
+                        self.path.glob(
+                            self.prefix + f'Sink{idx:04}N[0-9][0-9].ev'
                         )
                     )
                 )
@@ -178,12 +178,12 @@ class Simulation:
         if glob is None:
             # Phantom dump file name format
             glob = (
-                self._prefix
+                self.prefix
                 + '_[0-9][0-9][0-9][0-9][0-9].'
                 + self._dump_file_extension
             )
 
-        return sorted(list(self._path.glob(glob)))
+        return sorted(list(self.path.glob(glob)))
 
     def _get_dump_file_type(self, glob=None):
         """
@@ -193,9 +193,9 @@ class Simulation:
 
         if glob is None:
             # Phantom dump file name format
-            glob = self._prefix + '_[0-9][0-9][0-9][0-9][0-9].*'
+            glob = self.prefix + '_[0-9][0-9][0-9][0-9][0-9].*'
 
-        file_types = set([f.suffix for f in self._path.glob(glob)])
+        file_types = set([f.suffix for f in self.path.glob(glob)])
 
         if len(file_types) > 1:
             raise ValueError(
@@ -219,6 +219,6 @@ class Simulation:
 
     def __str__(self):
         return (
-            f'<plonk.Simulation: "{self._prefix}", '
-            f'directory="{self._path}">'
+            f'<plonk.Simulation: "{self.prefix}", '
+            f'directory="{self.path.name}">'
         )

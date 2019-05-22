@@ -55,16 +55,16 @@ class Evolution:
         if isinstance(filenames, str):
             filenames = [filenames]
 
-        self._file_paths = list()
-        self._file_names = list()
+        self.file_paths = list()
+        self.file_names = list()
         for filename in filenames:
             if not isinstance(filename, str) and not isinstance(filename, Path):
                 raise TypeError(
                     'filenames must be a list of str or pathlib.Path'
                 )
             path = Path(filename)
-            self._file_paths.append(path.resolve())
-            self._file_names.append(path.name)
+            self.file_paths.append(path.resolve())
+            self.file_names.append(path.name)
 
         _check_file_consistency(filenames)
 
@@ -111,7 +111,7 @@ class Evolution:
     def _get_data(self):
 
         times = list()
-        for filename in self._file_names:
+        for filename in self.file_names:
             times.append(np.loadtxt(filename, usecols=0))
 
         final_row_index = [
@@ -122,9 +122,9 @@ class Evolution:
 
         arr = [
             np.loadtxt(filename)[: final_row_index[idx]]
-            for idx, filename in enumerate(self._file_names[:-1])
+            for idx, filename in enumerate(self.file_names[:-1])
         ]
-        arr.append(np.loadtxt(self._file_names[-1]))
+        arr.append(np.loadtxt(self.file_names[-1]))
         arr = np.concatenate(arr)
 
         return np.core.records.fromarrays(arr.T, dtype=dtype)
@@ -134,8 +134,7 @@ class Evolution:
 
     def __str__(self):
         return (
-            f'<plonk.Evolution: "{self._file_names}", '
-            f'path="{self._file_paths}">'
+            f'<plonk.Evolution: "{self.file_names}">'
         )
 
 
