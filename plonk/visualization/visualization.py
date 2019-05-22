@@ -246,13 +246,13 @@ class Visualization:
             if not isinstance(particle_type, int):
                 raise ValueError('particle_type must be int')
 
-        particle_mask = dump.particles.arrays['itype'] == particle_type
+        particle_mask = dump.particles.itype[()] == particle_type
 
-        positions = dump.particles.arrays['xyz'][particle_mask]
-        smoothing_length = dump.particles.arrays['h'][particle_mask]
+        positions = dump.particles.xyz[()][particle_mask]
+        smoothing_length = dump.particles.h[()][particle_mask]
         particle_mass = dump.header['massoftype'][particle_type - 1]
         try:
-            velocities = dump.particles.arrays['vxyz']
+            velocities = dump.particles.vxyz[()]
         except Exception:
             velocities = None
 
@@ -383,17 +383,17 @@ class Visualization:
         if render in ['rho', 'dens', 'density']:
             render_data = dump.density_from_smoothing_length()
         elif render == 'x':
-            render_data = dump.particles.arrays['xyz'][particle_mask][:, 0]
+            render_data = dump.particles.xyz[()][particle_mask][:, 0]
         elif render == 'y':
-            render_data = dump.particles.arrays['xyz'][particle_mask][:, 1]
+            render_data = dump.particles.xyz[()][particle_mask][:, 1]
         elif render == 'z':
-            render_data = dump.particles.arrays['xyz'][particle_mask][:, 2]
+            render_data = dump.particles.xyz[()][particle_mask][:, 2]
         elif render == 'vx':
-            render_data = dump.particles.arrays['vxyz'][particle_mask][:, 0]
+            render_data = dump.particles.vxyz[()][particle_mask][:, 0]
         elif render == 'vy':
-            render_data = dump.particles.arrays['vxyz'][particle_mask][:, 1]
+            render_data = dump.particles.vxyz[()][particle_mask][:, 1]
         elif render == 'vz':
-            render_data = dump.particles.arrays['vxyz'][particle_mask][:, 2]
+            render_data = dump.particles.vxyz[()][particle_mask][:, 2]
         elif render in ['v', 'velocity']:
             render_data = dump.particles.extra_quantity('velocity magnitude')[
                 particle_mask
@@ -412,7 +412,7 @@ class Visualization:
 
         image_data = scalar_interpolation(
             positions,
-            dump.particles.arrays['h'][particle_mask],
+            dump.particles.h[()][particle_mask],
             weights,
             render_data,
             particle_mass,
@@ -536,7 +536,7 @@ class Visualization:
 
         if vector in ['v', 'vel', 'velocity']:
             try:
-                vector_data = dump.particles.arrays['vxyz'][particle_mask]
+                vector_data = dump.particles.vxyz[()][particle_mask]
             except Exception:
                 raise ValueError('Velocity not available in dump')
         else:
@@ -555,7 +555,7 @@ class Visualization:
 
         vector_data = vector_interpolation(
             positions,
-            dump.particles.arrays['h'][particle_mask],
+            dump.particles.h[()][particle_mask],
             weights,
             vector_data,
             horizontal_range,
