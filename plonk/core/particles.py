@@ -61,14 +61,10 @@ class Arrays:
                 raise TypeError('cache_array must be bool')
         if not cache_arrays:
             self._cache_arrays = False
+            for field in self.fields:
+                setattr(self, field, self._get_array_handle(field))
         else:
             self.cache_arrays()
-
-        for field in self.fields:
-            if cache_arrays:
-                setattr(self, field, self.arrays[field])
-            else:
-                setattr(self, field, self._get_array_handle(field))
 
     @property
     def arrays(self):
@@ -145,6 +141,8 @@ class Arrays:
     def cache_arrays(self):
         """Load arrays into memory."""
         self._arrays_cached = self._read_arrays()
+        for field in self.fields:
+            setattr(self, field, self._arrays_cached[field])
         self._cache_arrays = True
 
     def extra_quantity(self, quantity, **kwargs):
