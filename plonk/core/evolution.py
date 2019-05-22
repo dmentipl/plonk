@@ -10,6 +10,8 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
+FLOAT_TYPE = '<f8'
+
 
 class Evolution:
     """
@@ -47,8 +49,6 @@ class Evolution:
 
     >>> evol.plot('ekin', 'etherm')
     """
-
-    FLOAT_TYPE = '<f8'
 
     def __init__(self, filenames):
 
