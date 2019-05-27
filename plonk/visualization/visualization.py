@@ -25,9 +25,9 @@ PlotOptions = namedtuple(
         'colorscale',
         'cross_section',
         'density_weighted',
-        'dscreen',
-        'fontfamily',
-        'fontsize',
+        'distance_to_screen',
+        'font_family',
+        'font_size',
         'normalize',
         'npixx',
         'npixy',
@@ -36,7 +36,7 @@ PlotOptions = namedtuple(
         'stream',
         'stride',
         'vector_color',
-        'zobserver',
+        'z_observer',
     ],
 )
 
@@ -47,9 +47,9 @@ _DEFAULT_OPTS = PlotOptions(
     colorscale='linear',
     cross_section=False,
     density_weighted=False,
-    dscreen=None,
-    fontfamily='sans-serif',
-    fontsize=12,
+    distance_to_screen=None,
+    font_family='sans-serif',
+    font_size=12,
     normalize=False,
     npixx=512,
     npixy=512,
@@ -58,7 +58,7 @@ _DEFAULT_OPTS = PlotOptions(
     stream=False,
     stride=25,
     vector_color='black',
-    zobserver=None,
+    z_observer=None,
 )
 
 
@@ -106,39 +106,55 @@ class Visualization:
         An angle (radians) of inclination specified relative to a
         ``position_angle``.
 
-    render_scale : str, default ``None``
+    render_scale : str, default 'linear'
         Render scale options include: 'log', 'linear'.
-    render_min : float, default ``None``
+    render_min : float, default None
         Minimum value of the rendered quantity.
-    render_max : float, default ``None``
+    render_max : float, default None
         Maximum value of the rendered quantity.
-    render_fraction_max : float, default ``None``
+    render_fraction_max : float, default None
         Maximum value of the rendered quantity specified as a
         fraction of the maximum in the data.
 
-    stream : bool, default ``None``
+    stream : bool, default False
         If true, plot vector plots as stream functions.
+    stride : int, default 25
+        Striding through vector interpolation for vector plots.
+    vector_color : str, default None
+        Color of vector field as arrows or streamfunction.
 
-    title : str, default ``None``
-        Plot title.
-    axis : Axes, default ``None``
+    axis : Axes, default None
         Matplotlib Axes object to plot to.
-    new_figure : bool, default ``None``
-        If true, create new figure using Matplotlib.
-    colorbar : bool, default ``None``
+    colorbar : bool, default True
         If true, plot colorbar.
-    colormap : str, default ``None``
+    colormap : str, default 'gist_heat'
         Specify the colormap.
+    new_figure : bool, default False
+        If true, create new figure using Matplotlib.
+    title : str, default None
+        Plot title.
 
-    cross_section : bool, default ``None``
+    accelerate : bool, default False
+        Use accelerated interpolation.
+    cross_section : bool, default False
         If true, plot a cross section rather than column density
         with slice position specified by ``slice_position``.
-    number_pixels : list of float (len=2), default ``None``
+    density_weighted : bool, default False
+        Use density weighted interpolation.
+    distance_to_screen : float, default 0.0
+        Distance to screen.
+    normalize : bool, default False
+        Use normalized interpolation.
+    number_pixels : list of float (len=2), default (512, 512)
         The number of pixels in the horizontal and vertical
         directions, like [npixx, npixy], for interpolation. This
         determines the resolution of the image.
-    slice_position : float, default ``None``
+    opacity : bool, default False
+        Use opacity rendering.
+    slice_position : float, 0.0
         Position of the cross sectional slice.
+    z_observer : float, default 0.0
+        Z position of observer.
 
     Examples
     --------
@@ -158,7 +174,9 @@ class Visualization:
         # TODO: physical units
         # TODO: calculated quantities
 
-        self._dump = dump
+        self._particles = dump.particles
+        self._sinks = dump.sinks
+        self._header = dump.header
 
         render_options = {
             key: value
@@ -174,7 +192,9 @@ class Visualization:
         }
 
         vector_options = {
-            key: value for key, value in kwargs.items() if key in ['stream']
+            key: value
+            for key, value in kwargs.items()
+            if key in ['stream', 'stride', 'vector_color']
         }
 
         figure_options = {
@@ -191,12 +211,12 @@ class Visualization:
                 'accelerate',
                 'cross_section',
                 'density_weighted',
-                'dscreen',
+                'distance_to_screen',
                 'normalize',
                 'number_pixels',
                 'opacity',
                 'slice_position',
-                'zobserver',
+                'z_observer',
             ]
         }
 
@@ -228,12 +248,12 @@ class Visualization:
         else:
             if not isinstance(particle_type, int):
                 raise ValueError('particle_type must be int')
-        self._particle_mask = self._dump.particles.itype[()] == particle_type
-        self._positions = self._dump.particles.xyz[()][self._particle_mask]
-        self._smoothing_length = self._dump.particles.h[()][self._particle_mask]
-        self._particle_mass = self._dump.header['massoftype'][particle_type - 1]
+        self._particle_mask = self._particles.itype[()] == particle_type
+        self._positions = self._particles.xyz[()][self._particle_mask]
+        self._smoothing_length = self._particles.h[()][self._particle_mask]
+        self._particle_mass = self._header['massoftype'][particle_type - 1]
         try:
-            self._velocities = self._dump.particles.vxyz[()]
+            self._velocities = self._particles.vxyz[()]
         except Exception:
             self._velocities = None
 
@@ -242,7 +262,7 @@ class Visualization:
             density_weighted,
             self._smoothing_length,
             self._particle_mass,
-            self._dump.header['hfact'],
+            self._header['hfact'],
         )
 
         _rotation_options = {
@@ -316,7 +336,9 @@ class Visualization:
         cross_section = interpolation_options.pop(
             'cross_section', _DEFAULT_OPTS.cross_section
         )
-        dscreen = interpolation_options.pop('dscreen', _DEFAULT_OPTS.dscreen)
+        distance_to_screen = interpolation_options.pop(
+            'distance_to_screen', _DEFAULT_OPTS.distance_to_screen
+        )
         normalize = interpolation_options.pop(
             'normalize', _DEFAULT_OPTS.normalize
         )
@@ -327,43 +349,31 @@ class Visualization:
         slice_position = interpolation_options.pop(
             'slice_position', _DEFAULT_OPTS.slice_position
         )
-        zobserver = interpolation_options.pop(
-            'zobserver', _DEFAULT_OPTS.zobserver
+        z_observer = interpolation_options.pop(
+            'z_observer', _DEFAULT_OPTS.z_observer
         )
 
         if self._render in ['rho', 'dens', 'density']:
-            render_data = self._dump.particles.rho
+            render_data = self._particles.rho
         elif self._render == 'x':
-            render_data = self._dump.particles.xyz[()][self._particle_mask][
-                :, 0
-            ]
+            render_data = self._particles.xyz[()][self._particle_mask][:, 0]
         elif self._render == 'y':
-            render_data = self._dump.particles.xyz[()][self._particle_mask][
-                :, 1
-            ]
+            render_data = self._particles.xyz[()][self._particle_mask][:, 1]
         elif self._render == 'z':
-            render_data = self._dump.particles.xyz[()][self._particle_mask][
-                :, 2
-            ]
+            render_data = self._particles.xyz[()][self._particle_mask][:, 2]
         elif self._render == 'vx':
-            render_data = self._dump.particles.vxyz[()][self._particle_mask][
-                :, 0
-            ]
+            render_data = self._particles.vxyz[()][self._particle_mask][:, 0]
         elif self._render == 'vy':
-            render_data = self._dump.particles.vxyz[()][self._particle_mask][
-                :, 1
-            ]
+            render_data = self._particles.vxyz[()][self._particle_mask][:, 1]
         elif self._render == 'vz':
-            render_data = self._dump.particles.vxyz[()][self._particle_mask][
-                :, 2
-            ]
+            render_data = self._particles.vxyz[()][self._particle_mask][:, 2]
         elif self._render in ['v', 'velocity']:
-            render_data = self._dump.particles.extra_quantity(
-                'velocity magnitude'
-            )[self._particle_mask]
+            render_data = self._particles.extra_quantity('velocity magnitude')[
+                self._particle_mask
+            ]
         else:
             try:
-                render_data = self._dump.particles.arrays[self._render][
+                render_data = self._particles.arrays[self._render][
                     self._particle_mask
                 ]
             except Exception:
@@ -388,8 +398,8 @@ class Visualization:
             slice_position,
             opacity,
             normalize,
-            zobserver,
-            dscreen,
+            z_observer,
+            distance_to_screen,
             accelerate,
         )
 
@@ -461,7 +471,9 @@ class Visualization:
         cross_section = interpolation_options.pop(
             'cross_section', _DEFAULT_OPTS.cross_section
         )
-        dscreen = interpolation_options.pop('dscreen', _DEFAULT_OPTS.dscreen)
+        distance_to_screen = interpolation_options.pop(
+            'distance_to_screen', _DEFAULT_OPTS.distance_to_screen
+        )
         normalize = interpolation_options.pop(
             'normalize', _DEFAULT_OPTS.normalize
         )
@@ -471,18 +483,18 @@ class Visualization:
         slice_position = interpolation_options.pop(
             'slice_position', _DEFAULT_OPTS.slice_position
         )
-        zobserver = interpolation_options.pop(
-            'zobserver', _DEFAULT_OPTS.zobserver
+        z_observer = interpolation_options.pop(
+            'z_observer', _DEFAULT_OPTS.z_observer
         )
 
         if self._vector in ['v', 'vel', 'velocity']:
             try:
-                vector_data = self._dump.particles.vxyz[()][self._particle_mask]
+                vector_data = self._particles.vxyz[()][self._particle_mask]
             except Exception:
                 raise ValueError('Velocity not available in dump')
         else:
             try:
-                vector_data = self._dump.particles.arrays[self._vector][
+                vector_data = self._particles.arrays[self._vector][
                     self._particle_mask
                 ]
                 if vector_data.ndim != 2 and vector_data.shape[1] != 3:
@@ -509,8 +521,8 @@ class Visualization:
             cross_section,
             slice_position,
             normalize,
-            zobserver,
-            dscreen,
+            z_observer,
+            distance_to_screen,
         )
 
         xvector_data = vector_data[0]
