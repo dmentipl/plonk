@@ -373,7 +373,7 @@ class Visualization:
         if self._initialized:
             self._make_plot()
 
-    def set_image_size(self, extent=None):
+    def set_image_size(self, extent=None, size=None):
         """
         Set image size.
 
@@ -381,6 +381,9 @@ class Visualization:
         ----------
         extent : list or numpy.ndarray
             Extent is the image size: [xmin, xmax, ymin, ymax].
+        size : float
+            Extent specified by a single value:
+            [-size, size, -size, size].
         """
 
         if extent is not None:
@@ -388,6 +391,14 @@ class Visualization:
                 if np.all(extent == self._extent):
                     return
             self._extent = extent
+            if self._initialized:
+                self._make_plot()
+            return
+        if size is not None:
+            if hasattr(self, '_extent'):
+                if np.all(size == np.abs(self._extent)):
+                    return
+            self._extent = [-size, size, -size, size]
             if self._initialized:
                 self._make_plot()
             return
