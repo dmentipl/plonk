@@ -213,7 +213,7 @@ class Visualization:
         self._plot_particles = False
         self._plot_render = False
         self._plot_vector = False
-        if render is None:
+        if render is None and vector is None:
             self._plot_particles = True
         if render is not None:
             self._render = render
@@ -229,18 +229,18 @@ class Visualization:
             if not isinstance(particle_type, int):
                 raise ValueError('particle_type must be int')
         self._particle_mask = self._particles.itype[()] == particle_type
-        self._positions = self._particles.xyz[()][self._particle_mask]
-        self._smoothing_length = self._particles.h[()][self._particle_mask]
+        self._positions = self._particles.xyz
+        self._smoothing_length = self._particles.h
         self._particle_mass = self._header['massoftype'][particle_type - 1]
         try:
-            self._velocities = self._particles.vxyz[()]
+            self._velocities = self._particles.vxyz
         except Exception:
             self._velocities = None
 
         density_weighted = kwargs.pop('density_weighted', None)
         self._weights = _interpolation_weights(
             density_weighted,
-            self._smoothing_length,
+            self._smoothing_length[()][self._particle_mask],
             self._particle_mass,
             self._header['hfact'],
         )
@@ -311,20 +311,62 @@ class Visualization:
             if len(_extent) == 4:
                 self._extent = _extent
 
-        if _xrange is None and _yrange is None:
-            _x = min(self._positions[:, 0].min(), self._positions[:, 1].min())
-            _y = max(self._positions[:, 0].max(), self._positions[:, 1].max())
-        if _xrange is None:
-            _x = [self._positions[:, 0].min(), self._positions[:, 0].max()]
-        if _yrange is None:
-            _y = [self._positions[:, 0].min(), self._positions[:, 0].max()]
-
         if self._extent is None:
-            self._extent = _x + _y
+            if _xrange is None and _yrange is None:
+                _min = self._positions[()][self._particle_mask][:, 0:2].min(
+                    axis=0
+                )
+                _max = self._positions[()][self._particle_mask][:, 0:2].max(
+                    axis=0
+                )
+                self._extent = (_min[0], _max[0], _min[1], _max[1])
+            else:
+                if _xrange is None:
+                    _x = (
+                        self._positions[()][self._particle_mask][:, 0].min(),
+                        self._positions[()][self._particle_mask][:, 0].max(),
+                    )
+                if _yrange is None:
+                    _y = (
+                        self._positions[()][self._particle_mask][:, 0].min(),
+                        self._positions[()][self._particle_mask][:, 0].max(),
+                    )
+                if self._extent is None:
+                    self._extent = _x + _y
 
     def _render_image(
         self, interpolation_options, render_options, figure_options
     ):
+
+        if self._render in ['rho', 'dens', 'density']:
+            render_data = self._particles.rho[()][self._particle_mask]
+        elif self._render == 'x':
+            render_data = self._particles.xyz[()][self._particle_mask][:, 0]
+        elif self._render == 'y':
+            render_data = self._particles.xyz[()][self._particle_mask][:, 1]
+        elif self._render == 'z':
+            render_data = self._particles.xyz[()][self._particle_mask][:, 2]
+        elif self._render == 'vx':
+            render_data = self._particles.vxyz[()][self._particle_mask][:, 0]
+        elif self._render == 'vy':
+            render_data = self._particles.vxyz[()][self._particle_mask][:, 1]
+        elif self._render == 'vz':
+            render_data = self._particles.vxyz[()][self._particle_mask][:, 2]
+        elif self._render in ['v', 'velocity']:
+            render_data = self._particles.extra_quantity('velocity magnitude')[
+                self._particle_mask
+            ]
+        else:
+            try:
+                render_data = self._particles.arrays[self._render][()][
+                    self._particle_mask
+                ]
+            except Exception:
+                raise ValueError(
+                    f'Cannot determine quantity to render: {self._render}'
+                )
+            if render_data.ndim != 1:
+                raise ValueError(f'{self._render} is not 1-dimensional')
 
         accelerate = interpolation_options.pop(
             'accelerate', _DEFAULT_OPTS.accelerate
@@ -349,41 +391,11 @@ class Visualization:
             'z_observer', _DEFAULT_OPTS.z_observer
         )
 
-        if self._render in ['rho', 'dens', 'density']:
-            render_data = self._particles.rho
-        elif self._render == 'x':
-            render_data = self._particles.xyz[()][self._particle_mask][:, 0]
-        elif self._render == 'y':
-            render_data = self._particles.xyz[()][self._particle_mask][:, 1]
-        elif self._render == 'z':
-            render_data = self._particles.xyz[()][self._particle_mask][:, 2]
-        elif self._render == 'vx':
-            render_data = self._particles.vxyz[()][self._particle_mask][:, 0]
-        elif self._render == 'vy':
-            render_data = self._particles.vxyz[()][self._particle_mask][:, 1]
-        elif self._render == 'vz':
-            render_data = self._particles.vxyz[()][self._particle_mask][:, 2]
-        elif self._render in ['v', 'velocity']:
-            render_data = self._particles.extra_quantity('velocity magnitude')[
-                self._particle_mask
-            ]
-        else:
-            try:
-                render_data = self._particles.arrays[self._render][
-                    self._particle_mask
-                ]
-            except Exception:
-                raise ValueError(
-                    f'Cannot determine quantity to render: {self._render}'
-                )
-            if render_data.ndim != 1:
-                raise ValueError(f'{self._render} is not 1-dimensional')
-
         print(f'Rendering {self._render} using Splash')
 
         image_data = scalar_interpolation(
-            self._positions,
-            self._smoothing_length,
+            self._positions[()][self._particle_mask],
+            self._smoothing_length[()][self._particle_mask],
             self._weights,
             render_data,
             self._particle_mass,
@@ -459,6 +471,7 @@ class Visualization:
 
         stream = vector_options.pop('stream', _DEFAULT_OPTS.stream)
         stride = vector_options.pop('stride', _DEFAULT_OPTS.stride)
+        vector_color = vector_options.pop('stride', _DEFAULT_OPTS.stride)
 
         cross_section = interpolation_options.pop(
             'cross_section', _DEFAULT_OPTS.cross_section
@@ -470,7 +483,7 @@ class Visualization:
             'normalize', _DEFAULT_OPTS.normalize
         )
         number_pixels = interpolation_options.pop(
-            'number_pixels', [_DEFAULT_OPTS.npixx, _DEFAULT_OPTS.npixy]
+            'number_pixels', _DEFAULT_OPTS.number_pixels
         )
         slice_position = interpolation_options.pop(
             'slice_position', _DEFAULT_OPTS.slice_position
@@ -486,7 +499,7 @@ class Visualization:
                 raise ValueError('Velocity not available in dump')
         else:
             try:
-                vector_data = self._particles.arrays[self._vector][
+                vector_data = self._particles.arrays[self._vector][()][
                     self._particle_mask
                 ]
                 if vector_data.ndim != 2 and vector_data.shape[1] != 3:
@@ -503,8 +516,8 @@ class Visualization:
         _xrange, _yrange = self._extent[0:2], self._extent[2:]
 
         vector_data = vector_interpolation(
-            self._positions,
-            self._smoothing_length,
+            self._positions[()][self._particle_mask],
+            self._smoothing_length[()][self._particle_mask],
             self._weights,
             vector_data,
             _xrange,
@@ -525,12 +538,13 @@ class Visualization:
             np.linspace(*_yrange, len(yvector_data)),
         )
 
-        vector_color = _DEFAULT_OPTS.vector_color
         if self._render:
             vector_color = 'white'
 
+        self.stream = None
+        self.quiver = None
         if stream:
-            self.axis.streamplot(
+            self.stream = self.axis.streamplot(
                 X[::stride, ::stride],
                 Y[::stride, ::stride],
                 xvector_data[::stride, ::stride],
@@ -538,7 +552,7 @@ class Visualization:
                 color=vector_color,
             )
         else:
-            self.axis.quiver(
+            self.quiver = self.axis.quiver(
                 X[::stride, ::stride],
                 Y[::stride, ::stride],
                 xvector_data[::stride, ::stride],
@@ -551,7 +565,10 @@ class Visualization:
     def _particle_scatter_plot(self):
         marker_size = 0.01
         self.axis.scatter(
-            self._positions[:, 0], self._positions[:, 1], s=marker_size, c='k'
+            self._positions[()][self._particle_mask][:, 0],
+            self._positions[()][self._particle_mask][:, 1],
+            s=marker_size,
+            c='k',
         )
         self.axis.set_aspect('equal', 'box')
 
