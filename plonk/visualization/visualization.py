@@ -213,7 +213,7 @@ class Visualization:
             plt.clf()
             self.figure = plt.gcf()
         if self.axis is None:
-            self.axis = plt.gca()
+            self.axis = self.figure.gca()
 
         self._render = None
         self._vector = None
