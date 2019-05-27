@@ -293,10 +293,67 @@ class Visualization:
         if self._plot_particles:
             self._particle_scatter_plot()
 
-        self._set_axis_title()
+        self._set_axis()
+        self.set_axis_labels()
+        self.set_title()
+
+    def set_render_scale(self, render_scale=None):
+        """
+        Set render scale.
+
+        Parameters
+        ----------
+        render_scale : str
+            A string representing the render color scale, e.g.
+            'linear' or 'log'.
+        """
+
+        if render_scale is None:
+            render_scale = 'linear'
+
+        if render_scale == 'log':
+            norm = colors.SymLogNorm(1e-1 * self._vmax, clip=True)
+        elif render_scale == 'linear':
+            norm = colors.Normalize(vmin=self._vmin, vmax=self._vmax, clip=True)
+        else:
+            raise ValueError("Unknown color render_scale: " + render_scale)
+
+        self._norm = norm
+
+    def set_render_range(self, vmin=None, vmax=None):
+        """
+        Set render range for colorbar.
+
+        Parameters
+        ----------
+        vmin : float
+            Minimum for the render colorbar.
+        vmax : float
+            Maximum for the render colorbar.
+        """
+        if vmin is not None and vmax is not None:
+            self.image.set_clim(vmin=vmin, vmax=vmax)
+            self._vmin, self._vmax = vmin, vmax
+        if vmin is not None:
+            self.image.set_clim(vmin=vmin)
+            self._vmin = vmin
+        if vmax is not None:
+            self.image.set_clim(vmax=vmax)
+            self._vmax = vmax
 
     def set_particle_type(self, particle_type):
-        """Set particle type for plotting."""
+        """
+        Set particle type to visualize.
+
+        Parameters
+        ----------
+        particle_type : int
+            Integer representing the particle type.
+        """
+
+        if hasattr(self, '_particle_type'):
+            if particle_type == self._particle_type:
+                return
 
         if particle_type is None:
             particle_type = I_GAS
@@ -312,9 +369,19 @@ class Visualization:
             self._make_plot()
 
     def set_image_size(self, extent=None):
-        """Set image size."""
+        """
+        Set image size.
+
+        Parameters
+        ----------
+        extent : list or numpy.ndarray
+            Extent is the image size: [xmin, xmax, ymin, ymax].
+        """
 
         if extent is not None:
+            if hasattr(self, '_extent'):
+                if np.all(extent == self._extent):
+                    return
             self._extent = extent
             if self._initialized:
                 self._make_plot()
@@ -453,25 +520,19 @@ class Visualization:
             vmax = image_data.max()
         else:
             vmax = render_max
-
         if render_fraction_max is not None:
             vmax = image_data.max() * render_fraction_max
-
         if render_min is None:
             vmin = image_data.min()
         else:
             vmin = render_min
+        self._vmin, self._vmax = vmin, vmax
 
-        if render_scale == 'log':
-            norm = colors.SymLogNorm(1e-1 * vmax, clip=True)
-        elif render_scale == 'linear':
-            norm = colors.Normalize(vmin=vmin, vmax=vmax, clip=True)
-        else:
-            raise ValueError("Unknown color render_scale: " + render_scale)
+        self.set_render_scale(render_scale)
 
         self.image = self.axis.imshow(
             image_data,
-            norm=norm,
+            norm=self._norm,
             origin='lower',
             extent=self._extent,
             cmap=cmap,
@@ -480,8 +541,17 @@ class Visualization:
         # TODO: make render_label respond to settings/options
         render_label = r'$\int$ ' + f'{self._render}' + ' dz'
 
-        self.colorbar = None
-        if colorbar_:
+        if not hasattr(self, 'colorbar'):
+            if colorbar_:
+                divider = make_axes_locatable(self.axis)
+                cax = divider.append_axes("right", size="5%", pad=0.05)
+                self.colorbar = self.figure.colorbar(self.image, cax=cax)
+                if render_label:
+                    self.colorbar.set_label(render_label)
+            else:
+                self.colorbar = None
+        else:
+            self.colorbar.remove()
             divider = make_axes_locatable(self.axis)
             cax = divider.append_axes("right", size="5%", pad=0.05)
             self.colorbar = self.figure.colorbar(self.image, cax=cax)
@@ -650,16 +720,44 @@ class Visualization:
                 self._velocities, rotation_axis, rotation_angle
             )
 
-    def _set_axis_title(self):
+    def _set_axis(self):
 
-        title = self._figure_options.get('title', None)
+        self.axis.set_xlim(self._extent[0], self._extent[1])
+        self.axis.set_ylim(self._extent[2], self._extent[3])
+
+    def set_axis_labels(self, xlabel=None, ylabel=None):
+        """
+        Set axis labels.
+
+        Parameters
+        ----------
+        xlabel : str
+            Label for the x axis.
+        ylabel : str
+            Label for the y axis.
+        """
 
         if not self._rotate_frame:
             self.axis.set_xlabel('x')
             self.axis.set_ylabel('y')
 
-        self.axis.set_xlim(self._extent[0], self._extent[1])
-        self.axis.set_ylim(self._extent[2], self._extent[3])
+        if xlabel is not None:
+            self.axis.set_xlabel(xlabel)
+        if ylabel is not None:
+            self.axis.set_ylabel(ylabel)
+
+    def set_title(self, title=None):
+        """
+        Set title.
+
+        Parameters
+        ----------
+        title : str
+            Figure title.
+        """
+
+        if title is None:
+            title = self._figure_options.get('title', None)
 
         if title is not None:
             self.axis.set_title(title)
@@ -669,8 +767,15 @@ def plot_options(**kwargs):
     """
     Create a dictionary with plot options.
 
+    Parameters
+    ----------
+    **kwargs
+        Any values in PlotOptions namedtuple.
+
     Returns
     -------
+    dict
+        A dictionary of visualization options.
     """
 
     options = dict(_DEFAULT_OPTS._asdict())
@@ -679,25 +784,6 @@ def plot_options(**kwargs):
             options[key] = item
 
     return options
-
-
-def _convert_units():
-    """Convert units."""
-    # TODO: write this
-
-
-def _calculate_quantity():
-    """Calculate an extra quantity."""
-    # TODO: write this
-
-
-def set_colorbar(cb, vmin=None, vmax=None):
-    """Set colorbar limits."""
-    if vmin is None:
-        vmin = cb._colorbar.vmin
-    if vmax is None:
-        vmax = cb._colorbar.vmax
-    cb._image.set_clim([vmin, vmax])
 
 
 def _interpolation_weights(density_weighted, smoothing_length, mass, hfact):
