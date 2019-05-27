@@ -319,6 +319,11 @@ class Visualization:
             raise ValueError("Unknown color render_scale: " + render_scale)
 
         self._norm = norm
+        self._render_scale = render_scale
+
+        if self._initialized:
+            self.image.set_norm(norm)
+            self._make_colorbar()
 
     def set_render_range(self, vmin=None, vmax=None):
         """
@@ -538,25 +543,28 @@ class Visualization:
             cmap=cmap,
         )
 
-        # TODO: make render_label respond to settings/options
-        render_label = r'$\int$ ' + f'{self._render}' + ' dz'
-
         if not hasattr(self, 'colorbar'):
             if colorbar_:
-                divider = make_axes_locatable(self.axis)
-                cax = divider.append_axes("right", size="5%", pad=0.05)
-                self.colorbar = self.figure.colorbar(self.image, cax=cax)
-                if render_label:
-                    self.colorbar.set_label(render_label)
+                self._make_colorbar()
             else:
                 self.colorbar = None
         else:
+            self._make_colorbar()
+
+    def _set_render_label(self):
+        self._render_label = r'$\int$ ' + f'{self._render}' + ' dz'
+        if self._render_scale == 'log':
+            self._render_label = ' '.join(('log', self._render_label))
+
+    def _make_colorbar(self):
+        if hasattr(self, 'colorbar'):
             self.colorbar.remove()
-            divider = make_axes_locatable(self.axis)
-            cax = divider.append_axes("right", size="5%", pad=0.05)
-            self.colorbar = self.figure.colorbar(self.image, cax=cax)
-            if render_label:
-                self.colorbar.set_label(render_label)
+        divider = make_axes_locatable(self.axis)
+        cax = divider.append_axes("right", size="5%", pad=0.05)
+        self.colorbar = self.figure.colorbar(self.image, cax=cax)
+        self._set_render_label()
+        if self._render_label is not None:
+            self.colorbar.set_label(self._render_label)
 
     def _vector_image(self):
 
