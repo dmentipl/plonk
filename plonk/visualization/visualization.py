@@ -5,8 +5,6 @@ This class contains methods for visualizing smoothed particle
 hydrodynamics simulations.
 """
 
-from collections import namedtuple
-
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,49 +13,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from ..core.particles import I_GAS
 from ..core.utils import normalize_vector, rotate_vector_arbitrary_axis
 from .interpolation import scalar_interpolation, vector_interpolation
-
-PlotOptions = namedtuple(
-    'PlotOptions',
-    [
-        'accelerate',
-        'colorbar',
-        'colormap',
-        'cross_section',
-        'density_weighted',
-        'distance_to_screen',
-        'font_family',
-        'font_size',
-        'normalize',
-        'number_pixels',
-        'opacity',
-        'render_scale',
-        'slice_position',
-        'stream',
-        'stride',
-        'vector_color',
-        'z_observer',
-    ],
-)
-
-_DEFAULT_OPTS = PlotOptions(
-    accelerate=False,
-    colorbar=True,
-    colormap='gist_heat',
-    cross_section=False,
-    density_weighted=False,
-    distance_to_screen=None,
-    font_family='sans-serif',
-    font_size=12,
-    normalize=False,
-    number_pixels=(512, 512),
-    opacity=False,
-    render_scale='linear',
-    slice_position=0.0,
-    stream=False,
-    stride=25,
-    vector_color='black',
-    z_observer=None,
-)
+from .options import DEFAULT_OPTIONS
 
 
 class Visualization:
@@ -172,6 +128,40 @@ class Visualization:
         # TODO: physical units
         # TODO: calculated extra quantities
 
+        self._figure_options = dict(DEFAULT_OPTIONS.FigureOptions._asdict())
+        for key, value in kwargs.items():
+            if key in self._figure_options.keys():
+                self._figure_options[key] = value
+
+        self._image_range_options = dict(
+            DEFAULT_OPTIONS.ImageRangeOptions._asdict()
+        )
+        for key, value in kwargs.items():
+            if key in self._image_range_options.keys():
+                self._image_range_options[key] = value
+
+        self._interpolation_options = dict(
+            DEFAULT_OPTIONS.InterpolationOptions._asdict()
+        )
+        for key, value in kwargs.items():
+            if key in self._interpolation_options.keys():
+                self._interpolation_options[key] = value
+
+        self._render_options = dict(DEFAULT_OPTIONS.RenderOptions._asdict())
+        for key, value in kwargs.items():
+            if key in self._render_options.keys():
+                self._render_options[key] = value
+
+        self._rotation_options = dict(DEFAULT_OPTIONS.RotationOptions._asdict())
+        for key, value in kwargs.items():
+            if key in self._rotation_options.keys():
+                self._rotation_options[key] = value
+
+        self._vector_options = dict(DEFAULT_OPTIONS.VectorOptions._asdict())
+        for key, value in kwargs.items():
+            if key in self._vector_options.keys():
+                self._vector_options[key] = value
+
         self._initialized = False
 
         self._particles = dump.particles
@@ -183,29 +173,6 @@ class Visualization:
             self._velocities = self._particles.vxyz
         except Exception:
             self._velocities = None
-
-        self._figure_options = {
-            key: value
-            for key, value in kwargs.items()
-            if key in ['colorbar', 'colormap', 'title']
-        }
-
-        self._interpolation_options = {
-            key: value
-            for key, value in kwargs.items()
-            if key
-            in [
-                'accelerate',
-                'cross_section',
-                'density_weighted',
-                'distance_to_screen',
-                'normalize',
-                'number_pixels',
-                'opacity',
-                'slice_position',
-                'z_observer',
-            ]
-        }
 
         self.axis = kwargs.get('axis', None)
         self.figure = kwargs.get('figure', None)
@@ -232,51 +199,16 @@ class Visualization:
         particle_type = kwargs.get('particle_type', None)
         self.set_particle_type(particle_type)
 
-        density_weighted = kwargs.get('density_weighted', None)
         self._weights = _interpolation_weights(
-            density_weighted,
+            self._interpolation_options['density_weighted'],
             self._smoothing_length[()][self._particle_mask],
             self._particle_mass,
             self._header['hfact'],
         )
 
-        self._rotation_options = {
-            key: value
-            for key, value in kwargs.items()
-            if key
-            in [
-                'rotation_axis',
-                'rotation_angle',
-                'position_angle',
-                'inclination',
-            ]
-        }
         self._frame_rotation()
 
-        self._xy_range = {
-            key: value
-            for key, value in kwargs.items()
-            if key in ['xrange', 'yrange', 'extent']
-        }
         self.set_image_size()
-
-        self._render_options = {
-            key: value
-            for key, value in kwargs.items()
-            if key
-            in [
-                'render_scale',
-                'render_min',
-                'render_max',
-                'render_fraction_max',
-            ]
-        }
-
-        self._vector_options = {
-            key: value
-            for key, value in kwargs.items()
-            if key in ['stream', 'stride', 'vector_color']
-        }
 
         self._make_plot()
 
@@ -405,9 +337,9 @@ class Visualization:
 
         self._extent = None
 
-        _xrange = self._xy_range.get('xrange', None)
-        _yrange = self._xy_range.get('yrange', None)
-        _extent = self._xy_range.get('extent', None)
+        _xrange = self._image_range_options['xrange']
+        _yrange = self._image_range_options['yrange']
+        _extent = self._image_range_options['extent']
 
         if _extent is not None:
             if _xrange is not None or _yrange is not None:
@@ -472,31 +404,6 @@ class Visualization:
             if render_data.ndim != 1:
                 raise ValueError(f'{self._render} is not 1-dimensional')
 
-        accelerate = self._interpolation_options.get(
-            'accelerate', _DEFAULT_OPTS.accelerate
-        )
-        cross_section = self._interpolation_options.get(
-            'cross_section', _DEFAULT_OPTS.cross_section
-        )
-        distance_to_screen = self._interpolation_options.get(
-            'distance_to_screen', _DEFAULT_OPTS.distance_to_screen
-        )
-        normalize = self._interpolation_options.get(
-            'normalize', _DEFAULT_OPTS.normalize
-        )
-        number_pixels = self._interpolation_options.get(
-            'number_pixels', _DEFAULT_OPTS.number_pixels
-        )
-        opacity = self._interpolation_options.get(
-            'opacity', _DEFAULT_OPTS.opacity
-        )
-        slice_position = self._interpolation_options.get(
-            'slice_position', _DEFAULT_OPTS.slice_position
-        )
-        z_observer = self._interpolation_options.get(
-            'z_observer', _DEFAULT_OPTS.z_observer
-        )
-
         print(f'Rendering {self._render} using Splash')
 
         image_data = scalar_interpolation(
@@ -507,55 +414,48 @@ class Visualization:
             self._particle_mass,
             self._extent[0:2],
             self._extent[2:],
-            number_pixels,
-            cross_section,
-            slice_position,
-            opacity,
-            normalize,
-            z_observer,
-            distance_to_screen,
-            accelerate,
+            self._interpolation_options['number_pixels'],
+            self._interpolation_options['cross_section'],
+            self._interpolation_options['slice_position'],
+            self._interpolation_options['opacity'],
+            self._interpolation_options['normalize'],
+            self._interpolation_options['z_observer'],
+            self._interpolation_options['distance_to_screen'],
+            self._interpolation_options['accelerate'],
         )
 
         self._render_image_matplotlib(image_data)
 
     def _render_image_matplotlib(self, image_data):
 
-        render_scale = self._render_options.get(
-            'render_scale', _DEFAULT_OPTS.render_scale
-        )
-        render_min = self._render_options.get('render_min', None)
-        render_max = self._render_options.get('render_max', None)
-        render_fraction_max = self._render_options.get(
-            'render_fraction_max', None
-        )
-        cmap = self._render_options.get('colormap', _DEFAULT_OPTS.colormap)
-        colorbar_ = self._figure_options.get('colorbar', _DEFAULT_OPTS.colorbar)
-
-        if render_max is None:
+        if self._render_options['render_max'] is None:
             vmax = image_data.max()
         else:
-            vmax = render_max
-        if render_fraction_max is not None:
-            vmax = image_data.max() * render_fraction_max
-        if render_min is None:
+            vmax = self._render_options['render_max']
+        if self._render_options['render_fraction_max'] is not None:
+            vmax = (
+                image_data.max() * self._render_options['render_fraction_max']
+            )
+        if self._render_options['render_min'] is None:
             vmin = image_data.min()
         else:
-            vmin = render_min
+            vmin = self._render_options['render_min']
         self._vmin, self._vmax = vmin, vmax
 
-        self.set_render_scale(render_scale)
+        self.set_render_scale(self._render_options['render_scale'])
+
+        self._cmap = self._figure_options['colormap']
 
         self.image = self.axis.imshow(
             image_data,
             norm=self._norm,
             origin='lower',
             extent=self._extent,
-            cmap=cmap,
+            cmap=self._cmap,
         )
 
         if not hasattr(self, 'colorbar'):
-            if colorbar_:
+            if self._figure_options['colorbar']:
                 self._make_colorbar()
             else:
                 self.colorbar = None
@@ -578,29 +478,6 @@ class Visualization:
             self.colorbar.set_label(self._render_label)
 
     def _vector_image(self):
-
-        stream = self._vector_options.get('stream', _DEFAULT_OPTS.stream)
-        stride = self._vector_options.get('stride', _DEFAULT_OPTS.stride)
-        vector_color = self._vector_options.get('stride', _DEFAULT_OPTS.stride)
-
-        cross_section = self._interpolation_options.get(
-            'cross_section', _DEFAULT_OPTS.cross_section
-        )
-        distance_to_screen = self._interpolation_options.get(
-            'distance_to_screen', _DEFAULT_OPTS.distance_to_screen
-        )
-        normalize = self._interpolation_options.get(
-            'normalize', _DEFAULT_OPTS.normalize
-        )
-        number_pixels = self._interpolation_options.get(
-            'number_pixels', _DEFAULT_OPTS.number_pixels
-        )
-        slice_position = self._interpolation_options.get(
-            'slice_position', _DEFAULT_OPTS.slice_position
-        )
-        z_observer = self._interpolation_options.get(
-            'z_observer', _DEFAULT_OPTS.z_observer
-        )
 
         if self._vector in ['v', 'vel', 'velocity']:
             try:
@@ -632,12 +509,12 @@ class Visualization:
             vector_data,
             _xrange,
             _yrange,
-            number_pixels,
-            cross_section,
-            slice_position,
-            normalize,
-            z_observer,
-            distance_to_screen,
+            self._interpolation_options['number_pixels'],
+            self._interpolation_options['cross_section'],
+            self._interpolation_options['slice_position'],
+            self._interpolation_options['normalize'],
+            self._interpolation_options['z_observer'],
+            self._interpolation_options['distance_to_screen'],
         )
 
         xvector_data = vector_data[0]
@@ -648,12 +525,15 @@ class Visualization:
             np.linspace(*_yrange, len(yvector_data)),
         )
 
+        vector_color = self._vector_options['vector_color']
         if self._render:
             vector_color = 'white'
 
+        stride = self._vector_options['stride']
+
         self.stream = None
         self.quiver = None
-        if stream:
+        if self._vector_options['stream']:
             self.stream = self.axis.streamplot(
                 X[::stride, ::stride],
                 Y[::stride, ::stride],
@@ -797,7 +677,9 @@ def plot_options(**kwargs):
         A dictionary of visualization options.
     """
 
-    options = dict(_DEFAULT_OPTS._asdict())
+    options = {
+        key: opts._asdict() for key, opts in DEFAULT_OPTIONS._asdict().items()
+    }
     for key, item in kwargs.items():
         if key in options:
             options[key] = item
