@@ -22,16 +22,15 @@ PlotOptions = namedtuple(
         'accelerate',
         'colorbar',
         'colormap',
-        'colorscale',
         'cross_section',
         'density_weighted',
         'distance_to_screen',
         'font_family',
         'font_size',
         'normalize',
-        'npixx',
-        'npixy',
+        'number_pixels',
         'opacity',
+        'render_scale',
         'slice_position',
         'stream',
         'stride',
@@ -44,16 +43,15 @@ _DEFAULT_OPTS = PlotOptions(
     accelerate=False,
     colorbar=True,
     colormap='gist_heat',
-    colorscale='linear',
     cross_section=False,
     density_weighted=False,
     distance_to_screen=None,
     font_family='sans-serif',
     font_size=12,
     normalize=False,
-    npixx=512,
-    npixy=512,
+    number_pixels=(512, 512),
     opacity=False,
+    render_scale='linear',
     slice_position=0.0,
     stream=False,
     stride=25,
@@ -81,7 +79,7 @@ class Visualization:
 
     Other Parameters
     ----------------
-    particle_type : int, default ``None``
+    particle_type : int, default I_GAS
         Particle type to plot, represented as an integer type.
 
     xrange : list or tuple of float (len=2), default ``None``
@@ -129,8 +127,12 @@ class Visualization:
         If true, plot colorbar.
     colormap : str, default 'gist_heat'
         Specify the colormap.
-    new_figure : bool, default False
-        If true, create new figure using Matplotlib.
+    figure : Figure, default None
+        Matplotlib Figure to add Axes to.
+    font_family : str, default 'sans-serif'
+        Font family style for axes title, label, etc.
+    font_size : int, default 12
+        Font size for axes title, label, etc.
     title : str, default None
         Plot title.
 
@@ -167,40 +169,18 @@ class Visualization:
 
     def __init__(self, dump, render=None, vector=None, **kwargs):
 
-        # TODO: add options
-        # TODO: add docs
         # TODO: choose fluid type: gas, dust1, dust2, ...
-        # TODO: add more checks on input
         # TODO: physical units
-        # TODO: calculated quantities
+        # TODO: calculated extra quantities
 
         self._particles = dump.particles
         self._sinks = dump.sinks
         self._header = dump.header
 
-        render_options = {
-            key: value
-            for key, value in kwargs.items()
-            if key
-            in [
-                'render_scale',
-                'render_min',
-                'render_max',
-                'render_fraction_max',
-                'colormap',
-            ]
-        }
-
-        vector_options = {
-            key: value
-            for key, value in kwargs.items()
-            if key in ['stream', 'stride', 'vector_color']
-        }
-
         figure_options = {
             key: value
             for key, value in kwargs.items()
-            if key in ['title', 'colorbar']
+            if key in ['colorbar', 'colormap', 'title']
         }
 
         interpolation_options = {
@@ -221,11 +201,11 @@ class Visualization:
         }
 
         self.axis = kwargs.pop('axis', None)
-        new_figure = kwargs.pop('new_figure', None)
-        if self.axis is None:
-            if new_figure:
-                plt.figure()
+        self.figure = kwargs.pop('figure', None)
+        if self.axis is None and self.figure is None:
             plt.clf()
+            self.figure = plt.gcf()
+        if self.axis is None:
             self.axis = plt.gca()
 
         self._render = None
@@ -286,11 +266,27 @@ class Visualization:
         self._set_image_size(_xy_range)
 
         if self._plot_render:
-            image, colorbar = self._render_image(
+            render_options = {
+                key: value
+                for key, value in kwargs.items()
+                if key
+                in [
+                    'render_scale',
+                    'render_min',
+                    'render_max',
+                    'render_fraction_max',
+                ]
+            }
+            self._render_image(
                 interpolation_options, render_options, figure_options
             )
 
         if self._plot_vector:
+            vector_options = {
+                key: value
+                for key, value in kwargs.items()
+                if key in ['stream', 'stride', 'vector_color']
+            }
             self._vector_image(vector_options, interpolation_options)
 
         if self._plot_particles:
@@ -343,7 +339,7 @@ class Visualization:
             'normalize', _DEFAULT_OPTS.normalize
         )
         number_pixels = interpolation_options.pop(
-            'number_pixels', [_DEFAULT_OPTS.npixx, _DEFAULT_OPTS.npixy]
+            'number_pixels', _DEFAULT_OPTS.number_pixels
         )
         opacity = interpolation_options.pop('opacity', _DEFAULT_OPTS.opacity)
         slice_position = interpolation_options.pop(
@@ -403,18 +399,16 @@ class Visualization:
             accelerate,
         )
 
-        image, colorbar = self._render_image_matplotlib(
+        self._render_image_matplotlib(
             image_data, render_options, figure_options
         )
-
-        return image, colorbar
 
     def _render_image_matplotlib(
         self, image_data, render_options, figure_options
     ):
 
         render_scale = render_options.pop(
-            'render_scale', _DEFAULT_OPTS.colorscale
+            'render_scale', _DEFAULT_OPTS.render_scale
         )
         render_min = render_options.pop('render_min', None)
         render_max = render_options.pop('render_max', None)
@@ -442,7 +436,7 @@ class Visualization:
         else:
             raise ValueError("Unknown color render_scale: " + render_scale)
 
-        image = self.axis.imshow(
+        self.image = self.axis.imshow(
             image_data,
             norm=norm,
             origin='lower',
@@ -453,15 +447,13 @@ class Visualization:
         # TODO: make render_label respond to settings/options
         render_label = r'$\int$ ' + f'{self._render}' + ' dz'
 
-        colorbar = None
+        self.colorbar = None
         if colorbar_:
             divider = make_axes_locatable(self.axis)
             cax = divider.append_axes("right", size="5%", pad=0.05)
-            colorbar = plt.colorbar(image, cax=cax)
+            self.colorbar = plt.colorbar(self.image, cax=cax)
             if render_label:
-                colorbar.set_label(render_label)
-
-        return image, colorbar
+                self.colorbar.set_label(render_label)
 
     def _vector_image(self, vector_options, interpolation_options):
 
