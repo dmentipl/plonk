@@ -169,21 +169,28 @@ class Visualization:
 
     def __init__(self, dump, render=None, vector=None, **kwargs):
 
-        # TODO: choose fluid type: gas, dust1, dust2, ...
         # TODO: physical units
         # TODO: calculated extra quantities
+
+        self._initialized = False
 
         self._particles = dump.particles
         self._sinks = dump.sinks
         self._header = dump.header
+        self._positions = self._particles.xyz
+        self._smoothing_length = self._particles.h
+        try:
+            self._velocities = self._particles.vxyz
+        except Exception:
+            self._velocities = None
 
-        figure_options = {
+        self._figure_options = {
             key: value
             for key, value in kwargs.items()
             if key in ['colorbar', 'colormap', 'title']
         }
 
-        interpolation_options = {
+        self._interpolation_options = {
             key: value
             for key, value in kwargs.items()
             if key
@@ -200,8 +207,8 @@ class Visualization:
             ]
         }
 
-        self.axis = kwargs.pop('axis', None)
-        self.figure = kwargs.pop('figure', None)
+        self.axis = kwargs.get('axis', None)
+        self.figure = kwargs.get('figure', None)
         if self.axis is None and self.figure is None:
             plt.clf()
             self.figure = plt.gcf()
@@ -222,22 +229,10 @@ class Visualization:
             self._vector = vector
             self._plot_vector = True
 
-        particle_type = kwargs.pop('particle_type', None)
-        if particle_type is None:
-            particle_type = I_GAS
-        else:
-            if not isinstance(particle_type, int):
-                raise ValueError('particle_type must be int')
-        self._particle_mask = self._particles.itype[()] == particle_type
-        self._positions = self._particles.xyz
-        self._smoothing_length = self._particles.h
-        self._particle_mass = self._header['massoftype'][particle_type - 1]
-        try:
-            self._velocities = self._particles.vxyz
-        except Exception:
-            self._velocities = None
+        particle_type = kwargs.get('particle_type', None)
+        self.set_particle_type(particle_type)
 
-        density_weighted = kwargs.pop('density_weighted', None)
+        density_weighted = kwargs.get('density_weighted', None)
         self._weights = _interpolation_weights(
             density_weighted,
             self._smoothing_length[()][self._particle_mask],
@@ -245,7 +240,7 @@ class Visualization:
             self._header['hfact'],
         )
 
-        _rotation_options = {
+        self._rotation_options = {
             key: value
             for key, value in kwargs.items()
             if key
@@ -256,52 +251,80 @@ class Visualization:
                 'inclination',
             ]
         }
-        self._frame_rotation(_rotation_options)
+        self._frame_rotation()
 
-        _xy_range = {
+        self._xy_range = {
             key: value
             for key, value in kwargs.items()
             if key in ['xrange', 'yrange', 'extent']
         }
-        self._set_image_size(_xy_range)
+        self.set_image_size()
+
+        self._render_options = {
+            key: value
+            for key, value in kwargs.items()
+            if key
+            in [
+                'render_scale',
+                'render_min',
+                'render_max',
+                'render_fraction_max',
+            ]
+        }
+
+        self._vector_options = {
+            key: value
+            for key, value in kwargs.items()
+            if key in ['stream', 'stride', 'vector_color']
+        }
+
+        self._make_plot()
+
+        self._initialized = True
+
+    def _make_plot(self):
 
         if self._plot_render:
-            render_options = {
-                key: value
-                for key, value in kwargs.items()
-                if key
-                in [
-                    'render_scale',
-                    'render_min',
-                    'render_max',
-                    'render_fraction_max',
-                ]
-            }
-            self._render_image(
-                interpolation_options, render_options, figure_options
-            )
+            self._render_image()
 
         if self._plot_vector:
-            vector_options = {
-                key: value
-                for key, value in kwargs.items()
-                if key in ['stream', 'stride', 'vector_color']
-            }
-            self._vector_image(vector_options, interpolation_options)
+            self._vector_image()
 
         if self._plot_particles:
             self._particle_scatter_plot()
 
-        self._set_axis_title(figure_options)
+        self._set_axis_title()
 
-    def _set_image_size(self, _xy_range):
+    def set_particle_type(self, particle_type):
+        """Set particle type for plotting."""
+
+        if particle_type is None:
+            particle_type = I_GAS
+        else:
+            if not isinstance(particle_type, int):
+                raise ValueError('particle_type must be int')
+
+        self._particle_type = particle_type
+        self._particle_mask = self._particles.itype[()] == particle_type
+        self._particle_mass = self._header['massoftype'][particle_type - 1]
+
+        if self._initialized:
+            self._make_plot()
+
+    def set_image_size(self, extent=None):
         """Set image size."""
+
+        if extent is not None:
+            self._extent = extent
+            if self._initialized:
+                self._make_plot()
+            return
 
         self._extent = None
 
-        _xrange = _xy_range.pop('xrange', None)
-        _yrange = _xy_range.pop('yrange', None)
-        _extent = _xy_range.pop('extent', None)
+        _xrange = self._xy_range.get('xrange', None)
+        _yrange = self._xy_range.get('yrange', None)
+        _extent = self._xy_range.get('extent', None)
 
         if _extent is not None:
             if _xrange is not None or _yrange is not None:
@@ -334,9 +357,7 @@ class Visualization:
                 if self._extent is None:
                     self._extent = _x + _y
 
-    def _render_image(
-        self, interpolation_options, render_options, figure_options
-    ):
+    def _render_image(self):
 
         if self._render in ['rho', 'dens', 'density']:
             render_data = self._particles.rho[()][self._particle_mask]
@@ -368,26 +389,28 @@ class Visualization:
             if render_data.ndim != 1:
                 raise ValueError(f'{self._render} is not 1-dimensional')
 
-        accelerate = interpolation_options.pop(
+        accelerate = self._interpolation_options.get(
             'accelerate', _DEFAULT_OPTS.accelerate
         )
-        cross_section = interpolation_options.pop(
+        cross_section = self._interpolation_options.get(
             'cross_section', _DEFAULT_OPTS.cross_section
         )
-        distance_to_screen = interpolation_options.pop(
+        distance_to_screen = self._interpolation_options.get(
             'distance_to_screen', _DEFAULT_OPTS.distance_to_screen
         )
-        normalize = interpolation_options.pop(
+        normalize = self._interpolation_options.get(
             'normalize', _DEFAULT_OPTS.normalize
         )
-        number_pixels = interpolation_options.pop(
+        number_pixels = self._interpolation_options.get(
             'number_pixels', _DEFAULT_OPTS.number_pixels
         )
-        opacity = interpolation_options.pop('opacity', _DEFAULT_OPTS.opacity)
-        slice_position = interpolation_options.pop(
+        opacity = self._interpolation_options.get(
+            'opacity', _DEFAULT_OPTS.opacity
+        )
+        slice_position = self._interpolation_options.get(
             'slice_position', _DEFAULT_OPTS.slice_position
         )
-        z_observer = interpolation_options.pop(
+        z_observer = self._interpolation_options.get(
             'z_observer', _DEFAULT_OPTS.z_observer
         )
 
@@ -411,22 +434,20 @@ class Visualization:
             accelerate,
         )
 
-        self._render_image_matplotlib(
-            image_data, render_options, figure_options
-        )
+        self._render_image_matplotlib(image_data)
 
-    def _render_image_matplotlib(
-        self, image_data, render_options, figure_options
-    ):
+    def _render_image_matplotlib(self, image_data):
 
-        render_scale = render_options.pop(
+        render_scale = self._render_options.get(
             'render_scale', _DEFAULT_OPTS.render_scale
         )
-        render_min = render_options.pop('render_min', None)
-        render_max = render_options.pop('render_max', None)
-        render_fraction_max = render_options.pop('render_fraction_max', None)
-        cmap = render_options.pop('colormap', _DEFAULT_OPTS.colormap)
-        colorbar_ = figure_options.pop('colorbar', _DEFAULT_OPTS.colorbar)
+        render_min = self._render_options.get('render_min', None)
+        render_max = self._render_options.get('render_max', None)
+        render_fraction_max = self._render_options.get(
+            'render_fraction_max', None
+        )
+        cmap = self._render_options.get('colormap', _DEFAULT_OPTS.colormap)
+        colorbar_ = self._figure_options.get('colorbar', _DEFAULT_OPTS.colorbar)
 
         if render_max is None:
             vmax = image_data.max()
@@ -463,32 +484,32 @@ class Visualization:
         if colorbar_:
             divider = make_axes_locatable(self.axis)
             cax = divider.append_axes("right", size="5%", pad=0.05)
-            self.colorbar = plt.colorbar(self.image, cax=cax)
+            self.colorbar = self.figure.colorbar(self.image, cax=cax)
             if render_label:
                 self.colorbar.set_label(render_label)
 
-    def _vector_image(self, vector_options, interpolation_options):
+    def _vector_image(self):
 
-        stream = vector_options.pop('stream', _DEFAULT_OPTS.stream)
-        stride = vector_options.pop('stride', _DEFAULT_OPTS.stride)
-        vector_color = vector_options.pop('stride', _DEFAULT_OPTS.stride)
+        stream = self._vector_options.get('stream', _DEFAULT_OPTS.stream)
+        stride = self._vector_options.get('stride', _DEFAULT_OPTS.stride)
+        vector_color = self._vector_options.get('stride', _DEFAULT_OPTS.stride)
 
-        cross_section = interpolation_options.pop(
+        cross_section = self._interpolation_options.get(
             'cross_section', _DEFAULT_OPTS.cross_section
         )
-        distance_to_screen = interpolation_options.pop(
+        distance_to_screen = self._interpolation_options.get(
             'distance_to_screen', _DEFAULT_OPTS.distance_to_screen
         )
-        normalize = interpolation_options.pop(
+        normalize = self._interpolation_options.get(
             'normalize', _DEFAULT_OPTS.normalize
         )
-        number_pixels = interpolation_options.pop(
+        number_pixels = self._interpolation_options.get(
             'number_pixels', _DEFAULT_OPTS.number_pixels
         )
-        slice_position = interpolation_options.pop(
+        slice_position = self._interpolation_options.get(
             'slice_position', _DEFAULT_OPTS.slice_position
         )
-        z_observer = interpolation_options.pop(
+        z_observer = self._interpolation_options.get(
             'z_observer', _DEFAULT_OPTS.z_observer
         )
 
@@ -572,11 +593,11 @@ class Visualization:
         )
         self.axis.set_aspect('equal', 'box')
 
-    def _frame_rotation(self, _rotation_options):
-        rotation_axis = _rotation_options.get('rotation_axis', None)
-        rotation_angle = _rotation_options.get('rotation_angle', None)
-        position_angle = _rotation_options.get('position_angle', None)
-        inclination = _rotation_options.get('inclination', None)
+    def _frame_rotation(self):
+        rotation_axis = self._rotation_options.get('rotation_axis', None)
+        rotation_angle = self._rotation_options.get('rotation_angle', None)
+        position_angle = self._rotation_options.get('position_angle', None)
+        inclination = self._rotation_options.get('inclination', None)
         self._rotate_frame = False
 
         if (rotation_axis is not None or rotation_angle is not None) and (
@@ -629,9 +650,9 @@ class Visualization:
                 self._velocities, rotation_axis, rotation_angle
             )
 
-    def _set_axis_title(self, figure_options):
+    def _set_axis_title(self):
 
-        title = figure_options.pop('title', None)
+        title = self._figure_options.get('title', None)
 
         if not self._rotate_frame:
             self.axis.set_xlabel('x')
