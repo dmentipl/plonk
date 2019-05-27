@@ -9,7 +9,7 @@ Examples
 --------
 Rendering density.
 
->>> plonk.visualization.plot(dump, render='density')
+>>> viz = plonk.Visualization(dump, render='density')
 
 Notes
 -----
@@ -21,7 +21,4 @@ cite: Price, 2007, Publ. Astron. Soc. Aust., 24, 159-173.
 
 from .visualization import Visualization
 
-visualization = Visualization()
-plot = visualization.plot
-
-__all__ = ['plot']
+__all__ = ['Visualization']

@@ -22,6 +22,6 @@ from . import analysis
 from .core.dump import Dump
 from .core.evolution import Evolution
 from .core.simulation import Simulation
-from . import visualization
+from .visualization import Visualization
 
-__all__ = ['Dump', 'Evolution', 'Simulation', 'analysis', 'visualization']
+__all__ = ['Dump', 'Evolution', 'Simulation', 'Visualization', 'analysis']

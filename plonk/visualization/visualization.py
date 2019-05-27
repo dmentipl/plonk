@@ -64,101 +64,92 @@ _DEFAULT_OPTS = PlotOptions(
 
 class Visualization:
     """
-    Plonk visualization class.
+    Visualize a dump as a particle plot, a rendered plot, or a
+    vector plot.
+
+    Parameters
+    ----------
+    dump : Dump object
+        The plonk.Dump object to visualize.
+
+    render : str, default ``None``
+        Scalar quantity to render.
+
+    vector : str, default ``None``
+        Vector quantity to be represented as arrows or stream
+        function.
+
+    Other Parameters
+    ----------------
+    particle_type : int, default ``None``
+        Particle type to plot, represented as an integer type.
+
+    xrange : list or tuple of float (len=2), default ``None``
+        The range of values for the horizontal (x) axis.
+    yrange : list or tuple of float (len=2), default ``None``
+        The range of values for the vertical (y) axis.
+    extent : list or tuple of float (len=4), default ``None``
+        Specify the x and y image range as [xmin, xmax, ymin, ymax].
+
+    rotation_axis : list of float (len=3), default ``None``
+        A 3-dimensional vector specifying an axis around which to
+        rotate the reference frame. Must also specify
+        ``rotation_angle``.
+    rotation_angle : float, default ``None``
+        An angle (radians) to rotate the reference frame around a
+        ``rotation_axis``.
+    position_angle : float, default ``None``
+        An angle (radians) East of North specifying an axis around
+        which to incline the reference frame as specified by
+        ``inclination``.
+    inclination : float, default ``None``
+        An angle (radians) of inclination specified relative to a
+        ``position_angle``.
+
+    render_scale : str, default ``None``
+        Render scale options include: 'log', 'linear'.
+    render_min : float, default ``None``
+        Minimum value of the rendered quantity.
+    render_max : float, default ``None``
+        Maximum value of the rendered quantity.
+    render_fraction_max : float, default ``None``
+        Maximum value of the rendered quantity specified as a
+        fraction of the maximum in the data.
+
+    stream : bool, default ``None``
+        If true, plot vector plots as stream functions.
+
+    title : str, default ``None``
+        Plot title.
+    axis : Axes, default ``None``
+        Matplotlib Axes object to plot to.
+    new_figure : bool, default ``None``
+        If true, create new figure using Matplotlib.
+    colorbar : bool, default ``None``
+        If true, plot colorbar.
+    colormap : str, default ``None``
+        Specify the colormap.
+
+    cross_section : bool, default ``None``
+        If true, plot a cross section rather than column density
+        with slice position specified by ``slice_position``.
+    number_pixels : list of float (len=2), default ``None``
+        The number of pixels in the horizontal and vertical
+        directions, like [npixx, npixy], for interpolation. This
+        determines the resolution of the image.
+    slice_position : float, default ``None``
+        Position of the cross sectional slice.
+
+    Examples
+    --------
+    Rendering density.
+    >>> viz = plonk.Visualization(dump, render='rho')
+
+    Plotting velocity vectors.
+    >>> viz = plonk.Visualization(dump, vector='velocity')
     """
 
-    def __init__(self):
-        pass
-
-    def plot(self, dump, render=None, vector=None, **kwargs):
-        """
-        Visualize a dump as a particle plot, a rendered plot, or a
-        vector plot.
-
-        Parameters
-        ----------
-        dump : Dump object
-            The plonk.Dump object to visualize.
-
-        render : str, default ``None``
-            Scalar quantity to render.
-
-        vector : str, default ``None``
-            Vector quantity to be represented as arrows or stream
-            function.
-
-        Other Parameters
-        ----------------
-        particle_type : int, default ``None``
-            Particle type to plot, represented as an integer type.
-
-        horizontal_range : list of float (len=2), default ``None``
-            The range of values for the horizontal (x) axis.
-        vertical_range : list of float (len=2), default ``None``
-            The range of values for the vertical (y) axis.
-        image_range : float, default ``None``
-            Specify the horizontal and vertical image range to both
-            equal ``image_range``.
-
-        rotation_axis : list of float (len=3), default ``None``
-            A 3-dimensional vector specifying an axis around which to
-            rotate the reference frame. Must also specify
-            ``rotation_angle``.
-        rotation_angle : float, default ``None``
-            An angle (radians) to rotate the reference frame around a
-            ``rotation_axis``.
-        position_angle : float, default ``None``
-            An angle (radians) East of North specifying an axis around
-            which to incline the reference frame as specified by
-            ``inclination``.
-        inclination : float, default ``None``
-            An angle (radians) of inclination specified relative to a
-            ``position_angle``.
-
-        stream : bool, default ``None``
-            If true, plot vector plots as stream functions.
-        cross_section : bool, default ``None``
-            If true, plot a cross section rather than column density
-            with slice position specified by ``slice_position``.
-        slice_position : float, default ``None``
-            Position of the cross sectional slice.
-        number_pixels : list of float (len=2), default ``None``
-            The number of pixels in the horizontal and vertical
-            directions, like [npixx, npixy], for interpolation. This
-            determines the resolution of the image.
-
-        render_scale : str, default ``None``
-            Render scale options include: 'log', 'linear'.
-        render_min : float, default ``None``
-            Minimum value of the rendered quantity.
-        render_max : float, default ``None``
-            Maximum value of the rendered quantity.
-        render_fraction_max : float, default ``None``
-            Maximum value of the rendered quantity specified as a
-            fraction of the maximum in the data.
-
-        title : str, default ``None``
-            Plot title.
-        axis : Axes, default ``None``
-            Matplotlib Axes object to plot to.
-        new_figure : bool, default ``None``
-            If true, create new figure using Matplotlib.
-        colorbar : bool, default ``None``
-            If true, plot colorbar.
-        colormap : str, default ``None``
-            Specify the colormap.
-
-        Returns
-        -------
-
-        Examples
-        --------
-        Rendering density.
-        >>> plonk.plot(dump, render='rho')
-
-        Plotting velocity vectors.
-        >>> plonk.plot(dump, vector='velocity')
-        """
+    def __init__(self, dump, render=None, vector=None, **kwargs):
 
         # TODO: add options
         # TODO: add docs
@@ -167,23 +158,7 @@ class Visualization:
         # TODO: physical units
         # TODO: calculated quantities
 
-        range_options = {
-            key: value
-            for key, value in kwargs.items()
-            if key in ['horizontal_range', 'vertical_range', 'image_range']
-        }
-
-        rotation_options = {
-            key: value
-            for key, value in kwargs.items()
-            if key
-            in [
-                'rotation_axis',
-                'rotation_angle',
-                'position_angle',
-                'inclination',
-            ]
-        }
+        self._dump = dump
 
         render_options = {
             key: value
@@ -225,138 +200,114 @@ class Visualization:
             ]
         }
 
-        axis = kwargs.pop('axis', None)
+        self.axis = kwargs.pop('axis', None)
         new_figure = kwargs.pop('new_figure', None)
-
-        if axis is None:
+        if self.axis is None:
             if new_figure:
                 plt.figure()
             plt.clf()
-            axis = plt.gca()
+            self.axis = plt.gca()
 
-        particle_plot = False
-        if render is None and vector is None:
-            particle_plot = True
+        self._render = None
+        self._vector = None
+        self._plot_particles = False
+        self._plot_render = False
+        self._plot_vector = False
+        if render is None:
+            self._plot_particles = True
+        if render is not None:
+            self._render = render
+            self._plot_render = True
+        if vector is not None:
+            self._vector = vector
+            self._plot_vector = True
 
         particle_type = kwargs.pop('particle_type', None)
-
         if particle_type is None:
             particle_type = I_GAS
         else:
             if not isinstance(particle_type, int):
                 raise ValueError('particle_type must be int')
-
-        particle_mask = dump.particles.itype[()] == particle_type
-
-        positions = dump.particles.xyz[()][particle_mask]
-        smoothing_length = dump.particles.h[()][particle_mask]
-        particle_mass = dump.header['massoftype'][particle_type - 1]
+        self._particle_mask = self._dump.particles.itype[()] == particle_type
+        self._positions = self._dump.particles.xyz[()][self._particle_mask]
+        self._smoothing_length = self._dump.particles.h[()][self._particle_mask]
+        self._particle_mass = self._dump.header['massoftype'][particle_type - 1]
         try:
-            velocities = dump.particles.vxyz[()]
+            self._velocities = self._dump.particles.vxyz[()]
         except Exception:
-            velocities = None
+            self._velocities = None
 
-        density_weighted = kwargs.pop('new_figure', None)
-        weights = _interpolation_weights(
+        density_weighted = kwargs.pop('density_weighted', None)
+        self._weights = _interpolation_weights(
             density_weighted,
-            smoothing_length,
-            dump.header['massoftype'],
-            dump.header['hfact'],
+            self._smoothing_length,
+            self._particle_mass,
+            self._dump.header['hfact'],
         )
 
-        positions, velocities = self._rotate_frame(
-            positions, velocities, rotation_options
-        )
+        _rotation_options = {
+            key: value
+            for key, value in kwargs.items()
+            if key
+            in [
+                'rotation_axis',
+                'rotation_angle',
+                'position_angle',
+                'inclination',
+            ]
+        }
+        self._frame_rotation(_rotation_options)
 
-        horizontal_range, vertical_range = self._set_image_size(
-            positions, range_options
-        )
+        _xy_range = {
+            key: value
+            for key, value in kwargs.items()
+            if key in ['xrange', 'yrange', 'extent']
+        }
+        self._set_image_size(_xy_range)
 
-        image = None
-        if render:
+        if self._plot_render:
             image, colorbar = self._render_image(
-                dump,
-                render,
-                positions,
-                weights,
-                particle_mask,
-                particle_mass,
-                horizontal_range,
-                vertical_range,
-                interpolation_options,
-                render_options,
-                figure_options,
-                axis,
+                interpolation_options, render_options, figure_options
             )
 
-        if vector:
-            self._vector_image(
-                dump,
-                render,
-                vector,
-                positions,
-                weights,
-                particle_mask,
-                horizontal_range,
-                vertical_range,
-                vector_options,
-                interpolation_options,
-                axis,
-            )
+        if self._plot_vector:
+            self._vector_image(vector_options, interpolation_options)
 
-        if particle_plot:
-            self._plot_particles(positions, axis)
+        if self._plot_particles:
+            self._particle_scatter_plot()
 
-        self._set_axis_title(
-            axis, horizontal_range, vertical_range, figure_options
-        )
+        self._set_axis_title(figure_options)
 
-        return {'axis': axis, 'image': image, 'colorbar': colorbar}
-
-    def _set_image_size(self, positions, range_options):
+    def _set_image_size(self, _xy_range):
         """Set image size."""
 
-        horizontal_range = range_options.pop('horizontal_range', None)
-        vertical_range = range_options.pop('vertical_range', None)
-        image_range = range_options.pop('image_range', -1)
+        self._extent = None
 
-        if image_range > 0:
-            if horizontal_range is not None or vertical_range is not None:
+        _xrange = _xy_range.pop('xrange', None)
+        _yrange = _xy_range.pop('yrange', None)
+        _extent = _xy_range.pop('extent', None)
+
+        if _extent is not None:
+            if _xrange is not None or _yrange is not None:
                 raise ValueError(
-                    'Cannot set image_range and horizontal_range '
-                    + '(or vertical_range) at the same time'
+                    'Cannot set extent and xrange/yrange at the same time'
                 )
-            horizontal_range = [-image_range, image_range]
-            vertical_range = [-image_range, image_range]
+            if len(_extent) == 4:
+                self._extent = _extent
 
-        if horizontal_range is None and vertical_range is None:
-            range_min = min(positions[:, 0].min(), positions[:, 1].min())
-            range_max = max(positions[:, 0].max(), positions[:, 1].max())
-            horizontal_range = [range_min, range_max]
-            vertical_range = [range_min, range_max]
+        if _xrange is None and _yrange is None:
+            _x = min(self._positions[:, 0].min(), self._positions[:, 1].min())
+            _y = max(self._positions[:, 0].max(), self._positions[:, 1].max())
+        if _xrange is None:
+            _x = [self._positions[:, 0].min(), self._positions[:, 0].max()]
+        if _yrange is None:
+            _y = [self._positions[:, 0].min(), self._positions[:, 0].max()]
 
-        if horizontal_range is None:
-            horizontal_range = [positions[:, 0].min(), positions[:, 0].max()]
-
-        if vertical_range is None:
-            vertical_range = [positions[:, 1].min(), positions[:, 1].max()]
-
-        return horizontal_range, vertical_range
+        if self._extent is None:
+            self._extent = _x + _y
 
     def _render_image(
-        self,
-        dump,
-        render,
-        positions,
-        weights,
-        particle_mask,
-        particle_mass,
-        horizontal_range,
-        vertical_range,
-        interpolation_options,
-        render_options,
-        figure_options,
-        axis,
+        self, interpolation_options, render_options, figure_options
     ):
 
         accelerate = interpolation_options.pop(
@@ -380,44 +331,58 @@ class Visualization:
             'zobserver', _DEFAULT_OPTS.zobserver
         )
 
-        if render in ['rho', 'dens', 'density']:
-            render_data = dump.particles.rho
-        elif render == 'x':
-            render_data = dump.particles.xyz[()][particle_mask][:, 0]
-        elif render == 'y':
-            render_data = dump.particles.xyz[()][particle_mask][:, 1]
-        elif render == 'z':
-            render_data = dump.particles.xyz[()][particle_mask][:, 2]
-        elif render == 'vx':
-            render_data = dump.particles.vxyz[()][particle_mask][:, 0]
-        elif render == 'vy':
-            render_data = dump.particles.vxyz[()][particle_mask][:, 1]
-        elif render == 'vz':
-            render_data = dump.particles.vxyz[()][particle_mask][:, 2]
-        elif render in ['v', 'velocity']:
-            render_data = dump.particles.extra_quantity('velocity magnitude')[
-                particle_mask
+        if self._render in ['rho', 'dens', 'density']:
+            render_data = self._dump.particles.rho
+        elif self._render == 'x':
+            render_data = self._dump.particles.xyz[()][self._particle_mask][
+                :, 0
             ]
+        elif self._render == 'y':
+            render_data = self._dump.particles.xyz[()][self._particle_mask][
+                :, 1
+            ]
+        elif self._render == 'z':
+            render_data = self._dump.particles.xyz[()][self._particle_mask][
+                :, 2
+            ]
+        elif self._render == 'vx':
+            render_data = self._dump.particles.vxyz[()][self._particle_mask][
+                :, 0
+            ]
+        elif self._render == 'vy':
+            render_data = self._dump.particles.vxyz[()][self._particle_mask][
+                :, 1
+            ]
+        elif self._render == 'vz':
+            render_data = self._dump.particles.vxyz[()][self._particle_mask][
+                :, 2
+            ]
+        elif self._render in ['v', 'velocity']:
+            render_data = self._dump.particles.extra_quantity(
+                'velocity magnitude'
+            )[self._particle_mask]
         else:
             try:
-                render_data = dump.particles.arrays[render][particle_mask]
+                render_data = self._dump.particles.arrays[self._render][
+                    self._particle_mask
+                ]
             except Exception:
                 raise ValueError(
-                    f'Cannot determine quantity to render: {render}'
+                    f'Cannot determine quantity to render: {self._render}'
                 )
             if render_data.ndim != 1:
-                raise ValueError(f'{render} is not 1-dimensional')
+                raise ValueError(f'{self._render} is not 1-dimensional')
 
-        print(f'Rendering {render} using Splash')
+        print(f'Rendering {self._render} using Splash')
 
         image_data = scalar_interpolation(
-            positions,
-            dump.particles.h[()][particle_mask],
-            weights,
+            self._positions,
+            self._smoothing_length,
+            self._weights,
             render_data,
-            particle_mass,
-            horizontal_range,
-            vertical_range,
+            self._particle_mass,
+            self._extent[0:2],
+            self._extent[2:],
             number_pixels,
             cross_section,
             slice_position,
@@ -429,26 +394,13 @@ class Visualization:
         )
 
         image, colorbar = self._render_image_matplotlib(
-            image_data,
-            render,
-            horizontal_range,
-            vertical_range,
-            render_options,
-            figure_options,
-            axis,
+            image_data, render_options, figure_options
         )
 
         return image, colorbar
 
     def _render_image_matplotlib(
-        self,
-        image_data,
-        render,
-        horizontal_range,
-        vertical_range,
-        render_options,
-        figure_options,
-        axis,
+        self, image_data, render_options, figure_options
     ):
 
         render_scale = render_options.pop(
@@ -480,18 +432,20 @@ class Visualization:
         else:
             raise ValueError("Unknown color render_scale: " + render_scale)
 
-        extent = horizontal_range + vertical_range
-
-        image = axis.imshow(
-            image_data, norm=norm, origin='lower', extent=extent, cmap=cmap
+        image = self.axis.imshow(
+            image_data,
+            norm=norm,
+            origin='lower',
+            extent=self._extent,
+            cmap=cmap,
         )
 
         # TODO: make render_label respond to settings/options
-        render_label = r'$\int$ ' + f'{render}' + ' dz'
+        render_label = r'$\int$ ' + f'{self._render}' + ' dz'
 
         colorbar = None
         if colorbar_:
-            divider = make_axes_locatable(axis)
+            divider = make_axes_locatable(self.axis)
             cax = divider.append_axes("right", size="5%", pad=0.05)
             colorbar = plt.colorbar(image, cax=cax)
             if render_label:
@@ -499,20 +453,7 @@ class Visualization:
 
         return image, colorbar
 
-    def _vector_image(
-        self,
-        dump,
-        render,
-        vector,
-        positions,
-        weights,
-        particle_mask,
-        horizontal_range,
-        vertical_range,
-        vector_options,
-        interpolation_options,
-        axis,
-    ):
+    def _vector_image(self, vector_options, interpolation_options):
 
         stream = vector_options.pop('stream', _DEFAULT_OPTS.stream)
         stride = vector_options.pop('stride', _DEFAULT_OPTS.stride)
@@ -534,32 +475,36 @@ class Visualization:
             'zobserver', _DEFAULT_OPTS.zobserver
         )
 
-        if vector in ['v', 'vel', 'velocity']:
+        if self._vector in ['v', 'vel', 'velocity']:
             try:
-                vector_data = dump.particles.vxyz[()][particle_mask]
+                vector_data = self._dump.particles.vxyz[()][self._particle_mask]
             except Exception:
                 raise ValueError('Velocity not available in dump')
         else:
             try:
-                vector_data = dump.particles.arrays[vector][particle_mask]
+                vector_data = self._dump.particles.arrays[self._vector][
+                    self._particle_mask
+                ]
                 if vector_data.ndim != 2 and vector_data.shape[1] != 3:
                     raise ValueError(
-                        f'{vector} does not have appropriate dimensions'
+                        f'{self._vector} does not have appropriate dimensions'
                     )
             except Exception:
                 raise ValueError(
-                    f'Cannot determine vector quantity to render: {vector}'
+                    f'Cannot determine vector quantity to plot: {self._vector}'
                 )
 
-        print(f'Plotting vector field {vector} using Splash')
+        print(f'Plotting vector field {self._vector} using Splash')
+
+        _xrange, _yrange = self._extent[0:2], self._extent[2:]
 
         vector_data = vector_interpolation(
-            positions,
-            dump.particles.h[()][particle_mask],
-            weights,
+            self._positions,
+            self._smoothing_length,
+            self._weights,
             vector_data,
-            horizontal_range,
-            vertical_range,
+            _xrange,
+            _yrange,
             number_pixels,
             cross_section,
             slice_position,
@@ -572,16 +517,16 @@ class Visualization:
         yvector_data = vector_data[1]
 
         X, Y = np.meshgrid(
-            np.linspace(*horizontal_range, len(xvector_data)),
-            np.linspace(*vertical_range, len(yvector_data)),
+            np.linspace(*_xrange, len(xvector_data)),
+            np.linspace(*_yrange, len(yvector_data)),
         )
 
         vector_color = _DEFAULT_OPTS.vector_color
-        if render:
+        if self._render:
             vector_color = 'white'
 
         if stream:
-            axis.streamplot(
+            self.axis.streamplot(
                 X[::stride, ::stride],
                 Y[::stride, ::stride],
                 xvector_data[::stride, ::stride],
@@ -589,7 +534,7 @@ class Visualization:
                 color=vector_color,
             )
         else:
-            axis.quiver(
+            self.axis.quiver(
                 X[::stride, ::stride],
                 Y[::stride, ::stride],
                 xvector_data[::stride, ::stride],
@@ -597,22 +542,21 @@ class Visualization:
                 color=vector_color,
             )
 
-        axis.set_aspect('equal', 'box')
+        self.axis.set_aspect('equal', 'box')
 
-    def _plot_particles(self, positions, axis):
-        print('Plotting particles')
+    def _particle_scatter_plot(self):
         marker_size = 0.01
-        axis.scatter(positions[:, 0], positions[:, 1], s=marker_size, c='k')
-        axis.set_aspect('equal', 'box')
+        self.axis.scatter(
+            self._positions[:, 0], self._positions[:, 1], s=marker_size, c='k'
+        )
+        self.axis.set_aspect('equal', 'box')
 
-    def _rotate_frame(self, positions, velocities, rotation_options):
-
-        rotation_axis = rotation_options.pop('rotation_axis', None)
-        rotation_angle = rotation_options.pop('rotation_angle', None)
-        position_angle = rotation_options.pop('position_angle', None)
-        inclination = rotation_options.pop('inclination', None)
-
-        self._rotate = False
+    def _frame_rotation(self, _rotation_options):
+        rotation_axis = _rotation_options.get('rotation_axis', None)
+        rotation_angle = _rotation_options.get('rotation_angle', None)
+        position_angle = _rotation_options.get('position_angle', None)
+        inclination = _rotation_options.get('inclination', None)
+        self._rotate_frame = False
 
         if (rotation_axis is not None or rotation_angle is not None) and (
             position_angle is not None and inclination is not None
@@ -624,7 +568,7 @@ class Visualization:
 
         if rotation_axis is not None:
             if rotation_angle is not None:
-                self._rotate = True
+                self._rotate_frame = True
                 rotation_axis = normalize_vector(rotation_axis)
             else:
                 raise ValueError('Must specify rotation_angle')
@@ -637,7 +581,7 @@ class Visualization:
 
         if position_angle is not None:
             if inclination is not None:
-                self._rotate = True
+                self._rotate_frame = True
                 rotation_angle = inclination
                 rotation_axis = np.array(
                     [np.cos(position_angle), np.sin(position_angle), 0]
@@ -649,39 +593,34 @@ class Visualization:
             raise ValueError('Must specify position_angle')
 
         if rotation_axis is not None and rotation_angle is not None:
-
+            self._rotation_axis = rotation_axis
+            self._rotation_angle = rotation_angle
             print(
                 f'Rotating {rotation_angle*180/np.pi:.0f} deg around '
                 f'[{rotation_axis[0]:.2f},'
                 f' {rotation_axis[1]:.2f},'
                 f' {rotation_axis[2]:.2f}]'
             )
-
-            positions = rotate_vector_arbitrary_axis(
-                positions, rotation_axis, rotation_angle
+            self._positions = rotate_vector_arbitrary_axis(
+                self._positions, rotation_axis, rotation_angle
+            )
+            self._velocities = rotate_vector_arbitrary_axis(
+                self._velocities, rotation_axis, rotation_angle
             )
 
-            velocities = rotate_vector_arbitrary_axis(
-                velocities, rotation_axis, rotation_angle
-            )
-
-        return positions, velocities
-
-    def _set_axis_title(
-        self, axis, horizontal_range, vertical_range, figure_options
-    ):
+    def _set_axis_title(self, figure_options):
 
         title = figure_options.pop('title', None)
 
-        if not self._rotate:
-            axis.set_xlabel('x')
-            axis.set_ylabel('y')
+        if not self._rotate_frame:
+            self.axis.set_xlabel('x')
+            self.axis.set_ylabel('y')
 
-        axis.set_xlim(horizontal_range[0], horizontal_range[1])
-        axis.set_ylim(vertical_range[0], vertical_range[1])
+        self.axis.set_xlim(self._extent[0], self._extent[1])
+        self.axis.set_ylim(self._extent[2], self._extent[3])
 
         if title is not None:
-            axis.set_title(title)
+            self.axis.set_title(title)
 
 
 def plot_options(**kwargs):
