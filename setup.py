@@ -13,7 +13,7 @@ from numpy import get_include
 # ---------------------------------------------------------------------------- #
 # --- Splash ---
 
-LIBRARY_DIR = pathlib.Path(sysconfig.get_path('stdlib')).parent
+LIBRARY_DIR = str(pathlib.Path(sysconfig.get_path('stdlib')).parent)
 SOURCES = ['splash/splash.pyx']
 LIBRARIES = ['splash', 'gfortran']
 
