@@ -16,7 +16,7 @@ import plonk
 
 # --- Files
 
-DIRECTORY = pathlib.Path('~/runs/prefix/dir')
+DIRECTORY = pathlib.Path('~/runs/directory')
 PREFIX = 'prefix'
 
 # --- Options
@@ -29,15 +29,15 @@ RADIUS_OUT = 250
 
 # --- Read dump files
 
-SIMULATION = plonk.Simulation(prefix=PREFIX, directory=DIRECTORY)
+simulation = plonk.Simulation(prefix=PREFIX, directory=DIRECTORY)
 
 # --- Perform analysis
 
 print('\nPerforming disc analysis...\n')
-RADIAL_AVERAGES = list()
-for dump in SIMULATION.dumps:
+radial_averages = list()
+for dump in simulation.dumps:
     print(f'{dump.file_name}')
-    RADIAL_AVERAGES.append(
+    radial_averages.append(
         plonk.analysis.disc(
             dump=dump,
             radius_in=RADIUS_IN,
@@ -49,15 +49,15 @@ for dump in SIMULATION.dumps:
 # --- Plot data
 
 print('\nPlotting surface density and scale height...')
-FIG, AX = plt.subplots(1, 2, figsize=(10, 4))
+figure, axis = plt.subplots(1, 2, figsize=(10, 4))
 
-for df in RADIAL_AVERAGES:
-    AX[0].plot(df['R'], df['sigma'])
-    AX[1].plot(df['R'], df['H'])
+for df in radial_averages:
+    axis[0].plot(df['R'], df['sigma'])
+    axis[1].plot(df['R'], df['H'])
 
-AX[0].set_xlabel('radius')
-AX[0].set_ylabel('surface density')
-AX[1].set_xlabel('radius')
-AX[1].set_ylabel('scale height')
+axis[0].set_xlabel('radius')
+axis[0].set_ylabel('surface density')
+axis[1].set_xlabel('radius')
+axis[1].set_ylabel('scale height')
 
 plt.show()

@@ -15,24 +15,24 @@ import plonk
 
 # --- Files
 
-DIRECTORY = pathlib.Path('~/runs/prefix/dir')
+DIRECTORY = pathlib.Path('~/runs/directory')
 PREFIX = 'prefix'
 
 # --- Options
 
-RENDER = 'rho'
+RENDER = 'density'
 EXTENT = [-150, 150, -150, 150]
 
 # ---------------------------------------------------------------------------- #
 
 # --- Read dump files
 
-SIMULATION = plonk.Simulation(prefix=PREFIX, directory=DIRECTORY)
+simulation = plonk.Simulation(prefix=PREFIX, directory=DIRECTORY)
 
 # --- Plot images
 
 print(f'\nPlotting dump files...\n')
-for dump in SIMULATION.dumps:
+for dump in simulation.dumps:
     print(f'{dump.file_name}')
     plt.figure()
     plonk.Visualization(dump, render=RENDER, extent=EXTENT)
