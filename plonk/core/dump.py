@@ -194,6 +194,4 @@ class Dump(DumpFile):
         return self.__str__()
 
     def __str__(self):
-        return (
-            f'<plonk.Dump: "{self.file_name}">'
-        )
+        return f'<plonk.Dump: "{self.file_name}">'

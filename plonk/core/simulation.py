@@ -62,11 +62,11 @@ class Simulation:
         if directory is None:
             directory = '.'
         else:
-            if not isinstance(directory, str):
-                raise TypeError('directory must be str')
+            if not isinstance(directory, (str, Path)):
+                raise TypeError('directory must be str or pathlib.Path')
 
         self.prefix = prefix
-        self.path = Path(directory).resolve()
+        self.path = Path(directory).expanduser().resolve()
 
         if not list(self.path.glob(self.prefix + '*')):
             raise FileNotFoundError(f'No files with prefix: {prefix}')

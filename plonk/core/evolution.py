@@ -133,9 +133,7 @@ class Evolution:
         return self.__str__()
 
     def __str__(self):
-        return (
-            f'<plonk.Evolution: "{self.file_names}">'
-        )
+        return f'<plonk.Evolution: "{self.file_names}">'
 
 
 def _get_columns(filename):

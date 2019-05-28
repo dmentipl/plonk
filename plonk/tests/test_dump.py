@@ -2,11 +2,10 @@
 Testing reading and writing dumps.
 """
 
-import os
+import pathlib
 import unittest
 
 import numpy as np
-
 import plonk
 
 
@@ -16,15 +15,13 @@ class TestPhantomDump(unittest.TestCase):
     def test_read_dump_parameters(self):
         """Testing reading Phantom HDF dump file parameters."""
 
-        test_file = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            'test_data',
-            'disc_00000.h5',
+        test_file = (
+            pathlib.Path(__file__).parent / 'test_data' / 'disc_00000.h5'
         )
 
-        test_parameters = plonk.Dump(test_file).parameters
+        test_header = plonk.Dump(test_file).header
 
-        reference_parameters = {
+        reference_header = {
             'Bextx': 0.0,
             'Bexty': 0.0,
             'Bextz': 0.0,
@@ -177,15 +174,13 @@ class TestPhantomDump(unittest.TestCase):
             'zmin': -0.5,
         }
 
-        for para in test_parameters:
-            if isinstance(test_parameters[para], np.ndarray):
+        for para in test_header:
+            if isinstance(test_header[para], np.ndarray):
                 np.testing.assert_allclose(
-                    test_parameters[para], reference_parameters[para]
+                    test_header[para], reference_header[para]
                 )
             else:
-                self.assertEqual(
-                    test_parameters[para], reference_parameters[para]
-                )
+                self.assertEqual(test_header[para], reference_header[para])
 
 
 if __name__ == '__main__':

@@ -1,49 +1,42 @@
 """
 analyze_disc.py
 
-Produces similar output to the phantomanalysis module in analysis_disc.f90.
+Produces similar output to the phantomanalysis module in
+analysis_disc.f90.
 
 Daniel Mentiplay, 2019.
 """
 
-import os
+import pathlib
 
 import matplotlib.pyplot as plt
-
 import plonk
 
 # ---------------------------------------------------------------------------- #
 
 # --- Files
 
-PREFIX = 'disc'
-FILE_NUMBERS = range(1)
+DIRECTORY = pathlib.Path('~/runs/prefix/dir')
+PREFIX = 'prefix'
 
 # --- Options
 
-NUMBER_RADIAL_BINS = 200
+NUMBER_RADIAL_BINS = 100
 RADIUS_IN = 5
-RADIUS_OUT = 150
+RADIUS_OUT = 250
 
 # ---------------------------------------------------------------------------- #
 
 # --- Read dump files
 
-DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
-DUMPFILES = [PREFIX + f'_{i:05}.h5' for i in FILE_NUMBERS]
-
-DUMPS = list()
-for dumpfile in DUMPFILES:
-    file = os.path.join(DATA_PATH, dumpfile)
-    print('\nReading in data from dumpfile: ' + file + '...')
-    dump = plonk.Dump(file)
-    DUMPS.append(dump)
+SIMULATION = plonk.Simulation(prefix=PREFIX, directory=DIRECTORY)
 
 # --- Perform analysis
 
+print('\nPerforming disc analysis...\n')
 RADIAL_AVERAGES = list()
-for dump in DUMPS:
-    print('\nPerforming disc analysis...\n')
+for dump in SIMULATION.dumps:
+    print(f'{dump.file_name}')
     RADIAL_AVERAGES.append(
         plonk.analysis.disc(
             dump=dump,
@@ -55,7 +48,7 @@ for dump in DUMPS:
 
 # --- Plot data
 
-print('\nPlotting surface density and scale height...\n')
+print('\nPlotting surface density and scale height...')
 FIG, AX = plt.subplots(1, 2, figsize=(10, 4))
 
 for df in RADIAL_AVERAGES:

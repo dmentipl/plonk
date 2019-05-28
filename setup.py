@@ -2,7 +2,7 @@
 Install Plonk.
 """
 
-import os
+import pathlib
 import sysconfig
 
 from setuptools import Extension, setup
@@ -13,7 +13,7 @@ from numpy import get_include
 # ---------------------------------------------------------------------------- #
 # --- Splash ---
 
-LIBRARY_DIR = os.path.dirname(sysconfig.get_path('stdlib'))
+LIBRARY_DIR = pathlib.Path(sysconfig.get_path('stdlib')).parent
 SOURCES = ['splash/splash.pyx']
 LIBRARIES = ['splash', 'gfortran']
 

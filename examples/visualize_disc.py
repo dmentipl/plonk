@@ -6,48 +6,35 @@ Produces similar rendering to Splash.
 Daniel Mentiplay, 2019.
 """
 
-import os
+import pathlib
 
 import matplotlib.pyplot as plt
-
 import plonk
 
 # ---------------------------------------------------------------------------- #
 
 # --- Files
 
-PREFIX = 'disc'
-FILE_NUMBERS = range(1)
+DIRECTORY = pathlib.Path('~/runs/prefix/dir')
+PREFIX = 'prefix'
 
 # --- Options
 
-RENDER = 'rho'  # Render density
-RENDER_FRACTION_MAX = 0.05  # Colour bar scaled to % of max.
-IMAGE_RANGE = 150  # Figure width in code units
+RENDER = 'rho'
+EXTENT = [-150, 150, -150, 150]
 
 # ---------------------------------------------------------------------------- #
 
 # --- Read dump files
 
-DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
-DUMPFILES = [PREFIX + f'_{i:05}.h5' for i in FILE_NUMBERS]
-
-DUMPS = list()
-for dumpfile in DUMPFILES:
-    file = os.path.join(DATA_PATH, dumpfile)
-    print('\nReading in data from dumpfile: ' + file + '...')
-    DUMPS.append(plonk.Dump(file))
+SIMULATION = plonk.Simulation(prefix=PREFIX, directory=DIRECTORY)
 
 # --- Plot images
 
 print(f'\nPlotting dump files...\n')
-for dump in DUMPS:
+for dump in SIMULATION.dumps:
+    print(f'{dump.file_name}')
     plt.figure()
-    plonk.visualization.plot(
-        dump,
-        render=RENDER,
-        render_fraction_max=RENDER_FRACTION_MAX,
-        image_range=IMAGE_RANGE,
-    )
+    plonk.Visualization(dump, render=RENDER, extent=EXTENT)
 
 plt.show()
