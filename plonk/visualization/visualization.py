@@ -181,6 +181,8 @@ class Visualization:
             self.figure = plt.gcf()
         if self.axis is None:
             self.axis = self.figure.gca()
+        if self.figure is None:
+            self.figure = self.axis.get_figure()
 
         self._render = None
         self._vector = None

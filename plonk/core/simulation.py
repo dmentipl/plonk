@@ -192,8 +192,8 @@ class Simulation:
         """
 
         if glob is None:
-            # Phantom dump file name format
-            glob = self.prefix + '_[0-9][0-9][0-9][0-9][0-9].*'
+            # Phantom HDF5 dump file name format
+            glob = self.prefix + '_[0-9][0-9][0-9][0-9][0-9].h5'
 
         file_types = set([f.suffix for f in self.path.glob(glob)])
 
