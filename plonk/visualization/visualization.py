@@ -223,15 +223,6 @@ class Visualization:
 
         self._initialized = True
 
-    def _interpolation_weights(self):
-        """Interpolation weights."""
-        if self._interpolation_options['density_weighted']:
-            return np.array(self._particle_mass() / self._h() ** 2)
-        return np.full_like(self._h(), 1 / self._header['hfact'])
-
-    def _particle_mass(self):
-        return self._dump.mass
-
     def _quantity(self, quantity, mask=None, transform=None):
         if transform is not None:
             func = transform['func']
@@ -243,32 +234,58 @@ class Visualization:
             return quantity[mask]
         return quantity
 
-    def _xyz(self, mask=None, transform=None):
-        return self._quantity(self._particles.xyz[:], mask, transform)
+    @property
+    def _interpolation_weights(self):
+        """Interpolation weights."""
+        if self._interpolation_options['density_weighted']:
+            return np.array(self._particle_mass / self._h ** 2)
+        return np.full_like(self._h, 1 / self._header['hfact'])
 
-    def _x(self, mask=None, transform=None):
-        return self._quantity(self._particles.xyz[:, 0], mask, transform)
+    @property
+    def _particle_mass(self):
+        return self._dump.mass
 
-    def _y(self, mask=None, transform=None):
-        return self._quantity(self._particles.xyz[:, 1], mask, transform)
+    @property
+    def _xyz(self):
+        return self._quantity(
+            self._particles.xyz[:], self._particle_mask, self._rotation
+        )
 
-    def _z(self, mask=None, transform=None):
-        return self._quantity(self._particles.xyz[:, 2], mask, transform)
+    @property
+    def _x(self):
+        return self._xyz[:, 0]
 
-    def _h(self, mask=None, transform=None):
-        return self._quantity(self._particles.h[:], mask, transform)
+    @property
+    def _y(self):
+        return self._xyz[:, 1]
 
-    def _vxyz(self, mask=None, transform=None):
-        return self._quantity(self._particles.vxyz[:], mask, transform)
+    @property
+    def _z(self):
+        return self._xyz[:, 2]
 
-    def _vx(self, mask=None, transform=None):
-        return self._quantity(self._particles.vxyz[:, 0], mask, transform)
+    @property
+    def _h(self):
+        return self._quantity(
+            self._particles.h[:], self._particle_mask, self._rotation
+        )
 
-    def _vy(self, mask=None, transform=None):
-        return self._quantity(self._particles.vxyz[:, 1], mask, transform)
+    @property
+    def _vxyz(self):
+        return self._quantity(
+            self._particles.vxyz[:], self._particle_mask, self._rotation
+        )
 
-    def _vz(self, mask=None, transform=None):
-        return self._quantity(self._particles.vxyz[:, 2], mask, transform)
+    @property
+    def _vx(self):
+        return self._vxyz[:, 0]
+
+    @property
+    def _vy(self):
+        return self._vxyz[:, 1]
+
+    @property
+    def _vz(self):
+        return self._vxyz[:, 2]
 
     def _make_plot(self):
 
@@ -421,43 +438,33 @@ class Visualization:
 
         if self._extent is None:
             if _xrange is None and _yrange is None:
-                _min = self._xyz(self._particle_mask, self._rotation)[
-                    :, 0:2
-                ].min(axis=0)
-                _max = self._xyz(self._particle_mask, self._rotation)[
-                    :, 0:2
-                ].max(axis=0)
+                _min = self._xyz[:, 0:2].min(axis=0)
+                _max = self._xyz[:, 0:2].max(axis=0)
                 self._extent = (_min[0], _max[0], _min[1], _max[1])
             else:
                 if _xrange is None:
-                    _x = (
-                        self._x(self._particle_mask, self._rotation).min(),
-                        self._x(self._particle_mask, self._rotation).max(),
-                    )
+                    _x = (self._x.min(), self._x.max())
                 if _yrange is None:
-                    _y = (
-                        self._y(self._particle_mask, self._rotation).min(),
-                        self._y(self._particle_mask, self._rotation).max(),
-                    )
+                    _y = (self._y.min(), self._y.max())
                 if self._extent is None:
                     self._extent = _x + _y
 
     def _render_image(self):
 
         if self._render in ['rho', 'dens', 'density']:
-            render_data = self._particles.rho[self._particle_mask]
+            render_data = self._dump.density[self._particle_mask]
         elif self._render == 'x':
-            render_data = self._x(self._particle_mask, self._rotation)
+            render_data = self._x
         elif self._render == 'y':
-            render_data = self._y(self._particle_mask, self._rotation)
+            render_data = self._y
         elif self._render == 'z':
-            render_data = self._z(self._particle_mask, self._rotation)
+            render_data = self._z
         elif self._render == 'vx':
-            render_data = self._vx(self._particle_mask, self._rotation)
+            render_data = self._vx
         elif self._render == 'vy':
-            render_data = self._vy(self._particle_mask, self._rotation)
+            render_data = self._vy
         elif self._render == 'vz':
-            render_data = self._vz(self._particle_mask, self._rotation)
+            render_data = self._vz
         elif self._render in ['v', 'velocity']:
             render_data = self._particles.extra_quantity('velocity magnitude')[
                 self._particle_mask
@@ -477,12 +484,12 @@ class Visualization:
         print(f'Rendering {self._render} using Splash')
 
         image_data = scalar_interpolation(
-            self._xyz(self._particle_mask, self._rotation),
-            self._h(self._particle_mask),
-            self._interpolation_weights(),
+            self._xyz,
+            self._h,
+            self._interpolation_weights,
             render_data,
-            self._particle_mass(),
-            self._extent[0:2],
+            self._particle_mass,
+            self._extent[:2],
             self._extent[2:],
             self._interpolation_options['number_pixels'],
             self._interpolation_options['cross_section'],
@@ -551,7 +558,7 @@ class Visualization:
 
         if self._vector in ['v', 'vel', 'velocity']:
             try:
-                vector_data = self._vxyz(self._particle_mask, self._rotation)
+                vector_data = self._vxyz
             except Exception:
                 raise ValueError('Velocity not available in dump')
         else:
@@ -570,12 +577,12 @@ class Visualization:
 
         print(f'Plotting vector field {self._vector} using Splash')
 
-        _xrange, _yrange = self._extent[0:2], self._extent[2:]
+        _xrange, _yrange = self._extent[:2], self._extent[2:]
 
         vector_data = vector_interpolation(
-            self._xyz(self._particle_mask, self._rotation),
-            self._h(self._particle_mask),
-            self._interpolation_weights(),
+            self._xyz,
+            self._h,
+            self._interpolation_weights,
             vector_data,
             _xrange,
             _yrange,
@@ -624,12 +631,7 @@ class Visualization:
 
     def _particle_scatter_plot(self):
         marker_size = 0.01
-        self.axis.scatter(
-            self._x(self._particle_mask, self._rotation),
-            self._y(self._particle_mask, self._rotation),
-            s=marker_size,
-            c='k',
-        )
+        self.axis.scatter(self._x, self._y, s=marker_size, c='k')
         self.axis.set_aspect('equal', 'box')
 
     def _init_frame_rotation(self):

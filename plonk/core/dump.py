@@ -90,14 +90,14 @@ class Dump(DumpFile):
 
     >>> dump.particles
     >>> dump.particles.fields
-    >>> dump.particles.xyz[()]
+    >>> dump.particles.xyz[:]
     >>> dump.particles.arrays['xyz']
 
     Accessing the sink arrays object, array data types, and sink spin.
 
     >>> dump.sinks
     >>> dump.sinks.dtype
-    >>> dump.sinks.spinxyz[()]
+    >>> dump.sinks.spinxyz[:]
     >>> dump.sinks.arrays['spinxyz']
 
     Accessing the dump header dictionary, dump simulation time, and
@@ -153,7 +153,7 @@ class Dump(DumpFile):
         """Calculate density from particle mass and smoothing length."""
 
         if self.particles._can_compute_density:
-            return self.particles.mass * (hfact / np.abs(self.particles.h)) ** 3
+            return self.mass * (hfact / np.abs(self.particles.h)) ** 3
         else:
             print(f'Cannot compute density on {self.particles}')
             return None

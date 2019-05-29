@@ -63,7 +63,7 @@ class Arrays:
         self._shape = None
 
         self._mass = None
-        self._rho = None
+        self._density = None
 
         self._arrays = {
             field: self._get_array_handle(field) for field in self.fields
@@ -104,13 +104,13 @@ class Arrays:
         self._mass = value
 
     @property
-    def rho(self):
+    def density(self):
         """Mass density."""
-        return self._rho
+        return self._density
 
-    @rho.setter
-    def rho(self, value):
-        self._rho = value
+    @density.setter
+    def density(self, value):
+        self._density = value
 
     @property
     def fields(self):
