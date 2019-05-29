@@ -98,3 +98,28 @@ DEFAULT_OPTIONS = PlotOptions(
     ),
     VectorOptions(stream=False, stride=25, vector_color='black'),
 )
+
+
+def plot_options(**kwargs):
+    """
+    Create a dictionary with plot options.
+
+    Parameters
+    ----------
+    **kwargs
+        Any values in PlotOptions namedtuple.
+
+    Returns
+    -------
+    dict
+        A dictionary of visualization options.
+    """
+
+    options = {
+        key: opts._asdict() for key, opts in DEFAULT_OPTIONS._asdict().items()
+    }
+    for key, item in kwargs.items():
+        if key in options:
+            options[key] = item
+
+    return options

@@ -130,12 +130,16 @@ class Dump(DumpFile):
             particle_type='fluid',
             cache_arrays=cache_arrays,
         )
-        self.particles.mass = self._mass_from_itype()
-        self.particles.rho = self._density_from_smoothing_length(
-            self.header['hfact']
-        )
 
         self.sinks = Arrays(arrays_label='sinks', file_handle=self.file_handle)
+
+    @property
+    def mass(self):
+        return self._mass_from_itype()
+
+    @property
+    def density(self):
+        return self._density_from_smoothing_length(self.header['hfact'])
 
     @property
     def header(self):

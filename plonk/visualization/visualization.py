@@ -36,7 +36,9 @@ class Visualization:
     Other Parameters
     ----------------
     particle_type : int, default I_GAS
-        Particle type to plot, represented as an integer type.
+        Particle type to plot, as an int.
+    particle_types : collection of int
+        Particle types to plot, as a collection of ints.
 
     xrange : list or tuple of float (len=2), default ``None``
         The range of values for the horizontal (x) axis.
@@ -177,6 +179,7 @@ class Visualization:
 
         self._initialized = False
 
+        self._dump = dump
         self._particles = dump.particles
         self._sinks = dump.sinks
         self._header = dump.header
@@ -205,24 +208,29 @@ class Visualization:
             self._vector = vector
             self._plot_vector = True
 
-        self._itypes = set(np.unique(self._particles.itype[:]))
-        particle_type = kwargs.get('particle_type', None)
-        self.set_particle_type(particle_type)
-
-        self._weights = _interpolation_weights(
-            self._interpolation_options['density_weighted'],
-            self._h(),
-            self._particle_mass,
-            self._header['hfact'],
+        self._available_particle_types = set(
+            np.unique(self._particles.itype[:])
         )
+        particle_type = kwargs.get('particle_type', None)
+        particle_types = kwargs.get('particle_types', None)
+        if particle_types is None and particle_type is not None:
+            particle_types = particle_type
+        self.set_particle_type(particle_types)
 
         self._init_frame_rotation()
-
         self.set_image_size()
-
         self._make_plot()
 
         self._initialized = True
+
+    def _interpolation_weights(self):
+        """Interpolation weights."""
+        if self._interpolation_options['density_weighted']:
+            return np.array(self._particle_mass() / self._h() ** 2)
+        return np.full_like(self._h(), 1 / self._header['hfact'])
+
+    def _particle_mass(self):
+        return self._dump.mass
 
     def _quantity(self, quantity, mask=None, transform=None):
         if transform is not None:
@@ -326,34 +334,38 @@ class Visualization:
             self.image.set_clim(vmax=vmax)
             self._vmax = vmax
 
-    def set_particle_type(self, particle_type):
+    def set_particle_type(self, particle_types):
         """
-        Set particle type to visualize.
+        Set particle type(s) to visualize.
 
         Parameters
         ----------
-        particle_type : int
-            Integer representing the particle type.
+        particle_types : int or container of ints
+            Integer or container of integers representing the particle
+            type.
         """
 
-        if particle_type is not None and particle_type not in self._itypes:
-            print(f'{particle_type} not available')
+        if particle_types is None:
+            particle_types = I_GAS
+
+        if isinstance(particle_types, int):
+            particle_types = set((particle_types,))
+        elif isinstance(particle_types, (list, set, tuple)):
+            particle_types = set(particle_types)
+
+        if not particle_types.issubset(self._available_particle_types):
+            print(f'Some of particle type {particle_types} not available')
             return
 
-        if hasattr(self, '_particle_type'):
-            if particle_type == self._particle_type:
-                print(f'Particle type {particle_type} already plotted')
+        if hasattr(self, '_particle_types'):
+            if particle_types == self._particle_types:
+                print(f'Particle types {particle_types} already plotted')
                 return
 
-        if particle_type is None:
-            particle_type = I_GAS
-        else:
-            if not isinstance(particle_type, int):
-                raise ValueError('particle_type must be int')
-
-        self._particle_type = particle_type
-        self._particle_mask = self._particles.itype[:] == particle_type
-        self._particle_mass = self._header['massoftype'][particle_type - 1]
+        self._particle_types = particle_types
+        self._particle_mask = np.logical_or.reduce(
+            [self._particles.itype[:] == i for i in particle_types]
+        )
 
         if self._initialized:
             self._make_plot()
@@ -467,9 +479,9 @@ class Visualization:
         image_data = scalar_interpolation(
             self._xyz(self._particle_mask, self._rotation),
             self._h(self._particle_mask),
-            self._weights[self._particle_mask],
+            self._interpolation_weights(),
             render_data,
-            self._particle_mass,
+            self._particle_mass(),
             self._extent[0:2],
             self._extent[2:],
             self._interpolation_options['number_pixels'],
@@ -563,7 +575,7 @@ class Visualization:
         vector_data = vector_interpolation(
             self._xyz(self._particle_mask, self._rotation),
             self._h(self._particle_mask),
-            self._weights[self._particle_mask],
+            self._interpolation_weights(),
             vector_data,
             _xrange,
             _yrange,
@@ -751,35 +763,3 @@ class Visualization:
 
         if title is not None:
             self.axis.set_title(title)
-
-
-def plot_options(**kwargs):
-    """
-    Create a dictionary with plot options.
-
-    Parameters
-    ----------
-    **kwargs
-        Any values in PlotOptions namedtuple.
-
-    Returns
-    -------
-    dict
-        A dictionary of visualization options.
-    """
-
-    options = {
-        key: opts._asdict() for key, opts in DEFAULT_OPTIONS._asdict().items()
-    }
-    for key, item in kwargs.items():
-        if key in options:
-            options[key] = item
-
-    return options
-
-
-def _interpolation_weights(density_weighted, smoothing_length, mass, hfact):
-    """Calculate interpolation weights."""
-    if density_weighted:
-        return np.array(mass / smoothing_length ** 2)
-    return np.full_like(smoothing_length, 1 / hfact)
