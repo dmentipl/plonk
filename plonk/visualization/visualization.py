@@ -8,8 +8,10 @@ hydrodynamics simulations.
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
+import sympy
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
+from ..core.constants import constants
 from ..core.particles import I_GAS
 from ..core.utils import normalize_vector, rotate_vector_arbitrary_axis
 from .interpolation import scalar_interpolation, vector_interpolation
@@ -252,18 +254,6 @@ class Visualization:
         )
 
     @property
-    def _x(self):
-        return self._xyz[:, 0]
-
-    @property
-    def _y(self):
-        return self._xyz[:, 1]
-
-    @property
-    def _z(self):
-        return self._xyz[:, 2]
-
-    @property
     def _h(self):
         return self._quantity(
             self._particles.h[:], self._particle_mask, self._rotation
@@ -275,17 +265,40 @@ class Visualization:
             self._particles.vxyz[:], self._particle_mask, self._rotation
         )
 
-    @property
+    def _x(self):
+        return self._xyz[:, 0]
+
+    def _y(self):
+        return self._xyz[:, 1]
+
+    def _z(self):
+        return self._xyz[:, 2]
+
     def _vx(self):
         return self._vxyz[:, 0]
 
-    @property
     def _vy(self):
         return self._vxyz[:, 1]
 
-    @property
     def _vz(self):
         return self._vxyz[:, 2]
+
+    def _R(self):
+        return self._dump.extra_quantity('R')[self._particle_mask]
+
+    def _r(self):
+        return self._dump.extra_quantity('r')[self._particle_mask]
+
+    def _G(self):
+        return constants.gravitational_constant / (
+            self._header['udist'] ** 3
+            / self._header['umass']
+            / self._header['utime'] ** 2
+        )
+
+    def _M(self):
+        # TODO: assuming sink particle 0 is star
+        return self._sinks.arrays['m'][0]
 
     def _make_plot(self):
 
@@ -443,9 +456,9 @@ class Visualization:
                 self._extent = (_min[0], _max[0], _min[1], _max[1])
             else:
                 if _xrange is None:
-                    _x = (self._x.min(), self._x.max())
+                    _x = (self._x().min(), self._x().max())
                 if _yrange is None:
-                    _y = (self._y.min(), self._y.max())
+                    _y = (self._y().min(), self._y().max())
                 if self._extent is None:
                     self._extent = _x + _y
 
@@ -461,32 +474,49 @@ class Visualization:
         if self._render in ['rho', 'dens', 'density']:
             render_data = self._dump.density[self._particle_mask]
         elif self._render == 'x':
-            render_data = self._x
+            render_data = self._x()
         elif self._render == 'y':
-            render_data = self._y
+            render_data = self._y()
         elif self._render == 'z':
-            render_data = self._z
+            render_data = self._z()
         elif self._render == 'vx':
-            render_data = self._vx
+            render_data = self._vx()
         elif self._render == 'vy':
-            render_data = self._vy
+            render_data = self._vy()
         elif self._render == 'vz':
-            render_data = self._vz
+            render_data = self._vz()
         elif self._render in scalars:
             render_data = self._dump.extra_quantity(self._render)[
                 self._particle_mask
             ]
-        else:
-            try:
-                render_data = self._particles.arrays[self._render][
-                    self._particle_mask
-                ]
-            except Exception:
-                raise ValueError(
-                    f'Cannot determine quantity to render: {self._render}'
-                )
+        elif self._render in self._particles.fields:
+            render_data = self._particles.arrays[self._render][
+                self._particle_mask
+            ]
             if render_data.ndim != 1:
                 raise ValueError(f'{self._render} is not 1-dimensional')
+        else:
+            symbol_dictionary = {
+                'x': self._x,
+                'y': self._y,
+                'z': self._z,
+                'vx': self._vx,
+                'vy': self._vy,
+                'vz': self._vz,
+                'G': self._G,
+                'M': self._M,
+                'R': self._R,
+                'r': self._r,
+            }
+            symbols = sympy.sympify(self._render).free_symbols
+            symbols_as_str = set([str(s) for s in symbols])
+            if not symbols_as_str.issubset(set(symbol_dictionary.keys())):
+                raise ValueError(f'Cannot interpret expression: {self._render}')
+            f = sympy.utilities.lambdify(symbols, self._render, 'numpy')
+            args = tuple(
+                [symbol_dictionary[key]() for key in [str(s) for s in symbols]]
+            )
+            render_data = f(*args)
 
         print(f'Rendering {self._render} using Splash')
 
@@ -649,7 +679,7 @@ class Visualization:
 
     def _particle_scatter_plot(self):
         marker_size = 0.01
-        self.axis.scatter(self._x, self._y, s=marker_size, c='k')
+        self.axis.scatter(self._x(), self._y(), s=marker_size, c='k')
         self.axis.set_aspect('equal', 'box')
 
     def _init_frame_rotation(self):
