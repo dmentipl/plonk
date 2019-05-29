@@ -36,7 +36,7 @@ class Arrays:
     Accessing particle position array (two ways), available arrays, and
     array data types.
 
-    >>> particles.xyz[()]
+    >>> particles.xyz[:]
     >>> particles.arrays['xyz']
     >>> particles.arrays.fields
     >>> particles.arrays.dtype
@@ -61,9 +61,7 @@ class Arrays:
         self._fields = None
         self._dtype = None
         self._shape = None
-
-        self._mass = None
-        self._density = None
+        self._number = None
 
         self._arrays = {
             field: self._get_array_handle(field) for field in self.fields
@@ -87,30 +85,11 @@ class Arrays:
             return self._arrays_cached
         return self._arrays
 
-    def _get_field_from_cache(self, field):
-        return getattr(self, '_' + field)
-
-    def _get_array_handle(self, array):
-        """Get one array from file."""
-        return self._arrays_handle[array]
-
     @property
-    def mass(self):
-        """Particle masses."""
-        return self._mass
-
-    @mass.setter
-    def mass(self, value):
-        self._mass = value
-
-    @property
-    def density(self):
-        """Mass density."""
-        return self._density
-
-    @density.setter
-    def density(self, value):
-        self._density = value
+    def number(self):
+        if self._number:
+            return self._number
+        return self.arrays[self.fields[0]].size
 
     @property
     def fields(self):
@@ -143,6 +122,13 @@ class Arrays:
             return self._arrays_cached
         return self._read_arrays()
 
+    def _get_field_from_cache(self, field):
+        return getattr(self, '_' + field)
+
+    def _get_array_handle(self, array):
+        """Get one array from file."""
+        return self._arrays_handle[array]
+
     def _read_arrays(self):
         """Read arrays into structured Numpy array."""
 
@@ -169,7 +155,7 @@ class Arrays:
             setattr(self, field, self._arrays_cached[field])
         self._cache_arrays = True
 
-    def extra_quantity(self, quantity, **kwargs):
+    def extra_quantity(self, quantity, mass=None, **kwargs):
         """
         Calculate extra quantity.
 
@@ -182,30 +168,29 @@ class Arrays:
         quantity : str
             A string specifying the extra quantity to calculate.
 
+        mass : numpy.ndarray or float, optional
+            Particle masses as they are not stored on the particles.
+
         **kwargs
             Extra arguments to functions to calculate specific quantites.
 
+        Returns
+        -------
+        numpy.ndarray
+            An array of the computed extra quantity.
+
         Examples
         --------
+        Instantiate Arrays object.
+        >>> arrays = Arrays(label, handle)
+
         Calculating the angular momentum two ways.
 
-        >>> arrays = Arrays(label, handle)
-        >>> arrays.extra_quantity('angular momentum')
-        >>> arrays.extra_quantity('L')
+        >>> arrays.extra_quantity('angular momentum', mass)
+        >>> arrays.extra_quantity('L', mass)
         """
 
-        quantities = [
-            ('r', 'spherical radius'),
-            ('R', 'cylindrical radius'),
-            ('|v|', 'velocity magnitude'),
-            ('p', 'momentum'),
-            ('|p|', 'momentum magnitude'),
-            ('L', 'angular momentum'),
-            ('|L|', 'angular momentum magnitude'),
-            ('l', 'specific angular momentum'),
-            ('|l|', 'specific angular momentum magnitude'),
-        ]
-
+        quantities = self._available_extra_quantities()
         require_mass = False
 
         if quantity not in [element for tupl in quantities for element in tupl]:
@@ -227,22 +212,22 @@ class Arrays:
 
         elif quantity in ['p', 'momentum']:
             require_mass = True
-            data = (self.arrays['vxyz'], self.mass)
+            data = (self.arrays['vxyz'], mass)
             func = _momentum
 
         elif quantity in ['|p|', 'momentum magnitude']:
             require_mass = True
-            data = (self.arrays['vxyz'], self.mass)
+            data = (self.arrays['vxyz'], mass)
             func = _momentum_magnitude
 
         elif quantity in ['L', 'angular momentum']:
             require_mass = True
-            data = (self.arrays['xyz'], self.arrays['vxyz'], self.mass)
+            data = (self.arrays['xyz'], self.arrays['vxyz'], mass)
             func = _angular_momentum
 
         elif quantity in ['|L|', 'angular momentum magnitude']:
             require_mass = True
-            data = (self.arrays['xyz'], self.arrays['vxyz'], self.mass)
+            data = (self.arrays['xyz'], self.arrays['vxyz'], mass)
             func = _angular_momentum
 
         elif quantity in ['l', 'specific angular momentum']:
@@ -253,10 +238,33 @@ class Arrays:
             data = self.arrays['xyz'], self.arrays['vxyz']
             func = _specific_angular_momentum_magnitude
 
-        if self.mass is None and require_mass:
+        elif quantity in ['e', 'eccentricity']:
+            data = self.arrays['xyz'], self.arrays['vxyz']
+            func = _eccentricity
+            if 'gravitational_parameter' not in kwargs:
+                raise ValueError(
+                    f'Need gravitational_parameter for eccentricity'
+                )
+
+        if mass is None and require_mass:
             raise ValueError('Particle masses required but not available')
 
         return _call_function_on_data(*data, func=func, **kwargs)
+
+    def _available_extra_quantities(self):
+
+        return (
+            ('r', 'spherical radius'),
+            ('R', 'cylindrical radius'),
+            ('|v|', 'velocity magnitude'),
+            ('p', 'momentum'),
+            ('|p|', 'momentum magnitude'),
+            ('L', 'angular momentum'),
+            ('|L|', 'angular momentum magnitude'),
+            ('l', 'specific angular momentum'),
+            ('|l|', 'specific angular momentum magnitude'),
+            ('e', 'eccentricity'),
+        )
 
 
 def _call_function_on_data(*data, func, **kwargs):
@@ -326,7 +334,7 @@ def _angular_momentum_magnitude(position, velocity, mass):
     return np.linalg.norm(_angular_momentum(position, velocity, mass), axis=1)
 
 
-def _eccentricity(position, velocity, gravitational_parameter):
+def _eccentricity(position, velocity, *, gravitational_parameter):
     kinetic_energy = 1 / 2 * _velocity_magnitude(velocity) ** 2
     potential_energy = -gravitational_parameter / _spherical_radius(position)
     energy = kinetic_energy + potential_energy

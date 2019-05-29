@@ -11,6 +11,7 @@ from pathlib import Path
 import h5py
 import numpy as np
 
+from .constants import constants
 from .particles import Arrays
 
 FileTypes = collections.namedtuple('FileTypes', 'filetype extension')
@@ -135,10 +136,12 @@ class Dump(DumpFile):
 
     @property
     def mass(self):
+        """Particle masses"""
         return self._mass_from_itype()
 
     @property
     def density(self):
+        """Density on particles from smoothing length"""
         return self._density_from_smoothing_length(self.header['hfact'])
 
     @property
@@ -148,6 +151,72 @@ class Dump(DumpFile):
         parameters.
         """
         return self._header
+
+    @property
+    def available_extra_quantities(self):
+        """Available extra quantities to calculate on the particles."""
+        return self.particles._available_extra_quantities()
+
+    def extra_quantity(self, quantity, sph_type=None, **kwargs):
+        """
+        Calculate extra quantity.
+
+        Computes an extra quantity on the dump specified by a string.
+
+        Parameters
+        ----------
+        quantity : str
+            A string specifying the extra quantity to calculate.
+
+        sph_type : str, optional (default 'particles')
+            The type of SPH data to compute extra quantity on, e.g.
+            'particles' or 'sinks'.
+
+        **kwargs
+            Extra arguments to functions to calculate specific quantites.
+
+        Returns
+        -------
+        numpy.ndarray
+            An array of the computed extra quantity.
+
+        Examples
+        --------
+        Calculating the angular momentum two ways.
+
+        >>> dump.extra_quantity('angular momentum')
+        >>> dump.extra_quantity('L')
+        """
+
+        if sph_type is None:
+            sph_type = 'particles'
+        if sph_type not in ('particles', 'sinks'):
+            raise ValueError('sph_type must be either "particles" or "sinks"')
+        if sph_type == 'particles':
+            mass = self.mass
+        elif sph_type == 'sinks':
+            mass = self.sinks.m[:]
+
+        quantities = self.available_extra_quantities
+
+        if quantity not in [element for tupl in quantities for element in tupl]:
+            print(f'{quantity} not available')
+            return None
+
+        if quantity in ('e', 'eccentricity'):
+            gravitational_constant = constants.gravitational_constant / (
+                self.header['udist'] ** 3
+                / self.header['umass']
+                / self.header['utime'] ** 2
+            )
+            if self.sinks.number == 1:
+                stellar_mass = self.sinks.m[0]
+            mu = gravitational_constant * stellar_mass
+            kwargs = {'gravitational_parameter': mu}
+
+        return getattr(self, sph_type).extra_quantity(
+            quantity, mass=mass, **kwargs
+        )
 
     def _density_from_smoothing_length(self, hfact=1.2):
         """Calculate density from particle mass and smoothing length."""
