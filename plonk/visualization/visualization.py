@@ -167,12 +167,6 @@ class Visualization:
         self._particles = dump.particles
         self._sinks = dump.sinks
         self._header = dump.header
-        self._positions = self._particles.xyz
-        self._smoothing_length = self._particles.h
-        try:
-            self._velocities = self._particles.vxyz
-        except Exception:
-            self._velocities = None
 
         self.axis = kwargs.get('axis', None)
         self.figure = kwargs.get('figure', None)
@@ -203,18 +197,56 @@ class Visualization:
 
         self._weights = _interpolation_weights(
             self._interpolation_options['density_weighted'],
-            self._smoothing_length[()][self._particle_mask],
+            self._h(),
             self._particle_mass,
             self._header['hfact'],
         )
 
-        self._frame_rotation()
+        self._init_frame_rotation()
 
         self.set_image_size()
 
         self._make_plot()
 
         self._initialized = True
+
+    def _quantity(self, quantity, mask=None, transform=None):
+        if transform is not None:
+            func = transform['func']
+            args = transform['args']
+            if mask is not None:
+                return func(quantity[mask], *args)
+            return func(quantity, *args)
+        if mask is not None:
+            return quantity[mask]
+        return quantity
+
+    def _xyz(self, mask=None, transform=None):
+        return self._quantity(self._particles.xyz[:], mask, transform)
+
+    def _x(self, mask=None, transform=None):
+        return self._quantity(self._particles.xyz[:, 0], mask, transform)
+
+    def _y(self, mask=None, transform=None):
+        return self._quantity(self._particles.xyz[:, 1], mask, transform)
+
+    def _z(self, mask=None, transform=None):
+        return self._quantity(self._particles.xyz[:, 2], mask, transform)
+
+    def _h(self, mask=None, transform=None):
+        return self._quantity(self._particles.h[:], mask, transform)
+
+    def _vxyz(self, mask=None, transform=None):
+        return self._quantity(self._particles.vxyz[:], mask, transform)
+
+    def _vx(self, mask=None, transform=None):
+        return self._quantity(self._particles.vxyz[:, 0], mask, transform)
+
+    def _vy(self, mask=None, transform=None):
+        return self._quantity(self._particles.vxyz[:, 1], mask, transform)
+
+    def _vz(self, mask=None, transform=None):
+        return self._quantity(self._particles.vxyz[:, 2], mask, transform)
 
     def _make_plot(self):
 
@@ -292,6 +324,7 @@ class Visualization:
 
         if hasattr(self, '_particle_type'):
             if particle_type == self._particle_type:
+                print(f'Particle type {particle_type} already plotted')
                 return
 
         if particle_type is None:
@@ -301,7 +334,7 @@ class Visualization:
                 raise ValueError('particle_type must be int')
 
         self._particle_type = particle_type
-        self._particle_mask = self._particles.itype[()] == particle_type
+        self._particle_mask = self._particles.itype[:] == particle_type
         self._particle_mass = self._header['massoftype'][particle_type - 1]
 
         if self._initialized:
@@ -323,6 +356,7 @@ class Visualization:
         if extent is not None:
             if hasattr(self, '_extent'):
                 if np.all(extent == self._extent):
+                    print(f'Image window size already = {extent}')
                     return
             self._extent = extent
             if self._initialized:
@@ -331,6 +365,10 @@ class Visualization:
         if size is not None:
             if hasattr(self, '_extent'):
                 if np.all(size == np.abs(self._extent)):
+                    print(
+                        'Image window size already = '
+                        f'[-{size}, {size}, -{size}, {size}]'
+                    )
                     return
             self._extent = [-size, size, -size, size]
             if self._initialized:
@@ -353,23 +391,23 @@ class Visualization:
 
         if self._extent is None:
             if _xrange is None and _yrange is None:
-                _min = self._positions[()][self._particle_mask][:, 0:2].min(
-                    axis=0
-                )
-                _max = self._positions[()][self._particle_mask][:, 0:2].max(
-                    axis=0
-                )
+                _min = self._xyz(self._particle_mask, self._rotation)[
+                    :, 0:2
+                ].min(axis=0)
+                _max = self._xyz(self._particle_mask, self._rotation)[
+                    :, 0:2
+                ].max(axis=0)
                 self._extent = (_min[0], _max[0], _min[1], _max[1])
             else:
                 if _xrange is None:
                     _x = (
-                        self._positions[()][self._particle_mask][:, 0].min(),
-                        self._positions[()][self._particle_mask][:, 0].max(),
+                        self._x(self._particle_mask, self._rotation).min(),
+                        self._x(self._particle_mask, self._rotation).max(),
                     )
                 if _yrange is None:
                     _y = (
-                        self._positions[()][self._particle_mask][:, 0].min(),
-                        self._positions[()][self._particle_mask][:, 0].max(),
+                        self._y(self._particle_mask, self._rotation).min(),
+                        self._y(self._particle_mask, self._rotation).max(),
                     )
                 if self._extent is None:
                     self._extent = _x + _y
@@ -377,26 +415,26 @@ class Visualization:
     def _render_image(self):
 
         if self._render in ['rho', 'dens', 'density']:
-            render_data = self._particles.rho[()][self._particle_mask]
+            render_data = self._particles.rho[self._particle_mask]
         elif self._render == 'x':
-            render_data = self._particles.xyz[()][self._particle_mask][:, 0]
+            render_data = self._x(self._particle_mask, self._rotation)
         elif self._render == 'y':
-            render_data = self._particles.xyz[()][self._particle_mask][:, 1]
+            render_data = self._y(self._particle_mask, self._rotation)
         elif self._render == 'z':
-            render_data = self._particles.xyz[()][self._particle_mask][:, 2]
+            render_data = self._z(self._particle_mask, self._rotation)
         elif self._render == 'vx':
-            render_data = self._particles.vxyz[()][self._particle_mask][:, 0]
+            render_data = self._vx(self._particle_mask, self._rotation)
         elif self._render == 'vy':
-            render_data = self._particles.vxyz[()][self._particle_mask][:, 1]
+            render_data = self._vy(self._particle_mask, self._rotation)
         elif self._render == 'vz':
-            render_data = self._particles.vxyz[()][self._particle_mask][:, 2]
+            render_data = self._vz(self._particle_mask, self._rotation)
         elif self._render in ['v', 'velocity']:
             render_data = self._particles.extra_quantity('velocity magnitude')[
                 self._particle_mask
             ]
         else:
             try:
-                render_data = self._particles.arrays[self._render][()][
+                render_data = self._particles.arrays[self._render][
                     self._particle_mask
                 ]
             except Exception:
@@ -409,9 +447,9 @@ class Visualization:
         print(f'Rendering {self._render} using Splash')
 
         image_data = scalar_interpolation(
-            self._positions[()][self._particle_mask],
-            self._smoothing_length[()][self._particle_mask],
-            self._weights,
+            self._xyz(self._particle_mask, self._rotation),
+            self._h(self._particle_mask),
+            self._weights[self._particle_mask],
             render_data,
             self._particle_mass,
             self._extent[0:2],
@@ -483,12 +521,12 @@ class Visualization:
 
         if self._vector in ['v', 'vel', 'velocity']:
             try:
-                vector_data = self._particles.vxyz[()][self._particle_mask]
+                vector_data = self._vxyz(self._particle_mask, self._rotation)
             except Exception:
                 raise ValueError('Velocity not available in dump')
         else:
             try:
-                vector_data = self._particles.arrays[self._vector][()][
+                vector_data = self._particles.arrays[self._vector][
                     self._particle_mask
                 ]
                 if vector_data.ndim != 2 and vector_data.shape[1] != 3:
@@ -505,9 +543,9 @@ class Visualization:
         _xrange, _yrange = self._extent[0:2], self._extent[2:]
 
         vector_data = vector_interpolation(
-            self._positions[()][self._particle_mask],
-            self._smoothing_length[()][self._particle_mask],
-            self._weights,
+            self._xyz(self._particle_mask, self._rotation),
+            self._h(self._particle_mask),
+            self._weights[self._particle_mask],
             vector_data,
             _xrange,
             _yrange,
@@ -557,14 +595,14 @@ class Visualization:
     def _particle_scatter_plot(self):
         marker_size = 0.01
         self.axis.scatter(
-            self._positions[()][self._particle_mask][:, 0],
-            self._positions[()][self._particle_mask][:, 1],
+            self._x(self._particle_mask, self._rotation),
+            self._y(self._particle_mask, self._rotation),
             s=marker_size,
             c='k',
         )
         self.axis.set_aspect('equal', 'box')
 
-    def _frame_rotation(self):
+    def _init_frame_rotation(self):
         rotation_axis = self._rotation_options.get('rotation_axis', None)
         rotation_angle = self._rotation_options.get('rotation_angle', None)
         position_angle = self._rotation_options.get('position_angle', None)
@@ -605,21 +643,46 @@ class Visualization:
         if inclination is not None and position_angle is None:
             raise ValueError('Must specify position_angle')
 
+        self.rotate_frame(rotation_axis, rotation_angle)
+
+    def rotate_frame(self, rotation_axis, rotation_angle):
+        """
+        Rotate viewing frame.
+
+        Parameters
+        ----------
+        rotation_axis : list or numpy.ndarray
+            Rotation axis for frame rotation as a vector [x, y, z].
+        rotation_angle : float
+            Rotation angle in radians for frame rotation.
+        """
+
+        self._rotation = {
+            'func': rotate_vector_arbitrary_axis,
+            'args': (rotation_axis, rotation_angle),
+        }
+
+        if hasattr(self, '_rotation_axis') and hasattr(self, '_rotation_angle'):
+            if (
+                np.all(np.array(rotation_axis) == self._rotation_axis)
+                and rotation_angle == self._rotation_angle
+            ):
+                print(f'Frame already has the specified rotation')
+                return
+
         if rotation_axis is not None and rotation_angle is not None:
             self._rotation_axis = rotation_axis
             self._rotation_angle = rotation_angle
-            print(
-                f'Rotating {rotation_angle*180/np.pi:.0f} deg around '
-                f'[{rotation_axis[0]:.2f},'
-                f' {rotation_axis[1]:.2f},'
-                f' {rotation_axis[2]:.2f}]'
-            )
-            self._positions = rotate_vector_arbitrary_axis(
-                self._positions, rotation_axis, rotation_angle
-            )
-            self._velocities = rotate_vector_arbitrary_axis(
-                self._velocities, rotation_axis, rotation_angle
-            )
+
+        print(
+            f'Rotating {rotation_angle*180/np.pi:.0f} deg around '
+            f'[{rotation_axis[0]:.2f},'
+            f' {rotation_axis[1]:.2f},'
+            f' {rotation_axis[2]:.2f}]'
+        )
+
+        if self._initialized:
+            self._make_plot()
 
     def _set_axis(self):
 
