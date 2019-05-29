@@ -205,6 +205,7 @@ class Visualization:
             self._vector = vector
             self._plot_vector = True
 
+        self._itypes = set(np.unique(self._particles.itype[:]))
         particle_type = kwargs.get('particle_type', None)
         self.set_particle_type(particle_type)
 
@@ -334,6 +335,10 @@ class Visualization:
         particle_type : int
             Integer representing the particle type.
         """
+
+        if particle_type is not None and particle_type not in self._itypes:
+            print(f'{particle_type} not available')
+            return
 
         if hasattr(self, '_particle_type'):
             if particle_type == self._particle_type:
