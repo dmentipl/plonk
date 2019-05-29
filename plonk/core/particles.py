@@ -228,7 +228,7 @@ class Arrays:
         elif quantity in ['|L|', 'angular momentum magnitude']:
             require_mass = True
             data = (self.arrays['xyz'], self.arrays['vxyz'], mass)
-            func = _angular_momentum
+            func = _angular_momentum_magnitude
 
         elif quantity in ['l', 'specific angular momentum']:
             data = (self.arrays['xyz'], self.arrays['vxyz'])
@@ -254,16 +254,16 @@ class Arrays:
     def _available_extra_quantities(self):
 
         return (
-            ('r', 'spherical radius'),
-            ('R', 'cylindrical radius'),
-            ('|v|', 'velocity magnitude'),
-            ('p', 'momentum'),
-            ('|p|', 'momentum magnitude'),
-            ('L', 'angular momentum'),
-            ('|L|', 'angular momentum magnitude'),
-            ('l', 'specific angular momentum'),
-            ('|l|', 'specific angular momentum magnitude'),
-            ('e', 'eccentricity'),
+            ('r', 'spherical radius', 'scalar'),
+            ('R', 'cylindrical radius', 'scalar'),
+            ('|v|', 'velocity magnitude', 'scalar'),
+            ('p', 'momentum', 'vector'),
+            ('|p|', 'momentum magnitude', 'scalar'),
+            ('L', 'angular momentum', 'vector'),
+            ('|L|', 'angular momentum magnitude', 'scalar'),
+            ('l', 'specific angular momentum', 'vector'),
+            ('|l|', 'specific angular momentum magnitude', 'scalar'),
+            ('e', 'eccentricity', 'scalar'),
         )
 
 

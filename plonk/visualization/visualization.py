@@ -451,6 +451,13 @@ class Visualization:
 
     def _render_image(self):
 
+        scalars = list()
+        [
+            scalars.extend(item[:-1])
+            for item in self._dump.available_extra_quantities
+            if item[2] == 'scalar'
+        ]
+
         if self._render in ['rho', 'dens', 'density']:
             render_data = self._dump.density[self._particle_mask]
         elif self._render == 'x':
@@ -465,8 +472,8 @@ class Visualization:
             render_data = self._vy
         elif self._render == 'vz':
             render_data = self._vz
-        elif self._render in ['v', 'velocity']:
-            render_data = self._particles.extra_quantity('velocity magnitude')[
+        elif self._render in scalars:
+            render_data = self._dump.extra_quantity(self._render)[
                 self._particle_mask
             ]
         else:
@@ -556,11 +563,22 @@ class Visualization:
 
     def _vector_image(self):
 
+        vectors = list()
+        [
+            vectors.extend(item[:-1])
+            for item in self._dump.available_extra_quantities
+            if item[2] == 'vector'
+        ]
+
         if self._vector in ['v', 'vel', 'velocity']:
             try:
                 vector_data = self._vxyz
             except Exception:
                 raise ValueError('Velocity not available in dump')
+        elif self._vector in vectors:
+            vector_data = self._dump.extra_quantity(self._vector)[
+                self._particle_mask
+            ]
         else:
             try:
                 vector_data = self._particles.arrays[self._vector][
