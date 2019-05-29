@@ -25,7 +25,7 @@ class DumpFile:
             raise TypeError('filename must be str or pathlib.Path')
 
         path = Path(filename)
-        self.file_path = path.resolve()
+        self.file_path = path.expanduser().resolve()
         self.file_name = path.name
         self.file_extension = path.suffix[1:]
 
