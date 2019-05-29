@@ -117,10 +117,23 @@ class Visualization:
     Examples
     --------
     Rendering density.
-    >>> viz = plonk.Visualization(dump, render='rho')
+    >>> viz = plonk.Visualization(dump, render='density')
 
     Plotting velocity vectors.
     >>> viz = plonk.Visualization(dump, vector='velocity')
+
+    Rotate frame around arbitrary vector.
+    >>> viz.rotate_frame(vector=[1, 0, 0], angle=np.pi/2)
+
+    Set image window size.
+    >>> viz.set_image_size([-150, 150, -150, 150])
+
+    Set particle type.
+    >>> I_DUST = 7
+    >>> viz.set_particle_type(I_DUST)
+
+    Set rendered quantity range.
+    >>> viz.set_render_range(vmin=0, vmax=1e-7)
     """
 
     def __init__(self, dump, render=None, vector=None, **kwargs):
@@ -648,6 +661,10 @@ class Visualization:
     def rotate_frame(self, rotation_axis, rotation_angle):
         """
         Rotate viewing frame.
+
+        Specify an axis of rotation and an angle to rotate. This
+        rotation is a tranformation on the original frame specified
+        in the data.
 
         Parameters
         ----------
