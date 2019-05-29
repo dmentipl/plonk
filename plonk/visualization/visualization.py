@@ -657,10 +657,14 @@ class Visualization:
             Rotation angle in radians for frame rotation.
         """
 
-        self._rotation = {
-            'func': rotate_vector_arbitrary_axis,
-            'args': (rotation_axis, rotation_angle),
-        }
+        if rotation_axis is None or rotation_angle is None:
+            self._rotation = None
+            return
+        else:
+            self._rotation = {
+                'func': rotate_vector_arbitrary_axis,
+                'args': (rotation_axis, rotation_angle),
+            }
 
         if hasattr(self, '_rotation_axis') and hasattr(self, '_rotation_angle'):
             if (
