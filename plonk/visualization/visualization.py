@@ -22,20 +22,24 @@ from .options import DEFAULT_OPTIONS
 
 class Visualization:
     """
-    Visualize a dump as a particle plot, a rendered plot, or a
-    vector plot.
+    Visualize a dump as a particle plot, a rendered plot, a
+    vector plot, or a combination.
 
     Parameters
     ----------
     dump : Dump object
         The plonk.Dump object to visualize.
-
-    render : str, default ``None``
-        Scalar quantity to render.
-
-    vector : str, default ``None``
+    render : str or 1d numpy.ndarray, default ``None``
+        Scalar quantity to render. If str, render must be a quantity on
+        the particles, or a symbolic str that Sympy can interpret.
+        Alternatively render can be a 1d array of values on the
+        particles.
+    vector : str or 3d numpy.ndarray, default ``None``
         Vector quantity to be represented as arrows or stream
-        function.
+        function. If str, vector must be a quantity on
+        the particles, or a symbolic str that Sympy can interpret.
+        Alternatively render can be a 2d array of 3d values on the
+        particles.
 
     Other Parameters
     ----------------
@@ -122,11 +126,17 @@ class Visualization:
 
     Examples
     --------
-    Rendering density.
+    Rendering scalar fields.
     >>> viz = plonk.Visualization(dump, render='density')
+    >>> viz = plonk.Visualization(
+    >>>     dump,
+    >>>     render='sqrt(vx**2 + vy**2) - sqrt(G*M/R)'
+    >>>     )
+    >>> viz = plonk.Visualization(dump, render=some_numpy_array)
 
-    Plotting velocity vectors.
+    Plotting vector fields.
     >>> viz = plonk.Visualization(dump, vector='velocity')
+    >>> viz = plonk.Visualization(dump, render=some_numpy_array)
 
     Rotate frame around arbitrary vector.
     >>> viz.rotate_frame(vector=[1, 0, 0], angle=np.pi/2)
@@ -478,62 +488,76 @@ class Visualization:
 
     def _render_image(self):
 
-        scalars = list()
-        [
-            scalars.extend(item[:-1])
-            for item in self._dump.available_extra_quantities
-            if item[2] == 'scalar'
-        ]
+        if isinstance(self._render, str):
+            self._render_label = self._render
+            scalars = list()
+            [
+                scalars.extend(item[:-1])
+                for item in self._dump.available_extra_quantities
+                if item[2] == 'scalar'
+            ]
+            if self._render in ['rho', 'dens', 'density']:
+                render_data = self._dump.density[self._particle_mask]
+            elif self._render == 'x':
+                render_data = self._x()
+            elif self._render == 'y':
+                render_data = self._y()
+            elif self._render == 'z':
+                render_data = self._z()
+            elif self._render == 'vx':
+                render_data = self._vx()
+            elif self._render == 'vy':
+                render_data = self._vy()
+            elif self._render == 'vz':
+                render_data = self._vz()
+            elif self._render in scalars:
+                render_data = self._dump.extra_quantity(self._render)[
+                    self._particle_mask
+                ]
+            elif self._render in self._particles.fields:
+                render_data = self._particles.arrays[self._render][
+                    self._particle_mask
+                ]
+                if render_data.ndim != 1:
+                    raise ValueError(f'{self._render} is not 1-dimensional')
+            else:
+                symbol_dictionary = {
+                    'x': self._x,
+                    'y': self._y,
+                    'z': self._z,
+                    'vx': self._vx,
+                    'vy': self._vy,
+                    'vz': self._vz,
+                    'G': self._G,
+                    'M': self._M,
+                    'R': self._R,
+                    'r': self._r,
+                }
+                symbols = sympy.sympify(self._render).free_symbols
+                symbols_as_str = set([str(s) for s in symbols])
+                if not symbols_as_str.issubset(set(symbol_dictionary.keys())):
+                    raise ValueError(
+                        f'Cannot interpret expression: {self._render}'
+                    )
+                f = sympy.utilities.lambdify(symbols, self._render, 'numpy')
+                args = tuple(
+                    [
+                        symbol_dictionary[key]()
+                        for key in [str(s) for s in symbols]
+                    ]
+                )
+                render_data = f(*args)
 
-        if self._render in ['rho', 'dens', 'density']:
-            render_data = self._dump.density[self._particle_mask]
-        elif self._render == 'x':
-            render_data = self._x()
-        elif self._render == 'y':
-            render_data = self._y()
-        elif self._render == 'z':
-            render_data = self._z()
-        elif self._render == 'vx':
-            render_data = self._vx()
-        elif self._render == 'vy':
-            render_data = self._vy()
-        elif self._render == 'vz':
-            render_data = self._vz()
-        elif self._render in scalars:
-            render_data = self._dump.extra_quantity(self._render)[
-                self._particle_mask
-            ]
-        elif self._render in self._particles.fields:
-            render_data = self._particles.arrays[self._render][
-                self._particle_mask
-            ]
-            if render_data.ndim != 1:
-                raise ValueError(f'{self._render} is not 1-dimensional')
+        elif isinstance(self._render, np.ndarray):
+            if self._render.ndim != 1:
+                raise ValueError('Render array must be 1d')
+            render_data = self._render
+            self._render_label = 'from array'
+
         else:
-            symbol_dictionary = {
-                'x': self._x,
-                'y': self._y,
-                'z': self._z,
-                'vx': self._vx,
-                'vy': self._vy,
-                'vz': self._vz,
-                'G': self._G,
-                'M': self._M,
-                'R': self._R,
-                'r': self._r,
-            }
-            symbols = sympy.sympify(self._render).free_symbols
-            symbols_as_str = set([str(s) for s in symbols])
-            if not symbols_as_str.issubset(set(symbol_dictionary.keys())):
-                raise ValueError(f'Cannot interpret expression: {self._render}')
-            f = sympy.utilities.lambdify(symbols, self._render, 'numpy')
-            args = tuple(
-                [symbol_dictionary[key]() for key in [str(s) for s in symbols]]
-            )
-            render_data = f(*args)
+            raise ValueError('Cannot determine scalar data')
 
-        print(f'Rendering {self._render} using Splash')
-
+        print(f'Rendering scalar field {self._render_label} using Splash')
         image_data = scalar_interpolation(
             self._xyz,
             self._h,
@@ -584,7 +608,7 @@ class Visualization:
             self._make_colorbar()
 
     def _set_render_label(self):
-        self._render_label = r'$\int$ ' + f'{self._render}' + ' dz'
+        self._render_label = r'$\int$ ' + f'{self._render_label}' + ' dz'
         if self._render_scale == 'log':
             self._render_label = ' '.join(('log', self._render_label))
 
@@ -600,53 +624,66 @@ class Visualization:
 
     def _vector_image(self):
 
-        vectors = list()
-        [
-            vectors.extend(item[:-1])
-            for item in self._dump.available_extra_quantities
-            if item[2] == 'vector'
-        ]
-
-        if self._vector in ['v', 'vel', 'velocity']:
-            try:
-                vector_data = self._vxyz
-            except Exception:
-                raise ValueError('Velocity not available in dump')
-        elif self._vector in vectors:
-            vector_data = self._dump.extra_quantity(self._vector)[
-                self._particle_mask
+        if isinstance(self._vector, str):
+            self._vector_label = self._vector
+            vectors = list()
+            [
+                vectors.extend(item[:-1])
+                for item in self._dump.available_extra_quantities
+                if item[2] == 'vector'
             ]
-        else:
-            try:
-                vector_data = self._particles.arrays[self._vector][
+            if self._vector in ['v', 'vel', 'velocity']:
+                try:
+                    vector_data = self._vxyz
+                except Exception:
+                    raise ValueError('Velocity not available in dump')
+            elif self._vector in vectors:
+                vector_data = self._dump.extra_quantity(self._vector)[
                     self._particle_mask
                 ]
-                if vector_data.ndim != 2 and vector_data.shape[1] != 3:
+            else:
+                try:
+                    vector_data = self._particles.arrays[self._vector][
+                        self._particle_mask
+                    ]
+                    if vector_data.ndim != 2 and vector_data.shape[1] != 3:
+                        raise ValueError(
+                            f'{self._vector} does not have correct dimensions'
+                        )
+                except Exception:
                     raise ValueError(
-                        f'{self._vector} does not have appropriate dimensions'
+                        f'Cannot determine vector quantity: {self._vector}'
                     )
-            except Exception:
-                raise ValueError(
-                    f'Cannot determine vector quantity to plot: {self._vector}'
-                )
+        elif isinstance(self._vector, np.ndarray):
+            if self._vector.ndim != 2:
+                raise ValueError(f'{self._vector} is not 2-dimensional')
+            if self._vector.shape[1] != 3:
+                raise ValueError('Vector array must have shape (npart, 3)')
+            vector_data = self._vector
+            self._vector_label = 'from array'
 
-        print(f'Plotting vector field {self._vector} using Splash')
+        else:
+            raise ValueError('Cannot determine vector data')
 
-        _xrange, _yrange = self._extent[:2], self._extent[2:]
+        print(f'Plotting vector field {self._vector_label} using Splash')
 
         vector_data = vector_interpolation(
             self._xyz,
             self._h,
             self._interpolation_weights,
             vector_data,
-            _xrange,
-            _yrange,
+            self._extent[:2],
+            self._extent[2:],
             **self._interpolation_options,
         )
 
+        self._render_vector_matplotlib(vector_data)
+
+    def _render_vector_matplotlib(self, vector_data):
+
         xvector_data = vector_data[0]
         yvector_data = vector_data[1]
-
+        _xrange, _yrange = self._extent[:2], self._extent[2:]
         X, Y = np.meshgrid(
             np.linspace(*_xrange, len(xvector_data)),
             np.linspace(*_yrange, len(yvector_data)),
@@ -655,7 +692,6 @@ class Visualization:
         vector_color = self._vector_options['vector_color']
         if self._render:
             vector_color = 'white'
-
         stride = self._vector_options['stride']
 
         self.stream = None
