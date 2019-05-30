@@ -103,20 +103,20 @@ class Visualization:
         with slice position specified by ``slice_position``.
     density_weighted : bool, default False
         Use density weighted interpolation.
-    distance_to_screen : float, default 0.0
-        Distance to screen.
     normalize : bool, default False
         Use normalized interpolation.
     number_pixels : list of float (len=2), default (512, 512)
         The number of pixels in the horizontal and vertical
         directions, like [npixx, npixy], for interpolation. This
         determines the resolution of the image.
+    observer_distance : float, default None
+        Distance of observer to screen.
     opacity : bool, default False
         Use opacity rendering.
+    perspective : bool, default False
+        Use 3D perspective rendering.
     slice_position : float, 0.0
         Position of the cross sectional slice.
-    z_observer : float, default 0.0
-        Z position of observer.
 
     Examples
     --------
@@ -533,8 +533,8 @@ class Visualization:
             self._interpolation_options['slice_position'],
             self._interpolation_options['opacity'],
             self._interpolation_options['normalize'],
-            self._interpolation_options['z_observer'],
-            self._interpolation_options['distance_to_screen'],
+            self._interpolation_options['observer_distance'],
+            self._interpolation_options['observer_distance'],
             self._interpolation_options['accelerate'],
         )
 
@@ -638,8 +638,8 @@ class Visualization:
             self._interpolation_options['cross_section'],
             self._interpolation_options['slice_position'],
             self._interpolation_options['normalize'],
-            self._interpolation_options['z_observer'],
-            self._interpolation_options['distance_to_screen'],
+            self._interpolation_options['observer_distance'],
+            self._interpolation_options['observer_distance'],
         )
 
         xvector_data = vector_data[0]
