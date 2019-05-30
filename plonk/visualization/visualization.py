@@ -539,14 +539,7 @@ class Visualization:
             self._particle_mass,
             self._extent[:2],
             self._extent[2:],
-            self._interpolation_options['number_pixels'],
-            self._interpolation_options['cross_section'],
-            self._interpolation_options['slice_position'],
-            self._interpolation_options['opacity'],
-            self._interpolation_options['normalize'],
-            self._interpolation_options['observer_distance'],
-            self._interpolation_options['observer_distance'],
-            self._interpolation_options['accelerate'],
+            **self._interpolation_options,
         )
 
         self._render_image_matplotlib(image_data)
@@ -645,12 +638,7 @@ class Visualization:
             vector_data,
             _xrange,
             _yrange,
-            self._interpolation_options['number_pixels'],
-            self._interpolation_options['cross_section'],
-            self._interpolation_options['slice_position'],
-            self._interpolation_options['normalize'],
-            self._interpolation_options['observer_distance'],
-            self._interpolation_options['observer_distance'],
+            **self._interpolation_options,
         )
 
         xvector_data = vector_data[0]
