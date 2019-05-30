@@ -27,7 +27,7 @@ def interpolate3d_projection(
 
     cdef float[:, ::1] datsmooth = np.empty((npixx, npixy), dtype=np.single)
 
-    libsplash.c_interpolate3d_projection(
+    libsplash.interpolate3d_projection(
         &x[0],
         &y[0],
         &z[0],
@@ -73,7 +73,7 @@ def interpolate3d_proj_vec(
     cdef float[:, ::1] vecsmoothx = np.empty((npixx, npixy), dtype=np.single)
     cdef float[:, ::1] vecsmoothy = np.empty((npixx, npixy), dtype=np.single)
 
-    libsplash.c_interpolate3d_proj_vec(
+    libsplash.interpolate3d_proj_vec(
         &x[0],
         &y[0],
         &z[0],
@@ -117,7 +117,7 @@ def interpolate3d_fastxsec(
 
     cdef float[:, ::1] datsmooth = np.empty((npixx, npixy), dtype=np.single)
 
-    libsplash.c_interpolate3d_fastxsec(
+    libsplash.interpolate3d_fastxsec(
         &x[0],
         &y[0],
         &z[0],
@@ -160,7 +160,7 @@ def interpolate3d_xsec_vec(
     cdef float[:, ::1] vecsmoothx = np.empty((npixx, npixy), dtype=np.single)
     cdef float[:, ::1] vecsmoothy = np.empty((npixx, npixy), dtype=np.single)
 
-    libsplash.c_interpolate3d_xsec_vec(
+    libsplash.interpolate3d_xsec_vec(
         &x[0],
         &y[0],
         &z[0],
@@ -208,7 +208,7 @@ def interp3d_proj_opacity(
     cdef float[:, ::1] datsmooth  = np.empty((npixx, npixy), dtype=np.single)
     cdef float[:, ::1] brightness = np.empty((npixx, npixy), dtype=np.single)
 
-    libsplash.c_interp3d_proj_opacity(
+    libsplash.interp3d_proj_opacity(
         &x[0],
         &y[0],
         &z[0],

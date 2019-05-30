@@ -3,7 +3,7 @@
 
 cdef extern:
 
-    void c_interpolate3d_projection(
+    void interpolate3d_projection(
         float *x,
         float *y,
         float *z,
@@ -25,7 +25,7 @@ cdef extern:
         bint  *useaccelerate
         )
 
-    void c_interpolate3d_proj_vec(
+    void interpolate3d_proj_vec(
         float *x,
         float *y,
         float *z,
@@ -48,7 +48,7 @@ cdef extern:
         float *dscreen
         )
 
-    void c_interpolate3d_fastxsec(
+    void interpolate3d_fastxsec(
         float *x,
         float *y,
         float *z,
@@ -68,7 +68,7 @@ cdef extern:
         bint  *normalise
         )
 
-    void c_interpolate3d_xsec_vec(
+    void interpolate3d_xsec_vec(
         float *x,
         float *y,
         float *z,
@@ -90,7 +90,7 @@ cdef extern:
         bint  *normalise
         )
 
-    void c_interp3d_proj_opacity(
+    void interp3d_proj_opacity(
         float *x,
         float *y,
         float *z,
