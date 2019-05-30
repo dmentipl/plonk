@@ -47,9 +47,17 @@ available at https://github.com/dmentipl/plonk.
 """
 
 from . import analysis
+from .core.constants import constants
 from .core.dump import Dump
 from .core.evolution import Evolution
 from .core.simulation import Simulation
 from .visualization import Visualization
 
-__all__ = ['Dump', 'Evolution', 'Simulation', 'Visualization', 'analysis']
+__all__ = [
+    'Dump',
+    'Evolution',
+    'Simulation',
+    'Visualization',
+    'analysis',
+    'constants',
+]
