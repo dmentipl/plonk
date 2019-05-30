@@ -6,6 +6,8 @@ one for interpolation of vector fields. They both make calls to the
 Splash Fortran libraries via cython.
 """
 
+import warnings
+
 import numpy as np
 
 try:
@@ -166,7 +168,8 @@ def scalar_interpolation(
             )
         else:
             ####################################################################
-            # TODO: temporary; testing phase
+            # TODO: check this
+            warnings.warn('Opacity rendering in Plonk is experimental.')
             npmass = npart
             zorig = z
             pixwidth = pixwidthx

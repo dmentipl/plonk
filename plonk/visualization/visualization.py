@@ -5,6 +5,8 @@ This class contains methods for visualizing smoothed particle
 hydrodynamics simulations.
 """
 
+import warnings
+
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
@@ -298,6 +300,7 @@ class Visualization:
 
     def _M(self):
         # TODO: assuming sink particle 0 is star
+        warnings.warn('Assuming sink particle 0 is the central object')
         return self._sinks.arrays['m'][0]
 
     def _make_plot(self):
