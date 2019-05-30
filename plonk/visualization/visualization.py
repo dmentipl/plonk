@@ -343,6 +343,17 @@ class Visualization:
             self.image.set_norm(norm)
             self._make_colorbar()
 
+    def set_colormap(self, cmap):
+        """
+        Set colormap.
+
+        Parameters
+        ----------
+        cmap : str
+            Colormap from Matplotlib.
+        """
+        self.image.set_cmap(cmap)
+
     def set_render_range(self, vmin=None, vmax=None):
         """
         Set render range for colorbar.
