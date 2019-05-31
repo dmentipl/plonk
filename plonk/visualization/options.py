@@ -18,7 +18,7 @@ FigureOptions = namedtuple(
 )
 
 ImageRangeOptions = namedtuple(
-    'ImageRangeOptions', ['xrange', 'yrange', 'extent']
+    'ImageRangeOptions', ['extent']
 )
 
 InterpolationOptions = namedtuple(
@@ -72,7 +72,7 @@ DEFAULT_OPTIONS = PlotOptions(
         font_size=12,
         title=None,
     ),
-    ImageRangeOptions(xrange=None, yrange=None, extent=None),
+    ImageRangeOptions(extent=None),
     InterpolationOptions(
         accelerate=False,
         cross_section=False,

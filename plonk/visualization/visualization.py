@@ -45,13 +45,9 @@ class Visualization:
     ----------------
     particle_type : int, default I_GAS
         Particle type to plot, as an int.
-    particle_types : collection of int
-        Particle types to plot, as a collection of ints.
+    particle_types : collection (list, tuple) of int
+        Particle types to plot, as a collection of int.
 
-    xrange : list or tuple of float (len=2), default ``None``
-        The range of values for the horizontal (x) axis.
-    yrange : list or tuple of float (len=2), default ``None``
-        The range of values for the vertical (y) axis.
     extent : list or tuple of float (len=4), default ``None``
         Specify the x and y image range as [xmin, xmax, ymin, ymax].
 
@@ -458,30 +454,17 @@ class Visualization:
 
         self._extent = None
 
-        _xrange = self._image_range_options['xrange']
-        _yrange = self._image_range_options['yrange']
         _extent = self._image_range_options['extent']
 
         if _extent is not None:
-            if _xrange is not None or _yrange is not None:
-                raise ValueError(
-                    'Cannot set extent and xrange/yrange at the same time'
-                )
-            if len(_extent) == 4:
-                self._extent = _extent
-
-        if self._extent is None:
-            if _xrange is None and _yrange is None:
-                _min = self._xyz[:, 0:2].min(axis=0)
-                _max = self._xyz[:, 0:2].max(axis=0)
-                self._extent = (_min[0], _max[0], _min[1], _max[1])
+            if len(_extent) != 4:
+                raise ValueError('Extent must be like [xmin, xmax, ymin, ymax]')
             else:
-                if _xrange is None:
-                    _x = (self._x().min(), self._x().max())
-                if _yrange is None:
-                    _y = (self._y().min(), self._y().max())
-                if self._extent is None:
-                    self._extent = _x + _y
+                self._extent = _extent
+        else:
+            _min = self._xyz[:, 0:2].min(axis=0)
+            _max = self._xyz[:, 0:2].max(axis=0)
+            self._extent = (_min[0], _max[0], _min[1], _max[1])
 
     def _render_image(self):
 
