@@ -39,18 +39,14 @@ _Units = namedtuple('Units', _quantities)
 class Units:
     def __init__(self, ulength=None, umass=None, utime=None):
         """
-        Physical units in cgs.
-
-        Each value is the cgs value of the underlying physical unit.
+        Units in cgs.
 
         Parameters
         ----------
         ulength : float
             The length unit [cgs].
-
         umass : float
             The mass unit [cgs].
-
         utime : float
             The time unit [cgs].
         """
@@ -61,6 +57,29 @@ class Units:
             utime = 1.0
         if umass is None:
             umass = 1.0
+
+        self.set_units(ulength, umass, utime)
+
+    def set_units(self, ulength=None, umass=None, utime=None):
+        """
+        Set units in cgs.
+
+        Parameters
+        ----------
+        ulength : float
+            The length unit [cgs].
+        umass : float
+            The mass unit [cgs].
+        utime : float
+            The time unit [cgs].
+        """
+
+        if ulength is None:
+            ulength = self.units.length
+        if utime is None:
+            utime = self.units.time
+        if umass is None:
+            umass = self.units.mass
 
         _ud = dict()
 
@@ -81,7 +100,7 @@ class Units:
 
         self.units = _Units(**_ud)
 
-    def convert_units(self, quantity, dimension, new_unit_in_cgs):
+    def convert_quantity(self, quantity, dimension, new_unit_in_cgs):
         """
         Convert a quantity to new units.
 
@@ -106,19 +125,21 @@ class Units:
         Examples
         --------
         Convert a mass from Units.units to Earth masses
-        >>> units.convert_units(mass, 'M', plonk.constants.earth_mass)
+        >>> units.convert_quantity(mass, 'M', plonk.constants.earth_mass)
         """
 
-        return self.convert_unit_to_cgs(quantity, dimension) / new_unit_in_cgs
+        return (
+            self.convert_quantity_to_cgs(quantity, dimension) / new_unit_in_cgs
+        )
 
-    def convert_unit_to_cgs(self, quantity, dimension):
+    def convert_quantity_to_cgs(self, quantity, dimension):
         """
-        Convert quantity from code units to cgs.
+        Convert quantity from current units to cgs.
 
         Parameters
         ----------
         quantity : float
-            The quantity (in code units) to covert to cgs.
+            The quantity (in current units) to covert to cgs.
         dimension : str
             This can be a string available in units.units, e.g.
             'velocity', or 'energy'. Alternatively it can be a
