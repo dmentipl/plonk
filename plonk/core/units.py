@@ -37,7 +37,7 @@ _Units = namedtuple('Units', _quantities)
 
 
 class Units:
-    def __init__(self, udist=None, umass=None, utime=None):
+    def __init__(self, ulength=None, umass=None, utime=None):
         """
         Physical units in cgs.
 
@@ -45,7 +45,7 @@ class Units:
 
         Parameters
         ----------
-        udist : float
+        ulength : float
             The length unit [cgs].
 
         umass : float
@@ -55,8 +55,8 @@ class Units:
             The time unit [cgs].
         """
 
-        if udist is None:
-            udist = 1.0
+        if ulength is None:
+            ulength = 1.0
         if utime is None:
             utime = 1.0
         if umass is None:
@@ -64,20 +64,20 @@ class Units:
 
         _ud = dict()
 
-        _ud['length'] = _ud['L'] = udist
+        _ud['length'] = _ud['L'] = ulength
         _ud['time'] = _ud['T'] = utime
         _ud['mass'] = _ud['M'] = umass
 
-        _ud['angular_momentum'] = _ud['J'] = umass * udist ** 2 / utime
-        _ud['energy'] = _ud['E'] = umass * udist / utime ** 2
-        _ud['force'] = _ud['F'] = umass * udist / utime ** 2
+        _ud['angular_momentum'] = _ud['J'] = umass * ulength ** 2 / utime
+        _ud['energy'] = _ud['E'] = umass * ulength / utime ** 2
+        _ud['force'] = _ud['F'] = umass * ulength / utime ** 2
         _ud['frequency'] = _ud['f'] = 1 / utime
-        _ud['mass_density'] = _ud['rho'] = umass / udist ** 3
-        _ud['momentum'] = _ud['p'] = umass * udist / utime
-        _ud['pressure'] = _ud['P'] = umass / (udist * utime ** 2)
-        _ud['surface_density'] = _ud['sigma'] = umass / udist ** 2
-        _ud['torque'] = _ud['tau'] = umass * udist ** 2 / utime ** 2
-        _ud['velocity'] = _ud['v'] = udist / utime
+        _ud['mass_density'] = _ud['rho'] = umass / ulength ** 3
+        _ud['momentum'] = _ud['p'] = umass * ulength / utime
+        _ud['pressure'] = _ud['P'] = umass / (ulength * utime ** 2)
+        _ud['surface_density'] = _ud['sigma'] = umass / ulength ** 2
+        _ud['torque'] = _ud['tau'] = umass * ulength ** 2 / utime ** 2
+        _ud['velocity'] = _ud['v'] = ulength / utime
 
         self.units = _Units(**_ud)
 
