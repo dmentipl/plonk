@@ -13,6 +13,7 @@ import numpy as np
 
 from .constants import constants
 from .particles import Arrays
+from .units import Units
 
 FileTypes = collections.namedtuple('FileTypes', 'filetype extension')
 FILE_TYPES = [FileTypes(filetype='HDF5', extension='h5')]
@@ -115,6 +116,12 @@ class Dump(DumpFile):
         self._header = {
             key: val[()] for key, val in self.file_handle['header'].items()
         }
+
+        self.units = Units(
+            ulength=self.header['udist'],
+            utime=self.header['utime'],
+            umass=self.header['umass'],
+        )
 
         self.is_full_dump = self._determine_if_full_dump()
 
