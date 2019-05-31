@@ -155,7 +155,6 @@ class Visualization:
     def __init__(self, dump, render=None, vector=None, **kwargs):
 
         # TODO: physical units
-        # TODO: calculated extra quantities
 
         self._figure_options = dict(DEFAULT_OPTIONS.FigureOptions._asdict())
         for key, value in kwargs.items():
@@ -267,9 +266,7 @@ class Visualization:
 
     @property
     def _h(self):
-        return self._quantity(
-            self._particles.h[:], self._particle_mask, self._rotation
-        )
+        return self._quantity(self._particles.h[:], self._particle_mask)
 
     @property
     def _vxyz(self):
