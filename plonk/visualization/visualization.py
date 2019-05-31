@@ -233,39 +233,65 @@ class Visualization:
         self._initialized = True
 
     def _quantity(self, quantity, mask=None, transform=None):
+        """
+        Apply mask, and, optionally, a transform to particle quantities.
+        """
         if transform is not None:
             func = transform['func']
-            args = transform['args']
+            args = transform.get('args')
             if mask is not None:
-                return func(quantity[mask], *args)
-            return func(quantity, *args)
+                if args is not None:
+                    return func(quantity[mask], *args)
+                return func(quantity[mask])
+            if args is not None:
+                return func(quantity, *args)
+            return func(quantity)
         if mask is not None:
             return quantity[mask]
         return quantity
+
+    def _particle_quantity(self, quantity):
+        return self._quantity(
+            self._particles.arrays[quantity], self._particle_mask
+        )
+
+    def _extra_quantity(self, quantity):
+        return self._quantity(
+            self._dump.extra_quantity(quantity), self._particle_mask
+        )
 
     @property
     def _interpolation_weights(self):
         """Interpolation weights."""
         if self._interpolation_options['density_weighted']:
-            return np.array(self._particle_mass / self._h ** 2)
-        return np.full_like(self._h, 1 / self._header['hfact'])
+            return self._quantity(np.array(self._particle_mass / self._h ** 2))
+        return self._quantity(np.full_like(self._h, 1 / self._header['hfact']))
 
     @property
     def _particle_mass(self):
-        return self._dump.mass
+        """Particle masses."""
+        return self._quantity(self._dump.mass)
 
     @property
     def _xyz(self):
+        """Particle positions."""
         return self._quantity(
             self._particles.xyz[:], self._particle_mask, self._rotation
         )
 
     @property
     def _h(self):
+        """Particle smoothing lengths."""
         return self._quantity(self._particles.h[:], self._particle_mask)
 
     @property
+    def _density(self):
+        """Particle density."""
+        return self._quantity(self._dump.density[:], self._particle_mask)
+
+    @property
     def _vxyz(self):
+        """Particle velocities."""
         return self._quantity(
             self._particles.vxyz[:], self._particle_mask, self._rotation
         )
@@ -289,10 +315,14 @@ class Visualization:
         return self._vxyz[:, 2]
 
     def _R(self):
-        return self._dump.extra_quantity('R')[self._particle_mask]
+        return self._quantity(
+            self._dump.extra_quantity('R'), self._particle_mask
+        )
 
     def _r(self):
-        return self._dump.extra_quantity('r')[self._particle_mask]
+        return self._quantity(
+            self._dump.extra_quantity('r'), self._particle_mask
+        )
 
     def _G(self):
         return constants.gravitational_constant / (
@@ -477,7 +507,7 @@ class Visualization:
                 if item[2] == 'scalar'
             ]
             if self._render in ['rho', 'dens', 'density']:
-                render_data = self._dump.density[self._particle_mask]
+                render_data = self._density()
             elif self._render == 'x':
                 render_data = self._x()
             elif self._render == 'y':
@@ -491,15 +521,11 @@ class Visualization:
             elif self._render == 'vz':
                 render_data = self._vz()
             elif self._render in scalars:
-                render_data = self._dump.extra_quantity(self._render)[
-                    self._particle_mask
-                ]
+                render_data = self._extra_quantity(self._render)
             elif self._render in self._particles.fields:
-                render_data = self._particles.arrays[self._render][
-                    self._particle_mask
-                ]
+                render_data = self._particle_quantity(self._render)
                 if render_data.ndim != 1:
-                    raise ValueError(f'{self._render} is not 1-dimensional')
+                    raise ValueError(f'{self._render} is not scalar')
             else:
                 symbol_dictionary = {
                     'x': self._x,
@@ -618,14 +644,10 @@ class Visualization:
                 except Exception:
                     raise ValueError('Velocity not available in dump')
             elif self._vector in vectors:
-                vector_data = self._dump.extra_quantity(self._vector)[
-                    self._particle_mask
-                ]
+                vector_data = self._extra_quantity(self._vector)
             else:
                 try:
-                    vector_data = self._particles.arrays[self._vector][
-                        self._particle_mask
-                    ]
+                    vector_data = self._quantity(self._vector)
                     if vector_data.ndim != 2 and vector_data.shape[1] != 3:
                         raise ValueError(
                             f'{self._vector} does not have correct dimensions'
