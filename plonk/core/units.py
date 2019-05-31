@@ -4,6 +4,8 @@ This module contains functions for physical units.
 
 from collections import namedtuple
 
+import numpy as np
+
 from .constants import constants
 
 _quantities = [
@@ -48,6 +50,18 @@ LENGTH_UNITS = (
     ('pc', constants.pc),
 )
 
+MASS_UNITS = (
+    ('g', 1.0),
+    ('earth_mass', constants.earth_mass),
+    ('m_earth', constants.earth_mass),
+    ('mearth', constants.earth_mass),
+    ('earthm', constants.earth_mass),
+    ('solar_mass', constants.solar_mass),
+    ('m_sun', constants.solar_mass),
+    ('msolar', constants.solar_mass),
+    ('solarm', constants.solar_mass),
+)
+
 TIME_UNITS = (
     ('ms', 1.0e-3),
     ('millisecond', 1.0e-3),
@@ -62,23 +76,34 @@ TIME_UNITS = (
     ('myr', 1.0e6 * constants.year),
 )
 
-MASS_UNITS = (
-    ('g', 1.0),
-    ('earth_mass', constants.earth_mass),
-    ('m_earth', constants.earth_mass),
-    ('mearth', constants.earth_mass),
-    ('earthm', constants.earth_mass),
-    ('solar_mass', constants.solar_mass),
-    ('m_sun', constants.solar_mass),
-    ('msolar', constants.solar_mass),
-    ('solarm', constants.solar_mass),
-)
-
 
 class Units:
+    """
+    Units in cgs.
+
+    Parameters
+    ----------
+    ulength : float or str
+        If float, the length unit in cgs. If str, must be in list of
+        available quantities.
+    umass : float or str
+        If float, the mass unit in cgs. If str, must be in list of
+        available quantities.
+    utime : float or str
+        If float, the time unit in cgs. If str, must be in list of
+        available quantities.
+    """
     def __init__(self, ulength=None, umass=None, utime=None):
+
+        self.length = None
+        self.time = None
+        self.mass = None
+
+        self.set_units(ulength, umass, utime)
+
+    def set_units(self, ulength=None, umass=None, utime=None):
         """
-        Units in cgs.
+        Set units in cgs.
 
         Parameters
         ----------
@@ -93,64 +118,73 @@ class Units:
             available quantities.
         """
 
-        self.length = None
-        self.time = None
-        self.mass = None
-
-        self.set_units(ulength, umass, utime)
-
-    def set_units(self, ulength=None, umass=None, utime=None):
-        """
-        Set units in cgs.
-
-        Parameters
-        ----------
-        ulength : float
-            The length unit [cgs].
-        umass : float
-            The mass unit [cgs].
-        utime : float
-            The time unit [cgs].
-        """
-
         if ulength is None:
             if self.length is not None:
                 ulength = self.length
             else:
-                ulength = 1.0
-        if utime is None:
-            if self.time is not None:
-                utime = self.time
-            else:
-                utime = 1.0
+                ulength = 'cm'
         if umass is None:
             if self.mass is not None:
                 umass = self.mass
             else:
-                umass = 1.0
+                umass = 'g'
+        if utime is None:
+            if self.time is not None:
+                utime = self.time
+            else:
+                utime = 's'
 
         if isinstance(ulength, str):
-            ulength = ulength.lower()
-            if ulength in [unit[0] for unit in LENGTH_UNITS]:
+            ulength_str = ulength.lower()
+            if ulength_str in [unit[0] for unit in LENGTH_UNITS]:
                 ulength = [
-                    unit[1] for unit in LENGTH_UNITS if unit[0] == ulength
+                    unit[1] for unit in LENGTH_UNITS if unit[0] == ulength_str
                 ][0]
             else:
                 raise ValueError(f'{ulength} is not available')
-
-        if isinstance(utime, str):
-            utime = utime.lower()
-            if utime in [unit[0] for unit in TIME_UNITS]:
-                utime = [unit[1] for unit in TIME_UNITS if unit[0] == utime][0]
-            else:
-                raise ValueError(f'{utime} is not available')
+        elif isinstance(ulength, (int, float)):
+            ulength_str = ''
+            for unit in LENGTH_UNITS:
+                if np.isclose(ulength, unit[1]):
+                    ulength_str = unit[0]
+        else:
+            raise ValueError('Cannot determine length unit')
 
         if isinstance(umass, str):
-            umass = umass.lower()
-            if umass in [unit[0] for unit in MASS_UNITS]:
-                umass = [unit[1] for unit in MASS_UNITS if unit[0] == umass][0]
+            umass_str = umass.lower()
+            if umass_str in [unit[0] for unit in MASS_UNITS]:
+                umass = [
+                    unit[1] for unit in MASS_UNITS if unit[0] == umass_str
+                ][0]
             else:
                 raise ValueError(f'{umass} is not available')
+        elif isinstance(umass, (int, float)):
+            umass_str = ''
+            for unit in MASS_UNITS:
+                if np.isclose(umass, unit[1]):
+                    umass_str = unit[0]
+        else:
+            raise ValueError('Cannot determine mass unit')
+
+        if isinstance(utime, str):
+            utime_str = utime.lower()
+            if utime_str in [unit[0] for unit in TIME_UNITS]:
+                utime = [
+                    unit[1] for unit in TIME_UNITS if unit[0] == utime_str
+                ][0]
+            else:
+                raise ValueError(f'{utime} is not available')
+        elif isinstance(utime, (int, float)):
+            utime_str = ''
+            for unit in TIME_UNITS:
+                if np.isclose(utime, unit[1]):
+                    utime_str = unit[0]
+        else:
+            raise ValueError('Cannot determine time unit')
+
+        self.length = (ulength, ulength_str)
+        self.mass = (umass, umass_str)
+        self.time = (utime, utime_str)
 
         _ud = dict()
 
