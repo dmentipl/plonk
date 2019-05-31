@@ -171,7 +171,7 @@ class Units:
 
         self.units = _Units(**_ud)
 
-    def convert_quantity(self, quantity, dimension, new_unit_in_cgs):
+    def convert_quantity(self, quantity, dimension, new_units):
         """
         Convert a quantity to new units.
 
@@ -185,8 +185,8 @@ class Units:
             combination of 'L', 'M', 'T' with powers separated by
             spaces, e.g. 'L^3 M^-1 T^-2' for the gravitational
             constant.
-        new_unit_in_cgs : float
-            The unit to convert quantity to expressed in cgs.
+        new_units : Units
+            The units to convert quantity to as a Units object.
 
         Returns
         -------
@@ -199,9 +199,9 @@ class Units:
         >>> units.convert_quantity(mass, 'M', plonk.constants.earth_mass)
         """
 
-        return (
-            self.convert_quantity_to_cgs(quantity, dimension) / new_unit_in_cgs
-        )
+        return self.convert_quantity_to_cgs(
+            quantity, dimension
+        ) / new_units.convert_quantity_to_cgs(1.0, dimension)
 
     def convert_quantity_to_cgs(self, quantity, dimension):
         """
@@ -237,6 +237,10 @@ class Units:
 
 def _get_dimension_from_string(expression):
     units = [unit.split('^') for unit in expression.split()]
+    if len(units) > 3:
+        raise ValueError('Cannot interpret string')
+    if not set([unit[0] for unit in units]).issubset(set(('L', 'T', 'M'))):
+        raise ValueError('Cannot interpret string')
     d = {}
     for unit in units:
         if len(unit) > 1:
