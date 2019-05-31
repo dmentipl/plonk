@@ -1,48 +1,83 @@
 """
-This module contains physical constants, units, and astronomical data.
-
-The class _Constants is instantiated in the object constants, which
-is what should be imported.
+This module contains physical constants, units, and astronomical data
+with values in cgs units.
 """
 
+from collections import namedtuple
 
-class _Constants:
-    """This class contains physical constants in cgs units."""
+_constants = [
+    'Boltzmann',
+    'kB',
+    'gas_constant',
+    'R',
+    'gravitational_constant',
+    'G',
+    'mass_of_hydrogen',
+    'm_H',
+    'speed_of_light',
+    'c',
+    'second',
+    'minute',
+    'hour',
+    'day',
+    'year',
+    'micron',
+    'micrometer',
+    'millimeter',
+    'meter',
+    'kilometer',
+    'astronomical_unit',
+    'au',
+    'light_year',
+    'ly',
+    'parsec',
+    'pc',
+    'solar_mass',
+    'solar_radius',
+    'earth_mass',
+    'earth_radius',
+    'jupiter_mass',
+    'saturn_mass',
+    'uranus_mass',
+    'neptune_mass',
+]
 
-    def __init__(self):
+_Constants = namedtuple('Constants', _constants)
 
-        # Physical constants
-        self.Boltzmann = 1.380658e-16
-        self.gas_constant = 8.314e7
-        self.gravitational_constant = 6.67259e-8
-        self.mass_of_hydrogen = 1.6733e-24
-        self.speed_of_light = 2.997924e10
+_cd = dict()
 
-        # Time units
-        self.seconds = 1.0e0
-        self.minutes = 6.0e1
-        self.hours = 3.6e3
-        self.days = 8.64e4
-        self.years = 3.1556926e7
+# Physical constants
+_cd['Boltzmann'] = _cd['kB'] = 1.380658e-16
+_cd['gas_constant'] = _cd['R'] = 8.314e7
+_cd['gravitational_constant'] = _cd['G'] = 6.67259e-8
+_cd['mass_of_hydrogen'] = _cd['m_H'] = 1.6733e-24
+_cd['speed_of_light'] = _cd['c'] = 2.997924e10
 
-        # Distance units
-        self.micron = 1.0e-4
-        self.millimeter = 1.0e-1
-        self.kilometer = 1.0e5
-        self.astronomical_unit = 1.496e13
-        self.light_year = 9.4605e17
-        self.parsec = 3.086e18
+# Time units
+_cd['second'] = 1.0
+_cd['minute'] = 60.0
+_cd['hour'] = 3600.0
+_cd['day'] = 8.64e4
+_cd['year'] = 3.1556926e7
 
-        # Solar system
-        self.earth_mass = 5.972e27
-        self.neptune_mass = 1.024e29
-        self.uranus_mass = 8.681e29
-        self.saturn_mass = 5.683e29
-        self.jupiter_mass = 1.898e30
-        self.solar_mass = 1.99e33
-        self.earth_radius = 6.371315e8
-        self.solar_radius = 6.959500e10
+# Length units
+_cd['micron'] = _cd['micrometer'] = 1.0e-4
+_cd['millimeter'] = 1.0e-1
+_cd['meter'] = 100.0
+_cd['kilometer'] = 1.0e5
+_cd['astronomical_unit'] = _cd['au'] = 1.496e13
+_cd['light_year'] = _cd['ly'] = 9.4605e17
+_cd['parsec'] = _cd['pc'] = 3.086e18
 
+# Solar system
+_cd['solar_mass'] = 1.99e33
+_cd['solar_radius'] = 6.959500e10
+_cd['earth_mass'] = 5.972e27
+_cd['earth_radius'] = 6.371315e8
+_cd['jupiter_mass'] = 1.898e30
+_cd['saturn_mass'] = 5.683e29
+_cd['uranus_mass'] = 8.681e29
+_cd['neptune_mass'] = 1.024e29
 
-# Instantiate Constants class to create global constants object.
-constants = _Constants()
+# Create constants namedtuple.
+constants = _Constants(**_cd)

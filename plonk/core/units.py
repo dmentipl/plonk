@@ -4,64 +4,124 @@ This module contains functions for physical units.
 
 from collections import namedtuple
 
+_quantities = [
+    'length',
+    'L',
+    'time',
+    'T',
+    'mass',
+    'M',
+    'angular_momentum',
+    'J',
+    'energy',
+    'E',
+    'force',
+    'F',
+    'frequency',
+    'f',
+    'mass_density',
+    'rho',
+    'momentum',
+    'p',
+    'pressure',
+    'P',
+    'surface_density',
+    'sigma',
+    'torque',
+    'tau',
+    'velocity',
+    'v',
+]
 
-def units_in_cgs(udist=1.0, umass=1.0, utime=1.0):
-    """
-    Physical units in cgs.
+_Units = namedtuple('Units', _quantities)
 
-    Each value is the cgs value of the underlying physical unit.
 
-    Parameters
-    ----------
-    udist : float
-        The distance unit [cgs].
+class Units:
+    def __init__(self, udist=None, umass=None, utime=None):
+        """
+        Physical units in cgs.
 
-    umass : float
-        The mass unit [cgs].
+        Each value is the cgs value of the underlying physical unit.
 
-    utime : float
-        The time unit [cgs].
+        Parameters
+        ----------
+        udist : float
+            The length unit [cgs].
 
-    Returns
-    -------
-    namedtuple
-        This contains the units of different physical quantities in cgs.
-    """
+        umass : float
+            The mass unit [cgs].
 
-    quantities = [
-        'angular_momentum',
-        'distance',
-        'energy',
-        'force',
-        'frequency',
-        'mass',
-        'mass_density',
-        'momentum',
-        'pressure',
-        'surface_density',
-        'time',
-        'torque',
-        'velocity',
-    ]
+        utime : float
+            The time unit [cgs].
+        """
 
-    Units = namedtuple('Units', quantities)
+        if udist is None:
+            udist = 1.0
+        if utime is None:
+            utime = 1.0
+        if umass is None:
+            umass = 1.0
 
-    units = dict()
-    units['distance'] = udist
-    units['time'] = utime
-    units['mass'] = umass
-    units['angular_momentum'] = umass * udist ** 2 / utime
-    units['energy'] = umass * udist / utime ** 2
-    units['force'] = umass * udist / utime ** 2
-    units['frequency'] = 1 / utime
-    units['mass_density'] = umass / udist ** 3
-    units['momentum'] = umass * udist / utime
-    units['pressure'] = umass / (udist * utime ** 2)
-    units['surface_density'] = umass / udist ** 2
-    units['torque'] = umass * udist ** 2 / utime ** 2
-    units['velocity'] = udist / utime
+        _ud = dict()
 
-    return Units(**units)
+        _ud['length'] = _ud['L'] = udist
+        _ud['time'] = _ud['T'] = utime
+        _ud['mass'] = _ud['M'] = umass
+
+        _ud['angular_momentum'] = _ud['J'] = umass * udist ** 2 / utime
+        _ud['energy'] = _ud['E'] = umass * udist / utime ** 2
+        _ud['force'] = _ud['F'] = umass * udist / utime ** 2
+        _ud['frequency'] = _ud['f'] = 1 / utime
+        _ud['mass_density'] = _ud['rho'] = umass / udist ** 3
+        _ud['momentum'] = _ud['p'] = umass * udist / utime
+        _ud['pressure'] = _ud['P'] = umass / (udist * utime ** 2)
+        _ud['surface_density'] = _ud['sigma'] = umass / udist ** 2
+        _ud['torque'] = _ud['tau'] = umass * udist ** 2 / utime ** 2
+        _ud['velocity'] = _ud['v'] = udist / utime
+
+        self.units = _Units(**_ud)
+
+    def convert_quantity_to_cgs(self, quantity, dimension):
+        """
+        Convert quantity from code units to cgs.
+
+        Parameters
+        ----------
+        quantity : float
+            The quantity (in code units) to covert to cgs.
+        dimension : str
+            This can be a string available in units.units, e.g.
+            'velocity', or 'energy'. Alternatively it can be a
+            combination of 'L', 'M', 'T' with powers separated by
+            spaces, e.g. 'L^3 M^-1 T^-2' for the gravitational
+            constant.
+
+        Returns
+        -------
+        float
+            The value of the quantity in cgs.
+        """
+        if dimension in self.units._fields:
+            return quantity * getattr(self.units, dimension)
+        return quantity * self._get_cgs_from_dimension(dimension)
+
+    def _get_cgs_from_dimension(self, expression):
+        d = _get_dimension_from_string(expression)
+        val = 1.0
+        for key in d:
+            val *= getattr(self.units, key) ** d[key]
+        return val
+
+
+def _get_dimension_from_string(expression):
+    units = [unit.split('^') for unit in expression.split()]
+    d = {}
+    for unit in units:
+        if len(unit) > 1:
+            d[unit[0]] = int(unit[1])
+        elif len(unit) == 1:
+            d[unit[0]] = 1
+    return d
 
 
 def convert_units(quantity, unit_from, unit_to):
