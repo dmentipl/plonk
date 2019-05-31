@@ -81,7 +81,37 @@ class Units:
 
         self.units = _Units(**_ud)
 
-    def convert_quantity_to_cgs(self, quantity, dimension):
+    def convert_units(self, quantity, dimension, new_unit_in_cgs):
+        """
+        Convert a quantity to new units.
+
+        Parameters
+        ----------
+        quantity : float
+            The quantity to be converted.
+        dimension : str
+            This can be a string available in units.units, e.g.
+            'velocity', or 'energy'. Alternatively it can be a
+            combination of 'L', 'M', 'T' with powers separated by
+            spaces, e.g. 'L^3 M^-1 T^-2' for the gravitational
+            constant.
+        new_unit_in_cgs : float
+            The unit to convert quantity to expressed in cgs.
+
+        Returns
+        -------
+        float
+            The original quantity in the new units.
+
+        Examples
+        --------
+        Convert a mass from Units.units to Earth masses
+        >>> units.convert_units(mass, 'M', plonk.constants.earth_mass)
+        """
+
+        return self.convert_unit_to_cgs(quantity, dimension) / new_unit_in_cgs
+
+    def convert_unit_to_cgs(self, quantity, dimension):
         """
         Convert quantity from code units to cgs.
 
@@ -122,32 +152,3 @@ def _get_dimension_from_string(expression):
         elif len(unit) == 1:
             d[unit[0]] = 1
     return d
-
-
-def convert_units(quantity, unit_from, unit_to):
-    """
-    Convert a quantity from one unit to another:
-
-        new_value = quantity * unit_from / unit_to
-
-    e.g. mass_in_earth_mass =
-            mass_in_code_units * units['mass'] / constants.earth_mass
-
-    Parameters
-    ----------
-    quantity : float
-        The quantity to be converted.
-
-    unit_from : float
-        The current value of unit in cgs.
-
-    unit_to : float
-        The unit to convert quantity to in cgs.
-
-    Returns
-    -------
-    float
-        The original quantity in the new units.
-    """
-
-    return quantity * unit_from / unit_to
