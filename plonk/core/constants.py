@@ -26,6 +26,7 @@ _constants = [
     'millimeter',
     'meter',
     'kilometer',
+    'km',
     'astronomical_unit',
     'au',
     'light_year',
@@ -64,7 +65,7 @@ _cd['year'] = 3.1556926e7
 _cd['micron'] = _cd['micrometer'] = 1.0e-4
 _cd['millimeter'] = 1.0e-1
 _cd['meter'] = 100.0
-_cd['kilometer'] = 1.0e5
+_cd['kilometer'] = _cd['km'] = 1.0e5
 _cd['astronomical_unit'] = _cd['au'] = 1.496e13
 _cd['light_year'] = _cd['ly'] = 9.4605e17
 _cd['parsec'] = _cd['pc'] = 3.086e18

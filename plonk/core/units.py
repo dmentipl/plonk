@@ -4,6 +4,8 @@ This module contains functions for physical units.
 
 from collections import namedtuple
 
+from .constants import constants
+
 _quantities = [
     'length',
     'L',
@@ -35,6 +37,43 @@ _quantities = [
 
 _Units = namedtuple('Units', _quantities)
 
+LENGTH_UNITS = (
+    ('cm', 1.0),
+    ('km', constants.km),
+    ('solar_radius', constants.solar_radius),
+    ('r_sun', constants.solar_radius),
+    ('astronomical_unit', constants.au),
+    ('au', constants.au),
+    ('parsec', constants.pc),
+    ('pc', constants.pc),
+)
+
+TIME_UNITS = (
+    ('ms', 1.0e-3),
+    ('millisecond', 1.0e-3),
+    ('s', 1.0),
+    ('second', 1.0),
+    ('hr', constants.hour),
+    ('hour', constants.hour),
+    ('day', constants.day),
+    ('yr', constants.year),
+    ('year', constants.year),
+    ('kyr', 1.0e3 * constants.year),
+    ('myr', 1.0e6 * constants.year),
+)
+
+MASS_UNITS = (
+    ('g', 1.0),
+    ('earth_mass', constants.earth_mass),
+    ('m_earth', constants.earth_mass),
+    ('mearth', constants.earth_mass),
+    ('earthm', constants.earth_mass),
+    ('solar_mass', constants.solar_mass),
+    ('m_sun', constants.solar_mass),
+    ('msolar', constants.solar_mass),
+    ('solarm', constants.solar_mass),
+)
+
 
 class Units:
     def __init__(self, ulength=None, umass=None, utime=None):
@@ -43,20 +82,20 @@ class Units:
 
         Parameters
         ----------
-        ulength : float
-            The length unit [cgs].
-        umass : float
-            The mass unit [cgs].
-        utime : float
-            The time unit [cgs].
+        ulength : float or str
+            If float, the length unit in cgs. If str, must be in list of
+            available quantities.
+        umass : float or str
+            If float, the mass unit in cgs. If str, must be in list of
+            available quantities.
+        utime : float or str
+            If float, the time unit in cgs. If str, must be in list of
+            available quantities.
         """
 
-        if ulength is None:
-            ulength = 1.0
-        if utime is None:
-            utime = 1.0
-        if umass is None:
-            umass = 1.0
+        self.length = None
+        self.time = None
+        self.mass = None
 
         self.set_units(ulength, umass, utime)
 
@@ -75,11 +114,43 @@ class Units:
         """
 
         if ulength is None:
-            ulength = self.units.length
+            if self.length is not None:
+                ulength = self.length
+            else:
+                ulength = 1.0
         if utime is None:
-            utime = self.units.time
+            if self.time is not None:
+                utime = self.time
+            else:
+                utime = 1.0
         if umass is None:
-            umass = self.units.mass
+            if self.mass is not None:
+                umass = self.mass
+            else:
+                umass = 1.0
+
+        if isinstance(ulength, str):
+            ulength = ulength.lower()
+            if ulength in [unit[0] for unit in LENGTH_UNITS]:
+                ulength = [
+                    unit[1] for unit in LENGTH_UNITS if unit[0] == ulength
+                ][0]
+            else:
+                raise ValueError(f'{ulength} is not available')
+
+        if isinstance(utime, str):
+            utime = utime.lower()
+            if utime in [unit[0] for unit in TIME_UNITS]:
+                utime = [unit[1] for unit in TIME_UNITS if unit[0] == utime][0]
+            else:
+                raise ValueError(f'{utime} is not available')
+
+        if isinstance(umass, str):
+            umass = umass.lower()
+            if umass in [unit[0] for unit in MASS_UNITS]:
+                umass = [unit[1] for unit in MASS_UNITS if unit[0] == umass][0]
+            else:
+                raise ValueError(f'{umass} is not available')
 
         _ud = dict()
 
