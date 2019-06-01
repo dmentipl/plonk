@@ -8,6 +8,8 @@ from mpl_toolkits.axes_grid1 import AxesGrid
 
 from .visualization import Visualization
 
+SCALE = 3
+
 
 class MultiPlot:
     """
@@ -46,7 +48,7 @@ class MultiPlot:
         nrows = dumps.shape[0]
         ncols = dumps.shape[1]
 
-        self.figure = plt.figure(figsize=(6, 4))
+        self.figure = plt.figure(figsize=(ncols * SCALE, nrows * SCALE))
 
         self.grid = AxesGrid(
             self.figure,
