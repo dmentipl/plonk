@@ -192,6 +192,8 @@ class Visualization:
         self._particles = dump.particles
         self._sinks = dump.sinks
         self._header = dump.header
+        self._units = dump.units
+        self._new_units = kwargs.pop('new_units', None)
 
         self.axis = kwargs.get('axis', None)
         self.figure = kwargs.get('figure', None)
@@ -287,7 +289,7 @@ class Visualization:
     @property
     def _density(self):
         """Particle density."""
-        return self._quantity(self._dump.density[:], self._particle_mask)
+        return self._quantity(self._dump.density, self._particle_mask)
 
     @property
     def _vxyz(self):
@@ -507,7 +509,7 @@ class Visualization:
                 if item[2] == 'scalar'
             ]
             if self._render in ['rho', 'dens', 'density']:
-                render_data = self._density()
+                render_data = self._density
             elif self._render == 'x':
                 render_data = self._x()
             elif self._render == 'y':
@@ -853,3 +855,57 @@ class Visualization:
 
         if title is not None:
             self.axis.set_title(title)
+
+
+class VisualizationIterator:
+    """
+    Iterator over Visualization object.
+
+    Parameters
+    ----------
+    dumps : list of Dump
+        A list of plonk.Dump objects to visualize.
+    **kwargs
+        The keyword arguments to pass to Visualization.
+
+    Examples
+    --------
+    Go forwards and backwards through visualizations.
+
+    >>> viz_iter = VisualizationIterator(
+            dumps=sim.dumps, render=render,
+            )
+    >>> viz_iter.next()
+    >>> viz_iter.previous()
+    """
+
+    def __init__(self, dumps, **kwargs):
+        self._dumps = dumps
+        self._len = len(dumps)
+        self._where = 0
+        self.options = kwargs
+        self.visualization = Visualization(dump=dumps[0], **kwargs)
+        self._forwards = self._viz_iter(dumps[1:])
+        self._backwards = None
+
+    def _viz_iter(self, dumps):
+        for dump in dumps:
+            yield Visualization(dump=dump, **self.options)
+
+    def next(self):
+        if self._where < self._len - 1:
+            self.visualization = self._forwards.__next__()
+            self._where += 1
+            self._forwards = self._viz_iter(self._dumps[self._where+1:])
+            self._backwards = self._viz_iter(self._dumps[self._where-1::-1])
+        else:
+            print('At the end.')
+
+    def previous(self):
+        if self._where > 0:
+            self.visualization = self._backwards.__next__()
+            self._where -= 1
+            self._forwards = self._viz_iter(self._dumps[self._where+1:])
+            self._backwards = self._viz_iter(self._dumps[self._where-1::-1])
+        else:
+            print('At the start.')
