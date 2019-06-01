@@ -7,9 +7,27 @@ accessed by the plot function.
 
 Examples
 --------
-Rendering density.
+Rendering density on a Dump.
 
 >>> viz = plonk.Visualization(dump, render='density')
+
+Go forwards and backwards through visualizations in a Simulation.
+
+>>> viz_iter = VisualizationIterator(
+        dumps=simulation.dumps,
+        render=render
+    )
+>>> viz_iter.next()
+>>> viz_iter.previous()
+
+Density rendering multiple dumps from plonk.Simuation.
+
+>>> dumps = np.array([dump for dump in simulation.dumps])
+>>> options = {
+        'render': 'density',
+        'extent': [-100, 100, -100, 100],
+    }
+>>> multiplot = MultiPlot(dumps, **options)
 
 Notes
 -----
@@ -19,6 +37,7 @@ using any software derived from Splash for academic purposes you should
 cite: Price, 2007, Publ. Astron. Soc. Aust., 24, 159-173.
 """
 
+from .multiplot import MultiPlot
 from .visualization import Visualization, VisualizationIterator
 
-__all__ = ['Visualization', 'VisualizationIterator']
+__all__ = ['MultiPlot', 'Visualization', 'VisualizationIterator']
