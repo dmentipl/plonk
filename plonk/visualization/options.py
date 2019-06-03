@@ -8,6 +8,7 @@ FigureOptions = namedtuple(
     'FigureOptions',
     [
         'axis',
+        'cbar_axis',
         'colorbar',
         'colormap',
         'figure',
@@ -65,6 +66,7 @@ PlotOptions = namedtuple(
 DEFAULT_OPTIONS = PlotOptions(
     FigureOptions(
         axis=None,
+        cbar_axis=None,
         colorbar=True,
         colormap='gist_heat',
         figure=None,

@@ -607,6 +607,7 @@ class Visualization:
             cmap=self._cmap,
         )
 
+        self._cax = self._figure_options['cbar_axis']
         if not hasattr(self, 'colorbar'):
             if self._figure_options['colorbar']:
                 self._make_colorbar()
@@ -623,12 +624,18 @@ class Visualization:
     def _make_colorbar(self):
         if hasattr(self, 'colorbar'):
             self.colorbar.remove()
-        divider = make_axes_locatable(self.axis)
-        cax = divider.append_axes("right", size="5%", pad=0.05)
-        self.colorbar = self.figure.colorbar(self.image, cax=cax)
+        if self._cax is None:
+            divider = make_axes_locatable(self.axis)
+            cax = divider.append_axes("right", size="5%", pad=0.05)
+            self.colorbar = self.figure.colorbar(self.image, cax)
+        else:
+            self.colorbar = self._cax.colorbar(self.image)
         self._set_render_label()
         if self._render_label is not None:
-            self.colorbar.set_label(self._render_label)
+            try:
+                self.colorbar.set_label_text(self._render_label)
+            except AttributeError:
+                self.colorbar.set_label(self._render_label)
 
     def _vector_image(self):
 
