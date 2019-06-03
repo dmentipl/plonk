@@ -38,6 +38,13 @@ class MultiPlot:
     xy_factor : float, optional (default 1.0)
         Figure width/height ratio. Greater than unity makes width wider,
         and height shorter. Useful for tweaking plots.
+    cbar_location : str
+        Colorbar position: either 'top, 'bottom', 'left' or 'right'.
+    axes_pad : float
+        Padding between axes.
+    cbar_pad : float
+        Padding between axes and colorbar.
+
 
     Examples
     --------
@@ -60,8 +67,17 @@ class MultiPlot:
     >>> multiplot = MultiPlot(dumps, options)
     """
 
-    def __init__(self, dumps, options, shape=None, scale=None, xy_factor=None):
-
+    def __init__(
+        self,
+        dumps,
+        options,
+        shape=None,
+        scale=None,
+        xy_factor=None,
+        cbar_location=None,
+        axes_pad=None,
+        cbar_pad=None,
+    ):
         if scale is None:
             scale = SCALE
 
@@ -87,14 +103,21 @@ class MultiPlot:
 
         if number_options > 1:
             cbar_mode = 'each'
-            cbar_location = 'top'
-            axes_pad = 0.20
-            cbar_pad = 0.20
+            _cbar_location = 'top'
+            _axes_pad = 0.20
+            _cbar_pad = 0.20
         else:
             cbar_mode = 'single'
-            cbar_location = 'right'
-            axes_pad = 0.05
-            cbar_pad = 0.05
+            _cbar_location = 'right'
+            _axes_pad = 0.05
+            _cbar_pad = 0.05
+
+        if cbar_location is None:
+            cbar_location = _cbar_location
+        if axes_pad is None:
+            axes_pad = _axes_pad
+        if cbar_pad is None:
+            cbar_pad = _cbar_pad
 
         if number_dumps == 1 and number_options > 1:
             dumps = number_options * dumps
