@@ -14,6 +14,7 @@ FigureOptions = namedtuple(
         'figure',
         'font_family',
         'font_size',
+        'render_label',
         'title',
     ],
 )
@@ -72,6 +73,7 @@ DEFAULT_OPTIONS = PlotOptions(
         figure=None,
         font_family='sans-serif',
         font_size=12,
+        render_label=None,
         title=None,
     ),
     ImageRangeOptions(extent=None),

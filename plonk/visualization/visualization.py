@@ -95,6 +95,8 @@ class Visualization:
         Font family style for axes title, label, etc.
     font_size : int, default 12
         Font size for axes title, label, etc.
+    render_label : str
+        Label for colorbar for rendered figures.
     title : str, default None
         Plot title.
 
@@ -500,8 +502,10 @@ class Visualization:
 
     def _render_image(self):
 
+        self._render_label = self._figure_options['render_label']
         if isinstance(self._render, str):
-            self._render_label = self._render
+            if self._render_label is None:
+                self._render_label = self._render
             scalars = list()
             [
                 scalars.extend(item[:-1])
@@ -560,12 +564,17 @@ class Visualization:
             if self._render.ndim != 1:
                 raise ValueError('Render array must be 1d')
             render_data = self._render
-            self._render_label = 'from array'
+            if self._render_label is None:
+                self._render_label = None
 
         else:
             raise ValueError('Cannot determine scalar data')
 
-        print(f'Rendering scalar field {self._render_label} using Splash')
+        if self._render_label is not None:
+            print(f'Rendering scalar field "{self._render_label}" using Splash')
+        else:
+            print(f'Rendering scalar field using Splash')
+
         image_data = scalar_interpolation(
             self._xyz,
             self._h,
@@ -616,11 +625,6 @@ class Visualization:
         else:
             self._make_colorbar()
 
-    def _set_render_label(self):
-        self._render_label = r'$\int$ ' + f'{self._render_label}' + ' dz'
-        if self._render_scale == 'log':
-            self._render_label = ' '.join(('log', self._render_label))
-
     def _make_colorbar(self):
         if hasattr(self, 'colorbar'):
             self.colorbar.remove()
@@ -630,7 +634,6 @@ class Visualization:
             self.colorbar = self.figure.colorbar(self.image, cax)
         else:
             self.colorbar = self._cax.colorbar(self.image)
-        self._set_render_label()
         if self._render_label is not None:
             try:
                 self.colorbar.set_label_text(self._render_label)
@@ -671,12 +674,15 @@ class Visualization:
             if self._vector.shape[1] != 3:
                 raise ValueError('Vector array must have shape (npart, 3)')
             vector_data = self._vector
-            self._vector_label = 'from array'
+            self._vector_label = None
 
         else:
             raise ValueError('Cannot determine vector data')
 
-        print(f'Plotting vector field {self._vector_label} using Splash')
+        if self._vector_label is not None:
+            print(f'Plotting vector field "{self._vector_label}" using Splash')
+        else:
+            print(f'Plotting vector field using Splash')
 
         vector_data = vector_interpolation(
             self._xyz,
@@ -903,8 +909,8 @@ class VisualizationIterator:
         if self._where < self._len - 1:
             self.visualization = self._forwards.__next__()
             self._where += 1
-            self._forwards = self._viz_iter(self._dumps[self._where+1:])
-            self._backwards = self._viz_iter(self._dumps[self._where-1::-1])
+            self._forwards = self._viz_iter(self._dumps[self._where + 1 :])
+            self._backwards = self._viz_iter(self._dumps[self._where - 1 :: -1])
         else:
             print('At the end.')
 
@@ -912,7 +918,7 @@ class VisualizationIterator:
         if self._where > 0:
             self.visualization = self._backwards.__next__()
             self._where -= 1
-            self._forwards = self._viz_iter(self._dumps[self._where+1:])
-            self._backwards = self._viz_iter(self._dumps[self._where-1::-1])
+            self._forwards = self._viz_iter(self._dumps[self._where + 1 :])
+            self._backwards = self._viz_iter(self._dumps[self._where - 1 :: -1])
         else:
             print('At the start.')
