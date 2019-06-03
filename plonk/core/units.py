@@ -93,6 +93,7 @@ class Units:
         If float, the time unit in cgs. If str, must be in list of
         available quantities.
     """
+
     def __init__(self, ulength=None, umass=None, utime=None):
 
         self.length = None

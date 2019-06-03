@@ -19,9 +19,7 @@ FigureOptions = namedtuple(
     ],
 )
 
-ImageRangeOptions = namedtuple(
-    'ImageRangeOptions', ['extent']
-)
+ImageRangeOptions = namedtuple('ImageRangeOptions', ['extent'])
 
 InterpolationOptions = namedtuple(
     'InterpolationOptions',

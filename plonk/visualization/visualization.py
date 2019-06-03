@@ -5,6 +5,7 @@ This class contains methods for visualizing smoothed particle
 hydrodynamics simulations.
 """
 
+import functools
 import warnings
 
 import matplotlib.colors as colors
@@ -236,69 +237,87 @@ class Visualization:
 
         self._initialized = True
 
-    def _quantity(self, quantity, mask=None, transform=None):
+    def _rotate(func):
         """
-        Apply mask, and, optionally, a transform to particle quantities.
+        Decorator to compute quantity under frame rotation. Should only
+        be applied to vector quantities.
         """
-        if transform is not None:
-            func = transform['func']
-            args = transform.get('args')
-            if mask is not None:
-                if args is not None:
-                    return func(quantity[mask], *args)
-                return func(quantity[mask])
-            if args is not None:
-                return func(quantity, *args)
-            return func(quantity)
-        if mask is not None:
-            return quantity[mask]
-        return quantity
 
+        @functools.wraps(func)
+        def wrapper_rotate(*args, **kwargs):
+            if args[0]._rotation is not None:
+                value = rotate_vector_arbitrary_axis(
+                    func(*args, **kwargs),
+                    args[0]._rotation_axis,
+                    args[0]._rotation_angle,
+                )
+            else:
+                value = func(*args, **kwargs)
+            return value
+
+        return wrapper_rotate
+
+    def _mask(func):
+        """Decorator to apply particle mask to quantities."""
+
+        @functools.wraps(func)
+        def wrapper_mask(*args, **kwargs):
+            if args[0]._particle_mask is not None:
+                value = func(*args, **kwargs)[args[0]._particle_mask]
+            else:
+                value = func(*args, **kwargs)
+            return value
+
+        return wrapper_mask
+
+    @_mask
     def _particle_quantity(self, quantity):
-        return self._quantity(
-            self._particles.arrays[quantity], self._particle_mask
-        )
+        """Reference a particle quantity by str."""
+        return self._particles.arrays[quantity]
 
+    @_mask
     def _extra_quantity(self, quantity):
-        return self._quantity(
-            self._dump.extra_quantity(quantity), self._particle_mask
-        )
+        """Reference a particle extra quantity by str."""
+        return self._dump.extra_quantity(quantity)
 
     @property
     def _interpolation_weights(self):
         """Interpolation weights."""
         if self._interpolation_options['density_weighted']:
-            return self._quantity(np.array(self._particle_mass / self._h ** 2))
-        return self._quantity(np.full_like(self._h, 1 / self._header['hfact']))
+            return np.array(self._particle_mass / self._h ** 2)
+        return np.full_like(self._h, 1 / self._header['hfact'])
 
     @property
+    @_mask
     def _particle_mass(self):
         """Particle masses."""
-        return self._quantity(self._dump.mass)
+        return self._dump.mass
 
     @property
+    @_rotate
+    @_mask
     def _xyz(self):
         """Particle positions."""
-        return self._quantity(
-            self._particles.xyz[:], self._particle_mask, self._rotation
-        )
+        return self._particles.xyz[:]
 
     @property
+    @_mask
     def _h(self):
         """Particle smoothing lengths."""
-        return self._quantity(self._particles.h[:], self._particle_mask)
+        return self._particles.h[:]
 
     @property
+    @_mask
     def _density(self):
         """Particle density."""
-        return self._quantity(self._dump.density, self._particle_mask)
+        return self._dump.density
 
     @property
+    @_rotate
+    @_mask
     def _vxyz(self):
         """Particle velocities."""
-        return self._quantity(
-            self._particles.vxyz[:], self._particle_mask, self._rotation
-        )
+        return self._particles.vxyz[:]
 
     def _x(self):
         return self._xyz[:, 0]
@@ -318,15 +337,13 @@ class Visualization:
     def _vz(self):
         return self._vxyz[:, 2]
 
+    @_mask
     def _R(self):
-        return self._quantity(
-            self._dump.extra_quantity('R'), self._particle_mask
-        )
+        return self._dump.extra_quantity('R')
 
+    @_mask
     def _r(self):
-        return self._quantity(
-            self._dump.extra_quantity('r'), self._particle_mask
-        )
+        return self._dump.extra_quantity('r')
 
     def _G(self):
         return constants.gravitational_constant / (
@@ -659,7 +676,7 @@ class Visualization:
                 vector_data = self._extra_quantity(self._vector)
             else:
                 try:
-                    vector_data = self._quantity(self._vector)
+                    vector_data = self._particle_quantity(self._vector)
                     if vector_data.ndim != 2 and vector_data.shape[1] != 3:
                         raise ValueError(
                             f'{self._vector} does not have correct dimensions'
