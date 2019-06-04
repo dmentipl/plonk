@@ -44,7 +44,8 @@ class MultiPlot:
         Padding between axes.
     cbar_pad : float
         Padding between axes and colorbar.
-
+    colorbar_label : str
+        The label for the colorbar.
 
     Examples
     --------
@@ -77,6 +78,7 @@ class MultiPlot:
         cbar_location=None,
         axes_pad=None,
         cbar_pad=None,
+        colorbar_label=None,
     ):
         if scale is None:
             scale = SCALE
@@ -193,3 +195,85 @@ class MultiPlot:
             self.colorbar = self.grid.cbar_axes[0].colorbar(
                 self.plots[0, 0].image
             )
+            if colorbar_label is not None:
+                self.colorbar.set_label_text(colorbar_label)
+
+    def set_render_scale(self, scale):
+        """
+        Set render scale.
+
+        Parameters
+        ----------
+        scale : str
+            A string representing the render color scale, e.g.
+            'linear' or 'log'.
+        """
+
+        [viz.set_render_scale(scale) for viz in self.plots.flatten()]
+
+    def set_colorbar_label(self, label):
+        """
+        Set the colorbar label.
+
+        Parameters
+        ----------
+        label : str
+            The label for the global colorbar.
+        """
+
+        self.colorbar.set_label_text(label)
+
+    def set_colormap(self, cmap):
+        """
+        Set colormap.
+
+        Parameters
+        ----------
+        cmap : str
+            Colormap from Matplotlib.
+        """
+
+        [viz.set_colormap(cmap) for viz in self.plots.flatten()]
+
+    def set_render_range(self, vmin=None, vmax=None):
+        """
+        Set render range for colorbar.
+
+        Parameters
+        ----------
+        vmin : float
+            Minimum for the render colorbar.
+        vmax : float
+            Maximum for the render colorbar.
+        """
+
+        if vmin is not None and vmax is not None:
+            [
+                viz.set_render_range(vmin=vmin, vmax=vmax)
+                for viz in self.plots.flatten()
+            ]
+        if vmin is not None:
+            [viz.set_render_range(vmin=vmin) for viz in self.plots.flatten()]
+        if vmax is not None:
+            [viz.set_render_range(vmax=vmax) for viz in self.plots.flatten()]
+
+    def set_image_size(self, extent=None, size=None):
+        """
+        Set image size.
+
+        Parameters
+        ----------
+        extent : list or numpy.ndarray
+            Extent is the image size: [xmin, xmax, ymin, ymax].
+        size : float
+            Extent specified by a single value:
+            [-size, size, -size, size].
+        """
+
+        if extent is None and size is None:
+            raise ValueError('Must set one of extent or size')
+
+        if size is not None:
+            extent = [-size, size, -size, size]
+
+        [viz.set_image_size(extent=extent) for viz in self.plots.flatten()]
