@@ -291,23 +291,65 @@ class Units:
         return quantity * self._get_cgs_from_dimension(dimension)
 
     def _get_cgs_from_dimension(self, expression):
-        d = _get_dimension_from_string(expression)
+        d = dimensions_as_dict(expression)
         val = 1.0
         for key in d:
             val *= getattr(self.units, key) ** d[key]
         return val
 
+    def _units_same(self, a, b):
+        if a in _quantities_short_name:
+            a = _quantities_base[_quantities_short_name.index(a)]
+        elif a in _quantities_long_name:
+            a = _quantities_base[_quantities_long_name.index(a)]
+        elif a in _quantities_base:
+            pass
+        elif dimensions_as_dict(a):
+            pass
+        else:
+            raise ValueError(f'{a} unknown dimension/unit')
 
-def _get_dimension_from_string(expression):
-    units = [unit.split('^') for unit in expression.split()]
-    if len(units) > 3:
-        raise ValueError('Cannot interpret string')
-    if not set([unit[0] for unit in units]).issubset(set(('L', 'T', 'M'))):
-        raise ValueError('Cannot interpret string')
-    d = {}
-    for unit in units:
-        if len(unit) > 1:
-            d[unit[0]] = int(unit[1])
-        elif len(unit) == 1:
-            d[unit[0]] = 1
-    return d
+        if b in _quantities_short_name:
+            b = _quantities_base[_quantities_short_name.index(b)]
+        elif b in _quantities_long_name:
+            b = _quantities_base[_quantities_long_name.index(b)]
+        elif b in _quantities_base:
+            pass
+        elif dimensions_as_dict(b):
+            pass
+        else:
+            raise ValueError(f'{b} unknown dimension/unit')
+
+        return dimensions_as_dict(a) == dimensions_as_dict(b)
+
+
+def dimensions_as_dict(expression):
+    """
+    Convert expression like 'L^m M^n T^o' to {'L': m, 'M': n, 'T': o}.
+    """
+
+    units = list()
+    for unit in expression.split():
+        unit = unit.split('^')
+        if unit[0] not in ('L', 'M', 'T'):
+            raise ValueError(
+                'Cannot interpret string: must be like ' '"L^m M^n T^o"'
+            )
+        if len(unit) == 1:
+            units.append([unit[0], 1])
+        elif len(unit) == 2:
+            try:
+                i = int(unit[1])
+            except ValueError:
+                raise ValueError(
+                    'Cannot interpret string: must be like ' '"L^m M^n T^o"'
+                )
+            units.append([unit[0], i])
+        else:
+            raise ValueError('Cannot interpret string')
+
+    for dim in ('L', 'M', 'T'):
+        if dim not in [unit[0] for unit in units]:
+            units.append([dim, 0])
+
+    return dict(sorted(units))
