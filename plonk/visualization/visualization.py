@@ -51,6 +51,8 @@ class Visualization:
 
     extent : list or tuple of float (len=4), default ``None``
         Specify the x and y image range as [xmin, xmax, ymin, ymax].
+    size : float
+        Specify the x and y image range as [-size, size, -size, size].
 
     rotation_axis : list of float (len=3), default ``None``
         A 3-dimensional vector specifying an axis around which to
@@ -164,12 +166,8 @@ class Visualization:
             if key in self._figure_options.keys():
                 self._figure_options[key] = value
 
-        self._image_range_options = dict(
-            DEFAULT_OPTIONS.ImageRangeOptions._asdict()
-        )
-        for key, value in kwargs.items():
-            if key in self._image_range_options.keys():
-                self._image_range_options[key] = value
+        self._extent = kwargs.get('extent')
+        self._size = kwargs.get('size')
 
         self._interpolation_options = dict(
             DEFAULT_OPTIONS.InterpolationOptions._asdict()
@@ -182,11 +180,15 @@ class Visualization:
         for key, value in kwargs.items():
             if key in self._render_options.keys():
                 self._render_options[key] = value
+        self._render_fraction_max = kwargs.get('render_fraction_max')
 
         self._rotation_options = dict(DEFAULT_OPTIONS.RotationOptions._asdict())
         for key, value in kwargs.items():
             if key in self._rotation_options.keys():
                 self._rotation_options[key] = value
+
+        self._position_angle = kwargs.get('position_angle', None)
+        self._inclination = kwargs.get('inclination', None)
 
         self._units_options = dict(DEFAULT_OPTIONS.UnitsOptions._asdict())
         for key, value in kwargs.items():
@@ -243,7 +245,7 @@ class Visualization:
             self._units_options['units'], self._units_options['integrated_z']
         )
         self._init_frame_rotation()
-        self.set_image_size()
+        self._init_image_size()
         self._make_plot()
 
         self._initialized = True
@@ -256,11 +258,11 @@ class Visualization:
 
         @functools.wraps(func)
         def wrapper_rotate(*args, **kwargs):
-            if args[0]._rotation is not None:
+            if args[0]._rotate_frame:
                 value = rotate_vector_arbitrary_axis(
                     func(*args, **kwargs),
-                    args[0]._rotation_axis,
-                    args[0]._rotation_angle,
+                    args[0]._rotation_options['rotation_axis'],
+                    args[0]._rotation_options['rotation_angle'],
                 )
             else:
                 value = func(*args, **kwargs)
@@ -308,9 +310,7 @@ class Visualization:
                 if self._units._units_same(u, dimension):
                     dimension = u
             return self._units.convert_quantity_to_new_units(
-                self._particles.arrays[quantity],
-                dimension,
-                self._new_units,
+                self._particles.arrays[quantity], dimension, self._new_units
             )
         return self._particles.arrays[quantity]
 
@@ -462,9 +462,15 @@ class Visualization:
             render_scale = 'linear'
 
         if render_scale == 'log':
-            norm = colors.SymLogNorm(1e-1 * self._vmax, clip=True)
+            norm = colors.SymLogNorm(
+                1e-1 * self._render_options['render_max'], clip=True
+            )
         elif render_scale == 'linear':
-            norm = colors.Normalize(vmin=self._vmin, vmax=self._vmax, clip=True)
+            norm = colors.Normalize(
+                vmin=self._render_options['render_min'],
+                vmax=self._render_options['render_max'],
+                clip=True,
+            )
         else:
             raise ValueError("Unknown color render_scale: " + render_scale)
 
@@ -499,13 +505,14 @@ class Visualization:
         """
         if vmin is not None and vmax is not None:
             self.image.set_clim(vmin=vmin, vmax=vmax)
-            self._vmin, self._vmax = vmin, vmax
+            self._render_options['render_min'] = vmin
+            self._render_options['render_max'] = vmax
         if vmin is not None:
             self.image.set_clim(vmin=vmin)
-            self._vmin = vmin
+            self._render_options['render_min'] = vmin
         if vmax is not None:
             self.image.set_clim(vmax=vmax)
-            self._vmax = vmax
+            self._render_options['render_max'] = vmax
 
     def set_particle_type(self, particle_types):
         """
@@ -557,36 +564,33 @@ class Visualization:
         """
 
         if extent is not None:
-            if hasattr(self, '_extent'):
-                if np.all(extent == self._extent):
-                    print(f'Image window size already = {extent}')
-                    return
-            self._extent = extent
+            if np.all(extent == self._extent):
+                print(f'Image window size already = {extent}')
+                return
+            self._extent = tuple(extent)
             if self._initialized:
                 self._make_plot()
             return
+
         if size is not None:
-            if hasattr(self, '_extent'):
-                if np.all(size == np.abs(self._extent)):
-                    print(
-                        'Image window size already = '
-                        f'[-{size}, {size}, -{size}, {size}]'
-                    )
-                    return
-            self._extent = [-size, size, -size, size]
+            if np.all(size == np.abs(self._extent)):
+                print(
+                    'Image window size already = '
+                    f'(-{size}, {size}, -{size}, {size})'
+                )
+                return
+            self._extent = (-size, size, -size, size)
             if self._initialized:
                 self._make_plot()
             return
 
-        self._extent = None
+    def _init_image_size(self):
 
-        _extent = self._image_range_options['extent']
-
-        if _extent is not None:
-            if len(_extent) != 4:
-                raise ValueError('Extent must be like [xmin, xmax, ymin, ymax]')
-            else:
-                self._extent = _extent
+        if self._extent is not None:
+            if len(self._extent) != 4:
+                raise ValueError('Extent must be like (xmin, xmax, ymin, ymax)')
+        elif self._size is not None:
+            self._extent = (-self._size, self._size, -self._size, self._size)
         else:
             _min = self._xyz[:, 0:2].min(axis=0)
             _max = self._xyz[:, 0:2].max(axis=0)
@@ -684,18 +688,13 @@ class Visualization:
     def _render_image_matplotlib(self, image_data):
 
         if self._render_options['render_max'] is None:
-            vmax = image_data.max()
-        else:
-            vmax = self._render_options['render_max']
-        if self._render_options['render_fraction_max'] is not None:
-            vmax = (
-                image_data.max() * self._render_options['render_fraction_max']
+            self._render_options['render_max'] = image_data.max()
+        if self._render_fraction_max is not None:
+            self._render_options['render_max'] = (
+                image_data.max() * self._render_fraction_max
             )
         if self._render_options['render_min'] is None:
-            vmin = image_data.min()
-        else:
-            vmin = self._render_options['render_min']
-        self._vmin, self._vmax = vmin, vmax
+            self._render_options['render_min'] = image_data.min()
 
         self.set_render_scale(self._render_options['render_scale'])
 
@@ -835,8 +834,8 @@ class Visualization:
     def _init_frame_rotation(self):
         rotation_axis = self._rotation_options.get('rotation_axis', None)
         rotation_angle = self._rotation_options.get('rotation_angle', None)
-        position_angle = self._rotation_options.get('position_angle', None)
-        inclination = self._rotation_options.get('inclination', None)
+        position_angle = self._position_angle
+        inclination = self._inclination
         self._rotate_frame = False
 
         if (rotation_axis is not None or rotation_angle is not None) and (
@@ -844,7 +843,7 @@ class Visualization:
         ):
             raise ValueError(
                 'Cannot set rotation_axis/rotation_angle and '
-                + ' position_angle/inclination at the same time'
+                ' position_angle/inclination at the same time'
             )
 
         if rotation_axis is not None:
@@ -873,7 +872,11 @@ class Visualization:
         if inclination is not None and position_angle is None:
             raise ValueError('Must specify position_angle')
 
-        self.rotate_frame(rotation_axis, rotation_angle)
+        self._rotation_options['rotation_axis'] = rotation_axis
+        self._rotation_options['rotation_angle'] = rotation_angle
+
+        if self._rotate_frame:
+            self.rotate_frame(rotation_axis, rotation_angle)
 
     def rotate_frame(self, rotation_axis, rotation_angle):
         """
@@ -891,26 +894,26 @@ class Visualization:
             Rotation angle in radians for frame rotation.
         """
 
-        if rotation_axis is None or rotation_angle is None:
-            self._rotation = None
-            return
-        else:
-            self._rotation = {
-                'func': rotate_vector_arbitrary_axis,
-                'args': (rotation_axis, rotation_angle),
-            }
-
-        if hasattr(self, '_rotation_axis') and hasattr(self, '_rotation_angle'):
+        if (
+            self._rotation_options['rotation_axis'] is not None
+            and self._rotation_options['rotation_angle'] is not None
+        ):
             if (
-                np.all(np.array(rotation_axis) == self._rotation_axis)
-                and rotation_angle == self._rotation_angle
+                np.all(
+                    np.array(rotation_axis)
+                    == self._rotation_options['rotation_axis']
+                )
+                and rotation_angle == self._rotation_options['rotation_angle']
             ):
                 print(f'Frame already has the specified rotation')
                 return
 
         if rotation_axis is not None and rotation_angle is not None:
-            self._rotation_axis = rotation_axis
-            self._rotation_angle = rotation_angle
+            self._rotation_options['rotation_axis'] = rotation_axis
+            self._rotation_options['rotation_angle'] = rotation_angle
+            self._rotate_frame = True
+        else:
+            raise ValueError('Must specify by axis and angle for rotation')
 
         print(
             f'Rotating {rotation_angle*180/np.pi:.0f} deg around '

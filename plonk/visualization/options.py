@@ -19,8 +19,6 @@ FigureOptions = namedtuple(
     ],
 )
 
-ImageRangeOptions = namedtuple('ImageRangeOptions', ['extent'])
-
 InterpolationOptions = namedtuple(
     'InterpolationOptions',
     [
@@ -37,13 +35,11 @@ InterpolationOptions = namedtuple(
 )
 
 RenderOptions = namedtuple(
-    'RenderOptions',
-    ['render_scale', 'render_min', 'render_max', 'render_fraction_max'],
+    'RenderOptions', ['render_scale', 'render_min', 'render_max']
 )
 
 RotationOptions = namedtuple(
-    'RotationOptions',
-    ['rotation_axis', 'rotation_angle', 'position_angle', 'inclination'],
+    'RotationOptions', ['rotation_axis', 'rotation_angle']
 )
 
 UnitsOptions = namedtuple('UnitsOptions', ['units', 'integrated_z'])
@@ -56,7 +52,6 @@ PlotOptions = namedtuple(
     'PlotOptions',
     [
         'FigureOptions',
-        'ImageRangeOptions',
         'InterpolationOptions',
         'RenderOptions',
         'RotationOptions',
@@ -77,7 +72,6 @@ DEFAULT_OPTIONS = PlotOptions(
         render_label=None,
         title=None,
     ),
-    ImageRangeOptions(extent=None),
     InterpolationOptions(
         accelerate=False,
         cross_section=False,
@@ -89,17 +83,10 @@ DEFAULT_OPTIONS = PlotOptions(
         perspective=False,
         slice_position=0.0,
     ),
-    RenderOptions(
-        render_scale='linear',
-        render_min=None,
-        render_max=None,
-        render_fraction_max=None,
-    ),
+    RenderOptions(render_scale='linear', render_min=None, render_max=None),
     RotationOptions(
         rotation_axis=None,
         rotation_angle=None,
-        position_angle=None,
-        inclination=None,
     ),
     UnitsOptions(units=None, integrated_z=None),
     VectorOptions(stream=False, stride=25, vector_color='black'),
