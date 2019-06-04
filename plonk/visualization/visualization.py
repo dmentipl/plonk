@@ -720,7 +720,8 @@ class Visualization:
 
     def _make_colorbar(self):
         if hasattr(self, 'colorbar'):
-            self.colorbar.remove()
+            if self.colorbar is not None:
+                self.colorbar.remove()
         if self._cax is None:
             divider = make_axes_locatable(self.axis)
             cax = divider.append_axes("right", size="5%", pad=0.05)
