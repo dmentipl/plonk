@@ -46,6 +46,8 @@ RotationOptions = namedtuple(
     ['rotation_axis', 'rotation_angle', 'position_angle', 'inclination'],
 )
 
+UnitsOptions = namedtuple('UnitsOptions', ['units', 'integrated_z'])
+
 VectorOptions = namedtuple(
     'VectorOptions', ['stream', 'stride', 'vector_color']
 )
@@ -58,6 +60,7 @@ PlotOptions = namedtuple(
         'InterpolationOptions',
         'RenderOptions',
         'RotationOptions',
+        'UnitsOptions',
         'VectorOptions',
     ],
 )
@@ -98,6 +101,7 @@ DEFAULT_OPTIONS = PlotOptions(
         position_angle=None,
         inclination=None,
     ),
+    UnitsOptions(units=None, integrated_z=None),
     VectorOptions(stream=False, stride=25, vector_color='black'),
 )
 

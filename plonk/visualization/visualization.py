@@ -67,6 +67,12 @@ class Visualization:
         An angle (radians) of inclination specified relative to a
         ``position_angle``.
 
+    units : Units, default None
+        A plonk.Units object with the units to convert to.
+    integrated_z : float
+        A length scale for the integrated z direction in projection
+        plots.
+
     render_scale : str, default 'linear'
         Render scale options include: 'log', 'linear'.
     render_min : float, default None
@@ -153,8 +159,6 @@ class Visualization:
 
     def __init__(self, dump, render=None, vector=None, **kwargs):
 
-        # TODO: physical units
-
         self._figure_options = dict(DEFAULT_OPTIONS.FigureOptions._asdict())
         for key, value in kwargs.items():
             if key in self._figure_options.keys():
@@ -183,6 +187,11 @@ class Visualization:
         for key, value in kwargs.items():
             if key in self._rotation_options.keys():
                 self._rotation_options[key] = value
+
+        self._units_options = dict(DEFAULT_OPTIONS.UnitsOptions._asdict())
+        for key, value in kwargs.items():
+            if key in self._units_options.keys():
+                self._units_options[key] = value
 
         self._vector_options = dict(DEFAULT_OPTIONS.VectorOptions._asdict())
         for key, value in kwargs.items():
@@ -230,6 +239,9 @@ class Visualization:
             particle_types = particle_type
         self.set_particle_type(particle_types)
 
+        self.set_units(
+            self._units_options['units'], self._units_options['integrated_z']
+        )
         self._init_frame_rotation()
         self.set_image_size()
         self._make_plot()
@@ -269,14 +281,44 @@ class Visualization:
 
         return wrapper_mask
 
+    def _unit_conversion(dimension):
+        """Decorator to apply unit conversion quantities."""
+
+        def decorator_unit_conversion(func):
+            @functools.wraps(func)
+            def wrapper_unit_conversion(*args, **kwargs):
+                if args[0]._new_units is not None:
+                    value = args[0]._units.convert_quantity_to_new_units(
+                        func(*args, **kwargs), dimension, args[0]._new_units
+                    )
+                else:
+                    value = func(*args, **kwargs)
+                return value
+
+            return wrapper_unit_conversion
+
+        return decorator_unit_conversion
+
     @_mask
     def _particle_quantity(self, quantity):
         """Reference a particle quantity by str."""
+        if self._new_units is not None:
+            return self._units.convert_quantity_to_new_units(
+                self._particles.arrays[quantity],
+                self._particles.dimensions[quantity],
+                self._new_units,
+            )
         return self._particles.arrays[quantity]
 
     @_mask
     def _extra_quantity(self, quantity):
         """Reference a particle extra quantity by str."""
+        if self._new_units is not None:
+            return self._units.convert_quantity_to_new_units(
+                self._dump.extra_quantity(quantity)[0],
+                self._dump.extra_quantity(quantity)[1],
+                self._new_units,
+            )
         return self._dump.extra_quantity(quantity)[0]
 
     @property
@@ -287,6 +329,7 @@ class Visualization:
         return np.full_like(self._h, 1 / self._header['hfact'])
 
     @property
+    @_unit_conversion(dimension='M')
     @_mask
     def _particle_mass(self):
         """Particle masses."""
@@ -294,18 +337,21 @@ class Visualization:
 
     @property
     @_rotate
+    @_unit_conversion(dimension='L')
     @_mask
     def _xyz(self):
         """Particle positions."""
         return self._particles.arrays['xyz'][:]
 
     @property
+    @_unit_conversion(dimension='L')
     @_mask
     def _h(self):
         """Particle smoothing lengths."""
         return self._particles.arrays['h'][:]
 
     @property
+    @_unit_conversion(dimension='density')
     @_mask
     def _density(self):
         """Particle density."""
@@ -313,6 +359,7 @@ class Visualization:
 
     @property
     @_rotate
+    @_unit_conversion(dimension='velocity')
     @_mask
     def _vxyz(self):
         """Particle velocities."""
@@ -336,21 +383,25 @@ class Visualization:
     def _vz(self):
         return self._vxyz[:, 2]
 
+    @_unit_conversion(dimension='L')
     @_mask
     def _R(self):
         return self._dump.extra_quantity('R')
 
+    @_unit_conversion(dimension='L')
     @_mask
     def _r(self):
         return self._dump.extra_quantity('r')
 
+    @_unit_conversion(dimension='L^3 M^-1 T^-2')
     def _G(self):
         return constants.gravitational_constant / (
-            self._header['udist'] ** 3
-            / self._header['umass']
-            / self._header['utime'] ** 2
+            self._units.units.L ** 3
+            / self._units.units.M
+            / self._units.units.T ** 2
         )
 
+    @_unit_conversion(dimension='M')
     def _M(self):
         # TODO: assuming sink particle 0 is star
         warnings.warn('Assuming sink particle 0 is the central object')
@@ -370,6 +421,23 @@ class Visualization:
         self._set_axis()
         self.set_axis_labels()
         self.set_title()
+
+    def set_units(self, units, integrated_z=None):
+        """
+        Set units.
+
+        Parameters
+        ----------
+        units : plonk.Units
+            The new units to plot with.
+        integrated_z : float, optional
+            A length scale for the integrated z direction in projection
+            plots.
+        """
+        self._new_units = units
+        self._units_options['integrated_z'] = integrated_z
+        if self._initialized:
+            self._make_plot()
 
     def set_render_scale(self, render_scale=None):
         """
@@ -600,6 +668,7 @@ class Visualization:
             self._extent[:2],
             self._extent[2:],
             **self._interpolation_options,
+            **self._units_options,
         )
 
         self._render_image_matplotlib(image_data)
@@ -708,6 +777,7 @@ class Visualization:
             self._extent[:2],
             self._extent[2:],
             **self._interpolation_options,
+            **self._units_options,
         )
 
         self._render_vector_matplotlib(vector_data)

@@ -37,6 +37,7 @@ def scalar_interpolation(
     opacity=None,
     normalize=None,
     accelerate=None,
+    integrated_z=None,
     **kwargs,
 ):
     """
@@ -79,6 +80,8 @@ def scalar_interpolation(
         Use normalized interpolation.
     accelerate : bool (default False)
         Use accelerated interpolation.
+    integrated_z : float (default None)
+        Z unit for projection plots.
 
     Returns
     -------
@@ -220,6 +223,8 @@ def scalar_interpolation(
             normalise=normalise,
         )
 
+    if integrated_z is not None and projection:
+        return integrated_z * np.array(datsmooth)
     return np.array(datsmooth)
 
 
@@ -237,6 +242,7 @@ def vector_interpolation(
     perspective=None,
     observer_distance=None,
     normalize=None,
+    integrated_z=None,
     **kwargs,
 ):
     """
@@ -273,6 +279,8 @@ def vector_interpolation(
         perspective rendering.
     normalize : bool
         Use normalized interpolation.
+    integrated_z : float (default None)
+        Z unit for projection plots.
 
     Returns
     -------
@@ -372,4 +380,8 @@ def vector_interpolation(
             normalise=normalise,
         )
 
+    if integrated_z is not None and projection:
+        return integrated_z * np.stack(
+            (np.array(vecsmoothx), np.array(vecsmoothy))
+        )
     return np.stack((np.array(vecsmoothx), np.array(vecsmoothy)))
