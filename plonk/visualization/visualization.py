@@ -163,7 +163,7 @@ class Visualization:
 
         for options in DEFAULT_OPTIONS:
             options_ = '_' + options + '_options'
-            setattr(self, options_, DEFAULT_OPTIONS[options])
+            setattr(self, options_, dict(DEFAULT_OPTIONS[options]))
             for key in dict(kwargs):
                 if key in getattr(self, options_).keys():
                     getattr(self, options_)[key] = kwargs.pop(key)
