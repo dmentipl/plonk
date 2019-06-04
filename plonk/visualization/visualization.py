@@ -196,7 +196,6 @@ class Visualization:
         self._sinks = dump.sinks
         self._header = dump.header
         self._units = dump.units
-        self._new_units = kwargs.pop('new_units', None)
 
         self.axis = kwargs.get('axis', None)
         self.figure = kwargs.get('figure', None)
@@ -223,7 +222,7 @@ class Visualization:
             self._plot_vector = True
 
         self._available_particle_types = set(
-            np.unique(self._particles.itype[:])
+            np.unique(self._particles.arrays['itype'][:])
         )
         particle_type = kwargs.get('particle_type', None)
         particle_types = kwargs.get('particle_types', None)
@@ -278,7 +277,7 @@ class Visualization:
     @_mask
     def _extra_quantity(self, quantity):
         """Reference a particle extra quantity by str."""
-        return self._dump.extra_quantity(quantity)
+        return self._dump.extra_quantity(quantity)[0]
 
     @property
     def _interpolation_weights(self):
@@ -298,13 +297,13 @@ class Visualization:
     @_mask
     def _xyz(self):
         """Particle positions."""
-        return self._particles.xyz[:]
+        return self._particles.arrays['xyz'][:]
 
     @property
     @_mask
     def _h(self):
         """Particle smoothing lengths."""
-        return self._particles.h[:]
+        return self._particles.arrays['h'][:]
 
     @property
     @_mask
@@ -317,7 +316,7 @@ class Visualization:
     @_mask
     def _vxyz(self):
         """Particle velocities."""
-        return self._particles.vxyz[:]
+        return self._particles.arrays['vxyz'][:]
 
     def _x(self):
         return self._xyz[:, 0]
@@ -462,7 +461,7 @@ class Visualization:
 
         self._particle_types = particle_types
         self._particle_mask = np.logical_or.reduce(
-            [self._particles.itype[:] == i for i in particle_types]
+            [self._particles.arrays['itype'][:] == i for i in particle_types]
         )
 
         if self._initialized:
