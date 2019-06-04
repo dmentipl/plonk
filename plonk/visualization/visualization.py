@@ -303,9 +303,13 @@ class Visualization:
     def _particle_quantity(self, quantity):
         """Reference a particle quantity by str."""
         if self._new_units is not None:
+            dimension = self._particles.dimensions[quantity]
+            for u in self._new_units.units._fields:
+                if self._units._units_same(u, dimension):
+                    dimension = u
             return self._units.convert_quantity_to_new_units(
                 self._particles.arrays[quantity],
-                self._particles.dimensions[quantity],
+                dimension,
                 self._new_units,
             )
         return self._particles.arrays[quantity]
@@ -314,9 +318,13 @@ class Visualization:
     def _extra_quantity(self, quantity):
         """Reference a particle extra quantity by str."""
         if self._new_units is not None:
+            dimension = self._dump.extra_quantity(quantity)[1]
+            for u in self._new_units.units._fields:
+                if self._units._units_same(u, dimension):
+                    dimension = u
             return self._units.convert_quantity_to_new_units(
                 self._dump.extra_quantity(quantity)[0],
-                self._dump.extra_quantity(quantity)[1],
+                dimension,
                 self._new_units,
             )
         return self._dump.extra_quantity(quantity)[0]
