@@ -36,8 +36,7 @@ class Arrays:
     Accessing particle position array (two ways), available arrays, and
     array data types.
 
-    >>> particles.xyz[:]
-    >>> particles.arrays['xyz']
+    >>> particles.arrays['xyz'][:]
     >>> particles.arrays.fields
     >>> particles.arrays.dtype
     """
@@ -75,8 +74,6 @@ class Arrays:
                 raise TypeError('cache_array must be bool')
         if not cache_arrays:
             self._cache_arrays = False
-            for field in self.fields:
-                setattr(self, field, self._get_array_handle(field))
         else:
             self.cache_arrays()
 
@@ -103,41 +100,40 @@ class Arrays:
     def dtype(self):
         """List of array data types."""
         if self._dtype is None:
-            self._dtype = tuple(
-                [item.dtype for _, item in self._arrays_handle.items()]
-            )
+            self._dtype = {
+                key: item.dtype for key, item in self._arrays_handle.items()
+            }
         return self._dtype
 
     @property
     def dimensions(self):
         """Dimension of quantities."""
         if self._dimensions is None:
-            self._dimensions = [None] * len(self.fields)
-            for idx, field in enumerate(self.fields):
-                print(field)
+            self._dimensions = {k: None for k in self.fields}
+            for field in self.fields:
                 if field in ('xyz', 'h', 'hsoft'):
-                    self._dimensions[idx] = 'length'
+                    self._dimensions[field] = 'L'
                 elif field in ('vxyz'):
-                    self._dimensions[idx] = 'velocity'
+                    self._dimensions[field] = 'L T^-1'
                 elif field in ('mass', 'm', 'maccreted'):
-                    self._dimensions[idx] = 'mass'
+                    self._dimensions[field] = 'M'
                 elif field in ('spinxyz'):
-                    self._dimensions[idx] = 'angular_momentum'
+                    self._dimensions[field] = 'M L^2 T^-1'
                 elif field in ('pressure'):
-                    self._dimensions[idx] = 'pressure'
+                    self._dimensions[field] = 'M L^-1 T^-1'
                 elif field in ('dt', 'tstop', 'tlast'):
-                    self._dimensions[idx] = 'time'
+                    self._dimensions[field] = 'T'
                 elif field in ('divv', 'curlv'):
-                    self._dimensions[idx] = 'L T^-1'
+                    self._dimensions[field] = 'T^-1'
         return self._dimensions
 
     @property
     def shape(self):
         """List of array shapes."""
         if self._shape is None:
-            self._shape = tuple(
-                [item.shape for _, item in self._arrays_handle.items()]
-            )
+            self._shape = {
+                key: item.shape for key, item in self._arrays_handle.items()
+            }
         return self._shape
 
     def to_structured_array(self):
@@ -202,6 +198,8 @@ class Arrays:
         -------
         numpy.ndarray
             An array of the computed extra quantity.
+        str
+            The dimensions, e.g. 'L T^-1' for velocity.
 
         Examples
         --------
@@ -224,43 +222,52 @@ class Arrays:
         if quantity in ['r', 'spherical radius']:
             data = (self.arrays['xyz'],)
             func = _spherical_radius
+            dimensions = 'L'
 
         elif quantity in ['R', 'cylindrical radius']:
             data = (self.arrays['xyz'],)
             func = _cylindrical_radius
+            dimensions = 'L'
 
         elif quantity in ['|v|', 'velocity magnitude']:
             require_mass = True
             data = (self.arrays['vxyz'],)
             func = _velocity_magnitude
+            dimensions = 'L T^-1'
 
         elif quantity in ['p', 'momentum']:
             require_mass = True
             data = (self.arrays['vxyz'], mass)
             func = _momentum
+            dimensions = 'M L T^-1'
 
         elif quantity in ['|p|', 'momentum magnitude']:
             require_mass = True
             data = (self.arrays['vxyz'], mass)
             func = _momentum_magnitude
+            dimensions = 'M L T^-1'
 
         elif quantity in ['L', 'angular momentum']:
             require_mass = True
             data = (self.arrays['xyz'], self.arrays['vxyz'], mass)
             func = _angular_momentum
+            dimensions = 'M L^2 T^-1'
 
         elif quantity in ['|L|', 'angular momentum magnitude']:
             require_mass = True
             data = (self.arrays['xyz'], self.arrays['vxyz'], mass)
             func = _angular_momentum_magnitude
+            dimensions = 'M L^2 T^-1'
 
         elif quantity in ['l', 'specific angular momentum']:
             data = (self.arrays['xyz'], self.arrays['vxyz'])
             func = _specific_angular_momentum
+            dimensions = 'L^2 T^-1'
 
         elif quantity in ['|l|', 'specific angular momentum magnitude']:
             data = self.arrays['xyz'], self.arrays['vxyz']
             func = _specific_angular_momentum_magnitude
+            dimensions = 'L^2 T^-1'
 
         elif quantity in ['e', 'eccentricity']:
             data = self.arrays['xyz'], self.arrays['vxyz']
@@ -269,11 +276,12 @@ class Arrays:
                 raise ValueError(
                     f'Need gravitational_parameter for eccentricity'
                 )
+            dimensions = None
 
         if mass is None and require_mass:
             raise ValueError('Particle masses required but not available')
 
-        return _call_function_on_data(*data, func=func, **kwargs)
+        return func(*data, **kwargs), dimensions
 
     def _available_extra_quantities(self):
 
@@ -289,10 +297,6 @@ class Arrays:
             ('|l|', 'specific angular momentum magnitude', 'scalar'),
             ('e', 'eccentricity', 'scalar'),
         )
-
-
-def _call_function_on_data(*data, func, **kwargs):
-    return func(*data, **kwargs)
 
 
 def _spherical_radius(position):

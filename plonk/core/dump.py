@@ -88,19 +88,17 @@ class Dump(DumpFile):
     >>> dump = plonk.Dump(file_name)
 
     Accessing the particle arrays object, available particle arrays, and
-    particle positions (in two ways).
+    particle positions.
 
     >>> dump.particles
     >>> dump.particles.fields
-    >>> dump.particles.xyz[:]
-    >>> dump.particles.arrays['xyz']
+    >>> dump.particles.arrays['xyz'][:]
 
     Accessing the sink arrays object, array data types, and sink spin.
 
     >>> dump.sinks
     >>> dump.sinks.dtype
-    >>> dump.sinks.spinxyz[:]
-    >>> dump.sinks.arrays['spinxyz']
+    >>> dump.sinks.arrays['spinxyz'][:]
 
     Accessing the dump header dictionary, dump simulation time, and
     particle mass for each type.
@@ -186,6 +184,8 @@ class Dump(DumpFile):
         -------
         numpy.ndarray
             An array of the computed extra quantity.
+        str
+            The dimensions, e.g. 'L T^-1' for velocity.
 
         Examples
         --------
@@ -229,13 +229,13 @@ class Dump(DumpFile):
         """Calculate density from particle mass and smoothing length."""
 
         if self.particles._can_compute_density:
-            return self.mass * (hfact / np.abs(self.particles.h)) ** 3
+            return self.mass * (hfact / np.abs(self.particles.arrays['h'])) ** 3
         else:
             print(f'Cannot compute density on {self.particles}')
             return None
 
     def _mass_from_itype(self):
-        return self.header['massoftype'][self.particles.itype[()] - 1]
+        return self.header['massoftype'][self.particles.arrays['itype'][:] - 1]
 
     def _load_arrays(self, array):
         """Load arrays into memory."""
