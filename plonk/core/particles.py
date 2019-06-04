@@ -62,6 +62,7 @@ class Arrays:
         self._dtype = None
         self._shape = None
         self._number = None
+        self._dimensions = None
 
         self._arrays = {
             field: self._get_array_handle(field) for field in self.fields
@@ -106,6 +107,29 @@ class Arrays:
                 [item.dtype for _, item in self._arrays_handle.items()]
             )
         return self._dtype
+
+    @property
+    def dimensions(self):
+        """Dimension of quantities."""
+        if self._dimensions is None:
+            self._dimensions = [None] * len(self.fields)
+            for idx, field in enumerate(self.fields):
+                print(field)
+                if field in ('xyz', 'h', 'hsoft'):
+                    self._dimensions[idx] = 'length'
+                elif field in ('vxyz'):
+                    self._dimensions[idx] = 'velocity'
+                elif field in ('mass', 'm', 'maccreted'):
+                    self._dimensions[idx] = 'mass'
+                elif field in ('spinxyz'):
+                    self._dimensions[idx] = 'angular_momentum'
+                elif field in ('pressure'):
+                    self._dimensions[idx] = 'pressure'
+                elif field in ('dt', 'tstop', 'tlast'):
+                    self._dimensions[idx] = 'time'
+                elif field in ('divv', 'curlv'):
+                    self._dimensions[idx] = 'L T^-1'
+        return self._dimensions
 
     @property
     def shape(self):

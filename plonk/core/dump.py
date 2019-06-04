@@ -118,9 +118,9 @@ class Dump(DumpFile):
         }
 
         self.units = Units(
-            ulength=self.header['udist'],
-            utime=self.header['utime'],
-            umass=self.header['umass'],
+            length=self.header['udist'],
+            time=self.header['utime'],
+            mass=self.header['umass'],
         )
 
         self.is_full_dump = self._determine_if_full_dump()

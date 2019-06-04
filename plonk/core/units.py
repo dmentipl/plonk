@@ -1,5 +1,5 @@
 """
-This module contains functions for physical units.
+This module contains the Units class.
 """
 
 from collections import namedtuple
@@ -9,35 +9,28 @@ import numpy as np
 from .constants import constants
 
 _quantities = [
-    'length',
-    'L',
-    'time',
-    'T',
-    'mass',
-    'M',
-    'angular_momentum',
-    'J',
-    'energy',
-    'E',
-    'force',
-    'F',
-    'frequency',
-    'f',
-    'mass_density',
-    'rho',
-    'momentum',
-    'p',
-    'pressure',
-    'P',
-    'surface_density',
-    'sigma',
-    'torque',
-    'tau',
-    'velocity',
-    'v',
+    ('length', 'L', 'L'),
+    ('time', 'T', 'T'),
+    ('mass', 'M', 'M'),
+    ('angular_momentum', 'J', 'M L^2 T^-1'),
+    ('density', 'rho', 'M L^-3'),
+    ('energy', 'E', 'M L^2 T^-2'),
+    ('force', 'F', 'M L T^-1'),
+    ('frequency', 'f', 'T^-1'),
+    ('momentum', 'p', 'M L T^-1'),
+    ('pressure', 'P', 'M L^-1 T^-1'),
+    ('torque', 'tau', 'M L^2 T^-2'),
+    ('velocity', 'v', 'L T^-1'),
 ]
 
-_Units = namedtuple('Units', _quantities)
+_quantities_long_name = [q[0] for q in _quantities]
+_quantities_short_name = [q[1] for q in _quantities]
+_quantities_base = [q[2] for q in _quantities]
+_quantities_list = _quantities_long_name + _quantities_short_name
+
+_Units = namedtuple(
+    'Units', _quantities_list, defaults=(None,) * len(_quantities_list)
+)
 
 LENGTH_UNITS = (
     ('cm', 1.0),
@@ -83,130 +76,119 @@ class Units:
 
     Parameters
     ----------
-    ulength : float or str
+    length : float or str
         If float, the length unit in cgs. If str, must be in list of
         available quantities.
-    umass : float or str
+    mass : float or str
         If float, the mass unit in cgs. If str, must be in list of
         available quantities.
-    utime : float or str
+    time : float or str
         If float, the time unit in cgs. If str, must be in list of
         available quantities.
+
+    Other parameters
+    ----------------
+    **kwargs
+        Other quantities to set units for.
     """
 
-    def __init__(self, ulength=None, umass=None, utime=None):
+    def __init__(self, length=None, mass=None, time=None, **kwargs):
 
-        self.length = None
-        self.time = None
-        self.mass = None
-
-        self.set_units(ulength, umass, utime)
-
-    def set_units(self, ulength=None, umass=None, utime=None):
-        """
-        Set units in cgs.
-
-        Parameters
-        ----------
-        ulength : float or str
-            If float, the length unit in cgs. If str, must be in list of
-            available quantities.
-        umass : float or str
-            If float, the mass unit in cgs. If str, must be in list of
-            available quantities.
-        utime : float or str
-            If float, the time unit in cgs. If str, must be in list of
-            available quantities.
-        """
-
-        if ulength is None:
+        if length is None:
             if self.length is not None:
-                ulength = self.length
+                length = self.length
             else:
-                ulength = 'cm'
-        if umass is None:
+                length = 'cm'
+        if mass is None:
             if self.mass is not None:
-                umass = self.mass
+                mass = self.mass
             else:
-                umass = 'g'
-        if utime is None:
+                mass = 'g'
+        if time is None:
             if self.time is not None:
-                utime = self.time
+                time = self.time
             else:
-                utime = 's'
+                time = 's'
 
-        if isinstance(ulength, str):
-            ulength_str = ulength.lower()
-            if ulength_str in [unit[0] for unit in LENGTH_UNITS]:
-                ulength = [
-                    unit[1] for unit in LENGTH_UNITS if unit[0] == ulength_str
+        if isinstance(length, str):
+            length_str = length.lower()
+            if length_str in [unit[0] for unit in LENGTH_UNITS]:
+                length = [
+                    unit[1] for unit in LENGTH_UNITS if unit[0] == length_str
                 ][0]
             else:
-                raise ValueError(f'{ulength} is not available')
-        elif isinstance(ulength, (int, float)):
-            ulength_str = ''
+                raise ValueError(f'{length} is not available')
+        elif isinstance(length, (int, float)):
+            length_str = ''
             for unit in LENGTH_UNITS:
-                if np.isclose(ulength, unit[1]):
-                    ulength_str = unit[0]
+                if np.isclose(length, unit[1]):
+                    length_str = unit[0]
         else:
             raise ValueError('Cannot determine length unit')
 
-        if isinstance(umass, str):
-            umass_str = umass.lower()
-            if umass_str in [unit[0] for unit in MASS_UNITS]:
-                umass = [
-                    unit[1] for unit in MASS_UNITS if unit[0] == umass_str
-                ][0]
+        if isinstance(mass, str):
+            mass_str = mass.lower()
+            if mass_str in [unit[0] for unit in MASS_UNITS]:
+                mass = [unit[1] for unit in MASS_UNITS if unit[0] == mass_str][
+                    0
+                ]
             else:
-                raise ValueError(f'{umass} is not available')
-        elif isinstance(umass, (int, float)):
-            umass_str = ''
+                raise ValueError(f'{mass} is not available')
+        elif isinstance(mass, (int, float)):
+            mass_str = ''
             for unit in MASS_UNITS:
-                if np.isclose(umass, unit[1]):
-                    umass_str = unit[0]
+                if np.isclose(mass, unit[1]):
+                    mass_str = unit[0]
         else:
             raise ValueError('Cannot determine mass unit')
 
-        if isinstance(utime, str):
-            utime_str = utime.lower()
-            if utime_str in [unit[0] for unit in TIME_UNITS]:
-                utime = [
-                    unit[1] for unit in TIME_UNITS if unit[0] == utime_str
-                ][0]
+        if isinstance(time, str):
+            time_str = time.lower()
+            if time_str in [unit[0] for unit in TIME_UNITS]:
+                time = [unit[1] for unit in TIME_UNITS if unit[0] == time_str][
+                    0
+                ]
             else:
-                raise ValueError(f'{utime} is not available')
-        elif isinstance(utime, (int, float)):
-            utime_str = ''
+                raise ValueError(f'{time} is not available')
+        elif isinstance(time, (int, float)):
+            time_str = ''
             for unit in TIME_UNITS:
-                if np.isclose(utime, unit[1]):
-                    utime_str = unit[0]
+                if np.isclose(time, unit[1]):
+                    time_str = unit[0]
         else:
             raise ValueError('Cannot determine time unit')
 
-        self.length = (ulength, ulength_str)
-        self.mass = (umass, umass_str)
-        self.time = (utime, utime_str)
+        self.length = (length, length_str)
+        self.mass = (mass, mass_str)
+        self.time = (time, time_str)
 
         _ud = dict()
 
-        _ud['length'] = _ud['L'] = ulength
-        _ud['time'] = _ud['T'] = utime
-        _ud['mass'] = _ud['M'] = umass
+        _ud['length'] = _ud['L'] = length
+        _ud['time'] = _ud['T'] = time
+        _ud['mass'] = _ud['M'] = mass
 
-        _ud['angular_momentum'] = _ud['J'] = umass * ulength ** 2 / utime
-        _ud['energy'] = _ud['E'] = umass * ulength / utime ** 2
-        _ud['force'] = _ud['F'] = umass * ulength / utime ** 2
-        _ud['frequency'] = _ud['f'] = 1 / utime
-        _ud['mass_density'] = _ud['rho'] = umass / ulength ** 3
-        _ud['momentum'] = _ud['p'] = umass * ulength / utime
-        _ud['pressure'] = _ud['P'] = umass / (ulength * utime ** 2)
-        _ud['surface_density'] = _ud['sigma'] = umass / ulength ** 2
-        _ud['torque'] = _ud['tau'] = umass * ulength ** 2 / utime ** 2
-        _ud['velocity'] = _ud['v'] = ulength / utime
+        for quantity, value in kwargs.items():
+            if quantity not in _quantities_list:
+                raise ValueError(f'{quantity} unavailable')
+            if not isinstance(value, float):
+                raise TypeError(f'{quantity} must be float')
+            if quantity in _quantities_long_name:
+                quantity_long = quantity
+                quantity_short = _quantities_short_name[
+                    _quantities_long_name.index(quantity)
+                ]
+            elif quantity in _quantities_short_name:
+                quantity_short = quantity
+                quantity_long = _quantities_long_name[
+                    _quantities_short_name.index(quantity)
+                ]
+            _ud[quantity_short] = value
+            _ud[quantity_long] = value
 
         self.units = _Units(**_ud)
 
-    def convert_quantity(self, quantity, dimension, new_units):
+    def convert_quantity_to_new_units(self, quantity, dimension, new_units):
         """
         Convert a quantity to new units.
 
@@ -230,13 +212,48 @@ class Units:
 
         Examples
         --------
-        Convert a mass from Units.units to Earth masses
-        >>> units.convert_quantity(mass, 'M', plonk.constants.earth_mass)
+        Convert a mass to new units.
+        >>> new_units = Units(umass='earth_mass')
+        >>> units.convert_quantity_to_new_units(
+                mass, 'M', new_units
+            )
         """
 
         return self.convert_quantity_to_cgs(
             quantity, dimension
         ) / new_units.convert_quantity_to_cgs(1.0, dimension)
+
+    def convert_quantity(self, quantity, dimension, unit_factor):
+        """
+        Convert a quantity to new units.
+
+        Parameters
+        ----------
+        quantity : float
+            The quantity to be converted.
+        dimension : str
+            This can be a string available in units.units, e.g.
+            'velocity', or 'energy'. Alternatively it can be a
+            combination of 'L', 'M', 'T' with powers separated by
+            spaces, e.g. 'L^3 M^-1 T^-2' for the gravitational
+            constant.
+        unit_factor : float
+            The factor to convert the quantity as cgs.
+
+        Returns
+        -------
+        float
+            The original quantity in the new units.
+
+        Examples
+        --------
+        Convert a mass from Units.units to Earth masses
+        >>> units.convert_quantity_to_new_units(
+                mass, 'M', plonk.constants.earth_mass
+            )
+        """
+
+        return self.convert_quantity_to_cgs(quantity, dimension) * unit_factor
 
     def convert_quantity_to_cgs(self, quantity, dimension):
         """
@@ -259,7 +276,18 @@ class Units:
             The value of the quantity in cgs.
         """
         if dimension in self.units._fields:
-            return quantity * getattr(self.units, dimension)
+            cgs_val = getattr(self.units, dimension)
+            if cgs_val is not None:
+                return quantity * cgs_val
+            else:
+                if dimension in _quantities_short_name:
+                    dimension = _quantities_base[
+                        _quantities_short_name.index(dimension)
+                    ]
+                elif dimension in _quantities_long_name:
+                    dimension = _quantities_base[
+                        _quantities_long_name.index(dimension)
+                    ]
         return quantity * self._get_cgs_from_dimension(dimension)
 
     def _get_cgs_from_dimension(self, expression):
