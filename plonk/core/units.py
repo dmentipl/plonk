@@ -326,6 +326,17 @@ class Units:
 def dimensions_as_dict(expression):
     """
     Convert expression like 'L^m M^n T^o' to {'L': m, 'M': n, 'T': o}.
+
+    Parameters
+    ----------
+    expression : str
+        A unit expression like 'L^m M^n T^o'.
+
+    Returns
+    -------
+    dict
+        A dictionary of L, M, T like {'L': m, 'M': n, 'T': o}, where
+        m, n, o are int.
     """
 
     units = list()
