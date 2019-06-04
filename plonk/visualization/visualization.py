@@ -161,44 +161,20 @@ class Visualization:
 
     def __init__(self, dump, render=None, vector=None, **kwargs):
 
-        self._figure_options = dict(DEFAULT_OPTIONS.FigureOptions._asdict())
-        for key, value in kwargs.items():
-            if key in self._figure_options.keys():
-                self._figure_options[key] = value
+        for options in DEFAULT_OPTIONS:
+            options_ = '_' + options + '_options'
+            setattr(self, options_, DEFAULT_OPTIONS[options])
+            for key in dict(kwargs):
+                if key in getattr(self, options_).keys():
+                    getattr(self, options_)[key] = kwargs.pop(key)
 
-        self._extent = kwargs.get('extent')
-        self._size = kwargs.get('size')
+        self._extent = kwargs.pop('extent', None)
+        self._size = kwargs.pop('size', None)
 
-        self._interpolation_options = dict(
-            DEFAULT_OPTIONS.InterpolationOptions._asdict()
-        )
-        for key, value in kwargs.items():
-            if key in self._interpolation_options.keys():
-                self._interpolation_options[key] = value
+        self._render_fraction_max = kwargs.pop('render_fraction_max', None)
 
-        self._render_options = dict(DEFAULT_OPTIONS.RenderOptions._asdict())
-        for key, value in kwargs.items():
-            if key in self._render_options.keys():
-                self._render_options[key] = value
-        self._render_fraction_max = kwargs.get('render_fraction_max')
-
-        self._rotation_options = dict(DEFAULT_OPTIONS.RotationOptions._asdict())
-        for key, value in kwargs.items():
-            if key in self._rotation_options.keys():
-                self._rotation_options[key] = value
-
-        self._position_angle = kwargs.get('position_angle', None)
-        self._inclination = kwargs.get('inclination', None)
-
-        self._units_options = dict(DEFAULT_OPTIONS.UnitsOptions._asdict())
-        for key, value in kwargs.items():
-            if key in self._units_options.keys():
-                self._units_options[key] = value
-
-        self._vector_options = dict(DEFAULT_OPTIONS.VectorOptions._asdict())
-        for key, value in kwargs.items():
-            if key in self._vector_options.keys():
-                self._vector_options[key] = value
+        self._position_angle = kwargs.pop('position_angle', None)
+        self._inclination = kwargs.pop('inclination', None)
 
         self._initialized = False
 
@@ -208,8 +184,8 @@ class Visualization:
         self._header = dump.header
         self._units = dump.units
 
-        self.axis = kwargs.get('axis', None)
-        self.figure = kwargs.get('figure', None)
+        self.axis = kwargs.pop('axis', None)
+        self.figure = kwargs.pop('figure', None)
         if self.axis is None and self.figure is None:
             plt.clf()
             self.figure = plt.gcf()
@@ -235,11 +211,15 @@ class Visualization:
         self._available_particle_types = set(
             np.unique(self._particles.arrays['itype'][:])
         )
-        particle_type = kwargs.get('particle_type', None)
-        particle_types = kwargs.get('particle_types', None)
+        particle_type = kwargs.pop('particle_type', None)
+        particle_types = kwargs.pop('particle_types', None)
         if particle_types is None and particle_type is not None:
             particle_types = particle_type
         self.set_particle_type(particle_types)
+
+        if kwargs:
+            for key in kwargs:
+                warnings.warn(f'Unknown keyword argument: {key}', UserWarning)
 
         self.set_units(
             self._units_options['units'], self._units_options['integrated_z']
@@ -832,8 +812,8 @@ class Visualization:
         self.axis.set_aspect('equal', 'box')
 
     def _init_frame_rotation(self):
-        rotation_axis = self._rotation_options.get('rotation_axis', None)
-        rotation_angle = self._rotation_options.get('rotation_angle', None)
+        rotation_axis = self._rotation_options['rotation_axis']
+        rotation_angle = self._rotation_options['rotation_angle']
         position_angle = self._position_angle
         inclination = self._inclination
         self._rotate_frame = False
@@ -962,7 +942,7 @@ class Visualization:
         """
 
         if title is None:
-            title = self._figure_options.get('title', None)
+            title = self._figure_options['title']
 
         if title is not None:
             self.axis.set_title(title)
