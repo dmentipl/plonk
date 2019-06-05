@@ -2,47 +2,77 @@
 Plot options.
 """
 
-FIGURE_OPTIONS = {
-    'axis': None,
-    'cbar_axis': None,
-    'colorbar': True,
-    'colormap': 'gist_heat',
-    'figure': None,
-    'font_family': 'sans-serif',
-    'font_size': 12,
-    'render_label': None,
-    'title': None,
-}
+from dataclasses import dataclass
+from typing import Any, List
 
-INTERPOLATION_OPTIONS = {
-    'accelerate': False,
-    'cross_section': False,
-    'density_weighted': False,
-    'normalize': False,
-    'number_pixels': (512, 512),
-    'observer_distance': 0.0,
-    'opacity': False,
-    'perspective': False,
-    'slice_position': 0.0,
-}
 
-RENDER_OPTIONS = {
-    'render_scale': 'linear',
-    'render_min': None,
-    'render_max': None,
-}
+@dataclass
+class FigureOptions:
+    axis: Any = None
+    cbar_axis: Any = None
+    colorbar: bool = True
+    colormap: str = 'gist_heat'
+    figure: Any = None
+    font_family: str = 'sans-serif'
+    font_size: int = 12
+    render_label: str = None
+    title: str = None
 
-ROTATION_OPTIONS = {'rotation_axis': None, 'rotation_angle': None}
 
-UNITS_OPTIONS = {'units': None, 'integrated_z': None}
+@dataclass
+class InterpolationOptions:
+    accelerate: bool = False
+    cross_section: bool = False
+    density_weighted: bool = False
+    normalize: bool = False
+    number_pixels: tuple = (512, 512)
+    observer_distance: float = 0.0
+    opacity: bool = False
+    perspective: bool = False
+    slice_position: float = 0.0
 
-VECTOR_OPTIONS = {'stream': False, 'stride': 25, 'vector_color': 'black'}
 
-DEFAULT_OPTIONS = {
-    'figure': FIGURE_OPTIONS,
-    'interpolation': INTERPOLATION_OPTIONS,
-    'render': RENDER_OPTIONS,
-    'rotation': ROTATION_OPTIONS,
-    'units': UNITS_OPTIONS,
-    'vector': VECTOR_OPTIONS,
-}
+@dataclass
+class RenderOptions:
+    render_scale: str = 'linear'
+    render_min: float = None
+    render_max: float = None
+
+
+@dataclass
+class RotationOptions:
+    rotation_axis: List[float] = None
+    rotation_angle: float = None
+
+
+@dataclass
+class UnitsOptions:
+    units: Any = None
+    integrated_z: Any = None
+
+
+@dataclass
+class VectorOptions:
+    stream: bool = False
+    stride: int = 25
+    vector_color: str = 'black'
+
+
+@dataclass
+class PlotOptions:
+    figure: Any
+    interpolation: Any
+    render: Any
+    rotation: Any
+    units: Any
+    vector: Any
+
+
+DEFAULT_OPTIONS = PlotOptions(
+    FigureOptions(),
+    InterpolationOptions(),
+    RenderOptions(),
+    RotationOptions(),
+    UnitsOptions(),
+    VectorOptions(),
+)
