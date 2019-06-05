@@ -18,9 +18,7 @@ from ..core.constants import constants
 from ..core.particles import I_GAS
 from ..core.utils import normalize_vector, rotate_vector_arbitrary_axis
 from .interpolation import scalar_interpolation, vector_interpolation
-from .options import (DEFAULT_OPTIONS, FigureOptions, InterpolationOptions,
-                      PlotOptions, RenderOptions, RotationOptions,
-                      UnitsOptions, VectorOptions)
+from .options import DEFAULT_OPTIONS, PlotOptions
 
 
 class Visualization:
@@ -163,17 +161,10 @@ class Visualization:
 
     def __init__(self, dump, render=None, vector=None, **kwargs):
 
-        self.options = PlotOptions(
-            FigureOptions(),
-            InterpolationOptions(),
-            RenderOptions(),
-            RotationOptions(),
-            UnitsOptions(),
-            VectorOptions(),
-        )
+        self._options = PlotOptions()
         options_labels = DEFAULT_OPTIONS.__dataclass_fields__
         for options in options_labels:
-            sub_options = getattr(self.options, options)
+            sub_options = getattr(self._options, options)
             for key in dict(kwargs):
                 if key in getattr(sub_options, '__dataclass_fields__'):
                     setattr(sub_options, key, kwargs.pop(key))
@@ -232,7 +223,7 @@ class Visualization:
                 warnings.warn(f'Unknown keyword argument: {key}', UserWarning)
 
         self.set_units(
-            self.options.units.units, self.options.units.integrated_z
+            self._options.units.units, self._options.units.integrated_z
         )
         self._init_frame_rotation()
         self._init_image_size()
@@ -322,7 +313,7 @@ class Visualization:
     @property
     def _interpolation_weights(self):
         """Interpolation weights."""
-        if self.options.interpolation.density_weighted:
+        if self._options.interpolation.density_weighted:
             return np.array(self._particle_mass / self._h ** 2)
         return np.full_like(self._h, 1 / self._header['hfact'])
 
@@ -433,7 +424,7 @@ class Visualization:
             plots.
         """
         self._new_units = units
-        self.options.units.integrated_z = integrated_z
+        self._options.units.integrated_z = integrated_z
         if self._initialized:
             self._make_plot()
 
@@ -453,12 +444,12 @@ class Visualization:
 
         if render_scale == 'log':
             norm = colors.SymLogNorm(
-                1e-1 * self.options.render.render_max, clip=True
+                1e-1 * self._options.render.render_max, clip=True
             )
         elif render_scale == 'linear':
             norm = colors.Normalize(
-                vmin=self.options.render.render_min,
-                vmax=self.options.render.render_max,
+                vmin=self._options.render.render_min,
+                vmax=self._options.render.render_max,
                 clip=True,
             )
         else:
@@ -495,14 +486,14 @@ class Visualization:
         """
         if vmin is not None and vmax is not None:
             self.image.set_clim(vmin=vmin, vmax=vmax)
-            self.options.render.render_min = vmin
-            self.options.render.render_max = vmax
+            self._options.render.render_min = vmin
+            self._options.render.render_max = vmax
         if vmin is not None:
             self.image.set_clim(vmin=vmin)
-            self.options.render.render_min = vmin
+            self._options.render.render_min = vmin
         if vmax is not None:
             self.image.set_clim(vmax=vmax)
-            self.options.render.render_max = vmax
+            self._options.render.render_max = vmax
 
     def set_particle_type(self, particle_types):
         """
@@ -588,7 +579,7 @@ class Visualization:
 
     def _render_image(self):
 
-        self._render_label = self.options.figure.render_label
+        self._render_label = self._options.figure.render_label
         if isinstance(self._render, str):
             if self._render_label is None:
                 self._render_label = self._render
@@ -669,26 +660,26 @@ class Visualization:
             self._particle_mass,
             self._extent[:2],
             self._extent[2:],
-            **self.options.interpolation.__dict__,
-            **self.options.units.__dict__,
+            **self._options.interpolation.__dict__,
+            **self._options.units.__dict__,
         )
 
         self._render_image_matplotlib(image_data)
 
     def _render_image_matplotlib(self, image_data):
 
-        if self.options.render.render_max is None:
-            self.options.render.render_max = image_data.max()
+        if self._options.render.render_max is None:
+            self._options.render.render_max = image_data.max()
         if self._render_fraction_max is not None:
-            self.options.render.render_max = (
+            self._options.render.render_max = (
                 image_data.max() * self._render_fraction_max
             )
-        if self.options.render.render_min is None:
-            self.options.render.render_min = image_data.min()
+        if self._options.render.render_min is None:
+            self._options.render.render_min = image_data.min()
 
-        self.set_render_scale(self.options.render.render_scale)
+        self.set_render_scale(self._options.render.render_scale)
 
-        self._cmap = self.options.figure.colormap
+        self._cmap = self._options.figure.colormap
 
         self.image = self.axis.imshow(
             image_data,
@@ -698,9 +689,9 @@ class Visualization:
             cmap=self._cmap,
         )
 
-        self._cax = self.options.figure.cbar_axis
+        self._cax = self._options.figure.cbar_axis
         if not hasattr(self, 'colorbar'):
-            if self.options.figure.colorbar:
+            if self._options.figure.colorbar:
                 self._make_colorbar()
             else:
                 self.colorbar = None
@@ -774,8 +765,8 @@ class Visualization:
             vector_data,
             self._extent[:2],
             self._extent[2:],
-            **self.options.interpolation.__dict__,
-            **self.options.units.__dict__,
+            **self._options.interpolation.__dict__,
+            **self._options.units.__dict__,
         )
 
         self._render_vector_matplotlib(vector_data)
@@ -790,14 +781,14 @@ class Visualization:
             np.linspace(*_yrange, len(yvector_data)),
         )
 
-        vector_color = self.options.vector.vector_color
+        vector_color = self._options.vector.vector_color
         if self._render:
             vector_color = 'white'
-        stride = self.options.vector.stride
+        stride = self._options.vector.stride
 
         self.stream = None
         self.quiver = None
-        if self.options.vector.stream:
+        if self._options.vector.stream:
             self.stream = self.axis.streamplot(
                 X[::stride, ::stride],
                 Y[::stride, ::stride],
@@ -822,8 +813,8 @@ class Visualization:
         self.axis.set_aspect('equal', 'box')
 
     def _init_frame_rotation(self):
-        rotation_axis = self.options.rotation.rotation_axis
-        rotation_angle = self.options.rotation.rotation_angle
+        rotation_axis = self._options.rotation.rotation_axis
+        rotation_angle = self._options.rotation.rotation_angle
         position_angle = self._position_angle
         inclination = self._inclination
         self._rotate_frame = False
@@ -862,8 +853,8 @@ class Visualization:
         if inclination is not None and position_angle is None:
             raise ValueError('Must specify position_angle')
 
-        self.options.rotation.rotation_axis = rotation_axis
-        self.options.rotation.rotation_angle = rotation_angle
+        self._options.rotation.rotation_axis = rotation_axis
+        self._options.rotation.rotation_angle = rotation_angle
 
         if self._rotate_frame:
             self.rotate_frame(rotation_axis, rotation_angle)
@@ -885,22 +876,22 @@ class Visualization:
         """
 
         if (
-            self.options.rotation.rotation_axis is not None
-            and self.options.rotation.rotation_angle is not None
+            self._options.rotation.rotation_axis is not None
+            and self._options.rotation.rotation_angle is not None
         ):
             if (
                 np.all(
                     np.array(rotation_axis)
-                    == self.options.rotation.rotation_axis
+                    == self._options.rotation.rotation_axis
                 )
-                and rotation_angle == self.options.rotation.rotation_angle
+                and rotation_angle == self._options.rotation.rotation_angle
             ):
                 print(f'Frame already has the specified rotation')
                 return
 
         if rotation_axis is not None and rotation_angle is not None:
-            self.options.rotation.rotation_axis = rotation_axis
-            self.options.rotation.rotation_angle = rotation_angle
+            self._options.rotation.rotation_axis = rotation_axis
+            self._options.rotation.rotation_angle = rotation_angle
             self._rotate_frame = True
         else:
             raise ValueError('Must specify by axis and angle for rotation')
@@ -952,14 +943,14 @@ class Visualization:
         """
 
         if title is None:
-            title = self.options.figure.title
+            title = self._options.figure.title
 
         if title is not None:
             self.axis.set_title(title)
 
     def options_todict(self):
         return {
-            key: value.__dict__ for key, value in self.options.__dict__.items()
+            key: value.__dict__ for key, value in self._options.__dict__.items()
         }
 
 
