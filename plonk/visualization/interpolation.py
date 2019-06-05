@@ -17,8 +17,6 @@ except ImportError:
         'Cannot import Splash interpolation routines. See documentation.'
     )
 
-# TODO: add docs
-
 
 def scalar_interpolation(
     positions,
