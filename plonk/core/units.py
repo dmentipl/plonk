@@ -95,20 +95,11 @@ class Units:
     def __init__(self, length=None, mass=None, time=None, **kwargs):
 
         if length is None:
-            if self.length is not None:
-                length = self.length
-            else:
-                length = 'cm'
+            length = 'cm'
         if mass is None:
-            if self.mass is not None:
-                mass = self.mass
-            else:
-                mass = 'g'
+            mass = 'g'
         if time is None:
-            if self.time is not None:
-                time = self.time
-            else:
-                time = 's'
+            time = 's'
 
         if isinstance(length, str):
             length_str = length.lower()
@@ -253,7 +244,7 @@ class Units:
             )
         """
 
-        return self.convert_quantity_to_cgs(quantity, dimension) * unit_factor
+        return self.convert_quantity_to_cgs(quantity, dimension) / unit_factor
 
     def convert_quantity_to_cgs(self, quantity, dimension):
         """
@@ -297,30 +288,45 @@ class Units:
             val *= getattr(self.units, key) ** d[key]
         return val
 
-    def _units_same(self, a, b):
-        if a in _quantities_short_name:
-            a = _quantities_base[_quantities_short_name.index(a)]
-        elif a in _quantities_long_name:
-            a = _quantities_base[_quantities_long_name.index(a)]
-        elif a in _quantities_base:
-            pass
-        elif dimensions_as_dict(a):
-            pass
-        else:
-            raise ValueError(f'{a} unknown dimension/unit')
 
-        if b in _quantities_short_name:
-            b = _quantities_base[_quantities_short_name.index(b)]
-        elif b in _quantities_long_name:
-            b = _quantities_base[_quantities_long_name.index(b)]
-        elif b in _quantities_base:
-            pass
-        elif dimensions_as_dict(b):
-            pass
-        else:
-            raise ValueError(f'{b} unknown dimension/unit')
+def is_dimension_same(self, a, b):
+    """
+    Check if two string representations of dimensions are the same.
 
-        return dimensions_as_dict(a) == dimensions_as_dict(b)
+    For example, 'velocity' is equivalent to 'L T^-1', as is 'T^-1 L'.
+
+    Parameters
+    ----------
+    a : str
+        A string representation of dimensions , e.g. 'velocity' or
+        'L T^-1'.
+    b : str
+        A string representation of dimensions , e.g. 'velocity' or
+        'L T^-1'.
+    """
+    if a in _quantities_short_name:
+        a = _quantities_base[_quantities_short_name.index(a)]
+    elif a in _quantities_long_name:
+        a = _quantities_base[_quantities_long_name.index(a)]
+    elif a in _quantities_base:
+        pass
+    elif dimensions_as_dict(a):
+        pass
+    else:
+        raise ValueError(f'{a} unknown dimension/unit')
+
+    if b in _quantities_short_name:
+        b = _quantities_base[_quantities_short_name.index(b)]
+    elif b in _quantities_long_name:
+        b = _quantities_base[_quantities_long_name.index(b)]
+    elif b in _quantities_base:
+        pass
+    elif dimensions_as_dict(b):
+        pass
+    else:
+        raise ValueError(f'{b} unknown dimension/unit')
+
+    return dimensions_as_dict(a) == dimensions_as_dict(b)
 
 
 def dimensions_as_dict(expression):

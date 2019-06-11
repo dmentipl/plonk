@@ -16,6 +16,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from ..core.constants import constants
 from ..core.particles import I_GAS
+from ..core.units import is_dimension_same
 from ..core.utils import normalize_vector, rotate_vector_arbitrary_axis
 from .interpolation import scalar_interpolation, vector_interpolation
 from .options import DEFAULT_OPTIONS, PlotOptions
@@ -288,7 +289,7 @@ class Visualization:
         if self._new_units is not None:
             dimension = self._particles.dimensions[quantity]
             for u in self._new_units.units._fields:
-                if self._units._units_same(u, dimension):
+                if is_dimension_same(u, dimension):
                     dimension = u
             return self._units.convert_quantity_to_new_units(
                 self._particles.arrays[quantity], dimension, self._new_units
@@ -301,7 +302,7 @@ class Visualization:
         if self._new_units is not None:
             dimension = self._dump.extra_quantity(quantity)[1]
             for u in self._new_units.units._fields:
-                if self._units._units_same(u, dimension):
+                if is_dimension_same(u, dimension):
                     dimension = u
             return self._units.convert_quantity_to_new_units(
                 self._dump.extra_quantity(quantity)[0],
