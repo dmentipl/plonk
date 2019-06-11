@@ -30,16 +30,15 @@ def disc_analysis(
     ----------
     dump : Dump
         Dump object.
-
     radius_in : float
         Inner disc radius for radial binning.
-
     radius_out : float
         Outer disc radius for radial binning.
 
+    Other parameters
+    ----------------
     number_radial_bins : int (default 200)
         Number of radial bins.
-
     sink_index : int (default 1)
         Index (counting from 1) of the sink representing the central
         star.
@@ -87,7 +86,7 @@ def _calculate_radially_binned_quantities(
 ):
 
     particles = dump.particles.to_structured_array()
-    particle_masses = dump.particles.mass
+    particle_masses = dump.mass
 
     radius = _cylindrical_radius(particles['xyz'])
 
@@ -102,7 +101,9 @@ def _calculate_radially_binned_quantities(
     stellar_mass = dump.sinks.arrays['m'][sink_index - 1]
     gravitational_parameter = gravitational_constant * stellar_mass
     eccentricity = _eccentricity(
-        particles['xyz'], particles['vxyz'], gravitational_parameter
+        particles['xyz'],
+        particles['vxyz'],
+        gravitational_parameter=gravitational_parameter,
     )
 
     averages = pd.DataFrame(radial_bins, columns=['R'])
@@ -132,9 +133,10 @@ def _calculate_radially_binned_quantities(
     radius_left = radial_bins - radial_bin_width / 2
     radius_right = radial_bins + radial_bin_width / 2
 
+    h_mask = particles['h'] > 0.0
     masks = [
-        (radius >= radius_left) & (radius <= radius_right)
-        for radius_left, radius_right in zip(radius_left, radius_right)
+        (radius >= rl) & (radius <= rr) & h_mask
+        for rl, rr in zip(radius_left, radius_right)
     ]
 
     for index, mask in enumerate(masks):
