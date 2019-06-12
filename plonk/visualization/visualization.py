@@ -19,7 +19,7 @@ from ..core.particles import I_GAS
 from ..core.units import is_dimension_same
 from ..core.utils import normalize_vector, rotate_vector_arbitrary_axis
 from .interpolation import scalar_interpolation, vector_interpolation
-from .options import DEFAULT_OPTIONS, PlotOptions
+from .options import PlotOptions
 
 
 class Visualization:
@@ -163,7 +163,7 @@ class Visualization:
     def __init__(self, dump, render=None, vector=None, **kwargs):
 
         self._options = PlotOptions()
-        options_labels = DEFAULT_OPTIONS.__dataclass_fields__
+        options_labels = self._options.__dataclass_fields__.keys()
         for options in options_labels:
             sub_options = getattr(self._options, options)
             for key in dict(kwargs):
