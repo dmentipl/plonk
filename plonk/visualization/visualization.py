@@ -186,8 +186,8 @@ class Visualization:
         self._header = dump.header
         self._units = dump.units
 
-        self.axis = kwargs.pop('axis', None)
-        self.figure = kwargs.pop('figure', None)
+        self.axis = self._options.figure.axis
+        self.figure = self._options.figure.figure
         if self.axis is None and self.figure is None:
             plt.clf()
             self.figure = plt.gcf()
