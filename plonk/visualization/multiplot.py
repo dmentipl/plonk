@@ -180,8 +180,8 @@ class MultiPlot:
                     axis=axis
                 )
 
-                vmin[idxi, idxj] = plot._vmin
-                vmax[idxi, idxj] = plot._vmax
+                vmin[idxi, idxj] = plot._options.render.render_min
+                vmax[idxi, idxj] = plot._options.render.render_max
                 self.plots[idxi, idxj] = plot
 
         if cbar_mode == 'single':
