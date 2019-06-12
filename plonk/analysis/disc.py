@@ -152,7 +152,7 @@ def _calculate_radially_binned_quantities(
             continue
 
         averages['sigma'].iloc[index] = (
-            np.sum(n_particles_in_bin * pmass) / surface_area[index]
+            np.sum(pmass) / surface_area[index]
         )
 
         averages['h'].iloc[index] = part['h'].mean()
