@@ -51,6 +51,7 @@ class Arrays:
     ):
 
         self._arrays_handle = file_handle[arrays_label]
+        self._arrays_label = arrays_label
 
         _CAN_COMPUTE_DENSITY_LABELS = ['fluid', 'sph fluid', 'sph_fluid']
         self._can_compute_density = False
@@ -76,6 +77,12 @@ class Arrays:
             self._cache_arrays = False
         else:
             self.cache_arrays()
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        return f'<plonk.Arrays: "{self._arrays_label}">'
 
     @property
     def arrays(self):
