@@ -243,8 +243,8 @@ class Visualization:
             if args[0]._rotate_frame:
                 value = rotate_vector_arbitrary_axis(
                     func(*args, **kwargs),
-                    args[0]._rotation_options['rotation_axis'],
-                    args[0]._rotation_options['rotation_angle'],
+                    args[0]._options.rotation.rotation_axis,
+                    args[0]._options.rotation.rotation_angle,
                 )
             else:
                 value = func(*args, **kwargs)
