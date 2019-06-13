@@ -860,7 +860,7 @@ class Visualization:
         if self._rotate_frame:
             self.rotate_frame(rotation_axis, rotation_angle)
 
-    def rotate_frame(self, rotation_axis, rotation_angle):
+    def rotate_frame(self, axis, angle):
         """
         Rotate viewing frame.
 
@@ -870,9 +870,9 @@ class Visualization:
 
         Parameters
         ----------
-        rotation_axis : list or numpy.ndarray
+        axis : list or numpy.ndarray
             Rotation axis for frame rotation as a vector [x, y, z].
-        rotation_angle : float
+        angle : float
             Rotation angle in radians for frame rotation.
         """
 
@@ -882,26 +882,26 @@ class Visualization:
         ):
             if (
                 np.all(
-                    np.array(rotation_axis)
+                    np.array(axis)
                     == self._options.rotation.rotation_axis
                 )
-                and rotation_angle == self._options.rotation.rotation_angle
+                and angle == self._options.rotation.rotation_angle
             ):
                 print(f'Frame already has the specified rotation')
                 return
 
-        if rotation_axis is not None and rotation_angle is not None:
-            self._options.rotation.rotation_axis = rotation_axis
-            self._options.rotation.rotation_angle = rotation_angle
+        if axis is not None and angle is not None:
+            self._options.rotation.rotation_axis = axis
+            self._options.rotation.rotation_angle = angle
             self._rotate_frame = True
         else:
             raise ValueError('Must specify by axis and angle for rotation')
 
         print(
-            f'Rotating {rotation_angle*180/np.pi:.0f} deg around '
-            f'[{rotation_axis[0]:.2f},'
-            f' {rotation_axis[1]:.2f},'
-            f' {rotation_axis[2]:.2f}]'
+            f'Rotating {angle*180/np.pi:.0f} deg around '
+            f'[{axis[0]:.2f},'
+            f' {axis[1]:.2f},'
+            f' {axis[2]:.2f}]'
         )
 
         if self._initialized:
