@@ -206,8 +206,8 @@ class Units:
         Convert a mass to new units.
         >>> new_units = Units(umass='earth_mass')
         >>> units.convert_quantity_to_new_units(
-                mass, 'M', new_units
-            )
+        ...     mass, 'M', new_units
+        ... )
         """
 
         return self.convert_quantity_to_cgs(
@@ -240,8 +240,8 @@ class Units:
         --------
         Convert a mass from Units.units to Earth masses
         >>> units.convert_quantity_to_new_units(
-                mass, 'M', plonk.constants.earth_mass
-            )
+        ...     mass, 'M', plonk.constants.earth_mass
+        ... )
         """
 
         return self.convert_quantity_to_cgs(quantity, dimension) / unit_factor

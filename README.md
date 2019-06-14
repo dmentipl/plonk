@@ -39,10 +39,10 @@ To visualize a single dump file:
 >>> dump = plonk.Dump('disc_00000.h5')
 
 >>> plonk.Visualization(
->>>     dump=dump,
->>>     render='density',
->>>     extent=[-200, 200, -200, 200]
->>>     )
+...     dump=dump,
+...     render='density',
+...     extent=[-200, 200, -200, 200]
+...     )
 ```
 
 For further usage, see `examples` folder and documentation. The code is internally documented with docstrings. Try, for example, `help(plonk.Dump)` or `help(plonk.Visualization)`.

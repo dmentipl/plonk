@@ -53,9 +53,9 @@ class MultiPlot:
 
     >>> dumps = [dump for dump in simulation.dumps]
     >>> options = {
-            'render': 'density',
-            'extent': [-100, 100, -100, 100],
-        }
+    ...     'render': 'density',
+    ...     'extent': [-100, 100, -100, 100],
+    ... }
     >>> multiplot = MultiPlot(dumps, options)
 
     Rendering multiple quantites on a single dump.

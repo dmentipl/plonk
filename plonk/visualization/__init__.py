@@ -14,9 +14,9 @@ Rendering density on a Dump.
 Go forwards and backwards through visualizations in a Simulation.
 
 >>> viz_iter = VisualizationIterator(
-        dumps=simulation.dumps,
-        render=render
-    )
+...     dumps=simulation.dumps,
+...     render=render
+... )
 >>> viz_iter.next()
 >>> viz_iter.previous()
 
@@ -24,9 +24,9 @@ Density rendering multiple dumps from plonk.Simuation.
 
 >>> dumps = np.array([dump for dump in simulation.dumps])
 >>> options = {
-        'render': 'density',
-        'extent': [-100, 100, -100, 100],
-    }
+...     'render': 'density',
+...     'extent': [-100, 100, -100, 100],
+... }
 >>> multiplot = MultiPlot(dumps, **options)
 
 Notes

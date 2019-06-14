@@ -137,9 +137,9 @@ class Visualization:
     Rendering scalar fields.
     >>> viz = plonk.Visualization(dump, render='density')
     >>> viz = plonk.Visualization(
-    >>>     dump,
-    >>>     render='sqrt(vx**2 + vy**2) - sqrt(G*M/R)'
-    >>>     )
+    ...     dump,
+    ...     render='sqrt(vx**2 + vy**2) - sqrt(G*M/R)'
+    ...     )
     >>> viz = plonk.Visualization(dump, render=some_numpy_array)
 
     Plotting vector fields.
@@ -971,8 +971,8 @@ class VisualizationIterator:
     Go forwards and backwards through visualizations.
 
     >>> viz_iter = VisualizationIterator(
-            dumps=sim.dumps, render=render,
-            )
+    ...     dumps=sim.dumps, render=render,
+    ...     )
     >>> viz_iter.next()
     >>> viz_iter.previous()
     """
