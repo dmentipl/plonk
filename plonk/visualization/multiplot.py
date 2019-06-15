@@ -9,8 +9,6 @@ from mpl_toolkits.axes_grid1 import AxesGrid
 from ..core.dump import Dump
 from .visualization import Visualization
 
-SCALE = 3.0
-
 
 class MultiPlot:
     """
@@ -38,13 +36,16 @@ class MultiPlot:
     xy_factor : float, optional (default 1.0)
         Figure width/height ratio. Greater than unity makes width wider,
         and height shorter. Useful for tweaking plots.
-    cbar_location : str
-        Colorbar position: either 'top, 'bottom', 'left' or 'right'.
     axes_pad : float
         Padding between axes.
+    cbar_mode : str
+        Colorbar mode: 'each' for one colorbar per plot or 'single' for
+        one common colorbar for all plots.
+    cbar_location : str
+        Colorbar position: either 'top, 'bottom', 'left' or 'right'.
     cbar_pad : float
         Padding between axes and colorbar.
-    colorbar_label : str
+    cbar_label : str
         The label for the colorbar.
 
     Examples
@@ -75,16 +76,12 @@ class MultiPlot:
         shape=None,
         scale=None,
         xy_factor=None,
-        cbar_location=None,
         axes_pad=None,
+        cbar_mode=None,
+        cbar_location=None,
         cbar_pad=None,
-        colorbar_label=None,
+        cbar_label=None,
     ):
-        if scale is None:
-            scale = SCALE
-
-        if xy_factor is None:
-            xy_factor = 1.0
 
         if isinstance(dumps, Dump):
             number_dumps = 1
@@ -103,17 +100,25 @@ class MultiPlot:
                 'one dump and multiple sets of options.'
             )
 
+        _scale = 3.0
+        _xy_factor = 1.0
         if number_options > 1:
-            cbar_mode = 'each'
+            _cbar_mode = 'each'
             _cbar_location = 'top'
             _axes_pad = 0.20
             _cbar_pad = 0.20
         else:
-            cbar_mode = 'single'
+            _cbar_mode = 'single'
             _cbar_location = 'right'
             _axes_pad = 0.05
             _cbar_pad = 0.05
 
+        if scale is None:
+            scale = _scale
+        if xy_factor is None:
+            xy_factor = _xy_factor
+        if cbar_mode is None:
+            cbar_mode = _cbar_mode
         if cbar_location is None:
             cbar_location = _cbar_location
         if axes_pad is None:
@@ -195,8 +200,8 @@ class MultiPlot:
             self.colorbar = self.grid.cbar_axes[0].colorbar(
                 self.plots[0, 0].image
             )
-            if colorbar_label is not None:
-                self.colorbar.set_label_text(colorbar_label)
+            if cbar_label is not None:
+                self.colorbar.set_label_text(cbar_label)
 
     def set_render_scale(self, scale):
         """
