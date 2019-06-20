@@ -52,7 +52,7 @@ class Evolution:
 
     def __init__(self, filenames):
 
-        if isinstance(filenames, str):
+        if isinstance(filenames, (str, Path)):
             filenames = [filenames]
 
         self.file_paths = list()
@@ -111,7 +111,7 @@ class Evolution:
     def _get_data(self):
 
         times = list()
-        for filename in self.file_names:
+        for filename in self.file_paths:
             times.append(np.loadtxt(filename, usecols=0))
 
         final_row_index = [
@@ -122,9 +122,9 @@ class Evolution:
 
         arr = [
             np.loadtxt(filename)[: final_row_index[idx]]
-            for idx, filename in enumerate(self.file_names[:-1])
+            for idx, filename in enumerate(self.file_paths[:-1])
         ]
-        arr.append(np.loadtxt(self.file_names[-1]))
+        arr.append(np.loadtxt(self.file_paths[-1]))
         arr = np.concatenate(arr)
 
         return np.core.records.fromarrays(arr.T, dtype=dtype)
