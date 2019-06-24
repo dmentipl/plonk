@@ -34,11 +34,9 @@ cmdclass = dict()
 cmdclass.update({'build_ext': build_ext})
 include_dirs = [get_include()]
 
-install_requires = ['cython', 'h5py', 'matplotlib', 'numpy', 'pandas']
+install_requires = ['cython', 'h5py', 'matplotlib', 'numpy', 'pandas', 'sympy']
 
-description = (
-    'Smoothed particle hydrodynamics analysis and visualization with Python.'
-)
+description = 'Smoothed particle hydrodynamics analysis and visualization with Python.'
 
 setup(
     name='Plonk',
@@ -47,7 +45,13 @@ setup(
     author_email='d.mentiplay@gmail.com',
     url='https://github.com/dmentipl/plonk',
     description=description,
-    packages=['plonk', 'plonk.analysis', 'plonk.tests', 'plonk.visualization'],
+    packages=[
+        'plonk',
+        'plonk.analysis',
+        'plonk.core',
+        'plonk.tests',
+        'plonk.visualization',
+    ],
     license='MIT',
     install_requires=install_requires,
     cmdclass=cmdclass,
