@@ -11,7 +11,7 @@ If you want to contribute to Plonk you can fork the repository, clone it, and us
 
 There is also a compiled Fortran component to Plonk which is derived from Splash. This needs to be compiled during development::
 
- make
+ make install
  python setup.py build_ext --inplace
 
 You need to make sure the required dependencies are installed (via Conda). To satisfy these requirements there is a ``environment.yml`` file. You can set up a Conda environment for development and install Plonk in it::
