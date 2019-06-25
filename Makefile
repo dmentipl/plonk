@@ -5,10 +5,15 @@
 # Daniel Mentiplay, 2019
 #
 
+.PHONY: conda install default clean
+
 default:
 	@cd splash/fortran; $(MAKE) $(MAKECMDGOALS)
 
-%::
+install:
+	@cd splash/fortran; $(MAKE) $(MAKECMDGOALS)
+
+conda:
 	@cd splash/fortran; $(MAKE) $(MAKECMDGOALS)
 
 clean:

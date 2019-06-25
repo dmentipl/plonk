@@ -3,15 +3,18 @@ package:
   version: '0.1'
 
 source:
-  path: ..
+  git_url: https://github.com/dmentipl/plonk
 
 requirements:
   build:
+    - {{ compiler('fortran') }}
+    - git
+    - make
+  host:
     - python=3
     - cython
     - numpy
     - setuptools
-
   run:
     - python=3
     - h5py
@@ -19,3 +22,12 @@ requirements:
     - numpy
     - pandas
     - sympy
+
+about:
+  home: https://github.com/dmentipl/plonk
+  license: MIT
+  license_file: LICENSE
+  description: |
+    Smoothed particle hydrodynamics analysis and visualization with Python.
+  doc_url: https://plonk.readthedocs.io
+  dev_url: https://github.com/dmentipl/plonk

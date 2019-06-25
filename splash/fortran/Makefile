@@ -1,12 +1,22 @@
 #
 # Compile Splash Fortran source to produce libsplash.so.
-# And copy the library to INSTALL_DIR.
+#
+# The main targets are:
+#   - libsplash: to build the shared object library
+#   - install: to build and install the library to INSTALL_DIR
+#   - conda: to build the library when building the Plonk Conda package
 #
 # Daniel Mentiplay, 2019
 #
 
+# Name of the shared object library
 LIBSPLASH = libsplash.so
 
+# Install directory for Anaconda
+# Specify INSTALL_DIR if you want to install elsewhere
+ifeq (X$(CONDA_PREFIX), X)
+CONDA_PREFIX = $(HOME)/anaconda
+endif
 INSTALL_DIR = $(CONDA_PREFIX)/lib
 
 UNAME = ${shell uname}
@@ -26,7 +36,7 @@ endif
 
 ifeq ($(DEBUG), yes)
     FCFLAGS += -Wall -Wextra -pedantic -g -frange-check -fcheck=all \
-			   -fbacktrace -finit-real=NaN
+               -fbacktrace -finit-real=NaN
 endif
 
 ifeq ($(OPENMP), yes)
@@ -46,19 +56,22 @@ FSOURCES = sort.f90 asciiutils.f90 kernels.f90 timing.f90 globaldata.f90 \
 OBJECTS1 = $(FSOURCES:.f90=.o)
 OBJECTS  = $(OBJECTS1:.F90=.o)
 
-default: install
+default: libsplash
 
+.PHONY: print
 print:
 	@echo
 	@echo " Compiling Splash modules"
 	@echo
 
+.PHONY: libsplash
 libsplash: print $(OBJECTS)
 	@echo
 	@echo " Linking Splash into a shared object library"
 	@echo
 	$(FC) $(FCFLAGS) $(FLFLAGS) $(OBJECTS) -o $(LIBSPLASH)
 
+.PHONY: install
 install: libsplash
 	@echo
 	@echo " Copying libsplash.so to INSTALL_DIR=$(INSTALL_DIR)"
@@ -70,6 +83,14 @@ ifeq ($(UNAME), Darwin)
 	@echo
 	install_name_tool -id @rpath/$(LIBSPLASH) $(INSTALL_DIR)/$(LIBSPLASH)
 endif
+
+.PHONY: conda
+conda: libsplash
+	@echo
+	@echo " Copying libsplash.so to PREFIX/lib=$(PREFIX)/lib"
+	@echo " Only use this Makefile target for building the Conda package"
+	@echo
+	cp -f $(LIBSPLASH) $(PREFIX)/lib
 
 .PHONY: clean
 clean:
