@@ -71,19 +71,19 @@ conda install plonk
 
 This will install the required dependencies. For details on Conda, see https://docs.conda.io/.
 
-Contribute
-----------
+Contributing
+------------
 
-*Any contributions are welcome.*
+*Contributions are welcome.*
 
-If you want to contribute to Plonk you can fork the repository, clone it, and use Conda to link to your local copy of the code.
+If you want to contribute to Plonk you should fork the repository. You can then clone it to your local machine, and use Conda to link to your local copy of the code.
 
 ```bash
 git clone https://github.com/<user>/plonk
 cd plonk && conda develop .
 ```
 
-However, there is also a compiled Fortran component to Plonk which is derived from Splash. This needs to be compiled during development.
+There is a compiled Fortran component to Plonk which is derived from Splash. You must compile this before development. This requires a Fortran compiler, e.g. gfortran. The following compiles Splash into a shared object library, and then uses Cython to build a Python interface to that library.
 
 ```bash
 make install
@@ -98,10 +98,19 @@ conda env create --name plonk_dev --file environment.yml
 conda activate plonk_dev
 ```
 
-and then follow the instructions above. (To leave the development environment: `conda deactivate`).
+and then follow the instructions above. (To leave the development environment: `conda deactivate`.)
 
 After you have committed and pushed your changes to your forked repository you
 can issue a pull request: https://github.com/dmentipl/plonk/pull/new/master.
+
+### Code style
+
+We follow [PEP 8](https://www.python.org/dev/peps/pep-0008/) for code style, and use [Black](https://github.com/python/black) and [isort](https://github.com/timothycrosley/isort) for auto-formatting. To use Black on your changes run the following from the main repository directory:
+
+```bash
+isort plonk/**/*.py
+black --skip-string-normalization plonk
+```
 
 To do
 -----
