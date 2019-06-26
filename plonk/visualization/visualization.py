@@ -223,9 +223,7 @@ class Visualization:
             for key in kwargs:
                 warnings.warn(f'Unknown keyword argument: {key}', UserWarning)
 
-        self.set_units(
-            self._options.units.units, self._options.units.integrated_z
-        )
+        self.set_units(self._options.units.units, self._options.units.integrated_z)
         self._init_frame_rotation()
         self._init_image_size()
         self._make_plot()
@@ -305,9 +303,7 @@ class Visualization:
                 if is_dimension_same(u, dimension):
                     dimension = u
             return self._units.convert_quantity_to_new_units(
-                self._dump.extra_quantity(quantity)[0],
-                dimension,
-                self._new_units,
+                self._dump.extra_quantity(quantity)[0], dimension, self._new_units
             )
         return self._dump.extra_quantity(quantity)[0]
 
@@ -386,9 +382,7 @@ class Visualization:
     @_unit_conversion(dimension='L^3 M^-1 T^-2')
     def _G(self):
         return constants.gravitational_constant / (
-            self._units.units.L ** 3
-            / self._units.units.M
-            / self._units.units.T ** 2
+            self._units.units.L ** 3 / self._units.units.M / self._units.units.T ** 2
         )
 
     @_unit_conversion(dimension='M')
@@ -444,9 +438,7 @@ class Visualization:
             render_scale = 'linear'
 
         if render_scale == 'log':
-            norm = colors.SymLogNorm(
-                1e-1 * self._options.render.render_max, clip=True
-            )
+            norm = colors.SymLogNorm(1e-1 * self._options.render.render_max, clip=True)
         elif render_scale == 'linear':
             norm = colors.Normalize(
                 vmin=self._options.render.render_min,
@@ -557,8 +549,7 @@ class Visualization:
         if size is not None:
             if np.all(size == np.abs(self._extent)):
                 print(
-                    'Image window size already = '
-                    f'(-{size}, {size}, -{size}, {size})'
+                    'Image window size already = ' f'(-{size}, {size}, -{size}, {size})'
                 )
                 return
             self._extent = (-size, size, -size, size)
@@ -626,15 +617,10 @@ class Visualization:
                 symbols = sympy.sympify(self._render).free_symbols
                 symbols_as_str = set([str(s) for s in symbols])
                 if not symbols_as_str.issubset(set(symbol_dictionary.keys())):
-                    raise ValueError(
-                        f'Cannot interpret expression: {self._render}'
-                    )
+                    raise ValueError(f'Cannot interpret expression: {self._render}')
                 f = sympy.utilities.lambdify(symbols, self._render, 'numpy')
                 args = tuple(
-                    [
-                        symbol_dictionary[key]()
-                        for key in [str(s) for s in symbols]
-                    ]
+                    [symbol_dictionary[key]() for key in [str(s) for s in symbols]]
                 )
                 render_data = f(*args)
 
@@ -881,10 +867,7 @@ class Visualization:
             and self._options.rotation.rotation_angle is not None
         ):
             if (
-                np.all(
-                    np.array(axis)
-                    == self._options.rotation.rotation_axis
-                )
+                np.all(np.array(axis) == self._options.rotation.rotation_axis)
                 and angle == self._options.rotation.rotation_angle
             ):
                 print(f'Frame already has the specified rotation')
@@ -950,9 +933,7 @@ class Visualization:
             self.axis.set_title(title)
 
     def options_todict(self):
-        return {
-            key: value.__dict__ for key, value in self._options.__dict__.items()
-        }
+        return {key: value.__dict__ for key, value in self._options.__dict__.items()}
 
 
 class VisualizationIterator:

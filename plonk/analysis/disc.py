@@ -4,21 +4,13 @@ import numpy as np
 import pandas as pd
 
 from ..core.constants import constants
-from ..core.particles import (
-    _angular_momentum,
-    _cylindrical_radius,
-    _eccentricity,
-)
+from ..core.particles import _angular_momentum, _cylindrical_radius, _eccentricity
 
 _MIN_PARTICLES_IN_BIN = 5
 
 
 def disc_analysis(
-    dump,
-    radius_in=None,
-    radius_out=None,
-    number_radial_bins=None,
-    sink_index=None,
+    dump, radius_in=None, radius_out=None, number_radial_bins=None, sink_index=None
 ):
     """
     Disc analysis.
@@ -94,9 +86,7 @@ def _calculate_radially_binned_quantities(
     radial_bins = np.linspace(radius_in, radius_out, number_radial_bins)
 
     gravitational_constant = constants.gravitational_constant / (
-        dump.header['udist'] ** 3
-        / dump.header['umass']
-        / dump.header['utime'] ** 2
+        dump.header['udist'] ** 3 / dump.header['umass'] / dump.header['utime'] ** 2
     )
     stellar_mass = dump.sinks.arrays['m'][sink_index - 1]
     gravitational_parameter = gravitational_constant * stellar_mass
@@ -115,19 +105,7 @@ def _calculate_radially_binned_quantities(
 
     averages = averages.reindex(
         columns=averages.columns.tolist()
-        + [
-            'npart',
-            'sigma',
-            'h',
-            'H',
-            'Lx',
-            'Ly',
-            'Lz',
-            '|L|',
-            'tilt',
-            'twist',
-            'e',
-        ]
+        + ['npart', 'sigma', 'h', 'H', 'Lx', 'Ly', 'Lz', '|L|', 'tilt', 'twist', 'e']
     )
 
     radius_left = radial_bins - radial_bin_width / 2
@@ -151,16 +129,14 @@ def _calculate_radially_binned_quantities(
         if n_particles_in_bin < _MIN_PARTICLES_IN_BIN:
             continue
 
-        averages['sigma'].iloc[index] = (
-            np.sum(pmass) / surface_area[index]
-        )
+        averages['sigma'].iloc[index] = np.sum(pmass) / surface_area[index]
 
         averages['h'].iloc[index] = part['h'].mean()
         averages['H'].iloc[index] = part['xyz'][:, 2].std()
 
-        angular_momentum = _angular_momentum(
-            part['xyz'], part['vxyz'], pmass
-        ).mean(axis=0)
+        angular_momentum = _angular_momentum(part['xyz'], part['vxyz'], pmass).mean(
+            axis=0
+        )
 
         averages['Lx'].iloc[index] = angular_momentum[0]
         averages['Ly'].iloc[index] = angular_momentum[1]

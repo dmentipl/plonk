@@ -64,9 +64,7 @@ class Arrays:
         self._number = None
         self._dimensions = None
 
-        self._arrays = {
-            field: self._get_array_handle(field) for field in self.fields
-        }
+        self._arrays = {field: self._get_array_handle(field) for field in self.fields}
 
         if cache_arrays is None:
             cache_arrays = False
@@ -107,9 +105,7 @@ class Arrays:
     def dtype(self):
         """List of array data types."""
         if self._dtype is None:
-            self._dtype = {
-                key: item.dtype for key, item in self._arrays_handle.items()
-            }
+            self._dtype = {key: item.dtype for key, item in self._arrays_handle.items()}
         return self._dtype
 
     @property
@@ -138,9 +134,7 @@ class Arrays:
     def shape(self):
         """List of array shapes."""
         if self._shape is None:
-            self._shape = {
-                key: item.shape for key, item in self._arrays_handle.items()
-            }
+            self._shape = {key: item.shape for key, item in self._arrays_handle.items()}
         return self._shape
 
     def to_structured_array(self):
@@ -280,9 +274,7 @@ class Arrays:
             data = self.arrays['xyz'], self.arrays['vxyz']
             func = _eccentricity
             if 'gravitational_parameter' not in kwargs:
-                raise ValueError(
-                    f'Need gravitational_parameter for eccentricity'
-                )
+                raise ValueError(f'Need gravitational_parameter for eccentricity')
             dimensions = None
 
         if mass is None and require_mass:
@@ -347,9 +339,7 @@ def _specific_angular_momentum(position, velocity):
 
 
 def _specific_angular_momentum_magnitude(position, velocity):
-    return np.linalg.norm(
-        _specific_angular_momentum(position, velocity), axis=1
-    )
+    return np.linalg.norm(_specific_angular_momentum(position, velocity), axis=1)
 
 
 def _angular_momentum(position, velocity, mass):
@@ -359,9 +349,7 @@ def _angular_momentum(position, velocity, mass):
         if mass.ndim == 0:
             return mass * _specific_angular_momentum(position, velocity)
         elif mass.ndim == 1:
-            return mass[:, np.newaxis] * _specific_angular_momentum(
-                position, velocity
-            )
+            return mass[:, np.newaxis] * _specific_angular_momentum(position, velocity)
     raise ValueError('Check inputs, probably mass')
 
 

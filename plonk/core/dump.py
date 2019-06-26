@@ -111,9 +111,7 @@ class Dump(DumpFile):
     def __init__(self, filename, cache_arrays=None):
         super().__init__(filename)
 
-        self._header = {
-            key: val[()] for key, val in self.file_handle['header'].items()
-        }
+        self._header = {key: val[()] for key, val in self.file_handle['header'].items()}
 
         self.units = Units(
             length=self.header['udist'],
@@ -221,9 +219,7 @@ class Dump(DumpFile):
             mu = gravitational_constant * stellar_mass
             kwargs = {'gravitational_parameter': mu}
 
-        return getattr(self, sph_type).extra_quantity(
-            quantity, mass=mass, **kwargs
-        )
+        return getattr(self, sph_type).extra_quantity(quantity, mass=mass, **kwargs)
 
     def _density_from_smoothing_length(self, hfact=1.2):
         """Calculate density from particle mass and smoothing length."""

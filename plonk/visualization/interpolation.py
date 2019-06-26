@@ -13,9 +13,7 @@ import numpy as np
 try:
     from splash import splash
 except ImportError:
-    raise Exception(
-        'Cannot import Splash interpolation routines. See documentation.'
-    )
+    raise Exception('Cannot import Splash interpolation routines. See documentation.')
 
 
 def scalar_interpolation(
@@ -379,7 +377,5 @@ def vector_interpolation(
         )
 
     if integrated_z is not None and projection:
-        return integrated_z * np.stack(
-            (np.array(vecsmoothx), np.array(vecsmoothy))
-        )
+        return integrated_z * np.stack((np.array(vecsmoothx), np.array(vecsmoothy)))
     return np.stack((np.array(vecsmoothx), np.array(vecsmoothy)))

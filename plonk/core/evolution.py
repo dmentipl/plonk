@@ -59,9 +59,7 @@ class Evolution:
         self.file_names = list()
         for filename in filenames:
             if not isinstance(filename, str) and not isinstance(filename, Path):
-                raise TypeError(
-                    'filenames must be a list of str or pathlib.Path'
-                )
+                raise TypeError('filenames must be a list of str or pathlib.Path')
             path = Path(filename)
             self.file_paths.append(path.resolve())
             self.file_names.append(path.name)
@@ -141,9 +139,7 @@ def _get_columns(filename):
     with open(filename) as f:
         column_line = f.readline().strip('\n')
 
-    column_line = [
-        item.strip('] ')[2:].strip(' ') for item in column_line.split('[')
-    ]
+    column_line = [item.strip('] ')[2:].strip(' ') for item in column_line.split('[')]
 
     return column_line[1:]
 

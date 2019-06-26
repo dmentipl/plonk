@@ -28,9 +28,7 @@ _quantities_short_name = [q[1] for q in _quantities]
 _quantities_base = [q[2] for q in _quantities]
 _quantities_list = _quantities_long_name + _quantities_short_name
 
-_Units = namedtuple(
-    'Units', _quantities_list, defaults=(None,) * len(_quantities_list)
-)
+_Units = namedtuple('Units', _quantities_list, defaults=(None,) * len(_quantities_list))
 
 LENGTH_UNITS = (
     ('cm', 1.0),
@@ -104,9 +102,7 @@ class Units:
         if isinstance(length, str):
             length_str = length.lower()
             if length_str in [unit[0] for unit in LENGTH_UNITS]:
-                length = [
-                    unit[1] for unit in LENGTH_UNITS if unit[0] == length_str
-                ][0]
+                length = [unit[1] for unit in LENGTH_UNITS if unit[0] == length_str][0]
             else:
                 raise ValueError(f'{length} is not available')
         elif isinstance(length, (int, float)):
@@ -120,9 +116,7 @@ class Units:
         if isinstance(mass, str):
             mass_str = mass.lower()
             if mass_str in [unit[0] for unit in MASS_UNITS]:
-                mass = [unit[1] for unit in MASS_UNITS if unit[0] == mass_str][
-                    0
-                ]
+                mass = [unit[1] for unit in MASS_UNITS if unit[0] == mass_str][0]
             else:
                 raise ValueError(f'{mass} is not available')
         elif isinstance(mass, (int, float)):
@@ -136,9 +130,7 @@ class Units:
         if isinstance(time, str):
             time_str = time.lower()
             if time_str in [unit[0] for unit in TIME_UNITS]:
-                time = [unit[1] for unit in TIME_UNITS if unit[0] == time_str][
-                    0
-                ]
+                time = [unit[1] for unit in TIME_UNITS if unit[0] == time_str][0]
             else:
                 raise ValueError(f'{time} is not available')
         elif isinstance(time, (int, float)):
@@ -276,9 +268,7 @@ class Units:
                         _quantities_short_name.index(dimension)
                     ]
                 elif dimension in _quantities_long_name:
-                    dimension = _quantities_base[
-                        _quantities_long_name.index(dimension)
-                    ]
+                    dimension = _quantities_base[_quantities_long_name.index(dimension)]
         return quantity * self._get_cgs_from_dimension(dimension)
 
     def _get_cgs_from_dimension(self, expression):
@@ -349,9 +339,7 @@ def dimensions_as_dict(expression):
     for unit in expression.split():
         unit = unit.split('^')
         if unit[0] not in ('L', 'M', 'T'):
-            raise ValueError(
-                'Cannot interpret string: must be like ' '"L^m M^n T^o"'
-            )
+            raise ValueError('Cannot interpret string: must be like ' '"L^m M^n T^o"')
         if len(unit) == 1:
             units.append([unit[0], 1])
         elif len(unit) == 2:

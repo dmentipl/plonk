@@ -197,9 +197,7 @@ class MultiPlot:
                         vmin=vmin.mean(), vmax=vmax.mean()
                     )
 
-            self.colorbar = self.grid.cbar_axes[0].colorbar(
-                self.plots[0, 0].image
-            )
+            self.colorbar = self.grid.cbar_axes[0].colorbar(self.plots[0, 0].image)
             if cbar_label is not None:
                 self.colorbar.set_label_text(cbar_label)
 
@@ -253,10 +251,7 @@ class MultiPlot:
         """
 
         if vmin is not None and vmax is not None:
-            [
-                viz.set_render_range(vmin=vmin, vmax=vmax)
-                for viz in self.plots.flatten()
-            ]
+            [viz.set_render_range(vmin=vmin, vmax=vmax) for viz in self.plots.flatten()]
         if vmin is not None:
             [viz.set_render_range(vmin=vmin) for viz in self.plots.flatten()]
         if vmax is not None:

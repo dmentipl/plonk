@@ -71,9 +71,7 @@ class Simulation:
         if not list(self.path.glob(self.prefix + '*')):
             raise FileNotFoundError(f'No files with prefix: {prefix}')
 
-        self._dump_file_type, self._dump_file_extension = (
-            self._get_dump_file_type()
-        )
+        self._dump_file_type, self._dump_file_extension = self._get_dump_file_type()
 
         self._dump_files = self._get_dump_files()
         self._global_ev_files = self._get_global_ev_files()
@@ -154,19 +152,13 @@ class Simulation:
             glob = self.prefix + 'Sink[0-9][0-9][0-9][0-9]N[0-9][0-9].ev'
 
         n = len(self.prefix) + len('Sink')
-        n_sinks = len(
-            set([p.name[n : n + 4] for p in list(self.path.glob(glob))])
-        )
+        n_sinks = len(set([p.name[n : n + 4] for p in list(self.path.glob(glob))]))
 
         sinks = list()
         for idx in range(1, n_sinks + 1):
             sinks.append(
                 sorted(
-                    list(
-                        self.path.glob(
-                            self.prefix + f'Sink{idx:04}N[0-9][0-9].ev'
-                        )
-                    )
+                    list(self.path.glob(self.prefix + f'Sink{idx:04}N[0-9][0-9].ev'))
                 )
             )
 
@@ -178,9 +170,7 @@ class Simulation:
         if glob is None:
             # Phantom dump file name format
             glob = (
-                self.prefix
-                + '_[0-9][0-9][0-9][0-9][0-9].'
-                + self._dump_file_extension
+                self.prefix + '_[0-9][0-9][0-9][0-9][0-9].' + self._dump_file_extension
             )
 
         return sorted(list(self.path.glob(glob)))
@@ -218,7 +208,4 @@ class Simulation:
         return self.__str__()
 
     def __str__(self):
-        return (
-            f'<plonk.Simulation: "{self.prefix}", '
-            f'directory="{self.path.name}">'
-        )
+        return f'<plonk.Simulation: "{self.prefix}", ' f'directory="{self.path.name}">'
