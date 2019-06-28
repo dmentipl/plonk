@@ -2,7 +2,9 @@
 Install Plonk.
 """
 
+import io
 import pathlib
+import re
 import sysconfig
 
 from setuptools import Extension, setup
@@ -30,6 +32,11 @@ ext_modules = [
 # ---------------------------------------------------------------------------- #
 # --- Plonk ---
 
+__version__ = re.search(
+    r'__version__\s*=\s*[\'"]([^\'"]*)[\'"]',  # It excludes inline comment too
+    io.open('plonk/__init__.py', encoding='utf_8_sig').read(),
+).group(1)
+
 cmdclass = dict()
 cmdclass.update({'build_ext': build_ext})
 include_dirs = [get_include()]
@@ -39,8 +46,8 @@ install_requires = ['cython', 'h5py', 'matplotlib', 'numpy', 'pandas', 'sympy']
 description = 'Smoothed particle hydrodynamics analysis and visualization with Python.'
 
 setup(
-    name='Plonk',
-    version='0.1',
+    name='plonk',
+    version=__version__,
     author='Daniel Mentiplay',
     author_email='d.mentiplay@gmail.com',
     url='https://github.com/dmentipl/plonk',

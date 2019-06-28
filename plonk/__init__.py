@@ -71,3 +71,6 @@ __all__ = [
     'constants',
     'visualization',
 ]
+
+# Canonical version number
+__version__ = '0.1.0'
