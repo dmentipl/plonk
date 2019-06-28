@@ -26,7 +26,9 @@ UNAME = ${shell uname}
 OPENMP = yes
 DEBUG  = no
 
-FC      = gfortran
+ifeq (X$(FC), X)
+FC = gfortran
+endif
 FCFLAGS = -O3 -fPIC
 FLFLAGS = -shared
 
