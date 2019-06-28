@@ -5,9 +5,9 @@
 # Daniel Mentiplay, 2019
 #
 
-.PHONY: conda install default clean
+.PHONY: build install conda clean
 
-default:
+build:
 	@cd splash/fortran; $(MAKE) $(MAKECMDGOALS)
 
 install:

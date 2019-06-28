@@ -2,12 +2,14 @@
 # Compile Splash Fortran source to produce libsplash.so.
 #
 # The main targets are:
-#   - libsplash: to build the shared object library
+#   - build:   to build the shared object library
 #   - install: to build and install the library to INSTALL_DIR
-#   - conda: to build the library when building the Plonk Conda package
+#   - conda:   to build the library when building the Plonk Conda package
 #
 # Daniel Mentiplay, 2019
 #
+
+SHELL := /bin/bash
 
 # Name of the shared object library
 LIBSPLASH = libsplash.so
@@ -22,17 +24,14 @@ INSTALL_DIR = $(CONDA_PREFIX)/lib
 UNAME = ${shell uname}
 
 OPENMP = yes
-DOUBLE = no
 DEBUG  = no
 
 FC      = gfortran
 FCFLAGS = -O3 -fPIC
 FLFLAGS = -shared
 
-# DOUBLE will break Cython
-ifeq ($(DOUBLE), yes)
-    FCFLAGS += -fdefault-real-8 -fdefault-double-8
-endif
+FC_BIN = $(shell command -v $(FC))
+FC_VERSION = $(shell $(FC) --version | head -1 | awk '{print $$NF}')
 
 ifeq ($(DEBUG), yes)
     FCFLAGS += -Wall -Wextra -pedantic -g -frange-check -fcheck=all \
@@ -56,23 +55,33 @@ FSOURCES = sort.f90 asciiutils.f90 kernels.f90 timing.f90 globaldata.f90 \
 OBJECTS1 = $(FSOURCES:.f90=.o)
 OBJECTS  = $(OBJECTS1:.F90=.o)
 
-default: libsplash
+help:
+	@echo "Usage:"
+	@echo "  make <target>"
+	@echo
+	@echo "  build            Build libsplash"
+	@echo "  clean            Cleanup build files"
+	@echo "  conda            Build libsplash for Plonk Conda package"
+	@echo "  help             Display this help"
+	@echo "  install          Build libsplash and install to INSTALL_DIR"
 
 .PHONY: print
 print:
 	@echo
 	@echo " Compiling Splash modules"
+	@echo " Fortran compiler binary: $(FC_BIN)"
+	@echo " Fortran compiler version: $(FC_VERSION)"
 	@echo
 
-.PHONY: libsplash
-libsplash: print $(OBJECTS)
+.PHONY: build
+build: print $(OBJECTS)
 	@echo
 	@echo " Linking Splash into a shared object library"
 	@echo
 	$(FC) $(FCFLAGS) $(FLFLAGS) $(OBJECTS) -o $(LIBSPLASH)
 
 .PHONY: install
-install: libsplash
+install: build
 	@echo
 	@echo " Copying libsplash.so to INSTALL_DIR=$(INSTALL_DIR)"
 	@echo
@@ -85,7 +94,7 @@ ifeq ($(UNAME), Darwin)
 endif
 
 .PHONY: conda
-conda: libsplash
+conda: build
 	@echo
 	@echo " Copying libsplash.so to PREFIX/lib=$(PREFIX)/lib"
 	@echo " Only use this Makefile target for building the Conda package"
