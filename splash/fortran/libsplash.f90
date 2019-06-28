@@ -42,7 +42,7 @@ contains
 !-------------------------------------------------------------------------
 ! 3D projection (column density)
 !-------------------------------------------------------------------------
-subroutine interpolate3d_projection(                                           &
+subroutine interpolate3d_projection_c(                                         &
   x, y, z, hh, weight, dat, itype, npart, xmin, ymin, datsmooth, npixx, npixy, &
   pixwidthx, pixwidthy, normalise, zobserver, dscreen, useaccelerate           &
   ) bind(c)
@@ -78,12 +78,12 @@ subroutine interpolate3d_projection(                                           &
     npixy, pixwidthx, pixwidthy, normalise_f, zobserver, dscreen,         &
     useaccelerate_f)
 
-end subroutine interpolate3d_projection
+end subroutine interpolate3d_projection_c
 
 !-------------------------------------------------------------------------
 ! 3D projection of vectors
 !-------------------------------------------------------------------------
-subroutine interpolate3d_proj_vec(                                       &
+subroutine interpolate3d_proj_vec_c(                                     &
   x, y, z, hh, weight, vecx, vecy, itype, npart, xmin, ymin, vecsmoothx, &
   vecsmoothy, npixx, npixy, pixwidthx, pixwidthy, normalise, zobserver,  &
   dscreen                                                                &
@@ -119,12 +119,12 @@ subroutine interpolate3d_proj_vec(                                       &
     vecsmoothy, npixx, npixy, pixwidthx, pixwidthy, normalise_f, zobserver, &
     dscreen)
 
-end subroutine interpolate3d_proj_vec
+end subroutine interpolate3d_proj_vec_c
 
 !-------------------------------------------------------------------------
 ! cross sections of 3D data
 !-------------------------------------------------------------------------
-subroutine interpolate3d_fastxsec(                                       &
+subroutine interpolate3d_fastxsec_c(                                     &
   x, y, z, hh, weight, dat, itype, npart, xmin, ymin, zslice, datsmooth, &
   npixx, npixy, pixwidthx, pixwidthy, normalise                          &
   ) bind(c)
@@ -155,12 +155,12 @@ subroutine interpolate3d_fastxsec(                                       &
     x, y, z, hh, weight, dat, itype, npart, xmin, ymin, zslice, datsmooth, &
     npixx, npixy, pixwidthx, pixwidthy, normalise_f)
 
-end subroutine interpolate3d_fastxsec
+end subroutine interpolate3d_fastxsec_c
 
 !-------------------------------------------------------------------------
 ! cross sections of 3D vector data
 !-------------------------------------------------------------------------
-subroutine interpolate3d_xsec_vec(                                       &
+subroutine interpolate3d_xsec_vec_c(                                     &
   x, y, z, hh, weight, vecx, vecy, itype, npart, xmin, ymin, zslice,     &
   vecsmoothx, vecsmoothy, npixx, npixy, pixwidthx, pixwidthy, normalise  &
   ) bind(c)
@@ -193,12 +193,12 @@ subroutine interpolate3d_xsec_vec(                                       &
     x, y, z, hh, weight, vecx, vecy, itype, npart, xmin, ymin, zslice,       &
     vecsmoothx, vecsmoothy, npixx, npixy, pixwidthx, pixwidthy, normalise_f)
 
-end subroutine interpolate3d_xsec_vec
+end subroutine interpolate3d_xsec_vec_c
 
 !-------------------------------------------------------------------------
 ! opacity rendering of 3D data
 !-------------------------------------------------------------------------
-subroutine interp3d_proj_opacity(                                           &
+subroutine interp3d_proj_opacity_c(                                         &
   x, y, z, pmass, npmass, hh, weight, dat, zorig, itype, npart, xmin, ymin, &
   datsmooth, brightness, npixx, npixy, pixwidth, zobserver,                 &
   dscreenfromobserver, rkappa, zcut                                         &
@@ -231,6 +231,6 @@ subroutine interp3d_proj_opacity(                                           &
     itype, npart, xmin, ymin, datsmooth, brightness, npixx, npixy, pixwidth,   &
     zobserver, dscreenfromobserver, rkappa, zcut)
 
-end subroutine interp3d_proj_opacity
+end subroutine interp3d_proj_opacity_c
 
 end module libsplash
