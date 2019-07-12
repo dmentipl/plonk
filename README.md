@@ -61,7 +61,7 @@ Install
 The easiest and recommended way to install Plonk is via the package manager Conda
 
 ```bash
-conda install -c dmentipl plonk
+conda install plonk --channel dmentipl
 ```
 
 or

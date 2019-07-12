@@ -13,7 +13,7 @@ or
 
 ::
 
- conda install -c dmentipl plonk
+ conda install plonk --channel dmentipl
 
 This will install the required dependencies. For details on Conda, see https://docs.conda.io/.
 
