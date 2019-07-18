@@ -16,7 +16,7 @@ jupyter:
 <!-- #region {"slideshow": {"slide_type": "slide"}} -->
 # Plonk
 
-by Daniel Mentiplay
+Daniel Mentiplay
 <!-- #endregion -->
 
 <!-- #region {"slideshow": {"slide_type": "slide"}} -->
@@ -25,7 +25,15 @@ by Daniel Mentiplay
 Plonk is a tool for analysis and visualisation of smoothed particle hydrodynamics (SPH) data.
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
+<!-- #region {"slideshow": {"slide_type": "subslide"}} -->
+Plonk can read SPH data from HDF5 files.
+<!-- #endregion -->
+
+<!-- #region {"slideshow": {"slide_type": "subslide"}} -->
+For example, Plonk can read Phantom HDF5 files, but *not* the standard file format.
+<!-- #endregion -->
+
+<!-- #region {"slideshow": {"slide_type": "subslide"}} -->
 To use Plonk we import it directly.
 <!-- #endregion -->
 
@@ -132,7 +140,7 @@ Here is a dictionary for h5py dataset pointers.
 dump.particles.arrays
 ```
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
+<!-- #region {"slideshow": {"slide_type": "subslide"}} -->
 Now we read the position data directly from the file and print to screen.
 <!-- #endregion -->
 
@@ -182,7 +190,7 @@ Instantiate the `Evolution` object.
 evol = plonk.Evolution(evfile)
 ```
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
+<!-- #region {"slideshow": {"slide_type": "subslide"}} -->
 In the second case we pass in a list of either string or pathlib.Path objects.
 <!-- #endregion -->
 
@@ -271,7 +279,7 @@ The following examples produce a rendered image. Each example demonstrates a dif
 The first quantity is a string representing the name of the quantity to render. Any scalar dump particle array quantity can be rendered, as well as several predefined extra quantities.
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
+<!-- #region {"slideshow": {"slide_type": "subslide"}} -->
 Visualise the density as a projection rendering.
 <!-- #endregion -->
 
@@ -287,7 +295,7 @@ viz = plonk.Visualization(
 The second example shows an extra quantity to be calculated. We use SymPy to parse the string.
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
+<!-- #region {"slideshow": {"slide_type": "subslide"}} -->
 Visualise the azimuthal velocity as a projection rendering.
 <!-- #endregion -->
 
@@ -305,7 +313,7 @@ In the final example we show that you can calculate any quantity from the underl
 <!-- #endregion -->
 
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
+<!-- #region {"slideshow": {"slide_type": "subslide"}} -->
 First we use particle array data to calculate the deviation from Keplerian velocity around a planet.
 <!-- #endregion -->
 
@@ -448,11 +456,11 @@ av = plonk.analysis.disc(
 )
 ```
 
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
+<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
 The analysis produces Pandas `DataFrames` with index associated with the radial bin. We can plot the data using built-in methods, or with Matplotlib.
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
+<!-- #region {"slideshow": {"slide_type": "subslide"}} -->
 Here we plot the azimuthally-averaged surface density and scale height.
 <!-- #endregion -->
 
@@ -475,4 +483,13 @@ ax[1].set_ylabel('Scale height')
 + support for calculating extra quantities
 + support for multiple plots in the same figure with `MultiPlot`
 + support for jumping to the next dump a la Splash with `VisualizationIterator`
+<!-- #endregion -->
+
+<!-- #region {"slideshow": {"slide_type": "slide"}} -->
+
+More information
+----------------
+
++ https://github.com/dmentipl/plonk
++ https://plonk.readthedocs.io/
 <!-- #endregion -->
