@@ -30,7 +30,7 @@ If applicable, add screenshots to help explain your problem.
 ### Environment (please complete the following information):
 
  - OS: [e.g. macOS 10.14.6, Ubuntu 18.04]
- - Python: [e.g. Anaconda with conda 4.7.5 using Jupyter notebook]
+ - Python: [e.g. Python 3.7, Anaconda with conda 4.7.5, using Jupyter notebook]
  - Plonk version: [e.g. 0.1.0]
 
 ### Data source
