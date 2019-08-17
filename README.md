@@ -19,7 +19,7 @@ Plonk supports the following SPH file formats:
 
 * Phantom output in [HDF](https://en.wikipedia.org/wiki/Hierarchical_Data_Format) format.
 
-*Note: you can convert Phantom binary dumps to HDF.* See the [Phantom wiki](https://bitbucket.org/danielprice/phantom/wiki) for more information.
+*Note: you can convert Phantom standard dumps to HDF.* See the [Phantom wiki](https://bitbucket.org/danielprice/phantom/wiki).
 
 ### Basic usage
 
@@ -75,78 +75,29 @@ conda install plonk
 
 This will install the required dependencies. For details on Conda, see https://docs.conda.io/.
 
+Getting help
+------------
+
+If you need help, try the following, in order:
+
+1. Check the documentation.
+2. Ask questions on Stack Overflow using the [plonk](https://stackoverflow.com/questions/tagged/plonk) tag.
+3. File an issue, as a [bug report](https://github.com/dmentipl/plonk/issues/new?assignees=&labels=&template=bug_report.md&title=) or [feature request](https://github.com/dmentipl/plonk/issues/new?assignees=&labels=&template=feature_request.md&title=), using the issue tracker.
+
+If you don't get an immediate response, please be patient. Plonk is run by one person, [@dmentipl](https://github.com/dmentipl).
+
 Contributing
 ------------
 
-*Contributions are welcome.*
+Thank you for considering contributing to Plonk. *Contributions are welcome.*
 
-If you want to contribute to Plonk you should fork the repository. You can then clone it to your local machine, and use Conda to link to your local copy of the code.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to contribute.
 
-```bash
-git clone https://github.com/<user>/plonk
-cd plonk && conda develop .
-```
+Citation
+--------
 
-There is a compiled Fortran component to Plonk which is derived from Splash. You must compile this before development. This requires a Fortran compiler, e.g. gfortran. The following compiles Splash into a shared object library, and then uses Cython to build a Python interface to that library.
+If you use Plonk in a scientific publication, please cite
 
-```bash
-make install
-python setup.py build_ext --inplace
-```
+> [Plonk: Smoothed particle hydrodynamics data analysis and visualization](https://ui.adsabs.harvard.edu/abs/2019ascl.soft07009M/abstract)
 
-You need to make sure the required dependencies are installed (via Conda). To satisfy these requirements there is a `environment.yml` file. You can set up a Conda environment for development and install Plonk in it:
-
-```bash
-git clone https://github.com/<user>/plonk && cd plonk
-conda env create --name plonk_dev --file environment.yml
-conda activate plonk_dev
-```
-
-and then follow the instructions above. (To leave the development environment: `conda deactivate`.)
-
-After you have committed and pushed your changes to your forked repository you
-can issue a pull request: https://github.com/dmentipl/plonk/pull/new/master.
-
-### Code style
-
-We follow [PEP 8](https://www.python.org/dev/peps/pep-0008/) for code style, and use [Black](https://github.com/python/black) and [isort](https://github.com/timothycrosley/isort) for auto-formatting. To use Black on your changes run the following from the main repository directory:
-
-```bash
-isort plonk/**/*.py
-black --skip-string-normalization plonk
-```
-
-To do
------
-
-**Documentation**
-
-- [x] Put documentation online.
-
-**Tests**
-
-- [ ] Check read and write of Phantom dumps.
-- [ ] Calculating extra quantities.
-
-**Infrastructure**
-
-- [x] Put conda package on https://anaconda.org.
-- [ ] Add pip install instructions. Add to PyPI.
-- [ ] Pull request template.
-- [ ] Add versioning and releases.
-
-**Features**
-
-- [x] Making line plots from data.
-- [ ] Add analysis routines:
-    - [ ] binary discs
-    - [ ] dusty discs
-    - [ ] magnetic fields
-- [ ] Add to visualization features:
-    - [x] physical units
-    - [x] extra calculated quantities
-
-**Future features**
-
-- [ ] Setup initial conditions like phantomsetup.
-- [ ] Modify a dump file like moddump (from Phantom).
+You should also consider citing any other scientific software packages that you use.

@@ -31,7 +31,6 @@ Plonk aims to provide an alternative to the Phantom analysis tools and Splash. B
    installation
    getting-started
    examples
-   contributions
 
 .. role:: math(raw)
    :format: html latex
@@ -41,12 +40,15 @@ Plonk aims to provide an alternative to the Phantom analysis tools and Splash. B
 References
 ----------
 
+* Plonk:
+   * https://github.com/dmentipl/plonk
+   * Mentiplay, D., 2019, ASCL, ascl:1907.009 [`ADS <https://ui.adsabs.harvard.edu/abs/2019ascl.soft07009M/>`_, `DOI <http://ascl.net/1907.009>`_]
 * Splash:
    * http://users.monash.edu.au/~dprice/splash/
-   * Price D. J., 2007, PASA, 24, 159 [`ADS <http://adsabs.harvard.edu/abs/2007PASA...24..159P>`_, `DOI <http://dx.doi.org/10.1071/AS07022>`_]
+   * Price D. J., 2007, PASA, 24, 159 [`ADS <https://ui.adsabs.harvard.edu/abs/2007PASA...24..159P>`_, `DOI <http://dx.doi.org/10.1071/AS07022>`_]
 * Phantom:
    * https://phantomsph.bitbucket.io/
-   * Price D. J., et al., 2018, PASA, 35, 31P [`ADS <http://adsabs.harvard.edu/abs/2018PASA...35...31P>`_, `DOI <https://doi.org/10.1017/pasa.2018.25>`_]
+   * Price D. J., et al., 2018, PASA, 35, 31P [`ADS <https://ui.adsabs.harvard.edu/abs/2018PASA...35...31P>`_, `DOI <https://doi.org/10.1017/pasa.2018.25>`_]
 
 ============
 Contributors
