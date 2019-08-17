@@ -16,10 +16,12 @@ LIBSPLASH = libsplash.so
 
 # Install directory for Anaconda
 # Specify INSTALL_DIR if you want to install elsewhere
+ifeq (X$(INSTALL_DIR), X)
 ifeq (X$(CONDA_PREFIX), X)
 CONDA_PREFIX = $(HOME)/anaconda
 endif
 INSTALL_DIR = $(CONDA_PREFIX)/lib
+endif
 
 UNAME = ${shell uname}
 
