@@ -19,6 +19,7 @@ dependencies:
   - coveralls
   - cython
   - h5py
+  - isort
   - matplotlib
   - numpy
   - pandas
