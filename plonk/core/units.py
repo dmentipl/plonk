@@ -279,7 +279,7 @@ class Units:
         return val
 
 
-def is_dimension_same(self, a, b):
+def is_dimension_same(a, b):
     """
     Check if two string representations of dimensions are the same.
 

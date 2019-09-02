@@ -6,7 +6,6 @@ import pathlib
 import unittest
 
 import numpy as np
-
 import plonk
 
 from .stubdata.phantom_dump import array_keys, header, mean_array_values
@@ -57,6 +56,45 @@ class TestReadPhantomDump(unittest.TestCase):
 
         for key, val in dump.particles.arrays.items():
             np.testing.assert_allclose(val[()].mean(), mean_array_values[key])
+
+        dump._close_file()
+
+    def test_load_arrays_into_memory(self):
+
+        test_file = pathlib.Path(__file__).parent / 'stubdata/phantom_00000.h5'
+        dump = plonk.Dump(test_file)
+        dump._load_arrays('sinks')
+
+        dump._close_file()
+
+
+class TestExtraQuantity(unittest.TestCase):
+    """Test calculating extra quantities."""
+
+    def test_extra_quantity(self):
+
+        test_file = pathlib.Path(__file__).parent / 'stubdata/phantom_00000.h5'
+        dump = plonk.Dump(test_file)
+
+        self.assertEqual(
+            dump.extra_quantity('L', sph_type='particles')[0].mean(),
+            6.875907667109459e-05,
+        )
+
+        self.assertEqual(dump.extra_quantity('p')[0].mean(), -3.029025112420847e-22)
+
+        self.assertEqual(
+            dump.extra_quantity('R', sph_type='sinks')[0].mean(), 3.180317954809203e-15
+        )
+
+        dump._close_file()
+
+    def test_density(self):
+
+        test_file = pathlib.Path(__file__).parent / 'stubdata/phantom_00000.h5'
+        dump = plonk.Dump(test_file)
+
+        self.assertEqual(dump.density.mean(), 4.739748038277296e-08)
 
         dump._close_file()
 

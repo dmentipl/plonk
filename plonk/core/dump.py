@@ -200,7 +200,7 @@ class Dump(DumpFile):
         if sph_type == 'particles':
             mass = self.mass
         elif sph_type == 'sinks':
-            mass = self.sinks.m[:]
+            mass = self.sinks.arrays['m'][:]
 
         quantities = self.available_extra_quantities
 

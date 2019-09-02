@@ -15,4 +15,11 @@ class TestReadPhantomSimulation(unittest.TestCase):
         """Testing initialising simulation."""
 
         dir_path = pathlib.Path(__file__).parent / 'stubdata'
-        plonk.Simulation(prefix='phantom', directory=dir_path)
+        sim = plonk.Simulation(prefix='phantom', directory=dir_path)
+
+        dumps = sim.dumps
+        self.assertEqual(len(dumps), 1)
+        self.assertEqual(dumps[0].file_name, 'phantom_00000.h5')
+
+        ev = sim.evolution
+        self.assertEqual(ev.file_names[0], 'phantom01.ev')
