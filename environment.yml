@@ -1,8 +1,27 @@
+# Conda environment for Plonk development
+#
+# Install:    conda env create --file environment.yml
+# Update:     conda env update --file environment.yml
+# Activate:   conda activate plonk-dev
+# Deactivate: conda deactivate
+
+name: plonk-dev
+
+channels:
+  - conda-forge
+
 dependencies:
-  - python=3
+  - python>=3.6
+  - anaconda-client
+  - black
+  - conda-build
+  - coverage
+  - coveralls
   - cython
   - h5py
   - matplotlib
   - numpy
   - pandas
+  - sphinx
+  - sphinx_rtd_theme
   - sympy

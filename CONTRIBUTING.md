@@ -31,8 +31,8 @@ You need to make sure the required dependencies are installed (via Conda). To sa
 
 ```bash
 git clone https://github.com/<user>/plonk && cd plonk
-conda env create --name plonk_dev --file environment.yml
-conda activate plonk_dev
+conda env create --file environment.yml
+conda activate plonk-dev
 ```
 
 and then follow the instructions above. (To leave the development environment: `conda deactivate`.)

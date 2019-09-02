@@ -12,11 +12,11 @@ import plonk
 from .stubdata.phantom_arrays import (
     dimensions,
     dtype,
+    extra_quantities,
     fields,
     number,
     shape,
     structured_array_dtype,
-    extra_quantities,
 )
 
 

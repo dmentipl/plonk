@@ -8,7 +8,7 @@ import unittest
 import numpy as np
 import plonk
 
-from .stubdata.phantom_dump import header, array_keys, mean_array_values
+from .stubdata.phantom_dump import array_keys, header, mean_array_values
 
 
 class TestReadPhantomDump(unittest.TestCase):

@@ -17,8 +17,8 @@ before_install:
   - conda update -q conda
 
   # Install Python dependencies with conda using environment.yml.
-  - conda env create --name plonk_dev --file environment.yml
-  - source activate plonk_dev
+  - conda env create --file environment.yml
+  - source activate plonk-dev
 
 install:
   - make install
@@ -26,7 +26,12 @@ install:
   - python setup.py install
 
 script:
-  - python -m unittest discover
+  - python -m coverage run -m unittest discover
+  - isort --check-only ./**/*.py
+  - black --check --skip-string-normalization .
+
+after_success:
+  - coveralls
 
 notifications:
   email:

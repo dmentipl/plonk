@@ -1,6 +1,0 @@
-cython
-h5py
-matplotlib
-numpy
-pandas
-sympy
