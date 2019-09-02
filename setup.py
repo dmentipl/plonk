@@ -56,7 +56,6 @@ setup(
         'plonk',
         'plonk.analysis',
         'plonk.core',
-        'plonk.tests',
         'plonk.visualization',
     ],
     license='MIT',
