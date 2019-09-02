@@ -6,6 +6,7 @@ import pathlib
 import unittest
 
 import numpy as np
+
 import plonk
 
 from .stubdata.phantom_evolution import columns, mean_values

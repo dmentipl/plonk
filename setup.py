@@ -7,10 +7,9 @@ import pathlib
 import re
 import sysconfig
 
-from setuptools import Extension, setup
-
 from Cython.Distutils import build_ext
 from numpy import get_include
+from setuptools import Extension, setup
 
 # ---------------------------------------------------------------------------- #
 # --- Splash ---

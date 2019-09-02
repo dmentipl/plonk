@@ -7,6 +7,7 @@ import unittest
 
 import h5py
 import numpy as np
+
 import plonk
 
 from .stubdata.phantom_arrays import (
