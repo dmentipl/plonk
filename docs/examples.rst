@@ -126,4 +126,4 @@ We then use that list of dictionaries and plot. We also place a dot at the plane
 
 The above code produces this figure.
 
-.. image:: _static/deviation_from_keplerian.png
+.. image:: _static/deviation_from_keplerian.svg
