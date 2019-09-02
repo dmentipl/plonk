@@ -5,6 +5,7 @@ Testing utils.
 import unittest
 
 import numpy as np
+
 import plonk
 
 
@@ -43,3 +44,7 @@ class TestNormalizeVector(unittest.TestCase):
         v = plonk.core.utils.normalize_vector(u)
 
         np.testing.assert_array_almost_equal(v, v / np.linalg.norm(v))
+
+
+if __name__ == '__main__':
+    unittest.main(verbosity=2)

@@ -70,3 +70,7 @@ class TestArrays(unittest.TestCase):
             )
 
         file_handle.close()
+
+
+if __name__ == '__main__':
+    unittest.main(verbosity=2)

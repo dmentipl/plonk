@@ -44,3 +44,7 @@ class TestDimensionComparison(unittest.TestCase):
         self.assertTrue(plonk.core.units.is_dimension_same('L T^-1', 'v'))
         self.assertTrue(plonk.core.units.is_dimension_same('velocity', 'L T^-1'))
         self.assertTrue(plonk.core.units.is_dimension_same('v', 'L T^-1'))
+
+
+if __name__ == '__main__':
+    unittest.main(verbosity=2)

@@ -51,3 +51,7 @@ class TestPlotPhantomEvolution(unittest.TestCase):
         ev = plonk.Evolution(test_file_path)
 
         ev.plot('xcom')
+
+
+if __name__ == '__main__':
+    unittest.main(verbosity=2)

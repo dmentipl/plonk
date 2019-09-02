@@ -23,3 +23,7 @@ class TestReadPhantomSimulation(unittest.TestCase):
 
         ev = sim.evolution
         self.assertEqual(ev.file_names[0], 'phantom01.ev')
+
+
+if __name__ == '__main__':
+    unittest.main(verbosity=2)
