@@ -11,6 +11,8 @@ import plonk
 
 from .stubdata.phantom_dump import array_keys, header, mean_array_values
 
+TEST_FILE = pathlib.Path(__file__).parent / 'stubdata/phantom_00000.h5'
+
 
 class TestReadPhantomDump(unittest.TestCase):
     """Test reading Phantom HDF5 dump files."""
@@ -19,25 +21,21 @@ class TestReadPhantomDump(unittest.TestCase):
         """Testing reading Phantom HDF5 dumps."""
 
         # Read from pathlib.Path
-        test_file = pathlib.Path(__file__).parent / 'stubdata/phantom_00000.h5'
-        dump = plonk.Dump(test_file)
+        dump = plonk.Dump(TEST_FILE)
         dump._close_file()
 
         # Read from str
-        test_file = str(pathlib.Path(__file__).parent) + '/stubdata/phantom_00000.h5'
-        dump = plonk.Dump(test_file)
+        dump = plonk.Dump(str(TEST_FILE))
         dump._close_file()
 
         # Not exists
-        test_file = 'does_not_exist.h5'
-        self.assertRaises(FileNotFoundError, plonk.Dump, test_file)
+        self.assertRaises(FileNotFoundError, plonk.Dump, 'does_not_exist.h5')
         dump._close_file()
 
     def test_read_header(self):
         """Testing reading Phantom HDF5 dump header."""
 
-        test_file = pathlib.Path(__file__).parent / 'stubdata/phantom_00000.h5'
-        dump = plonk.Dump(test_file)
+        dump = plonk.Dump(TEST_FILE)
 
         for para in dump.header:
             if isinstance(dump.header[para], np.ndarray):
@@ -50,8 +48,7 @@ class TestReadPhantomDump(unittest.TestCase):
     def test_read_particle_arrays(self):
         """Testing reading Phantom HDF5 dump particle arrays."""
 
-        test_file = pathlib.Path(__file__).parent / 'stubdata/phantom_00000.h5'
-        dump = plonk.Dump(test_file)
+        dump = plonk.Dump(TEST_FILE)
 
         self.assertEqual(set(dump.particles.arrays), array_keys)
 
@@ -62,8 +59,7 @@ class TestReadPhantomDump(unittest.TestCase):
 
     def test_load_arrays_into_memory(self):
 
-        test_file = pathlib.Path(__file__).parent / 'stubdata/phantom_00000.h5'
-        dump = plonk.Dump(test_file)
+        dump = plonk.Dump(TEST_FILE)
         dump._load_arrays('sinks')
 
         dump._close_file()
@@ -74,8 +70,7 @@ class TestExtraQuantity(unittest.TestCase):
 
     def test_extra_quantity(self):
 
-        test_file = pathlib.Path(__file__).parent / 'stubdata/phantom_00000.h5'
-        dump = plonk.Dump(test_file)
+        dump = plonk.Dump(TEST_FILE)
 
         self.assertAlmostEqual(
             dump.extra_quantity('L', sph_type='particles')[0].mean(),
@@ -94,8 +89,7 @@ class TestExtraQuantity(unittest.TestCase):
 
     def test_density(self):
 
-        test_file = pathlib.Path(__file__).parent / 'stubdata/phantom_00000.h5'
-        dump = plonk.Dump(test_file)
+        dump = plonk.Dump(TEST_FILE)
 
         self.assertAlmostEqual(dump.density.mean(), 4.739748038277296e-08)
 

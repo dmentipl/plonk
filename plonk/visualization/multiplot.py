@@ -66,7 +66,7 @@ class MultiPlot:
     >>> options.append({'render': 'density'})
     >>> options.append({'render': 'divv'})
     >>> options.append({'render': 'pressure'})
-    >>> multiplot = MultiPlot(dumps, options)
+    >>> multiplot = MultiPlot(dump, options)
     """
 
     def __init__(

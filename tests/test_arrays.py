@@ -20,6 +20,8 @@ from .stubdata.phantom_arrays import (
     structured_array_dtype,
 )
 
+TEST_FILE = pathlib.Path(__file__).parent / 'stubdata/phantom_00000.h5'
+
 
 class TestArrays(unittest.TestCase):
     """Test Arrays class."""
@@ -27,8 +29,7 @@ class TestArrays(unittest.TestCase):
     def test_init_arrays(self):
         """Testing initialising Arrays object."""
 
-        test_file = pathlib.Path(__file__).parent / 'stubdata/phantom_00000.h5'
-        file_handle = h5py.File(test_file)
+        file_handle = h5py.File(TEST_FILE)
         arrays = plonk.core.particles.Arrays(
             file_handle=file_handle, arrays_label='particles'
         )
@@ -44,8 +45,7 @@ class TestArrays(unittest.TestCase):
     def test_to_structured_array(self):
         """Testing Arrays object to numpy structured array."""
 
-        test_file = pathlib.Path(__file__).parent / 'stubdata/phantom_00000.h5'
-        file_handle = h5py.File(test_file)
+        file_handle = h5py.File(TEST_FILE)
         arrays = plonk.core.particles.Arrays(
             file_handle=file_handle, arrays_label='particles'
         )
@@ -57,8 +57,7 @@ class TestArrays(unittest.TestCase):
     def test_extra_quantities(self):
         """Testing calculating extra quantities."""
 
-        test_file = pathlib.Path(__file__).parent / 'stubdata/phantom_00000.h5'
-        file_handle = h5py.File(test_file)
+        file_handle = h5py.File(TEST_FILE)
         arrays = plonk.core.particles.Arrays(
             file_handle=file_handle, arrays_label='particles'
         )

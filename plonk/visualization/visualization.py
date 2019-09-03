@@ -464,6 +464,7 @@ class Visualization:
         cmap : str
             Colormap from Matplotlib.
         """
+        self._options.figure.colormap = cmap
         self.image.set_cmap(cmap)
 
     def set_render_range(self, vmin=None, vmax=None):

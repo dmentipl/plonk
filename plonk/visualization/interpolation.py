@@ -108,11 +108,19 @@ def scalar_interpolation(
     if perspective and observer_distance is None:
         observer_distance = 0.0
 
-    dscreen = observer_distance
-    zobserver = observer_distance
+    if observer_distance is not None:
+        dscreen = observer_distance
+        zobserver = observer_distance
+    else:
+        dscreen = 0.0
+        zobserver = 0.0
 
     if opacity is None:
         opacity = False
+
+    if opacity:
+        if observer_distance is None:
+            raise ValueError('observer_distance cannot be None for opacity rendering')
 
     if normalize is None:
         normalise = False
@@ -307,8 +315,12 @@ def vector_interpolation(
     if perspective and observer_distance is None:
         observer_distance = 0.0
 
-    dscreen = observer_distance
-    zobserver = observer_distance
+    if observer_distance is not None:
+        dscreen = observer_distance
+        zobserver = observer_distance
+    else:
+        dscreen = 0.0
+        zobserver = 0.0
 
     if normalize is None:
         normalise = False
