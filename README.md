@@ -9,20 +9,22 @@ Smoothed particle hydrodynamics analysis and visualization with Python.
 [![Build Status](https://travis-ci.org/dmentipl/plonk.svg?branch=master)](https://travis-ci.org/dmentipl/plonk)
 [![Coverage Status](https://coveralls.io/repos/github/dmentipl/plonk/badge.svg?branch=master)](https://coveralls.io/github/dmentipl/plonk?branch=master)
 [![Documentation Status](https://readthedocs.org/projects/plonk/badge/?version=latest)](https://plonk.readthedocs.io/en/latest/?badge=latest)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/dmentipl/plonk/blob/master/LICENSE)
+
 [![Anaconda Version](https://img.shields.io/conda/v/dmentipl/plonk.svg)](https://anaconda.org/dmentipl/plonk)
 [![Anaconda Platform](https://img.shields.io/conda/pn/dmentipl/plonk.svg)](https://anaconda.org/dmentipl/plonk)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/dmentipl/plonk/blob/master/LICENSE)
+[![ASCL](https://img.shields.io/badge/ascl-1907.009-blue.svg?colorB=262255)](http://ascl.net/1907.009)
 
 Usage
 -----
 
 Plonk supports the following SPH file formats:
 
-* Phantom output in [HDF](https://en.wikipedia.org/wiki/Hierarchical_Data_Format) format.
+* [Phantom](https://phantomsph.bitbucket.io/) output in [HDF5](https://en.wikipedia.org/wiki/Hierarchical_Data_Format) format.
 
-*Note: you can convert Phantom standard dumps to HDF.* See the [Phantom wiki](https://bitbucket.org/danielprice/phantom/wiki).
+*Note: you can convert Phantom standard dumps to HDF5. See the [Phantom docs](https://phantomsph.readthedocs.io).*
 
-### Basic usage
+### Accessing data
 
 To read in a simulation with dump files like `disc_00000.h5`, ..., and evolution files like `disc01.ev`, ..., in the current directory, and see what dumps there are:
 
@@ -38,6 +40,8 @@ To read in a simulation with dump files like `disc_00000.h5`, ..., and evolution
 
 The Dump objects contain the particle and sinks arrays, lazily loaded from the HDF5 file, as well as the dump header stored as a dictionary.
 
+### Visualization
+
 To visualize a single dump file:
 
 ```python
@@ -49,6 +53,14 @@ To visualize a single dump file:
 ...     extent=[-200, 200, -200, 200]
 ...     )
 ```
+
+For example, here is the deviation from Keplerian velocity around a planet embedded in a protoplanetary disc.
+
+![](image.svg)
+
+*Deviation from Keplerian velocity around a planet: at the disc midplane (left), and 10 (middle) and 20 au (right) above the disc midplane. Data from a Phantom simulation.*
+
+### More
 
 For further usage, see `examples` folder and documentation. The code is internally documented with docstrings. Try, for example, `help(plonk.Dump)` or `help(plonk.Visualization)`.
 
@@ -63,13 +75,6 @@ The easiest and recommended way to install Plonk is via the package manager Cond
 
 ```bash
 conda install plonk --channel dmentipl
-```
-
-or
-
-```bash
-conda config --add channels dmentipl
-conda install plonk
 ```
 
 *Note*: Using this method you don't need to have this repository on your machine.
