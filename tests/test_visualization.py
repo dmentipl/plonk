@@ -2,8 +2,6 @@
 Testing Visualization.
 """
 
-import contextlib
-import io
 import pathlib
 import unittest
 
@@ -16,8 +14,6 @@ I_DUST = 7
 
 TEST_FILE = pathlib.Path(__file__).parent / 'stubdata/phantom_00000.h5'
 
-TEXT_TRAP = io.StringIO()
-
 
 class TestInitializeVisualization(unittest.TestCase):
     """Test initialization of Visualization object."""
@@ -26,10 +22,9 @@ class TestInitializeVisualization(unittest.TestCase):
 
         dump = plonk.Dump(TEST_FILE)
 
-        with contextlib.redirect_stdout(TEXT_TRAP):
-            plonk.Visualization(dump)
-            plonk.Visualization(dump, render='density')
-            plonk.Visualization(dump, vector='velocity')
+        plonk.Visualization(dump)
+        plonk.Visualization(dump, render='density')
+        plonk.Visualization(dump, vector='velocity')
 
 
 class TestNumpy(unittest.TestCase):
@@ -39,8 +34,7 @@ class TestNumpy(unittest.TestCase):
 
         dump = plonk.Dump(TEST_FILE)
 
-        with contextlib.redirect_stdout(TEXT_TRAP):
-            plonk.Visualization(dump, render=np.linspace(0, 1))
+        plonk.Visualization(dump, render=np.linspace(0, 1))
 
 
 class TestExtraQuantity(unittest.TestCase):
@@ -50,8 +44,7 @@ class TestExtraQuantity(unittest.TestCase):
 
         dump = plonk.Dump(TEST_FILE)
 
-        with contextlib.redirect_stdout(TEXT_TRAP):
-            plonk.Visualization(dump, render='r')
+        plonk.Visualization(dump, render='r')
 
 
 class TestSymbolic(unittest.TestCase):
@@ -61,8 +54,7 @@ class TestSymbolic(unittest.TestCase):
 
         dump = plonk.Dump(TEST_FILE)
 
-        with contextlib.redirect_stdout(TEXT_TRAP):
-            plonk.Visualization(dump, render='x**2 + y**2')
+        plonk.Visualization(dump, render='x**2 + y**2')
 
 
 class TestUnits(unittest.TestCase):
@@ -73,11 +65,10 @@ class TestUnits(unittest.TestCase):
         dump = plonk.Dump(TEST_FILE)
         units = plonk.Units(length='cm', mass='g', time='s')
 
-        with contextlib.redirect_stdout(TEXT_TRAP):
-            viz = plonk.Visualization(dump, render='density', units=units)
+        viz = plonk.Visualization(dump, render='density', units=units)
 
-            viz = plonk.Visualization(dump, render='density')
-            viz.set_units(units, integrated_z=1.0)
+        viz = plonk.Visualization(dump, render='density')
+        viz.set_units(units, integrated_z=1.0)
 
 
 class TestRenderScale(unittest.TestCase):
@@ -87,9 +78,8 @@ class TestRenderScale(unittest.TestCase):
 
         dump = plonk.Dump(TEST_FILE)
 
-        with contextlib.redirect_stdout(TEXT_TRAP):
-            viz = plonk.Visualization(dump, render='density')
-            viz.set_render_scale('linear')
+        viz = plonk.Visualization(dump, render='density')
+        viz.set_render_scale('linear')
 
         self.assertEqual(viz._render_scale, 'linear')
 
@@ -101,9 +91,8 @@ class TestRenderRange(unittest.TestCase):
 
         dump = plonk.Dump(TEST_FILE)
 
-        with contextlib.redirect_stdout(TEXT_TRAP):
-            viz = plonk.Visualization(dump, render='density')
-            viz.set_render_range(vmin=0.0, vmax=1.0)
+        viz = plonk.Visualization(dump, render='density')
+        viz.set_render_range(vmin=0.0, vmax=1.0)
 
         self.assertEqual(viz._options.render.render_min, 0.0)
         self.assertEqual(viz._options.render.render_max, 1.0)
@@ -116,9 +105,8 @@ class TestColormap(unittest.TestCase):
 
         dump = plonk.Dump(TEST_FILE)
 
-        with contextlib.redirect_stdout(TEXT_TRAP):
-            viz = plonk.Visualization(dump, render='density')
-            viz.set_colormap('viridis')
+        viz = plonk.Visualization(dump, render='density')
+        viz.set_colormap('viridis')
 
         self.assertEqual(viz._options.figure.colormap, 'viridis')
 
@@ -130,14 +118,12 @@ class TestParticleType(unittest.TestCase):
 
         dump = plonk.Dump(TEST_FILE)
 
-        with contextlib.redirect_stdout(TEXT_TRAP):
-            viz = plonk.Visualization(dump, render='density')
-            viz.set_particle_type(I_DUST)
+        viz = plonk.Visualization(dump, render='density')
+        viz.set_particle_type(I_DUST)
 
         self.assertEqual(viz._particle_types, {I_DUST})
 
-        with contextlib.redirect_stdout(TEXT_TRAP):
-            viz.set_particle_type([I_GAS, I_DUST])
+        viz.set_particle_type([I_GAS, I_DUST])
 
         self.assertEqual(viz._particle_types, {I_GAS, I_DUST})
 
@@ -149,32 +135,26 @@ class TestRotate(unittest.TestCase):
 
         dump = plonk.Dump(TEST_FILE)
 
-        with contextlib.redirect_stdout(TEXT_TRAP):
-            viz = plonk.Visualization(dump, render='density')
-            viz.rotate_frame([1, 0, 0], np.pi / 2)
+        viz = plonk.Visualization(dump, render='density')
+        viz.rotate_frame([1, 0, 0], np.pi / 2)
 
         np.testing.assert_array_almost_equal(
             viz._options.rotation.rotation_axis, [1, 0, 0]
         )
         self.assertEqual(viz._options.rotation.rotation_angle, np.pi / 2)
 
-        with contextlib.redirect_stdout(TEXT_TRAP):
-            viz = plonk.Visualization(
-                dump,
-                render='density',
-                rotation_axis=[1, 0, 0],
-                rotation_angle=np.pi / 2,
-            )
+        viz = plonk.Visualization(
+            dump, render='density', rotation_axis=[0, 1, 0], rotation_angle=np.pi / 3
+        )
 
         np.testing.assert_array_almost_equal(
-            viz._options.rotation.rotation_axis, [1, 0, 0]
+            viz._options.rotation.rotation_axis, [0, 1, 0]
         )
-        self.assertEqual(viz._options.rotation.rotation_angle, np.pi / 2)
+        self.assertEqual(viz._options.rotation.rotation_angle, np.pi / 3)
 
-        with contextlib.redirect_stdout(TEXT_TRAP):
-            viz = plonk.Visualization(
-                dump, render='density', position_angle=np.pi / 2, inclination=np.pi / 2
-            )
+        viz = plonk.Visualization(
+            dump, render='density', position_angle=np.pi / 2, inclination=np.pi / 2
+        )
 
         np.testing.assert_array_almost_equal(
             viz._options.rotation.rotation_axis, [0, 1, 0]
@@ -189,20 +169,17 @@ class TestImageSize(unittest.TestCase):
 
         dump = plonk.Dump(TEST_FILE)
 
-        with contextlib.redirect_stdout(TEXT_TRAP):
-            viz = plonk.Visualization(dump, render='density')
-            viz.set_image_size(extent=(-100, 100, -100, 100))
+        viz = plonk.Visualization(dump, render='density')
+        viz.set_image_size(extent=(-100, 100, -100, 100))
 
         self.assertEqual(viz._extent, (-100, 100, -100, 100))
 
-        with contextlib.redirect_stdout(TEXT_TRAP):
-            viz.set_image_size(extent=(-100, 100, -100, 100))
-            viz.set_image_size(size=200)
+        self.assertRaises(ValueError, viz.set_image_size, extent=(-100, 100, -100, 100))
+        viz.set_image_size(size=200)
 
         self.assertEqual(viz._extent, (-200, 200, -200, 200))
 
-        with contextlib.redirect_stdout(TEXT_TRAP):
-            viz.set_image_size(size=200)
+        self.assertRaises(ValueError, viz.set_image_size, size=200)
 
 
 if __name__ == '__main__':

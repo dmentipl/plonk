@@ -27,6 +27,9 @@ module interpolate3D_opacity
  use interpolation, only:weight_sink
  implicit none
 
+ integer, private :: iunit = 10
+ character(len=21), private :: output_file = '.libsplash.log'
+
 contains
 !--------------------------------------------------------------------------
 ! $Id: interpolate3D_opacity.f90,v 1.16 2007/11/20 17:05:35 dprice Exp $
@@ -106,25 +109,27 @@ subroutine interp3D_proj_opacity(x,y,z,pmass,npmass,hh,weight,dat,zorig,itype,np
   integer(kind=selected_int_kind(12)) :: iprogress
 !#endif
 
+  open(iunit, file=output_file, position='append')
+
   datsmooth = 0.
   term = 0.
   brightness = 0.
-  print "(1x,a)",'ray tracing from particles to pixels...'
+  write (iunit, "(1x,a)") 'ray tracing from particles to pixels...'
   if (pixwidth.le.0.) then
-     print "(a)",'interpolate3D_opacity: error: pixel width <= 0'
+     write (iunit, "(a)") 'interpolate3D_opacity: error: pixel width <= 0'
      return
   endif
   if (any(hh(1:npart).le.tiny(hh))) then
-     print*,'interpolate3D_opacity: warning: ignoring some or all particles with h < 0'
+     write (iunit, *) 'interpolate3D_opacity: warning: ignoring some or all particles with h < 0'
   endif
   !--check that npmass is sensible
   if (npmass.lt.1 .or. npmass.gt.npart) then
-     print*,'interpolate3D_opacity: ERROR in input number of particle masses '
+     write (iunit, *) 'interpolate3D_opacity: ERROR in input number of particle masses '
      return
   endif
   !--these values for npmass are not sensible but the routine will still work
   if (npmass.ne.1 .and. npmass.ne.npart) then
-     print*,'WARNING: interpolate3D_opacity: number of particle masses input =',npmass
+     write (iunit, *) 'WARNING: interpolate3D_opacity: number of particle masses input =',npmass
   endif
 
   if (abs(dscreenfromobserver).gt.tiny(dscreenfromobserver)) then
@@ -148,8 +153,8 @@ subroutine interp3D_proj_opacity(x,y,z,pmass,npmass,hh,weight,dat,zorig,itype,np
 !--average particle mass
   pmassav = sum(pmass(1:npmass))/real(npmass)
   rkappatemp = pi*hav*hav/(pmassav*coltable(0))
-  print*,'average h = ',hav,' average mass = ',pmassav
-  print "(1x,a,f6.2,a)",'typical surface optical depth is ~',rkappatemp/rkappa,' smoothing lengths'
+  write (iunit, *) 'average h = ',hav,' average mass = ',pmassav
+  write (iunit, "(1x,a,f6.2,a)") 'typical surface optical depth is ~',rkappatemp/rkappa,' smoothing lengths'
   !
   !--print a progress report if it is going to take a long time
   !  (a "long time" is, however, somewhat system dependent)
@@ -340,20 +345,22 @@ subroutine interp3D_proj_opacity(x,y,z,pmass,npmass,hh,weight,dat,zorig,itype,np
 !--get ending CPU time
 !
   if (nsink > 99) then
-     print*,'rendered ',nsink,' sink particles'
+     write (iunit, *) 'rendered ',nsink,' sink particles'
   elseif (nsink > 0) then
-     print "(1x,a,i2,a)",'rendered ',nsink,' sink particles'
+     write (iunit, "(1x,a,i2,a)") 'rendered ',nsink,' sink particles'
   endif
   call cpu_time(t_end)
   t_used = t_end - t_start
   if (t_used.gt.60.) then
      itmin = int(t_used/60.)
      tsec = t_used - (itmin*60.)
-     print "(1x,a,i4,a,f5.2,1x,a)",'completed in',itmin,' min ',tsec,'s'
+     write (iunit, "(1x,a,i4,a,f5.2,1x,a)") 'completed in',itmin,' min ',tsec,'s'
   else
-     print "(1x,a,f5.2,1x,a)",'completed in ',t_used,'s'
+     write (iunit, "(1x,a,f5.2,1x,a)") 'completed in ',t_used,'s'
   endif
-  if (zcut.lt.huge(zcut)) print*,'slice contains ',nused,' of ',npart,' particles'
+  if (zcut.lt.huge(zcut)) write (iunit, *) 'slice contains ',nused,' of ',npart,' particles'
+
+  close(iunit)
 
   return
 

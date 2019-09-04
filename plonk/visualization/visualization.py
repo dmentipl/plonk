@@ -509,13 +509,11 @@ class Visualization:
             particle_types = set(particle_types)
 
         if not particle_types.issubset(self._available_particle_types):
-            print(f'Some of particle type {particle_types} not available')
-            return
+            raise ValueError(f'Some of particle type {particle_types} not available')
 
         if hasattr(self, '_particle_types'):
             if particle_types == self._particle_types:
-                print(f'Particle types {particle_types} already plotted')
-                return
+                raise ValueError(f'Particle types {particle_types} already plotted')
 
         self._particle_types = particle_types
         self._particle_mask = np.logical_or.reduce(
@@ -540,8 +538,7 @@ class Visualization:
 
         if extent is not None:
             if np.all(extent == self._extent):
-                print(f'Image window size already = {extent}')
-                return
+                raise ValueError(f'Image window size already = {extent}')
             self._extent = tuple(extent)
             if self._initialized:
                 self._make_plot()
@@ -549,10 +546,9 @@ class Visualization:
 
         if size is not None:
             if np.all(size == np.abs(self._extent)):
-                print(
+                raise ValueError(
                     'Image window size already = ' f'(-{size}, {size}, -{size}, {size})'
                 )
-                return
             self._extent = (-size, size, -size, size)
             if self._initialized:
                 self._make_plot()
@@ -634,11 +630,6 @@ class Visualization:
 
         else:
             raise ValueError('Cannot determine scalar data')
-
-        if self._render_label is not None:
-            print(f'Rendering scalar field "{self._render_label}" using Splash')
-        else:
-            print(f'Rendering scalar field using Splash')
 
         image_data = scalar_interpolation(
             self._xyz,
@@ -740,11 +731,6 @@ class Visualization:
 
         else:
             raise ValueError('Cannot determine vector data')
-
-        if self._vector_label is not None:
-            print(f'Plotting vector field "{self._vector_label}" using Splash')
-        else:
-            print(f'Plotting vector field using Splash')
 
         vector_data = vector_interpolation(
             self._xyz,
@@ -871,7 +857,6 @@ class Visualization:
                 np.all(np.array(axis) == self._options.rotation.rotation_axis)
                 and angle == self._options.rotation.rotation_angle
             ):
-                print(f'Frame already has the specified rotation')
                 return
 
         if axis is not None and angle is not None:
@@ -880,13 +865,6 @@ class Visualization:
             self._rotate_frame = True
         else:
             raise ValueError('Must specify by axis and angle for rotation')
-
-        print(
-            f'Rotating {angle*180/np.pi:.0f} deg around '
-            f'[{axis[0]:.2f},'
-            f' {axis[1]:.2f},'
-            f' {axis[2]:.2f}]'
-        )
 
         if self._initialized:
             self._make_plot()

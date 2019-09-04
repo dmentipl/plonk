@@ -205,8 +205,7 @@ class Dump(DumpFile):
         quantities = self.available_extra_quantities
 
         if quantity not in [element for tupl in quantities for element in tupl]:
-            print(f'{quantity} not available')
-            return None
+            raise ValueError(f'{quantity} not available')
 
         if quantity in ('e', 'eccentricity'):
             gravitational_constant = constants.gravitational_constant / (
@@ -227,8 +226,7 @@ class Dump(DumpFile):
         if self.particles._can_compute_density:
             return self.mass * (hfact / np.abs(self.particles.arrays['h'])) ** 3
         else:
-            print(f'Cannot compute density on {self.particles}')
-            return None
+            raise ValueError(f'Cannot compute density on {self.particles}')
 
     def _mass_from_itype(self):
         return self.header['massoftype'][self.particles.arrays['itype'][:] - 1]

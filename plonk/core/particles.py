@@ -217,8 +217,7 @@ class Arrays:
         require_mass = False
 
         if quantity not in [element for tupl in quantities for element in tupl]:
-            print(f'{quantity} not available')
-            return None
+            raise ValueError(f'{quantity} not available')
 
         if quantity in ['r', 'spherical radius']:
             data = (self.arrays['xyz'],)

@@ -32,6 +32,9 @@ module xsections3D
  implicit none
  public :: interpolate3D_fastxsec, interpolate3D_xsec_vec
 
+ integer, private :: iunit = 10
+ character(len=21), private :: output_file = '.libsplash.log'
+
 contains
 
 !--------------------------------------------------------------------------
@@ -72,25 +75,27 @@ subroutine interpolate3D_fastxsec(x,y,z,hh,weight,dat,itype,npart,&
   real :: termnorm,term,dy,dy2,dz,dz2,ypix,rescalefac
   real, dimension(npixx) :: dx2i
 
+  open(iunit, file=output_file, position='append')
+
   ! force cubic kernel if not already set
   if (.not.associated(wfunc)) call select_kernel(0)
 
   datsmooth = 0.
   datnorm = 0.
   if (normalise) then
-     print*,'taking fast cross section (normalised)...',zslice
+     write (iunit, *) 'taking fast cross section (normalised)...',zslice
   else
-     print*,'taking fast cross section (non-normalised)...',zslice
+     write (iunit, *) 'taking fast cross section (non-normalised)...',zslice
   endif
   if (pixwidthx.le.0. .or. pixwidthy.le.0.) then
-     print*,'interpolate3D_xsec: error: pixel width <= 0'
+     write (iunit, *) 'interpolate3D_xsec: error: pixel width <= 0'
      return
   elseif (npart.le.0) then
-     print*,'interpolate3D_xsec: error: npart = 0'
+     write (iunit, *) 'interpolate3D_xsec: error: npart = 0'
      return
   endif
   if (any(hh(1:npart).le.tiny(hh))) then
-     print*,'interpolate3D_xsec: WARNING: ignoring some or all particles with h < 0'
+     write (iunit, *) 'interpolate3D_xsec: WARNING: ignoring some or all particles with h < 0'
   endif
   const = cnormk3D
   !
@@ -188,6 +193,8 @@ subroutine interpolate3D_fastxsec(x,y,z,hh,weight,dat,itype,npart,&
   endif
   datsmooth = datsmooth*rescalefac
 
+  close(iunit)
+
   return
 
 end subroutine interpolate3D_fastxsec
@@ -240,6 +247,8 @@ subroutine interpolate3D_xsec_vec(x,y,z,hh,weight,vecx,vecy,itype,npart,&
   real :: hi,hi1,radkern,q2,wab,const
   real :: termx,termy,termnorm,dx,dy,dz,dz2,xpix,ypix
 
+  open(iunit, file=output_file, position='append')
+
   ! force cubic kernel if not already set
   if (.not.associated(wfunc)) call select_kernel(0)
 
@@ -247,16 +256,16 @@ subroutine interpolate3D_xsec_vec(x,y,z,hh,weight,vecx,vecy,itype,npart,&
   vecsmoothy = 0.
   datnorm = 0.
   if (normalise) then
-     print*,'taking fast cross section (normalised)...',zslice
+     write (iunit, *) 'taking fast cross section (normalised)...',zslice
   else
-     print*,'taking fast cross section (non-normalised)...',zslice
+     write (iunit, *) 'taking fast cross section (non-normalised)...',zslice
   endif
   if (pixwidthx.le.0. .or. pixwidthy.le.0.) then
-     print*,'interpolate3D_xsec_vec: error: pixel width <= 0'
+     write (iunit, *) 'interpolate3D_xsec_vec: error: pixel width <= 0'
      return
   endif
   if (any(hh(1:npart).le.tiny(hh))) then
-     print*,'interpolate3D_xsec_vec: WARNING: ignoring some or all particles with h < 0'
+     write (iunit, *) 'interpolate3D_xsec_vec: WARNING: ignoring some or all particles with h < 0'
   endif
   const = cnormk3D ! normalisation constant (3D)
   !
@@ -336,6 +345,8 @@ subroutine interpolate3D_xsec_vec(x,y,z,hh,weight,vecx,vecy,itype,npart,&
         vecsmoothy = vecsmoothy/datnorm
      end where
   endif
+
+  close(iunit)
 
   return
 
