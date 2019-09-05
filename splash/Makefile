@@ -79,7 +79,7 @@ $(LIBSPLASH): $(SPLASH_DIR) print
 build: print $(LIBSPLASH) ## Build libsplash
 
 .PHONY: install
-install: $(LIBSPLASH) $(INSTALL_DIR) ## Install libsplash to INSTALL_DIR
+install: $(INSTALL_DIR) $(LIBSPLASH) ## Install libsplash to INSTALL_DIR
 	@echo
 	@echo ">>> Copying libsplash.so to INSTALL_DIR=$(INSTALL_DIR)"
 	@echo
@@ -90,6 +90,12 @@ ifeq ($(UNAME), Darwin)
 	@echo
 	install_name_tool -id @rpath/$(LIBSPLASH) $(INSTALL_DIR)/$(LIBSPLASH)
 endif
+
+$(INSTALL_DIR):
+	@echo
+	@echo ">>> INSTALL_DIR=$(INSTALL_DIR) does not exist"
+	@echo
+	@exit 1
 
 .PHONY: conda
 conda: $(LIBSPLASH) ## Build libsplash for Plonk Conda package
