@@ -35,6 +35,7 @@ endif
 
 ################################################################################
 
+SPLASH_GIT_COMMIT_HASH = 7cdbdd8b52eca6d2a78570f8647223af609742b3
 LIBSPLASH = libsplash.so
 SPLASH_DIR = splash
 
@@ -94,11 +95,19 @@ $(SPLASH_DIR):
 	@echo ">>> Fetching Splash source code"
 	@echo
 	@git clone https://github.com/danieljprice/splash.git
-	@cd splash && git checkout 0339411
+	@cd splash && git checkout $(SPLASH_GIT_COMMIT_HASH)
 
 .PHONY: clean
-clean: ## Clean build files
+clean: ## Clean temporary build files
 	@echo
-	@echo ">>> Cleaning up"
+	@echo ">>> Cleaning up temporary build files"
 	@echo
-	@\rm -rf $(SPLASH_DIR); \rm -f $(LIBSPLASH)
+	@\rm -rf $(SPLASH_DIR)
+
+.PHONY: distclean
+distclean: ## Clean all generated files
+	@echo
+	@echo ">>> Remove all generated files"
+	@echo
+	@\rm -rf $(SPLASH_DIR)
+	@\rm -f $(LIBSPLASH)
