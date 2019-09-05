@@ -23,11 +23,15 @@ endif
 
 # Splash compile options
 
-ifndef $(FC)
-    FC = gfortran
+ifndef $(SYSTEM)
+    SYSTEM = gfortran
+    FC = $(SYSTEM)
 endif
 ifndef $(OPENMP)
     OPENMP = yes
+endif
+ifndef $(DOUBLEPRECISION)
+	DOUBLEPRECISION = no
 endif
 ifndef $(DEBUG)
     DEBUG = no
@@ -63,8 +67,13 @@ $(LIBSPLASH): $(SPLASH_DIR) print
 	@echo
 	@echo ">>> Linking Splash into a shared object library"
 	@echo
-	make -C $(SPLASH_DIR) FC=$(FC) DOUBLEPRECISION=$(DOUBLEPRECISION) \
-		DEBUG=$(DEBUG) libsplash && cp $(SPLASH_DIR)/build/$(LIBSPLASH) .
+	make -C $(SPLASH_DIR) \
+		SYSTEM=$(SYSTEM) \
+		DOUBLEPRECISION=$(DOUBLEPRECISION) \
+		OPENMP=$(OPENMP) \
+		DEBUG=$(DEBUG) \
+		libsplash \
+		&& cp $(SPLASH_DIR)/build/$(LIBSPLASH) .
 
 .PHONY: build
 build: print $(LIBSPLASH) ## Build libsplash
