@@ -34,6 +34,18 @@ docs: ## Build documentation
 	@echo
 	@make -C docs html
 
+test: ## Run tests
+	@echo
+	@echo ">>> Run tests"
+	@echo
+	@python -m coverage run -m unittest discover && coverage html
+	@echo
+	@echo ">>> Check formatting with isort and black"
+	@echo
+	@isort --check-only -rc
+	@black --check --skip-string-normalization .
+
 clean: ## Clean up
-	@rm -rf splash/splash.c splash/splash.*.so
 	@make -C splash clean
+	@\rm -rf .coverage htmlcov
+	@\rm -rf splash/splash.c splash/splash.*.so

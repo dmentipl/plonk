@@ -1,8 +1,10 @@
 splash.c
+splash/splash
 examples/data
 *.so
 build/
 dist/
 *.egg-info/
-
+.coverage
+htmlcov/
 _build

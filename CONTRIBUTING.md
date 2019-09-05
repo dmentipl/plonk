@@ -11,34 +11,53 @@ We expect users and contributors to follow the [Python Community Code of Conduct
 Getting started
 ---------------
 
-If you want to contribute to Plonk you should fork the repository. You can then clone it to your local machine, and use Conda to link to your local copy of the code.
+If you want to contribute to Plonk you should fork the repository. You can then clone it to your local machine.
 
 ```bash
-git clone https://github.com/<user>/plonk
-cd plonk && conda develop .
+git clone https://github.com/your_user_name/plonk
 ```
 
-There is a compiled Fortran component to Plonk which is derived from Splash. You must compile this before development. This requires a Fortran compiler, e.g. gfortran. The following compiles Splash into a shared object library, and then uses Cython to build a Python interface to that library.
+Replace `your_user_name` with your GitHub user name.
+
+There is a compiled Fortran component to Plonk which is derived from Splash. You must compile this before development. This requires a Fortran compiler, e.g. gfortran. We compile Splash into a shared object library, and then uses Cython to build a Python interface to that library. Then we use Conda to install Plonk in development mode. So, the steps are
+
+1. Compile Splash into a library.
+2. Build the Cython extension.
+3. Install Plonk in Conda development mode.
+
+There is a Makefile in the root directory of the repository to facilitate this.
 
 ```bash
-make install
-python setup.py build_ext --inplace
+make development
 ```
 
-This installs the libsplash shared object library at `~/anaconda/lib`. You will need to set `INSTALL_DIR` if your Python distribution is located elsewhere. (I.e. `make install INSTALL_DIR=your_python_lib_dir`.)
+Then you can make changes to your local copy of Plonk and these changes will be reflected when you import Plonk and use it.
 
-You need to make sure the required dependencies are installed (via Conda). To satisfy these requirements there is a `environment.yml` file. You can set up a Conda environment for development and install Plonk in it:
+The Python interpreter must know where the Splash shared object library, `libsplash.so`, is at runtime. By default the Makefile installs it to `~/anaconda/lib`. If your Conda installation is different you can set the Makefile variable `INSTALL_DIR` as required
 
 ```bash
-git clone https://github.com/<user>/plonk && cd plonk
+INSTALL_DIR=/path/to/conda/lib make development
+```
+
+You need to make sure the required dependencies are installed (via Conda). To satisfy these requirements there is a `environment.yml` file. You can set up a Conda environment for development and install Plonk in it. In the root directory of the repository, do the following
+
+```bash
 conda env create --file environment.yml
 conda activate plonk-dev
 ```
 
-and then follow the instructions above. (To leave the development environment: `conda deactivate`.)
+and then follow the instructions above. To leave the development environment: `conda deactivate`.
+
+If you make changes to Plonk that you would like to contribute you need to test that your code passes the test suite, and satisfies the code style requirements. To run the tests and check the code formatting do the following
+
+```bash
+make test
+```
+
+If this fails then there is either a test failure, or the code needs to be formatted in line with the chosen code style for Plonk. (See below.)
 
 After you have committed and pushed your changes to your forked repository you
-can issue a pull request: https://github.com/dmentipl/plonk/pull/new/master.
+can issue a [pull request](https://github.com/dmentipl/plonk/pull/new/master).
 
 Code style
 ----------
@@ -54,8 +73,8 @@ We follow [PEP 8](https://www.python.org/dev/peps/pep-0008/) for code style, and
 To format your changes run the following from the main repository directory:
 
 ```bash
-isort plonk/**/*.py
-black --skip-string-normalization plonk
+isort -rc
+black --skip-string-normalization .
 ```
 
 ### Commit messages
@@ -97,7 +116,7 @@ As well as adding new features, contributions to documentation and testing are w
 
 ### Documentation
 
-The documentation is not very comprehensive.
+The documentation is not comprehensive.
 
 - Add documentation for general usage.
 - Add documentation for `plonk.Visualization`.
@@ -107,14 +126,9 @@ Documentation of use cases is also encouraged.
 
 ### Testing
 
-The testing framework is not at all comprehensive. Contributions to the testing framework are strongly encouraged. For example, we require tests for
+We encourage contributions to the testing framework. To see where test coverage is lacking run `make test` and then open htmlcov/index.html in a web browser.
 
-- reading and writing of Phantom dumps;
-- calculating extra quantities;
-- analysis functions;
-- visualization functions.
-
-Even just coming up with ideas of what to test is useful.
+Coming up with ideas of what to test is useful.
 
 ### Features
 
