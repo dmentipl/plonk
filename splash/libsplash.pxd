@@ -22,7 +22,8 @@ cdef extern:
         bint  *normalise,
         float *zobserver,
         float *dscreen,
-        bint  *useaccelerate
+        bint  *useaccelerate,
+        bint  *iverbose
         )
 
     void interpolate3d_proj_vec_c(
@@ -45,7 +46,8 @@ cdef extern:
         float *pixwidthy,
         bint  *normalise,
         float *zobserver,
-        float *dscreen
+        float *dscreen,
+        bint  *iverbose
         )
 
     void interpolate3d_fastxsec_c(
@@ -65,7 +67,8 @@ cdef extern:
         int   *npixy,
         float *pixwidthx,
         float *pixwidthy,
-        bint  *normalise
+        bint  *normalise,
+        bint  *iverbose
         )
 
     void interpolate3d_xsec_vec_c(
@@ -87,7 +90,8 @@ cdef extern:
         int   *npixy,
         float *pixwidthx,
         float *pixwidthy,
-        bint  *normalise
+        bint  *normalise,
+        bint  *iverbose
         )
 
     void interp3d_proj_opacity_c(
@@ -112,5 +116,6 @@ cdef extern:
         float *zobserver,
         float *dscreenfromobserver,
         float *rkappa,
-        float *zcut
+        float *zcut,
+        bint  *iverbose
         )

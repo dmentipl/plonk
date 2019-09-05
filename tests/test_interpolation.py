@@ -81,7 +81,6 @@ class TestScalarInterpolation(unittest.TestCase):
         np.testing.assert_allclose(im, scalar_perspective, rtol=1e-5)
 
 
-@unittest.skip('Test fails due to bugs in Splash')
 class TestVectorInterpolation(unittest.TestCase):
     """Test interpolation of vector quantities."""
 

@@ -15,6 +15,8 @@ try:
 except ImportError:
     raise Exception('Cannot import Splash interpolation routines. See documentation.')
 
+IVERBOSE = -2
+
 
 def scalar_interpolation(
     positions,
@@ -172,6 +174,7 @@ def scalar_interpolation(
                 zobserver=zobserver,
                 dscreen=dscreen,
                 useaccelerate=useaccelerate,
+                iverbose=IVERBOSE,
             )
         else:
             ####################################################################
@@ -206,6 +209,7 @@ def scalar_interpolation(
                 dscreenfromobserver=dscreenfromobserver,
                 rkappa=rkappa,
                 zcut=zcut,
+                iverbose=IVERBOSE,
             )
     elif cross_section:
         datsmooth = splash.interpolate3d_fastxsec(
@@ -225,6 +229,7 @@ def scalar_interpolation(
             pixwidthx=pixwidthx,
             pixwidthy=pixwidthy,
             normalise=normalise,
+            iverbose=IVERBOSE,
         )
 
     if integrated_z is not None and projection:
@@ -366,6 +371,7 @@ def vector_interpolation(
             normalise=normalise,
             zobserver=zobserver,
             dscreen=dscreen,
+            iverbose=IVERBOSE,
         )
     elif cross_section:
         vecsmoothx, vecsmoothy = splash.interpolate3d_xsec_vec(
@@ -386,6 +392,7 @@ def vector_interpolation(
             pixwidthx=pixwidthx,
             pixwidthy=pixwidthy,
             normalise=normalise,
+            iverbose=IVERBOSE,
         )
 
     if integrated_z is not None and projection:

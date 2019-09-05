@@ -23,7 +23,8 @@ def interpolate3d_projection(
     bint     normalise,
     float    zobserver,
     float    dscreen,
-    bint     useaccelerate ):
+    bint     useaccelerate,
+    bint     iverbose ):
 
     cdef float[:, ::1] datsmooth = np.empty((npixx, npixy), dtype=np.single)
 
@@ -46,7 +47,8 @@ def interpolate3d_projection(
         &normalise,
         &zobserver,
         &dscreen,
-        &useaccelerate )
+        &useaccelerate,
+        &iverbose )
 
     return datsmooth
 
@@ -68,7 +70,8 @@ def interpolate3d_proj_vec(
     float    pixwidthy,
     bint     normalise,
     float    zobserver,
-    float    dscreen ):
+    float    dscreen,
+    bint     iverbose ):
 
     cdef float[:, ::1] vecsmoothx = np.empty((npixx, npixy), dtype=np.single)
     cdef float[:, ::1] vecsmoothy = np.empty((npixx, npixy), dtype=np.single)
@@ -93,7 +96,8 @@ def interpolate3d_proj_vec(
         &pixwidthy,
         &normalise,
         &zobserver,
-        &dscreen )
+        &dscreen,
+        &iverbose )
 
     return vecsmoothx, vecsmoothy
 
@@ -113,7 +117,8 @@ def interpolate3d_fastxsec(
     int      npixy,
     float    pixwidthx,
     float    pixwidthy,
-    bint     normalise ):
+    bint     normalise,
+    bint     iverbose ):
 
     cdef float[:, ::1] datsmooth = np.empty((npixx, npixy), dtype=np.single)
 
@@ -134,7 +139,8 @@ def interpolate3d_fastxsec(
         &npixy,
         &pixwidthx,
         &pixwidthy,
-        &normalise )
+        &normalise,
+        &iverbose )
 
     return datsmooth
 
@@ -155,7 +161,8 @@ def interpolate3d_xsec_vec(
     int      npixy,
     float    pixwidthx,
     float    pixwidthy,
-    bint     normalise ):
+    bint     normalise,
+    bint     iverbose ):
 
     cdef float[:, ::1] vecsmoothx = np.empty((npixx, npixy), dtype=np.single)
     cdef float[:, ::1] vecsmoothy = np.empty((npixx, npixy), dtype=np.single)
@@ -179,7 +186,8 @@ def interpolate3d_xsec_vec(
         &npixy,
         &pixwidthx,
         &pixwidthy,
-        &normalise )
+        &normalise,
+        &iverbose )
 
     return vecsmoothx, vecsmoothy
 
@@ -203,7 +211,8 @@ def interp3d_proj_opacity(
     float    zobserver,
     float    dscreenfromobserver,
     float    rkappa,
-    float    zcut ):
+    float    zcut,
+    bint     iverbose ):
 
     cdef float[:, ::1] datsmooth  = np.empty((npixx, npixy), dtype=np.single)
     cdef float[:, ::1] brightness = np.empty((npixx, npixy), dtype=np.single)
@@ -230,6 +239,7 @@ def interp3d_proj_opacity(
         &zobserver,
         &dscreenfromobserver,
         &rkappa,
-        &zcut )
+        &zcut,
+        &iverbose )
 
     return datsmooth
