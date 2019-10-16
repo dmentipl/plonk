@@ -2,6 +2,7 @@
 This module contains the Units class.
 """
 
+import sys
 from collections import namedtuple
 
 import numpy as np
@@ -28,7 +29,15 @@ _quantities_short_name = [q[1] for q in _quantities]
 _quantities_base = [q[2] for q in _quantities]
 _quantities_list = _quantities_long_name + _quantities_short_name
 
-_Units = namedtuple('Units', _quantities_list, defaults=(None,) * len(_quantities_list))
+if sys.version_info > (3, 7):
+    # The defaults argument in namedtuple did not exist prior to Python 3.7
+    _Units = namedtuple('Units', _quantities_list, defaults=(None,) * len(_quantities_list))
+
+else:
+    # This code comes from:
+    # https://stackoverflow.com/questions/11351032/namedtuple-and-default-values-for-optional-keyword-arguments/29756101
+    _Units = namedtuple('Units', _quantities_list)
+    _Units.__new__.__defaults__ = (None,) * len(_quantities_list)
 
 LENGTH_UNITS = (
     ('cm', 1.0),
