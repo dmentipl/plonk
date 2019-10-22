@@ -53,7 +53,7 @@ class Arrays:
         self._arrays_handle = file_handle[arrays_label]
         self._arrays_label = arrays_label
 
-        _CAN_COMPUTE_DENSITY_LABELS = ['fluid', 'sph fluid', 'sph_fluid']
+        _CAN_COMPUTE_DENSITY_LABELS = ('fluid', 'sph fluid', 'sph_fluid')
         self._can_compute_density = False
         if particle_type in _CAN_COMPUTE_DENSITY_LABELS:
             self._can_compute_density = True
