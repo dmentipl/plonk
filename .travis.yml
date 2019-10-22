@@ -34,4 +34,7 @@ after_success:
 
 notifications:
   email:
-    - d.mentiplay@gmail.com
+    recipients:
+      - d.mentiplay@gmail.com
+    on_success: change
+    on_failure: always
