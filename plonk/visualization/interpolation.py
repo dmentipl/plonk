@@ -6,8 +6,7 @@ one for interpolation of vector fields. They both make calls to the
 Splash Fortran libraries via Cython.
 """
 
-import warnings
-from typing import Optional, Tuple
+from typing import Tuple
 
 import numpy as np
 from numpy import ndarray
@@ -17,7 +16,8 @@ try:
 except ImportError:
     raise Exception('Cannot import Splash interpolation routines. See documentation.')
 
-IVERBOSE = -2
+_IVERBOSE = -2
+_PIXEL = (512, 512)
 
 
 def scalar_interpolation(
@@ -31,17 +31,11 @@ def scalar_interpolation(
     x_range: Tuple[float, float],
     y_range: Tuple[float, float],
     *,
-    number_pixels: Tuple[float, float] = (512, 512),
-    density_weighted: bool = False,
+    number_pixels: Tuple[float, float] = _PIXEL,
     cross_section: bool = False,
     slice_position: float = 0.0,
-    perspective: bool = False,
-    observer_distance: float = 0.0,
-    opacity: bool = False,
+    density_weighted: bool = False,
     normalize: bool = False,
-    accelerate: bool = False,
-    integrated_z: Optional[float] = None,
-    **kwargs,
 ) -> ndarray:
     """
     Interpolate a scalar quantity to a pixel grid.
@@ -72,25 +66,14 @@ def scalar_interpolation(
     number_pixels
         The pixel grid to interpolate the scalar quantity to, as
         (npixx, npixy).
-    density_weighted
-        Use density weighted interpolation.
     cross_section
         Turn on cross section rendering.
     slice_position
-        Slice position as a z-value.
-    perspective
-        Turn on perspective rendering.
-    observer_distance
-        Distance from the screen to the observer. This turns on 3D
-        perspective rendering.
-    opacity
-        Turn on opacity rendering.
+        Slice position as a z-value. Default is 0.0.
+    density_weighted
+        Use density weighted interpolation.
     normalize
         Use normalized interpolation.
-    accelerate
-        Use accelerated interpolation.
-    integrated_z
-        Z unit for projection plots.
 
     Returns
     -------
@@ -100,12 +83,9 @@ def scalar_interpolation(
     """
     npixx = number_pixels[0]
     npixy = number_pixels[1]
-    projection = not cross_section and not perspective
+    projection = not cross_section
     zslice = slice_position
-    dscreen = observer_distance
-    zobserver = observer_distance
     normalise = normalize
-    useaccelerate = accelerate
     npart = len(smoothing_length)
     xmin = x_range[0]
     ymin = y_range[0]
@@ -123,69 +103,32 @@ def scalar_interpolation(
     y = np.array(y_coordinate, dtype=np.single)
     z = np.array(z_coordinate, dtype=np.single)
     hh = np.array(smoothing_length, dtype=np.single)
-    pmass = np.array(particle_mass, dtype=np.single)
     weight = np.array(weights, dtype=np.single)
     dat = np.array(scalar_data, dtype=np.single)
     itype = np.ones(npart, dtype=np.int32)
 
-    if projection or perspective:
-        if not opacity:
-            datsmooth = splash.interpolate3d_projection(
-                x=x,
-                y=y,
-                z=z,
-                hh=hh,
-                weight=weight,
-                dat=dat,
-                itype=itype,
-                npart=npart,
-                xmin=xmin,
-                ymin=ymin,
-                npixx=npixx,
-                npixy=npixy,
-                pixwidthx=pixwidthx,
-                pixwidthy=pixwidthy,
-                normalise=normalise,
-                zobserver=zobserver,
-                dscreen=dscreen,
-                useaccelerate=useaccelerate,
-                iverbose=IVERBOSE,
-            )
-        else:
-            ####################################################################
-            # TODO: check this
-            warnings.warn('Opacity rendering in Plonk is experimental.')
-            npmass = npart
-            zorig = z
-            pixwidth = pixwidthx
-            dscreenfromobserver = dscreen
-            rkappa = np.pi * hh.mean() ** 2 / pmass[0]
-            zcut = observer_distance
-            zobserver = observer_distance
-            ####################################################################
-            datsmooth = splash.interp3d_proj_opacity(
-                x=x,
-                y=y,
-                z=z,
-                hh=hh,
-                pmass=pmass,
-                npmass=npmass,
-                weight=weight,
-                dat=dat,
-                zorig=zorig,
-                itype=itype,
-                npart=npart,
-                xmin=xmin,
-                ymin=ymin,
-                npixx=npixx,
-                npixy=npixy,
-                pixwidth=pixwidth,
-                zobserver=zobserver,
-                dscreenfromobserver=dscreenfromobserver,
-                rkappa=rkappa,
-                zcut=zcut,
-                iverbose=IVERBOSE,
-            )
+    if projection:
+        datsmooth = splash.interpolate3d_projection(
+            x=x,
+            y=y,
+            z=z,
+            hh=hh,
+            weight=weight,
+            dat=dat,
+            itype=itype,
+            npart=npart,
+            xmin=xmin,
+            ymin=ymin,
+            npixx=npixx,
+            npixy=npixy,
+            pixwidthx=pixwidthx,
+            pixwidthy=pixwidthy,
+            normalise=normalise,
+            zobserver=0.0,
+            dscreen=0.0,
+            useaccelerate=False,
+            iverbose=_IVERBOSE,
+        )
     elif cross_section:
         datsmooth = splash.interpolate3d_fastxsec(
             x=x,
@@ -204,11 +147,9 @@ def scalar_interpolation(
             pixwidthx=pixwidthx,
             pixwidthy=pixwidthy,
             normalise=normalise,
-            iverbose=IVERBOSE,
+            iverbose=_IVERBOSE,
         )
 
-    if integrated_z is not None and projection:
-        return integrated_z * np.array(datsmooth)
     return np.array(datsmooth)
 
 
@@ -224,15 +165,11 @@ def vector_interpolation(
     x_range: Tuple[float, float],
     y_range: Tuple[float, float],
     *,
-    number_pixels: Tuple[float, float] = (512, 512),
-    density_weighted: bool = False,
+    number_pixels: Tuple[float, float] = _PIXEL,
     cross_section: bool = False,
     slice_position: float = 0.0,
-    perspective: bool = False,
-    observer_distance: float = 0.0,
+    density_weighted: bool = False,
     normalize: bool = False,
-    integrated_z: Optional[float] = None,
-    **kwargs,
 ) -> ndarray:
     """
     Interpolate a vector quantity to a pixel grid.
@@ -269,21 +206,14 @@ def vector_interpolation(
     number_pixels
         The pixel grid to interpolate the scalar quantity to, as
         (npixx, npixy).
-    density_weighted
-        Use density weighted interpolation.
     cross_section
         Turn on cross section rendering.
     slice_position
         Slice position as a z-value.
-    perspective
-        Turn on perspective rendering.
-    observer_distance
-        Distance from the screen to the observer. This turns on 3D
-        perspective rendering.
+    density_weighted
+        Use density weighted interpolation.
     normalize
         Use normalized interpolation.
-    integrated_z
-        Z unit for projection plots.
 
     Returns
     -------
@@ -293,10 +223,8 @@ def vector_interpolation(
     """
     npixx = number_pixels[0]
     npixy = number_pixels[1]
-    projection = not cross_section and not perspective
+    projection = not cross_section
     zslice = slice_position
-    dscreen = observer_distance
-    zobserver = observer_distance
     normalise = normalize
     npart = len(smoothing_length)
     xmin = x_range[0]
@@ -320,7 +248,7 @@ def vector_interpolation(
     weight = np.array(weights, dtype=np.single)
     itype = np.ones(npart, dtype=np.int32)
 
-    if projection or perspective:
+    if projection:
         vecsmoothx, vecsmoothy = splash.interpolate3d_proj_vec(
             x=x,
             y=y,
@@ -338,9 +266,9 @@ def vector_interpolation(
             pixwidthx=pixwidthx,
             pixwidthy=pixwidthy,
             normalise=normalise,
-            zobserver=zobserver,
-            dscreen=dscreen,
-            iverbose=IVERBOSE,
+            zobserver=0.0,
+            dscreen=0.0,
+            iverbose=_IVERBOSE,
         )
     elif cross_section:
         vecsmoothx, vecsmoothy = splash.interpolate3d_xsec_vec(
@@ -361,9 +289,7 @@ def vector_interpolation(
             pixwidthx=pixwidthx,
             pixwidthy=pixwidthy,
             normalise=normalise,
-            iverbose=IVERBOSE,
+            iverbose=_IVERBOSE,
         )
 
-    if integrated_z is not None and projection:
-        return integrated_z * np.stack((np.array(vecsmoothx), np.array(vecsmoothy)))
     return np.stack((np.array(vecsmoothx), np.array(vecsmoothy)))
