@@ -39,7 +39,8 @@ endif
 
 ################################################################################
 
-SPLASH_GIT_COMMIT_HASH = 7cdbdd8b52eca6d2a78570f8647223af609742b3
+SPLASH_GIT_COMMIT_HASH = c391328cf8c3ebf197ae8a2f94620d379b1a6b1a
+
 LIBSPLASH = libsplash.so
 SPLASH_DIR = splash
 

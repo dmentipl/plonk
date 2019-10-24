@@ -24,7 +24,8 @@ def interpolate3d_projection(
     float    zobserver,
     float    dscreen,
     bint     useaccelerate,
-    bint     iverbose ):
+    bint     iverbose
+):
 
     cdef float[:, ::1] datsmooth = np.empty((npixx, npixy), dtype=np.single)
 
@@ -48,7 +49,8 @@ def interpolate3d_projection(
         &zobserver,
         &dscreen,
         &useaccelerate,
-        &iverbose )
+        &iverbose
+    )
 
     return datsmooth
 
@@ -71,7 +73,8 @@ def interpolate3d_proj_vec(
     bint     normalise,
     float    zobserver,
     float    dscreen,
-    bint     iverbose ):
+    bint     iverbose
+):
 
     cdef float[:, ::1] vecsmoothx = np.empty((npixx, npixy), dtype=np.single)
     cdef float[:, ::1] vecsmoothy = np.empty((npixx, npixy), dtype=np.single)
@@ -97,7 +100,8 @@ def interpolate3d_proj_vec(
         &normalise,
         &zobserver,
         &dscreen,
-        &iverbose )
+        &iverbose
+    )
 
     return vecsmoothx, vecsmoothy
 
@@ -118,7 +122,8 @@ def interpolate3d_fastxsec(
     float    pixwidthx,
     float    pixwidthy,
     bint     normalise,
-    bint     iverbose ):
+    bint     iverbose
+):
 
     cdef float[:, ::1] datsmooth = np.empty((npixx, npixy), dtype=np.single)
 
@@ -140,7 +145,8 @@ def interpolate3d_fastxsec(
         &pixwidthx,
         &pixwidthy,
         &normalise,
-        &iverbose )
+        &iverbose
+    )
 
     return datsmooth
 
@@ -162,7 +168,8 @@ def interpolate3d_xsec_vec(
     float    pixwidthx,
     float    pixwidthy,
     bint     normalise,
-    bint     iverbose ):
+    bint     iverbose
+):
 
     cdef float[:, ::1] vecsmoothx = np.empty((npixx, npixy), dtype=np.single)
     cdef float[:, ::1] vecsmoothy = np.empty((npixx, npixy), dtype=np.single)
@@ -187,7 +194,8 @@ def interpolate3d_xsec_vec(
         &pixwidthx,
         &pixwidthy,
         &normalise,
-        &iverbose )
+        &iverbose
+    )
 
     return vecsmoothx, vecsmoothy
 
@@ -212,7 +220,8 @@ def interp3d_proj_opacity(
     float    dscreenfromobserver,
     float    rkappa,
     float    zcut,
-    bint     iverbose ):
+    bint     iverbose
+):
 
     cdef float[:, ::1] datsmooth  = np.empty((npixx, npixy), dtype=np.single)
     cdef float[:, ::1] brightness = np.empty((npixx, npixy), dtype=np.single)
@@ -240,6 +249,115 @@ def interp3d_proj_opacity(
         &dscreenfromobserver,
         &rkappa,
         &zcut,
-        &iverbose )
+        &iverbose
+    )
+
+    return datsmooth
+
+def interpolate3d_proj_geom(
+    float[:] x,
+    float[:] y,
+    float[:] z,
+    float[:] hh,
+    float[:] weight,
+    float[:] dat,
+    int[:]   itype,
+    int      npart,
+    float    xmin,
+    float    ymin,
+    int      npixx,
+    int      npixy,
+    float    pixwidthx,
+    float    pixwidthy,
+    bint     normalise,
+    int      igeom,
+    int      iplotx,
+    int      iploty,
+    int      iplotz,
+    int[:]   ix,
+    float[:] xorigin
+):
+
+    cdef float[:, ::1] datsmooth = np.empty((npixx, npixy), dtype=np.single)
+
+    libsplash.interpolate3d_proj_geom_c(
+        &x[0],
+        &y[0],
+        &z[0],
+        &hh[0],
+        &weight[0],
+        &dat[0],
+        &itype[0],
+        &npart,
+        &xmin,
+        &ymin,
+        &datsmooth[0,0],
+        &npixx,
+        &npixy,
+        &pixwidthx,
+        &pixwidthy,
+        &normalise,
+        &igeom,
+        &iplotx,
+        &iploty,
+        &iplotz,
+        &ix[0],
+        &xorigin[0]
+    )
+
+    return datsmooth
+
+def interpolate3d_xsec_geom(
+    float[:] x,
+    float[:] y,
+    float[:] z,
+    float[:] hh,
+    float[:] weight,
+    float[:] dat,
+    int[:]   itype,
+    int      npart,
+    float    xmin,
+    float    ymin,
+    float    zslice,
+    int      npixx,
+    int      npixy,
+    float    pixwidthx,
+    float    pixwidthy,
+    bint     normalise,
+    int      igeom,
+    int      iplotx,
+    int      iploty,
+    int      iplotz,
+    int[:]   ix,
+    float[:] xorigin
+):
+
+    cdef float[:, ::1] datsmooth = np.empty((npixx, npixy), dtype=np.single)
+
+    libsplash.interpolate3d_xsec_geom_c(
+        &x[0],
+        &y[0],
+        &z[0],
+        &hh[0],
+        &weight[0],
+        &dat[0],
+        &itype[0],
+        &npart,
+        &xmin,
+        &ymin,
+        &zslice,
+        &datsmooth[0,0],
+        &npixx,
+        &npixy,
+        &pixwidthx,
+        &pixwidthy,
+        &normalise,
+        &igeom,
+        &iplotx,
+        &iploty,
+        &iplotz,
+        &ix[0],
+        &xorigin[0]
+    )
 
     return datsmooth

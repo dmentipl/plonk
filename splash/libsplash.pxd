@@ -24,7 +24,7 @@ cdef extern:
         float *dscreen,
         bint  *useaccelerate,
         bint  *iverbose
-        )
+    )
 
     void interpolate3d_proj_vec_c(
         float *x,
@@ -48,7 +48,7 @@ cdef extern:
         float *zobserver,
         float *dscreen,
         bint  *iverbose
-        )
+    )
 
     void interpolate3d_fastxsec_c(
         float *x,
@@ -69,7 +69,7 @@ cdef extern:
         float *pixwidthy,
         bint  *normalise,
         bint  *iverbose
-        )
+    )
 
     void interpolate3d_xsec_vec_c(
         float *x,
@@ -92,7 +92,7 @@ cdef extern:
         float *pixwidthy,
         bint  *normalise,
         bint  *iverbose
-        )
+    )
 
     void interp3d_proj_opacity_c(
         float *x,
@@ -118,4 +118,55 @@ cdef extern:
         float *rkappa,
         float *zcut,
         bint  *iverbose
-        )
+    )
+
+    void interpolate3d_proj_geom_c(
+        float *x,
+        float *y,
+        float *z,
+        float *hh,
+        float *weight,
+        float *dat,
+        int   *itype,
+        int   *npart,
+        float *xmin,
+        float *ymin,
+        float *datsmooth,
+        int   *npixx,
+        int   *npixy,
+        float *pixwidthx,
+        float *pixwidthy,
+        bint  *normalise,
+        int   *igeom,
+        int   *iplotx,
+        int   *iploty,
+        int   *iplotz,
+        int   *ix,
+        float *xorigin
+    )
+
+    void interpolate3d_xsec_geom_c(
+        float *x,
+        float *y,
+        float *z,
+        float *hh,
+        float *weight,
+        float *dat,
+        int   *itype,
+        int   *npart,
+        float *xmin,
+        float *ymin,
+        float *zslice,
+        float *datsmooth,
+        int   *npixx,
+        int   *npixy,
+        float *pixwidthx,
+        float *pixwidthy,
+        bint  *normalise,
+        int   *igeom,
+        int   *iplotx,
+        int   *iploty,
+        int   *iplotz,
+        int   *ix,
+        float *xorigin
+    )
