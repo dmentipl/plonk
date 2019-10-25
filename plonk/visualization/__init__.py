@@ -38,6 +38,6 @@ cite: Price, 2007, Publ. Astron. Soc. Aust., 24, 159-173.
 """
 
 from .multiplot import MultiPlot
-from .visualization import Visualization, VisualizationIterator
+from .visualization import Visualization
 
-__all__ = ['MultiPlot', 'Visualization', 'VisualizationIterator']
+__all__ = ['MultiPlot', 'Visualization']
