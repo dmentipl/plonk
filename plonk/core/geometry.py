@@ -1,6 +1,7 @@
 """Geometry, and coordinate transformations."""
 
 from typing import Optional
+
 import numpy as np
 from numpy import ndarray
 

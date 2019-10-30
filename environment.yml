@@ -24,6 +24,7 @@ dependencies:
   - matplotlib
   - numpy
   - pandas
+  - pip
   - sphinx
   - sphinx_rtd_theme
   - pip:

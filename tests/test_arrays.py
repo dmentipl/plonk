@@ -28,8 +28,7 @@ class TestArrays(unittest.TestCase):
 
     def test_init_arrays(self):
         """Testing initialising Arrays object."""
-
-        file_handle = h5py.File(TEST_FILE)
+        file_handle = h5py.File(TEST_FILE, mode='r')
         arrays = plonk.core.particles.Arrays(
             file_handle=file_handle, arrays_label='particles'
         )
@@ -44,8 +43,7 @@ class TestArrays(unittest.TestCase):
 
     def test_to_structured_array(self):
         """Testing Arrays object to numpy structured array."""
-
-        file_handle = h5py.File(TEST_FILE)
+        file_handle = h5py.File(TEST_FILE, mode='r')
         arrays = plonk.core.particles.Arrays(
             file_handle=file_handle, arrays_label='particles'
         )
@@ -56,8 +54,7 @@ class TestArrays(unittest.TestCase):
 
     def test_extra_quantities(self):
         """Testing calculating extra quantities."""
-
-        file_handle = h5py.File(TEST_FILE)
+        file_handle = h5py.File(TEST_FILE, mode='r')
         arrays = plonk.core.particles.Arrays(
             file_handle=file_handle, arrays_label='particles'
         )

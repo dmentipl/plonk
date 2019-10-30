@@ -8,6 +8,7 @@ Daniel Mentiplay, 2019.
 import pathlib
 
 import matplotlib.pyplot as plt
+
 import plonk
 
 # ---------------------------------------------------------------------------- #

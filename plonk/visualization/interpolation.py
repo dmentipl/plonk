@@ -7,8 +7,8 @@ for interpolation of vector fields. They both make use of KDEpy.
 from typing import Optional, Tuple
 
 import numpy as np
-from numpy import ndarray
 from KDEpy import FFTKDE
+from numpy import ndarray
 
 _IVERBOSE = -2
 _NUMBER_OF_PIXELS = (512, 512)

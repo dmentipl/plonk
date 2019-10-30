@@ -1,6 +1,4 @@
-"""
-Testing Analysis.
-"""
+"""Testing Analysis."""
 
 import pathlib
 import unittest
@@ -21,6 +19,7 @@ class TestDiscAnalysis(unittest.TestCase):
     """Test disc analysis."""
 
     def test_disc_analysis(self):
+        """Test disc analysis."""
 
         dump = plonk.Dump(TEST_FILE)
         with warnings.catch_warnings():
@@ -28,7 +27,9 @@ class TestDiscAnalysis(unittest.TestCase):
             av = plonk.analysis.disc(
                 dump, radius_in=1, radius_out=150, number_radial_bins=10
             )
-        pd.testing.assert_frame_equal(av, pd.read_csv(CSV_FILE, index_col=0))
+        pd.testing.assert_frame_equal(
+            av, pd.read_csv(CSV_FILE, index_col=0), check_less_precise=2
+        )
 
 
 if __name__ == '__main__':
