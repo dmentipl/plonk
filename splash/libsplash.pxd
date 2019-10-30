@@ -170,3 +170,58 @@ cdef extern:
         int   *ix,
         float *xorigin
     )
+
+    void interpolate3d_proj_geom_vec_c(
+        float *x,
+        float *y,
+        float *z,
+        float *hh,
+        float *weight,
+        float *vecx,
+        float *vecy,
+        int   *itype,
+        int   *npart,
+        float *xmin,
+        float *ymin,
+        float *vecsmoothx,
+        float *vecsmoothy,
+        int   *npixx,
+        int   *npixy,
+        float *pixwidthx,
+        float *pixwidthy,
+        bint  *normalise,
+        int   *igeom,
+        int   *iplotx,
+        int   *iploty,
+        int   *iplotz,
+        int   *ix,
+        float *xorigin
+    )
+
+    void interpolate3d_xsec_geom_vec_c(
+        float *x,
+        float *y,
+        float *z,
+        float *hh,
+        float *weight,
+        float *vecx,
+        float *vecy,
+        int   *itype,
+        int   *npart,
+        float *xmin,
+        float *ymin,
+        float *zslice,
+        float *vecsmoothx,
+        float *vecsmoothy,
+        int   *npixx,
+        int   *npixy,
+        float *pixwidthx,
+        float *pixwidthy,
+        bint  *normalise,
+        int   *igeom,
+        int   *iplotx,
+        int   *iploty,
+        int   *iplotz,
+        int   *ix,
+        float *xorigin
+    )

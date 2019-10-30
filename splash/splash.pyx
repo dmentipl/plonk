@@ -361,3 +361,119 @@ def interpolate3d_xsec_geom(
     )
 
     return datsmooth
+
+def interpolate3d_proj_geom_vec(
+    float[:] x,
+    float[:] y,
+    float[:] z,
+    float[:] hh,
+    float[:] weight,
+    float[:] vecx,
+    float[:] vecy,
+    int[:]   itype,
+    int      npart,
+    float    xmin,
+    float    ymin,
+    int      npixx,
+    int      npixy,
+    float    pixwidthx,
+    float    pixwidthy,
+    bint     normalise,
+    int      igeom,
+    int      iplotx,
+    int      iploty,
+    int      iplotz,
+    int[:]   ix,
+    float[:] xorigin
+):
+
+    cdef float[:, ::1] vecsmoothx = np.empty((npixx, npixy), dtype=np.single)
+    cdef float[:, ::1] vecsmoothy = np.empty((npixx, npixy), dtype=np.single)
+
+    libsplash.interpolate3d_proj_geom_vec_c(
+        &x[0],
+        &y[0],
+        &z[0],
+        &hh[0],
+        &weight[0],
+        &vecx[0],
+        &vecy[0],
+        &itype[0],
+        &npart,
+        &xmin,
+        &ymin,
+        &vecsmoothx[0,0],
+        &vecsmoothy[0,0],
+        &npixx,
+        &npixy,
+        &pixwidthx,
+        &pixwidthy,
+        &normalise,
+        &igeom,
+        &iplotx,
+        &iploty,
+        &iplotz,
+        &ix[0],
+        &xorigin[0]
+    )
+
+    return vecsmoothx, vecsmoothy
+
+def interpolate3d_xsec_geom_vec(
+    float[:] x,
+    float[:] y,
+    float[:] z,
+    float[:] hh,
+    float[:] weight,
+    float[:] vecx,
+    float[:] vecy,
+    int[:]   itype,
+    int      npart,
+    float    xmin,
+    float    ymin,
+    float    zslice,
+    int      npixx,
+    int      npixy,
+    float    pixwidthx,
+    float    pixwidthy,
+    bint     normalise,
+    int      igeom,
+    int      iplotx,
+    int      iploty,
+    int      iplotz,
+    int[:]   ix,
+    float[:] xorigin
+):
+
+    cdef float[:, ::1] vecsmoothx = np.empty((npixx, npixy), dtype=np.single)
+    cdef float[:, ::1] vecsmoothy = np.empty((npixx, npixy), dtype=np.single)
+
+    libsplash.interpolate3d_xsec_geom_vec_c(
+        &x[0],
+        &y[0],
+        &z[0],
+        &hh[0],
+        &weight[0],
+        &vecx[0],
+        &vecy[0],
+        &itype[0],
+        &npart,
+        &xmin,
+        &ymin,
+        &zslice,
+        &vecsmoothx[0,0],
+        &vecsmoothy[0,0],
+        &npixx,
+        &npixy,
+        &pixwidthx,
+        &pixwidthy,
+        &normalise,
+        &igeom,
+        &iplotx,
+        &iploty,
+        &iplotz,
+        &ix[0],
+        &xorigin[0]
+    )
+
+    return vecsmoothx, vecsmoothy
