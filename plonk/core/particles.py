@@ -1,5 +1,4 @@
-"""
-This module contains the Particles class.
+"""The Particles class module.
 
 Variables and functions related to the particle arrays.
 """
@@ -11,8 +10,7 @@ I_DUST = 7
 
 
 class Arrays:
-    """
-    Smoothed particle hydrodynamics particle arrays object.
+    """Smoothed particle hydrodynamics particle arrays object.
 
     Used for accessing the particle arrays and sinks arrays from the
     dump file handle, i.e. with lazy loading.
@@ -77,19 +75,23 @@ class Arrays:
             self.cache_arrays()
 
     def __repr__(self):
+        """Dunder repr method."""
         return self.__str__()
 
     def __str__(self):
+        """Dunder str method."""
         return f'<plonk.Arrays: "{self._arrays_label}">'
 
     @property
     def arrays(self):
+        """Particle arrays."""
         if self._cache_arrays:
             return self._arrays_cached
         return self._arrays
 
     @property
     def number(self):
+        """Number of particles."""
         if self._number:
             return self._number
         return self.arrays[self.fields[0]].size
@@ -152,7 +154,6 @@ class Arrays:
 
     def _read_arrays(self):
         """Read arrays into structured Numpy array."""
-
         dtype = []
         nvals = None
         for key, val in self._arrays_handle.items():
@@ -212,7 +213,6 @@ class Arrays:
         >>> arrays.extra_quantity('angular momentum', mass)
         >>> arrays.extra_quantity('L', mass)
         """
-
         quantities = self._available_extra_quantities()
         require_mass = False
 

@@ -13,6 +13,7 @@ channels:
 dependencies:
   - python>=3.6
   - anaconda-client
+  - astropy
   - black
   - conda-build
   - coverage
@@ -25,4 +26,5 @@ dependencies:
   - pandas
   - sphinx
   - sphinx_rtd_theme
-  - sympy
+  - pip:
+    - KDEpy

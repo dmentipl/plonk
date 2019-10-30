@@ -8,13 +8,8 @@ source:
   git_url: https://github.com/dmentipl/plonk
 
 requirements:
-  build:
-    - {{ compiler('fortran') }}
-    - git
-    - make
   host:
     - python=3
-    - cython
     - numpy
     - setuptools
   run:
@@ -23,7 +18,6 @@ requirements:
     - matplotlib
     - numpy
     - pandas
-    - sympy
 
 about:
   home: https://github.com/dmentipl/plonk

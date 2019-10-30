@@ -1,6 +1,4 @@
-"""
-Testing visualization.interpolation.
-"""
+"""Testing visualization.interpolation."""
 
 import unittest
 
@@ -18,15 +16,20 @@ from .stubdata.interpolation_arrays import (
 
 N = 10
 
-XYZ = np.ones((N, 3))
-H = np.ones((N,))
-W = np.ones_like(H)
-M = np.ones_like(H)
-DX = DY = (0, 1)
+XX = np.ones(N)
+YY = np.ones(N)
+ZZ = np.ones(N)
+HH = np.ones(N)
+WW = np.ones(N)
+MM = np.ones(N)
+EXTENT = (0, 1, 0, 1)
 PIX = (10, 10)
 
-SDAT = np.ones_like(H)
-VDAT = np.ones_like(XYZ)
+S_DATA = np.ones(N)
+X_DATA = np.ones(N)
+Y_DATA = np.ones(N)
+
+ZSLICE = 0.5
 
 
 class TestScalarInterpolation(unittest.TestCase):
@@ -35,50 +38,33 @@ class TestScalarInterpolation(unittest.TestCase):
     def test_scalar_interpolation(self):
 
         im = plonk.visualization.interpolation.scalar_interpolation(
-            XYZ, H, W, SDAT, M, DX, DY, number_pixels=PIX
+            data=S_DATA,
+            x_position=XX,
+            y_position=YY,
+            z_position=ZZ,
+            extent=EXTENT,
+            smoothing_length=HH,
+            particle_mass=MM,
+            number_of_pixels=PIX,
         )
 
         np.testing.assert_allclose(im, scalar, rtol=1e-5)
 
     def test_scalar_cross_section(self):
 
-        cross_section = True
-        slice_position = 0.5
-
         im = plonk.visualization.interpolation.scalar_interpolation(
-            XYZ,
-            H,
-            W,
-            SDAT,
-            M,
-            DX,
-            DY,
-            number_pixels=PIX,
-            cross_section=cross_section,
-            slice_position=slice_position,
+            data=S_DATA,
+            x_position=XX,
+            y_position=YY,
+            z_position=ZZ,
+            extent=EXTENT,
+            smoothing_length=HH,
+            particle_mass=MM,
+            number_of_pixels=PIX,
+            cross_section=ZSLICE,
         )
 
         np.testing.assert_allclose(im, scalar_cross_section, rtol=1e-5)
-
-    def test_scalar_perspective(self):
-
-        perspective = True
-        observer_distance = 10.0
-
-        im = plonk.visualization.interpolation.scalar_interpolation(
-            XYZ,
-            H,
-            W,
-            SDAT,
-            M,
-            DX,
-            DY,
-            number_pixels=PIX,
-            perspective=perspective,
-            observer_distance=observer_distance,
-        )
-
-        np.testing.assert_allclose(im, scalar_perspective, rtol=1e-5)
 
 
 class TestVectorInterpolation(unittest.TestCase):
@@ -87,26 +73,32 @@ class TestVectorInterpolation(unittest.TestCase):
     def test_vector_interpolation(self):
 
         vec = plonk.visualization.interpolation.vector_interpolation(
-            XYZ, H, W, VDAT, DX, DY, number_pixels=PIX
+            x_data=X_DATA,
+            y_data=Y_DATA,
+            x_position=XX,
+            y_position=YY,
+            z_position=ZZ,
+            extent=EXTENT,
+            smoothing_length=HH,
+            particle_mass=MM,
+            number_of_pixels=PIX,
         )
 
         np.testing.assert_allclose(vec, vector, rtol=1e-5)
 
     def test_vector_cross_section(self):
 
-        cross_section = True
-        slice_position = 0.5
-
         vec = plonk.visualization.interpolation.vector_interpolation(
-            XYZ,
-            H,
-            W,
-            VDAT,
-            DX,
-            DY,
-            number_pixels=PIX,
-            cross_section=cross_section,
-            slice_position=slice_position,
+            x_data=X_DATA,
+            y_data=Y_DATA,
+            x_position=XX,
+            y_position=YY,
+            z_position=ZZ,
+            extent=EXTENT,
+            smoothing_length=HH,
+            particle_mass=MM,
+            number_of_pixels=PIX,
+            cross_section=ZSLICE,
         )
 
         np.testing.assert_allclose(vec, vector_cross_section, rtol=1e-5)

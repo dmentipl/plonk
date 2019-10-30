@@ -1,8 +1,6 @@
-"""
-analyze_disc.py
+"""Radial binning of disc quantities.
 
-Produces similar output to the phantomanalysis module in
-analysis_disc.f90.
+Produces similar output to the Phantom disc analysis module.
 
 Daniel Mentiplay, 2019.
 """
@@ -10,7 +8,6 @@ Daniel Mentiplay, 2019.
 import pathlib
 
 import matplotlib.pyplot as plt
-
 import plonk
 
 # ---------------------------------------------------------------------------- #

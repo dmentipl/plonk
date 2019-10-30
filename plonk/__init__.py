@@ -14,7 +14,7 @@ Features
 - Access particle and sink arrays.
 - Access simulation parameters and units.
 - Compute extra quantities on particles.
-- Visualize data using interpolation provided by Splash.
+- Visualize data using kernel interpolation.
 
 Classes
 -------
@@ -29,9 +29,6 @@ Classes
 - Simulation
     Represents an entire smoothed particle hydrodynamics simulation.
     It contains instances of Dump and Evolution objects.
-
-- Units
-    Represents the units of a Dump or Simulation.
 
 - Visualization
     Represents a visualization of a Dump object.
@@ -54,21 +51,17 @@ available at https://github.com/dmentipl/plonk.
 """
 
 from . import analysis, visualization
-from .core.constants import constants
 from .core.dump import Dump
 from .core.evolution import Evolution
 from .core.simulation import Simulation
-from .core.units import Units
 from .visualization import Visualization
 
 __all__ = [
     'Dump',
     'Evolution',
     'Simulation',
-    'Units',
     'Visualization',
     'analysis',
-    'constants',
     'visualization',
 ]
 

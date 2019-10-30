@@ -1,11 +1,5 @@
 language: python
 
-# Install Fortran compiler.
-addons:
-  apt:
-    packages:
-      - gfortran
-
 before_install:
 
   # Install Miniconda.
@@ -21,7 +15,6 @@ before_install:
   - source activate plonk-dev
 
 install:
-  - make development
   - python setup.py install
 
 script:

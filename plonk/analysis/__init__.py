@@ -1,5 +1,4 @@
-"""
-This is the analysis module.
+"""The analysis sub-package.
 
 It contains Plonk implementations of typical smoothed particle
 hydrodynamics post-simulation analysis tasks.

@@ -1,32 +1,9 @@
-"""
-Install Plonk.
-"""
+"""Plonk setup.py."""
 
 import io
-import pathlib
 import re
-import sysconfig
 
-from Cython.Distutils import build_ext
-from numpy import get_include
-from setuptools import Extension, setup
-
-# ---------------------------------------------------------------------------- #
-# --- Splash ---
-
-LIBRARY_DIR = str(pathlib.Path(sysconfig.get_path('stdlib')).parent)
-SOURCES = ['splash/splash.pyx']
-LIBRARIES = ['splash', 'gfortran']
-
-ext_modules = [
-    Extension(
-        'splash.splash',
-        sources=SOURCES,
-        libraries=LIBRARIES,
-        library_dirs=[LIBRARY_DIR],
-        runtime_library_dirs=[LIBRARY_DIR],
-    )
-]
+from setuptools import setup
 
 # ---------------------------------------------------------------------------- #
 # --- Plonk ---
@@ -36,11 +13,7 @@ __version__ = re.search(
     io.open('plonk/__init__.py', encoding='utf_8_sig').read(),
 ).group(1)
 
-cmdclass = dict()
-cmdclass.update({'build_ext': build_ext})
-include_dirs = [get_include()]
-
-install_requires = ['h5py', 'matplotlib', 'numpy', 'pandas', 'sympy']
+install_requires = ['KDEpy', 'astropy', 'h5py', 'matplotlib', 'numpy', 'pandas']
 
 description = 'Smoothed particle hydrodynamics analysis and visualization with Python.'
 
@@ -54,7 +27,4 @@ setup(
     packages=['plonk', 'plonk.analysis', 'plonk.core', 'plonk.visualization'],
     license='MIT',
     install_requires=install_requires,
-    cmdclass=cmdclass,
-    include_dirs=include_dirs,
-    ext_modules=ext_modules,
 )

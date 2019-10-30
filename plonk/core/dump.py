@@ -10,16 +10,15 @@ from pathlib import Path
 
 import h5py
 import numpy as np
+from astropy import constants
 
-from .constants import constants
 from .particles import Arrays
-from .units import Units
 
 FileTypes = collections.namedtuple('FileTypes', 'filetype extension')
 FILE_TYPES = [FileTypes(filetype='HDF5', extension='h5')]
 
 
-class DumpFile:
+class _DumpFile:
     def __init__(self, filename):
 
         if not isinstance(filename, str) and not isinstance(filename, Path):
@@ -57,7 +56,7 @@ class DumpFile:
         self.file_handle.close()
 
 
-class Dump(DumpFile):
+class Dump(_DumpFile):
     """
     Smoothed particle hydrodynamics dump file object.
 
@@ -113,12 +112,6 @@ class Dump(DumpFile):
 
         self._header = {key: val[()] for key, val in self.file_handle['header'].items()}
 
-        self.units = Units(
-            length=self.header['udist'],
-            time=self.header['utime'],
-            mass=self.header['umass'],
-        )
-
         if cache_arrays is None:
             self._cache_arrays = False
         else:
@@ -136,23 +129,25 @@ class Dump(DumpFile):
         self.sinks = Arrays(arrays_label='sinks', file_handle=self.file_handle)
 
     def close_file(self):
+        """Close the HDF5 file handle."""
         self._close_file()
 
     @property
     def mass(self):
-        """Particle masses"""
+        """Particle masses."""
         return self._mass_from_itype()
 
     @property
     def density(self):
-        """Density on particles from smoothing length"""
+        """Density on particles from smoothing length."""
         return self._density_from_smoothing_length(self.header['hfact'])
 
     @property
     def header(self):
-        """
-        File header, e.g. units, number of particles, numerical
-        parameters.
+        """File header.
+
+        Quantities such as units, number and mass of particles,
+        and numerical parameters.
         """
         return self._header
 
@@ -162,8 +157,7 @@ class Dump(DumpFile):
         return self.particles._available_extra_quantities()
 
     def extra_quantity(self, quantity, sph_type=None, **kwargs):
-        """
-        Calculate extra quantity.
+        """Calculate extra quantity.
 
         Computes an extra quantity on the dump specified by a string.
 
@@ -193,7 +187,6 @@ class Dump(DumpFile):
         >>> dump.extra_quantity('angular momentum')
         >>> dump.extra_quantity('L')
         """
-
         if sph_type is None:
             sph_type = 'particles'
         if sph_type not in ('particles', 'sinks'):
@@ -209,13 +202,13 @@ class Dump(DumpFile):
             raise ValueError(f'{quantity} not available')
 
         if quantity in ('e', 'eccentricity'):
-            gravitational_constant = constants.gravitational_constant / (
+            gravitational_constant = constants.G.cgs.value / (
                 self.header['udist'] ** 3
                 / self.header['umass']
                 / self.header['utime'] ** 2
             )
             if self.sinks.number == 1:
-                stellar_mass = self.sinks.m[0]
+                stellar_mass = self.sinks.arrays['m'][0]
             mu = gravitational_constant * stellar_mass
             kwargs = {'gravitational_parameter': mu}
 
@@ -223,7 +216,6 @@ class Dump(DumpFile):
 
     def _density_from_smoothing_length(self, hfact=1.2):
         """Calculate density from particle mass and smoothing length."""
-
         if self.particles._can_compute_density:
             return self.mass * (hfact / np.abs(self.particles.arrays['h'])) ** 3
         else:
@@ -234,14 +226,12 @@ class Dump(DumpFile):
 
     def _load_arrays(self, array):
         """Load arrays into memory."""
-
         _array = '_' + array
         setattr(self, _array, self._read_arrays(array))
         setattr(self, _array + '_loaded', True)
 
     def _read_arrays(self, array):
         """Read arrays into structured Numpy array."""
-
         array_handle = self.file_handle[array]
 
         dtypes = []
@@ -262,7 +252,9 @@ class Dump(DumpFile):
         return struct_array
 
     def __repr__(self):
+        """Dunder repr method."""
         return self.__str__()
 
     def __str__(self):
+        """Dunder str method."""
         return f'<plonk.Dump: "{self.file_name}">'

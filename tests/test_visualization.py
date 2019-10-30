@@ -5,8 +5,6 @@ Testing Visualization.
 import pathlib
 import unittest
 
-import numpy as np
-
 import plonk
 
 I_GAS = 1
@@ -22,164 +20,50 @@ class TestInitializeVisualization(unittest.TestCase):
 
         dump = plonk.Dump(TEST_FILE)
 
-        plonk.Visualization(dump)
-        plonk.Visualization(dump, render='density')
-        plonk.Visualization(dump, vector='velocity')
+        density = dump.density
+        position = dump.particles.arrays['xyz'][:]
+        smoothing_length = dump.particles.arrays['h'][:]
+        particle_mass = dump.mass
+        x_position = position[:, 0]
+        y_position = position[:, 1]
+
+        extent = (-150, 150, -150, 150)
+        scalar_options = {'norm': 'lin', 'cmap': 'gist_heat'}
+        interpolation_options = {
+            'number_of_pixels': (512, 512),
+            'cross_section': None,
+            'density_weighted': False,
+        }
+
+        plonk.Visualization(
+            scalar_data=density,
+            x_coordinate=x_position,
+            y_coordinate=y_position,
+            extent=extent,
+            particle_mass=particle_mass,
+            smoothing_length=smoothing_length,
+            scalar_options=scalar_options,
+            interpolation_options=interpolation_options,
+        )
 
 
-class TestNumpy(unittest.TestCase):
-    """Test rendering with NumPy array."""
+@unittest.skip('Not yet converted to new interpolation method')
+class TestInitializeMultiPlot(unittest.TestCase):
+    """Test initialization of MultiPlot object."""
 
     def test_initialization(self):
 
         dump = plonk.Dump(TEST_FILE)
+        options = list()
+        options.append({'render': 'density'})
+        options.append({'render': 'divv'})
 
-        plonk.Visualization(dump, render=np.linspace(0, 1))
+        plonk.visualization.MultiPlot(dump, options)
 
+        dumps = [dump, dump]
+        options = {'render': 'density', 'extent': [-100, 100, -100, 100]}
 
-class TestExtraQuantity(unittest.TestCase):
-    """Test rendering with extra quantity."""
-
-    def test_extra_quantity(self):
-
-        dump = plonk.Dump(TEST_FILE)
-
-        plonk.Visualization(dump, render='r')
-
-
-class TestSymbolic(unittest.TestCase):
-    """Test rendering a symbolic expression."""
-
-    def test_symbolic(self):
-
-        dump = plonk.Dump(TEST_FILE)
-
-        plonk.Visualization(dump, render='x**2 + y**2')
-
-
-class TestUnits(unittest.TestCase):
-    """Test using physical units."""
-
-    def test_units(self):
-
-        dump = plonk.Dump(TEST_FILE)
-        units = plonk.Units(length='cm', mass='g', time='s')
-
-        viz = plonk.Visualization(dump, render='density', units=units)
-
-        viz = plonk.Visualization(dump, render='density')
-        viz.set_units(units, integrated_z=1.0)
-
-
-class TestRenderScale(unittest.TestCase):
-    """Test changing the render scale."""
-
-    def test_set_render_scale(self):
-
-        dump = plonk.Dump(TEST_FILE)
-
-        viz = plonk.Visualization(dump, render='density')
-        viz.set_render_scale('linear')
-
-        self.assertEqual(viz._render_scale, 'linear')
-
-
-class TestRenderRange(unittest.TestCase):
-    """Test changing the render range."""
-
-    def test_set_render_range(self):
-
-        dump = plonk.Dump(TEST_FILE)
-
-        viz = plonk.Visualization(dump, render='density')
-        viz.set_render_range(vmin=0.0, vmax=1.0)
-
-        self.assertEqual(viz._options.render.render_min, 0.0)
-        self.assertEqual(viz._options.render.render_max, 1.0)
-
-
-class TestColormap(unittest.TestCase):
-    """Test changing the colormap."""
-
-    def test_set_colormap(self):
-
-        dump = plonk.Dump(TEST_FILE)
-
-        viz = plonk.Visualization(dump, render='density')
-        viz.set_colormap('viridis')
-
-        self.assertEqual(viz._options.figure.colormap, 'viridis')
-
-
-class TestParticleType(unittest.TestCase):
-    """Test changing the particle type."""
-
-    def test_set_particle_type(self):
-
-        dump = plonk.Dump(TEST_FILE)
-
-        viz = plonk.Visualization(dump, render='density')
-        viz.set_particle_type(I_DUST)
-
-        self.assertEqual(viz._particle_types, {I_DUST})
-
-        viz.set_particle_type([I_GAS, I_DUST])
-
-        self.assertEqual(viz._particle_types, {I_GAS, I_DUST})
-
-
-class TestRotate(unittest.TestCase):
-    """Test rotating the frame."""
-
-    def test_rotate_frame(self):
-
-        dump = plonk.Dump(TEST_FILE)
-
-        viz = plonk.Visualization(dump, render='density')
-        viz.rotate_frame([1, 0, 0], np.pi / 2)
-
-        np.testing.assert_array_almost_equal(
-            viz._options.rotation.rotation_axis, [1, 0, 0]
-        )
-        self.assertEqual(viz._options.rotation.rotation_angle, np.pi / 2)
-
-        viz = plonk.Visualization(
-            dump, render='density', rotation_axis=[0, 1, 0], rotation_angle=np.pi / 3
-        )
-
-        np.testing.assert_array_almost_equal(
-            viz._options.rotation.rotation_axis, [0, 1, 0]
-        )
-        self.assertEqual(viz._options.rotation.rotation_angle, np.pi / 3)
-
-        viz = plonk.Visualization(
-            dump, render='density', position_angle=np.pi / 2, inclination=np.pi / 2
-        )
-
-        np.testing.assert_array_almost_equal(
-            viz._options.rotation.rotation_axis, [0, 1, 0]
-        )
-        self.assertEqual(viz._options.rotation.rotation_angle, np.pi / 2)
-
-
-class TestImageSize(unittest.TestCase):
-    """Test setting the image size."""
-
-    def test_image_size(self):
-
-        dump = plonk.Dump(TEST_FILE)
-
-        viz = plonk.Visualization(dump, render='density')
-        viz.set_image_size(extent=(-100, 100, -100, 100))
-
-        self.assertEqual(viz._extent, (-100, 100, -100, 100))
-
-        self.assertRaises(ValueError, viz.set_image_size, extent=(-100, 100, -100, 100))
-        viz.set_image_size(size=200)
-
-        self.assertEqual(viz._extent, (-200, 200, -200, 200))
-
-        self.assertRaises(ValueError, viz.set_image_size, size=200)
+        plonk.visualization.MultiPlot(dumps, options)
 
 
 if __name__ == '__main__':

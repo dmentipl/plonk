@@ -1,9 +1,11 @@
+"""Disc analysis."""
+
 import warnings
 
 import numpy as np
 import pandas as pd
+from astropy import constants
 
-from ..core.constants import constants
 from ..core.particles import _angular_momentum, _cylindrical_radius, _eccentricity
 
 _MIN_PARTICLES_IN_BIN = 5
@@ -85,7 +87,7 @@ def _calculate_radially_binned_quantities(
     radial_bin_width = (radius_out - radius_in) / (number_radial_bins - 1)
     radial_bins = np.linspace(radius_in, radius_out, number_radial_bins)
 
-    gravitational_constant = constants.gravitational_constant / (
+    gravitational_constant = constants.G.cgs.value / (
         dump.header['udist'] ** 3 / dump.header['umass'] / dump.header['utime'] ** 2
     )
     stellar_mass = dump.sinks.arrays['m'][sink_index - 1]

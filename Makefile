@@ -12,12 +12,6 @@ help: ## Display this help
 
 .PHONY: development
 development: ## Setup Plonk for development
-	@make -C splash install
-	@echo
-	@echo ">>> Build Splash Cython extension"
-	@echo
-	@python setup.py build_ext --inplace
-	@echo
 	@echo ">>> Install Plonk in 'conda development' mode"
 	@echo
 	@conda develop .
@@ -27,7 +21,7 @@ conda: ## Build Conda package
 	@echo
 	@echo ">>> Build Conda package"
 	@echo
-	@make -C splash conda
+	@conda build conda
 
 .PHONY: docs
 docs: ## Build documentation
@@ -50,13 +44,4 @@ test: ## Run tests
 
 .PHONY: clean
 clean: ## Clean temporary build files
-	@make -C splash clean
 	@\rm -rf .coverage htmlcov
-	@\rm -rf splash/splash.c
-	@\rm -rf splash/libsplash.so
-
-.PHONY: distclean
-distclean: ## Clean all generated files
-	@make -C splash distclean
-	@\rm -rf splash/splash.c
-	@\rm -rf splash/*.so

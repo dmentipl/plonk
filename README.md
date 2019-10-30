@@ -20,7 +20,7 @@ Usage
 
 Plonk supports the following SPH file formats:
 
-* [Phantom](https://phantomsph.bitbucket.io/) output in [HDF5](https://en.wikipedia.org/wiki/Hierarchical_Data_Format) format.
++ [Phantom](https://phantomsph.bitbucket.io/) output in [HDF5](https://en.wikipedia.org/wiki/Hierarchical_Data_Format) format.
 
 *Note: you can convert Phantom standard dumps to HDF5. See the [Phantom docs](https://phantomsph.readthedocs.io).*
 
@@ -56,7 +56,7 @@ To visualize a single dump file:
 
 For example, here is the deviation from Keplerian velocity around a planet embedded in a protoplanetary disc.
 
-![](image.svg)
+![Planet embedded in protoplanetary disc](image.svg)
 
 *Deviation from Keplerian velocity around a planet: at the disc midplane (left), and 10 (middle) and 20 au (right) above the disc midplane. Data from a Phantom simulation.*
 
@@ -66,8 +66,6 @@ For further usage, see `examples` folder and documentation. The code is internal
 
 Install
 -------
-
-*Plonk is a Python 3 only package.*
 
 ### Conda
 
@@ -79,7 +77,7 @@ conda install plonk --channel dmentipl
 
 *Note*: Using this method you don't need to have this repository on your machine.
 
-This will install the required dependencies. For details on Conda, see https://docs.conda.io/.
+This will install the required dependencies. For details on Conda, see <https://docs.conda.io/>.
 
 Getting help
 ------------
