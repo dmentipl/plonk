@@ -9,6 +9,7 @@ from typing import Optional, Tuple
 import numpy as np
 from KDEpy import FFTKDE
 from numpy import ndarray
+from scipy.interpolate import RectBivariateSpline
 
 _IVERBOSE = -2
 _NUMBER_OF_PIXELS = (512, 512)
@@ -185,9 +186,9 @@ def _interpolate(
             raise ValueError('Must specify z position for cross section')
         mask = mask & (np.abs(z_position - cross_section) < 2 * smoothing_length)
 
-    h = smoothing_length[mask]
-    xy_data = np.stack((x_position[mask], y_position[mask])).T
+    xy = np.vstack((x_position[mask], y_position[mask])).T
     scalar = data[mask]
+    h = smoothing_length[mask]
     m = particle_mass[mask]
 
     if density_weighted:
@@ -204,18 +205,24 @@ def _interpolate(
         weights_norm = weights / scalar
 
     kde = FFTKDE(kernel='gaussian')
-    _, points = kde.fit(xy_data, weights=weights).evaluate(number_of_pixels)
-    z = points.reshape(number_of_pixels).T
+    grid, points = kde.fit(xy, weights=weights).evaluate(number_of_pixels)
+    z = points.reshape(number_of_pixels)
 
     if normalized:
-        _, points_norm = kde.fit(xy_data, weights=weights_norm).evaluate(
-            number_of_pixels
-        )
-        z_norm = points_norm.reshape(number_of_pixels).T
+        _, points_norm = kde.fit(xy, weights=weights_norm).evaluate(number_of_pixels)
+        z_norm = points_norm.reshape(number_of_pixels)
         z /= z_norm
 
     normalization = np.sum(weights)
     if normalized:
         normalization /= np.sum(m)
+    z *= normalization
 
-    return z * normalization
+    x_grid = np.linspace(grid[0, 0], grid[-1, 0], number_of_pixels[0])
+    y_grid = np.linspace(grid[0, 1], grid[-1, 1], number_of_pixels[1])
+    spl = RectBivariateSpline(x_grid, y_grid, z)
+    x_regrid = np.linspace(extent[0], extent[1], number_of_pixels[0])
+    y_regrid = np.linspace(extent[2], extent[3], number_of_pixels[1])
+    z_regrid = spl(x_regrid, y_regrid)
+
+    return z_regrid.T
