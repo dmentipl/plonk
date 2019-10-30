@@ -1,79 +1,61 @@
-"""
-Splash interpolation wrapper routines.
+"""Interpolation to a pixel grid.
 
-There are two main routines. One for interpolation of scalar fields and
-one for interpolation of vector fields. They both make calls to the
-Splash Fortran libraries via Cython.
+There are two functions: one for interpolation of scalar fields, and one
+for interpolation of vector fields. They both make use of KDEpy.
 """
 
-from typing import Tuple
+from typing import Optional, Tuple
 
 import numpy as np
 from numpy import ndarray
-
-try:
-    from splash import splash
-except ImportError:
-    raise Exception('Cannot import Splash interpolation routines. See documentation.')
+from KDEpy import FFTKDE
 
 _IVERBOSE = -2
-_PIXEL = (512, 512)
+_NUMBER_OF_PIXELS = (512, 512)
+_H_FACT = 1.2
+_C_NORM_3D = 1 / np.pi
 
 
 def scalar_interpolation(
-    x_coordinate: ndarray,
-    y_coordinate: ndarray,
-    z_coordinate: ndarray,
-    smoothing_length: ndarray,
-    smoothing_length_factor: float,
-    scalar_data: ndarray,
-    particle_mass: ndarray,
-    x_range: Tuple[float, float],
-    y_range: Tuple[float, float],
     *,
-    number_pixels: Tuple[float, float] = _PIXEL,
-    cross_section: bool = False,
-    slice_position: float = 0.0,
-    density_weighted: bool = False,
-    normalize: bool = False,
+    data: ndarray,
+    x_position: ndarray,
+    y_position: ndarray,
+    z_position: Optional[ndarray] = None,
+    extent: Tuple[float, float, float, float],
+    smoothing_length: ndarray,
+    particle_mass: ndarray,
+    number_of_pixels: Optional[Tuple[float, float]] = None,
+    cross_section: Optional[float] = None,
+    density_weighted: Optional[bool] = None,
 ) -> ndarray:
-    """
-    Interpolate a scalar quantity to a pixel grid.
+    """Interpolate scalar quantity to a pixel grid.
 
     Parameters
     ----------
+    data
+        A scalar quantity on the particles to interpolate.
     x_coordinate
         Particle coordinate for x-axis in interpolation.
     y_coordinate
         Particle coordinate for y-axis in interpolation.
-    z_coordinate
-        Particle coordinate for depth in interpolation.
+    z_coordinate, optional
+        Particle coordinate for z-axis. Only required for cross section
+        interpolation.
+    extent
+        The range in the x- and y-direction as (xmin, xmax, ymin, ymax).
     smoothing_length
-        Particle smoothing length.
-    smoothing_length_factor
-        The smoothing length factor.
-    scalar_data
-        A scalar quantity on the particles to interpolate.
+        The smoothing length on each particle.
     particle_mass
         The particle mass on each particle.
-    x_range
-        The range in the x-direction as (xmin, xmax).
-    y_range
-        The vertical range as (ymin, ymax).
-
-    Optional parameters
-    -------------------
-    number_pixels
+    number_pixels, optional
         The pixel grid to interpolate the scalar quantity to, as
-        (npixx, npixy).
-    cross_section
-        Turn on cross section rendering.
-    slice_position
-        Slice position as a z-value. Default is 0.0.
-    density_weighted
-        Use density weighted interpolation.
-    normalize
-        Use normalized interpolation.
+        (npixx, npixy). Default is (512, 512).
+    cross_section, optional
+        Cross section slice position as a z-value. If None, cross
+        section interpolation is turned off. Default is off.
+    density_weighted, optional
+        Use density weighted interpolation. Default is off.
 
     Returns
     -------
@@ -81,139 +63,63 @@ def scalar_interpolation(
         An array of scalar quantities interpolated to a pixel grid with
         shape (npixx, npixy).
     """
-    npixx = number_pixels[0]
-    npixy = number_pixels[1]
-    projection = not cross_section
-    zslice = slice_position
-    normalise = normalize
-    npart = len(smoothing_length)
-    xmin = x_range[0]
-    ymin = y_range[0]
-    xmax = x_range[1]
-    ymax = y_range[1]
-    pixwidthx = (xmax - xmin) / npixx
-    pixwidthy = (ymax - ymin) / npixy
-    if density_weighted:
-        weights = particle_mass / smoothing_length ** 2
-    else:
-        weights = np.ones(npart) / smoothing_length_factor
-
-    # Splash routines expect single precision
-    x = np.array(x_coordinate, dtype=np.single)
-    y = np.array(y_coordinate, dtype=np.single)
-    z = np.array(z_coordinate, dtype=np.single)
-    hh = np.array(smoothing_length, dtype=np.single)
-    weight = np.array(weights, dtype=np.single)
-    dat = np.array(scalar_data, dtype=np.single)
-    itype = np.ones(npart, dtype=np.int32)
-
-    if projection:
-        datsmooth = splash.interpolate3d_projection(
-            x=x,
-            y=y,
-            z=z,
-            hh=hh,
-            weight=weight,
-            dat=dat,
-            itype=itype,
-            npart=npart,
-            xmin=xmin,
-            ymin=ymin,
-            npixx=npixx,
-            npixy=npixy,
-            pixwidthx=pixwidthx,
-            pixwidthy=pixwidthy,
-            normalise=normalise,
-            zobserver=0.0,
-            dscreen=0.0,
-            useaccelerate=False,
-            iverbose=_IVERBOSE,
-        )
-    elif cross_section:
-        datsmooth = splash.interpolate3d_fastxsec(
-            x=x,
-            y=y,
-            z=z,
-            hh=hh,
-            weight=weight,
-            dat=dat,
-            itype=itype,
-            npart=npart,
-            xmin=xmin,
-            ymin=ymin,
-            zslice=zslice,
-            npixx=npixx,
-            npixy=npixy,
-            pixwidthx=pixwidthx,
-            pixwidthy=pixwidthy,
-            normalise=normalise,
-            iverbose=_IVERBOSE,
-        )
-
-    return np.array(datsmooth)
+    return _interpolate(
+        data=data,
+        x_position=x_position,
+        y_position=y_position,
+        z_position=z_position,
+        extent=extent,
+        smoothing_length=smoothing_length,
+        particle_mass=particle_mass,
+        number_of_pixels=number_of_pixels,
+        cross_section=cross_section,
+        density_weighted=density_weighted,
+    )
 
 
 def vector_interpolation(
-    x_coordinate: ndarray,
-    y_coordinate: ndarray,
-    z_coordinate: ndarray,
-    smoothing_length: ndarray,
-    smoothing_length_factor: float,
-    x_vector_data: ndarray,
-    y_vector_data: ndarray,
-    particle_mass: ndarray,
-    x_range: Tuple[float, float],
-    y_range: Tuple[float, float],
     *,
-    number_pixels: Tuple[float, float] = _PIXEL,
-    cross_section: bool = False,
-    slice_position: float = 0.0,
-    density_weighted: bool = False,
-    normalize: bool = False,
+    x_data: ndarray,
+    y_data: ndarray,
+    x_position: ndarray,
+    y_position: ndarray,
+    z_position: Optional[ndarray] = None,
+    extent: Tuple[float, float, float, float],
+    smoothing_length: ndarray,
+    particle_mass: ndarray,
+    number_of_pixels: Optional[Tuple[float, float]] = None,
+    cross_section: Optional[float] = None,
+    density_weighted: Optional[bool] = None,
 ) -> ndarray:
-    """
-    Interpolate a vector quantity to a pixel grid.
+    """Interpolate scalar quantity to a pixel grid.
 
     Parameters
     ----------
+    x_data
+        The x-component of a vector quantity to interpolate.
+    y_data
+        The y-component of a vector quantity to interpolate.
     x_coordinate
         Particle coordinate for x-axis in interpolation.
     y_coordinate
         Particle coordinate for y-axis in interpolation.
-    z_coordinate
-        Particle coordinate for depth in interpolation.
+    z_coordinate, optional
+        Particle coordinate for z-axis. Only required for cross section
+        interpolation.
+    extent
+        The range in the x- and y-direction as (xmin, xmax, ymin, ymax).
     smoothing_length
-        Particle smoothing length.
-    smoothing_length_factor
-        The smoothing length factor.
-    x_vector_data
-        The x-component of a vector quantity on the particles to
-        interpolate. This is the x-component with reference to the
-        coordinate system.
-    y_vector_data
-        The y-component of a vector quantity on the particles to
-        interpolate. This is the y-component with reference to the
-        coordinate system.
+        The smoothing length on each particle.
     particle_mass
         The particle mass on each particle.
-    x_range
-        The range in the x-direction as (xmin, xmax).
-    y_range
-        The vertical range as (ymin, ymax).
-
-    Optional parameters
-    -------------------
-    number_pixels
+    number_pixels, optional
         The pixel grid to interpolate the scalar quantity to, as
-        (npixx, npixy).
-    cross_section
-        Turn on cross section rendering.
-    slice_position
-        Slice position as a z-value.
-    density_weighted
-        Use density weighted interpolation.
-    normalize
-        Use normalized interpolation.
+        (npixx, npixy). Default is (512, 512).
+    cross_section, optional
+        Cross section slice position as a z-value. If None, cross
+        section interpolation is turned off. Default is off.
+    density_weighted, optional
+        Use density weighted interpolation. Default is off.
 
     Returns
     -------
@@ -221,75 +127,95 @@ def vector_interpolation(
         An array of vector quantities interpolated to a pixel grid with
         shape (2, npixx, npixy).
     """
-    npixx = number_pixels[0]
-    npixy = number_pixels[1]
-    projection = not cross_section
-    zslice = slice_position
-    normalise = normalize
-    npart = len(smoothing_length)
-    xmin = x_range[0]
-    ymin = y_range[0]
-    xmax = x_range[1]
-    ymax = y_range[1]
-    pixwidthx = (xmax - xmin) / npixx
-    pixwidthy = (ymax - ymin) / npixy
-    if density_weighted:
-        weights = particle_mass / smoothing_length ** 2
-    else:
-        weights = np.ones(npart) / smoothing_length_factor
-
-    # Splash routines expect single precision
-    x = np.array(x_coordinate, dtype=np.single)
-    y = np.array(y_coordinate, dtype=np.single)
-    z = np.array(z_coordinate, dtype=np.single)
-    hh = np.array(smoothing_length, dtype=np.single)
-    vecx = np.array(x_vector_data, dtype=np.single)
-    vecy = np.array(y_vector_data, dtype=np.single)
-    weight = np.array(weights, dtype=np.single)
-    itype = np.ones(npart, dtype=np.int32)
-
-    if projection:
-        vecsmoothx, vecsmoothy = splash.interpolate3d_proj_vec(
-            x=x,
-            y=y,
-            z=z,
-            hh=hh,
-            weight=weight,
-            vecx=vecx,
-            vecy=vecy,
-            itype=itype,
-            npart=npart,
-            xmin=xmin,
-            ymin=ymin,
-            npixx=npixx,
-            npixy=npixy,
-            pixwidthx=pixwidthx,
-            pixwidthy=pixwidthy,
-            normalise=normalise,
-            zobserver=0.0,
-            dscreen=0.0,
-            iverbose=_IVERBOSE,
-        )
-    elif cross_section:
-        vecsmoothx, vecsmoothy = splash.interpolate3d_xsec_vec(
-            x=x,
-            y=y,
-            z=z,
-            hh=hh,
-            weight=weight,
-            vecx=vecx,
-            vecy=vecy,
-            itype=itype,
-            npart=npart,
-            xmin=xmin,
-            ymin=ymin,
-            zslice=zslice,
-            npixx=npixx,
-            npixy=npixy,
-            pixwidthx=pixwidthx,
-            pixwidthy=pixwidthy,
-            normalise=normalise,
-            iverbose=_IVERBOSE,
-        )
-
+    vecsmoothx = _interpolate(
+        data=x_data,
+        x_position=x_position,
+        y_position=y_position,
+        z_position=z_position,
+        extent=extent,
+        smoothing_length=smoothing_length,
+        particle_mass=particle_mass,
+        number_of_pixels=number_of_pixels,
+        cross_section=cross_section,
+        density_weighted=density_weighted,
+    )
+    vecsmoothy = _interpolate(
+        data=y_data,
+        x_position=x_position,
+        y_position=y_position,
+        z_position=z_position,
+        extent=extent,
+        smoothing_length=smoothing_length,
+        particle_mass=particle_mass,
+        number_of_pixels=number_of_pixels,
+        cross_section=cross_section,
+        density_weighted=density_weighted,
+    )
     return np.stack((np.array(vecsmoothx), np.array(vecsmoothy)))
+
+
+def _interpolate(
+    *,
+    data: ndarray,
+    x_position: ndarray,
+    y_position: ndarray,
+    z_position: Optional[ndarray] = None,
+    extent: Tuple[float, float, float, float],
+    smoothing_length: ndarray,
+    particle_mass: ndarray,
+    number_of_pixels: Optional[Tuple[float, float]] = None,
+    cross_section: Optional[float] = None,
+    density_weighted: Optional[bool] = None,
+) -> ndarray:
+    normalized = False
+    if density_weighted is None:
+        density_weighted = False
+    if density_weighted:
+        normalized = True
+
+    mask = smoothing_length > 0.0
+    mask = mask & (
+        (x_position >= extent[0])
+        & (x_position <= extent[1])
+        & (y_position >= extent[2])
+        & (y_position <= extent[3])
+    )
+    if cross_section is not None:
+        if z_position is None:
+            raise ValueError('Must specify z position for cross section')
+        mask = mask & (np.abs(z_position - cross_section) < 2 * smoothing_length)
+
+    h = smoothing_length[mask]
+    xy_data = np.stack((x_position[mask], y_position[mask])).T
+    scalar = data[mask]
+    m = particle_mass[mask]
+
+    if density_weighted:
+        if cross_section is not None:
+            weights = scalar * m / h * _C_NORM_3D
+        else:
+            weights = scalar * m
+    else:
+        if cross_section is not None:
+            weights = scalar * h ** 2 * _C_NORM_3D / _H_FACT ** 3
+        else:
+            weights = scalar * h ** 3 / _H_FACT ** 3
+    if normalized:
+        weights_norm = weights / scalar
+
+    kde = FFTKDE(kernel='gaussian')
+    _, points = kde.fit(xy_data, weights=weights).evaluate(number_of_pixels)
+    z = points.reshape(number_of_pixels).T
+
+    if normalized:
+        _, points_norm = kde.fit(xy_data, weights=weights_norm).evaluate(
+            number_of_pixels
+        )
+        z_norm = points_norm.reshape(number_of_pixels).T
+        z /= z_norm
+
+    normalization = np.sum(weights)
+    if normalized:
+        normalization /= np.sum(m)
+
+    return z * normalization

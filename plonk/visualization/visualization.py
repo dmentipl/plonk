@@ -13,8 +13,6 @@ from numpy import ndarray
 
 from .interpolation import scalar_interpolation, vector_interpolation
 
-_HFACT = 1.2
-
 
 class Visualization:
     """Visualize scalar and vector smoothed particle hydrodynamics data.
@@ -33,17 +31,18 @@ class Visualization:
     scalar_data, optional
         The 1d array (N,) of scalar data to visualize.
     vector_data, optional
-        The 2d array (2, N) of vector data to visualize.
+        The 2d array (N, 2) of vector data to visualize.
     x_coordinate
         The x-position on the particles, where x is the required plot
         x-axis.
     y_coordinate
         The y-position on the particles, where y is the required plot
         y-axis.
-    x_range
-        The range of x-axis values, like (x_min, x_max).
-    y_range
-        The range of y-axis values, like (y_min, y_max).
+    z_coordinate, optional
+        The z-position on the particles, where z is the depth-axis for
+        the required plot.
+    extent
+        The range in the x- and y-direction as (xmin, xmax, ymin, ymax).
     particle_mass
         The particle mass for each particle.
     smoothing_length
@@ -55,8 +54,7 @@ class Visualization:
     vector_options, optional
         A dictionary of options for vector plots.
     interpolation_options, optional
-        A dictionary of options for interpolation. These get passed to
-        the Splash interpolation routines.
+        A dictionary of options for interpolation.
     """
 
     def __init__(
@@ -66,8 +64,8 @@ class Visualization:
         vector_data: Optional[ndarray] = None,
         x_coordinate: ndarray,
         y_coordinate: ndarray,
-        x_range: Tuple[float, float],
-        y_range: Tuple[float, float],
+        z_coordinate: Optional[ndarray] = None,
+        extent: Tuple[float, float, float, float],
         particle_mass: ndarray,
         smoothing_length: ndarray,
         axis: Optional[Any] = None,
@@ -96,29 +94,28 @@ class Visualization:
             self.fig = axis.get_figure()
             self.axis = axis
 
-        self.axis.set_xlim(*x_range)
-        self.axis.set_ylim(*y_range)
+        self.axis.set_xlim(*extent[:2])
+        self.axis.set_ylim(*extent[2:])
         self.axis.set_aspect('equal')
 
         if scalar_data is None and vector_data is None:
             self._particle_plot(
-                x_coordinate,
-                y_coordinate,
-                smoothing_length,
-                x_range,
-                y_range,
-                self.axis,
+                x_coordinate=x_coordinate,
+                y_coordinate=y_coordinate,
+                smoothing_length=smoothing_length,
+                extent=extent,
+                axis=self.axis,
             )
 
         if scalar_data is not None:
             _scalar_plot = self._scalar_plot(
+                scalar_data=scalar_data,
                 x_coordinate=x_coordinate,
                 y_coordinate=y_coordinate,
-                scalar_data=scalar_data,
+                z_coordinate=z_coordinate,
                 particle_mass=particle_mass,
                 smoothing_length=smoothing_length,
-                x_range=x_range,
-                y_range=y_range,
+                extent=extent,
                 fig=self.fig,
                 axis=self.axis,
                 plot_options=scalar_options,
@@ -131,13 +128,13 @@ class Visualization:
 
         if vector_data is not None:
             _vector_plot = self._vector_plot(
+                vector_data=vector_data,
                 x_coordinate=x_coordinate,
                 y_coordinate=y_coordinate,
-                vector_data=vector_data,
+                z_coordinate=z_coordinate,
                 particle_mass=particle_mass,
                 smoothing_length=smoothing_length,
-                x_range=x_range,
-                y_range=y_range,
+                extent=extent,
                 axis=self.axis,
                 plot_options=vector_options,
                 interpolation_options=interpolation_options,
@@ -151,8 +148,7 @@ class Visualization:
         x_coordinate: ndarray,
         y_coordinate: ndarray,
         smoothing_length: ndarray,
-        x_range: Tuple[float, float],
-        y_range: Tuple[float, float],
+        extent: Tuple[float, float, float, float],
         axis: Any,
     ):
 
@@ -166,13 +162,14 @@ class Visualization:
 
     def _scalar_plot(
         self,
+        *,
+        scalar_data: ndarray,
         x_coordinate: ndarray,
         y_coordinate: ndarray,
-        scalar_data: ndarray,
+        z_coordinate: Optional[ndarray] = None,
         particle_mass: ndarray,
         smoothing_length: ndarray,
-        x_range: Tuple[float, float],
-        y_range: Tuple[float, float],
+        extent: Tuple[float, float, float, float],
         axis: Any,
         fig: Any,
         plot_options: Dict[str, Any] = None,
@@ -189,15 +186,13 @@ class Visualization:
             interpolation_options = {}
 
         interpolated_data = scalar_interpolation(
-            x_coordinate=x_coordinate,
-            y_coordinate=y_coordinate,
-            z_coordinate=np.zeros(x_coordinate.shape),
+            data=scalar_data,
+            x_position=x_coordinate,
+            y_position=y_coordinate,
+            z_position=z_coordinate,
+            extent=extent,
             smoothing_length=smoothing_length,
-            smoothing_length_factor=_HFACT,
-            scalar_data=scalar_data,
             particle_mass=particle_mass,
-            x_range=x_range,
-            y_range=y_range,
             **interpolation_options,
         )
 
@@ -219,11 +214,7 @@ class Visualization:
                 cmap = 'gist_heat'
 
             scalar_image = axis.imshow(
-                interpolated_data,
-                origin='lower',
-                norm=norm,
-                extent=x_range + y_range,
-                cmap=cmap,
+                interpolated_data, origin='lower', norm=norm, extent=extent, cmap=cmap
             )
 
             divider = make_axes_locatable(axis)
@@ -236,7 +227,8 @@ class Visualization:
             contour_format = plot_options.get('contour_format', '%.2g')
             n_interp_x, n_interp_y = interpolated_data.shape
             X, Y = np.meshgrid(
-                np.linspace(*x_range, n_interp_x), np.linspace(*y_range, n_interp_y)
+                np.linspace(*extent[:2], n_interp_x),
+                np.linspace(*extent[2:], n_interp_y),
             )
 
             scalar_contour = axis.contour(X, Y, interpolated_data, colors=contour_color)
@@ -246,13 +238,14 @@ class Visualization:
 
     def _vector_plot(
         self,
+        *,
+        vector_data: ndarray,
         x_coordinate: ndarray,
         y_coordinate: ndarray,
-        vector_data: ndarray,
+        z_coordinate: Optional[ndarray] = None,
         particle_mass: ndarray,
         smoothing_length: ndarray,
-        x_range: Tuple[float, float],
-        y_range: Tuple[float, float],
+        extent: Tuple[float, float, float, float],
         axis: Any,
         plot_options: Dict[str, Any] = None,
         interpolation_options: Dict[str, Any] = None,
@@ -268,22 +261,20 @@ class Visualization:
             interpolation_options = {}
 
         interpolated_data = vector_interpolation(
-            x_coordinate=x_coordinate,
-            y_coordinate=y_coordinate,
-            z_coordinate=np.zeros(x_coordinate.shape),
+            x_data=vector_data[:, 0],
+            y_data=vector_data[:, 1],
+            x_position=x_coordinate,
+            y_position=y_coordinate,
+            z_position=z_coordinate,
+            extent=extent,
             smoothing_length=smoothing_length,
-            smoothing_length_factor=_HFACT,
-            x_vector_data=vector_data[:, 0],
-            y_vector_data=vector_data[:, 1],
             particle_mass=particle_mass,
-            x_range=x_range,
-            y_range=y_range,
             **interpolation_options,
         )
 
         n_interp_x, n_interp_y = interpolated_data[0].shape
         X, Y = np.meshgrid(
-            np.linspace(*x_range, n_interp_x), np.linspace(*y_range, n_interp_y)
+            np.linspace(*extent[:2], n_interp_x), np.linspace(*extent[2:], n_interp_y)
         )
         U, V = interpolated_data[0], interpolated_data[1]
 
