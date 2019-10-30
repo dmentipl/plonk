@@ -5,7 +5,7 @@ hydrodynamics simulation data.
 """
 from typing import Any, Dict, Optional, Tuple
 
-import matplotlib.colors as colors
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -83,8 +83,8 @@ class Visualization:
             'interpolated_data': None,
         }
         self.vector: Dict[str, Any] = {
-            'arrows': None,
-            'streamlines': None,
+            'quiver': None,
+            'streamplot': None,
             'interpolated_data': None,
         }
 
@@ -96,7 +96,6 @@ class Visualization:
 
         self.axis.set_xlim(*extent[:2])
         self.axis.set_ylim(*extent[2:])
-        self.axis.set_aspect('equal')
 
         if scalar_data is None and vector_data is None:
             self._particle_plot(
@@ -139,9 +138,11 @@ class Visualization:
                 plot_options=vector_options,
                 interpolation_options=interpolation_options,
             )
-            self.vector['arrows'] = _vector_plot[0]
-            self.vector['streamlines'] = _vector_plot[1]
+            self.vector['quiver'] = _vector_plot[0]
+            self.vector['streamplot'] = _vector_plot[1]
             self.vector['interpolated_data'] = _vector_plot[2]
+
+        self.axis.set_aspect('equal')
 
     def _particle_plot(
         self,
@@ -158,6 +159,8 @@ class Visualization:
             'k.',
             markersize=0.5,
         )
+        axis.set_xlim(extent[:2])
+        axis.set_ylim(extent[2:])
         return
 
     def _scalar_plot(
@@ -179,8 +182,15 @@ class Visualization:
         if plot_options is None:
             plot_options = {}
 
-        plot_render = plot_options.get('plot_render', True)
-        plot_contour = plot_options.get('plot_contour', False)
+        plot_render = plot_options.pop('plot_render', True)
+        plot_contour = plot_options.pop('plot_contour', False)
+        colors = plot_options.pop('contour_color', 'black')
+        fmt = plot_options.pop('contour_format', '%.2g')
+        _norm = plot_options.pop('norm')
+        cmap = plot_options.pop('cmap')
+
+        if len(plot_options) > 0:
+            raise ValueError(f'plot_options: {list(plot_options.keys())} not available')
 
         if interpolation_options is None:
             interpolation_options = {}
@@ -199,17 +209,15 @@ class Visualization:
         scalar_image = None
         scalar_colorbar = None
         if plot_render:
-            norm = colors.Normalize()
-            _norm = plot_options.get('norm')
+            norm = mpl.colors.Normalize()
             if _norm is not None:
                 if _norm.lower() in ('linear', 'lin'):
-                    norm = colors.Normalize()
+                    norm = mpl.colors.Normalize()
                 elif _norm.lower() in ('logarithic', 'logarithm', 'log', 'log10'):
-                    norm = colors.LogNorm()
+                    norm = mpl.colors.LogNorm()
                 else:
                     raise ValueError('Cannot determine normalization for colorbar')
 
-            cmap = plot_options.get('cmap')
             if cmap is None:
                 cmap = 'gist_heat'
 
@@ -223,16 +231,14 @@ class Visualization:
 
         scalar_contour = None
         if plot_contour:
-            contour_color = plot_options.get('contour_color', 'black')
-            contour_format = plot_options.get('contour_format', '%.2g')
             n_interp_x, n_interp_y = interpolated_data.shape
             X, Y = np.meshgrid(
                 np.linspace(*extent[:2], n_interp_x),
                 np.linspace(*extent[2:], n_interp_y),
             )
 
-            scalar_contour = axis.contour(X, Y, interpolated_data, colors=contour_color)
-            scalar_contour.clabel(inline=True, fmt=contour_format, fontsize=8)
+            scalar_contour = axis.contour(X, Y, interpolated_data, colors=colors)
+            scalar_contour.clabel(inline=True, fmt=fmt, fontsize=8)
 
         return scalar_image, scalar_contour, scalar_colorbar, interpolated_data
 
@@ -254,8 +260,15 @@ class Visualization:
         if plot_options is None:
             plot_options = {}
 
-        plot_stream = plot_options.get('plot_stream', False)
-        vector_color = plot_options.get('vector_color', 'black')
+        plot_stream = plot_options.pop('plot_stream', False)
+        color = plot_options.pop('vector_color', 'black')
+        scale = plot_options.pop('vector_scale', None)
+        scale_units = plot_options.pop('vector_scale_units', None)
+        normalize_vectors = plot_options.pop('normalize_vectors', None)
+        number_of_arrows = plot_options.pop('number_of_arrows', (25, 25))
+
+        if len(plot_options) > 0:
+            raise ValueError(f'plot_options: {list(plot_options.keys())} not available')
 
         if interpolation_options is None:
             interpolation_options = {}
@@ -278,22 +291,27 @@ class Visualization:
         )
         U, V = interpolated_data[0], interpolated_data[1]
 
-        arrows, streamlines = None, None
+        quiver, streamplot = None, None
         if not plot_stream:
-            number_of_arrows = plot_options.get('number_of_arrows', (25, 25))
             n_x, n_y = number_of_arrows[0], number_of_arrows[1]
             stride_x = int(n_interp_x / n_x)
             stride_y = int(n_interp_y / n_y)
-            X = X[::stride_x, ::stride_y]
-            Y = Y[::stride_x, ::stride_y]
-            U = U[::stride_x, ::stride_y]
-            V = V[::stride_x, ::stride_y]
-            arrows = axis.quiver(X, Y, U, V, color=vector_color)
+            X = X[::stride_y, ::stride_x]
+            Y = Y[::stride_y, ::stride_x]
+            U = U[::stride_y, ::stride_x]
+            V = V[::stride_y, ::stride_x]
+            if normalize_vectors:
+                norm = np.hypot(U, V)
+                U /= norm
+                V /= norm
+            quiver = axis.quiver(
+                X, Y, U, V, scale=scale, scale_units=scale_units, color=color
+            )
 
         else:
-            streamlines = axis.streamplot(X, Y, U, V, color=vector_color)
+            streamplot = axis.streamplot(X, Y, U, V, color=color)
 
-        return arrows, streamlines, interpolated_data
+        return quiver, streamplot, interpolated_data
 
     def __repr__(self):
         """Dunder repr method."""
