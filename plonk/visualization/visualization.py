@@ -10,6 +10,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ndarray
+from scipy.interpolate import RectBivariateSpline
+from skimage import transform
 
 from .interpolation import scalar_interpolation, vector_interpolation
 
@@ -80,13 +82,9 @@ class Visualization:
             'image': None,
             'contours': None,
             'colorbar': None,
-            'interpolated_data': None,
+            'data': None,
         }
-        self.vector: Dict[str, Any] = {
-            'quiver': None,
-            'streamplot': None,
-            'interpolated_data': None,
-        }
+        self.vector: Dict[str, Any] = {'quiver': None, 'streamplot': None, 'data': None}
 
         if axis is None:
             self.fig, self.axis = plt.subplots()
@@ -94,21 +92,17 @@ class Visualization:
             self.fig = axis.get_figure()
             self.axis = axis
 
-        self.axis.set_xlim(*extent[:2])
-        self.axis.set_ylim(*extent[2:])
-
         if scalar_data is None and vector_data is None:
             self._particle_plot(
                 x_coordinate=x_coordinate,
                 y_coordinate=y_coordinate,
                 smoothing_length=smoothing_length,
-                extent=extent,
                 axis=self.axis,
             )
 
         if scalar_data is not None:
-            _scalar_plot = self._scalar_plot(
-                scalar_data=scalar_data,
+            self._scalar_plot(
+                data=scalar_data,
                 x_coordinate=x_coordinate,
                 y_coordinate=y_coordinate,
                 z_coordinate=z_coordinate,
@@ -120,14 +114,12 @@ class Visualization:
                 plot_options=scalar_options,
                 interpolation_options=interpolation_options,
             )
-            self.scalar['image'] = _scalar_plot[0]
-            self.scalar['contours'] = _scalar_plot[1]
-            self.scalar['colorbar'] = _scalar_plot[2]
-            self.scalar['interpolated_data'] = _scalar_plot[3]
+            if not np.allclose(self.scalar['extent'], extent):
+                new_extent = self.scalar['extent']
 
         if vector_data is not None:
-            _vector_plot = self._vector_plot(
-                vector_data=vector_data,
+            self._vector_plot(
+                data=vector_data,
                 x_coordinate=x_coordinate,
                 y_coordinate=y_coordinate,
                 z_coordinate=z_coordinate,
@@ -138,18 +130,26 @@ class Visualization:
                 plot_options=vector_options,
                 interpolation_options=interpolation_options,
             )
-            self.vector['quiver'] = _vector_plot[0]
-            self.vector['streamplot'] = _vector_plot[1]
-            self.vector['interpolated_data'] = _vector_plot[2]
+            try:
+                if not np.allclose(self.vector['extent'], new_extent):
+                    raise ValueError('scalar and vector plot have different extent')
+            except NameError:
+                pass
 
-        self.axis.set_aspect('equal')
+        # self.axis.set_aspect('equal')
+
+        try:
+            extent = new_extent
+        except NameError:
+            pass
+        self.axis.set_xlim(*extent[:2])
+        self.axis.set_ylim(*extent[2:])
 
     def _particle_plot(
         self,
         x_coordinate: ndarray,
         y_coordinate: ndarray,
         smoothing_length: ndarray,
-        extent: Tuple[float, float, float, float],
         axis: Any,
     ):
 
@@ -159,14 +159,12 @@ class Visualization:
             'k.',
             markersize=0.5,
         )
-        axis.set_xlim(extent[:2])
-        axis.set_ylim(extent[2:])
         return
 
     def _scalar_plot(
         self,
         *,
-        scalar_data: ndarray,
+        data: ndarray,
         x_coordinate: ndarray,
         y_coordinate: ndarray,
         z_coordinate: Optional[ndarray] = None,
@@ -188,6 +186,7 @@ class Visualization:
         fmt = plot_options.pop('contour_format', '%.2g')
         _norm = plot_options.pop('norm')
         cmap = plot_options.pop('cmap')
+        polar_coordinates = plot_options.pop('polar_coordinates')
 
         if len(plot_options) > 0:
             raise ValueError(f'plot_options: {list(plot_options.keys())} not available')
@@ -195,19 +194,38 @@ class Visualization:
         if interpolation_options is None:
             interpolation_options = {}
 
-        interpolated_data = scalar_interpolation(
-            data=scalar_data,
+        number_of_pixels = interpolation_options.pop('number_of_pixels', (512, 512))
+
+        data = scalar_interpolation(
+            data=data,
             x_position=x_coordinate,
             y_position=y_coordinate,
             z_position=z_coordinate,
             extent=extent,
             smoothing_length=smoothing_length,
             particle_mass=particle_mass,
+            number_of_pixels=number_of_pixels,
             **interpolation_options,
         )
 
-        scalar_image = None
-        scalar_colorbar = None
+        if polar_coordinates:
+            if not np.allclose(extent[1] - extent[0], extent[3] - extent[2]):
+                raise ValueError('Bad polar plot: x and y have different scales')
+            radius_pix = 0.5 * data.shape[0]
+            data = transform.warp_polar(data, radius=radius_pix)
+
+            radius = 0.5 * (extent[1] - extent[0])
+            extent = (0, radius, 0, 2 * np.pi)
+
+            x_grid = np.linspace(*extent[:2], data.shape[0])
+            y_grid = np.linspace(*extent[2:], data.shape[1])
+            spl = RectBivariateSpline(x_grid, y_grid, data)
+            x_regrid = np.linspace(extent[0], extent[1], number_of_pixels[0])
+            y_regrid = np.linspace(extent[2], extent[3], number_of_pixels[1])
+            data = spl(x_regrid, y_regrid)
+
+        image = None
+        colorbar = None
         if plot_render:
             norm = mpl.colors.Normalize()
             if _norm is not None:
@@ -221,31 +239,36 @@ class Visualization:
             if cmap is None:
                 cmap = 'gist_heat'
 
-            scalar_image = axis.imshow(
-                interpolated_data, origin='lower', norm=norm, extent=extent, cmap=cmap
+            image = axis.imshow(
+                data, origin='lower', norm=norm, extent=extent, cmap=cmap
             )
 
             divider = make_axes_locatable(axis)
             cax = divider.append_axes("right", size="5%", pad=0.05)
-            scalar_colorbar = fig.colorbar(scalar_image, cax)
+            colorbar = fig.colorbar(image, cax)
 
-        scalar_contour = None
+        contour = None
         if plot_contour:
-            n_interp_x, n_interp_y = interpolated_data.shape
+            n_interp_x, n_interp_y = data.shape
             X, Y = np.meshgrid(
                 np.linspace(*extent[:2], n_interp_x),
                 np.linspace(*extent[2:], n_interp_y),
             )
 
-            scalar_contour = axis.contour(X, Y, interpolated_data, colors=colors)
-            scalar_contour.clabel(inline=True, fmt=fmt, fontsize=8)
+            contour = axis.contour(X, Y, data, colors=colors)
+            contour.clabel(inline=True, fmt=fmt, fontsize=8)
 
-        return scalar_image, scalar_contour, scalar_colorbar, interpolated_data
+        self.scalar['image'] = image
+        self.scalar['contours'] = contour
+        self.scalar['colorbar'] = colorbar
+        self.scalar['data'] = data
+        self.scalar['extent'] = extent
+        return
 
     def _vector_plot(
         self,
         *,
-        vector_data: ndarray,
+        data: ndarray,
         x_coordinate: ndarray,
         y_coordinate: ndarray,
         z_coordinate: Optional[ndarray] = None,
@@ -273,23 +296,26 @@ class Visualization:
         if interpolation_options is None:
             interpolation_options = {}
 
-        interpolated_data = vector_interpolation(
-            x_data=vector_data[:, 0],
-            y_data=vector_data[:, 1],
+        number_of_pixels = interpolation_options.pop('number_of_pixels', (512, 512))
+
+        data = vector_interpolation(
+            x_data=data[:, 0],
+            y_data=data[:, 1],
             x_position=x_coordinate,
             y_position=y_coordinate,
             z_position=z_coordinate,
             extent=extent,
             smoothing_length=smoothing_length,
             particle_mass=particle_mass,
+            number_of_pixels=number_of_pixels,
             **interpolation_options,
         )
 
-        n_interp_x, n_interp_y = interpolated_data[0].shape
+        n_interp_x, n_interp_y = data[0].shape
         X, Y = np.meshgrid(
             np.linspace(*extent[:2], n_interp_x), np.linspace(*extent[2:], n_interp_y)
         )
-        U, V = interpolated_data[0], interpolated_data[1]
+        U, V = data[0], data[1]
 
         quiver, streamplot = None, None
         if not plot_stream:
@@ -311,7 +337,11 @@ class Visualization:
         else:
             streamplot = axis.streamplot(X, Y, U, V, color=color)
 
-        return quiver, streamplot, interpolated_data
+        self.vector['quiver'] = quiver
+        self.vector['streamplot'] = streamplot
+        self.vector['data'] = data
+        self.vector['extent'] = extent
+        return
 
     def __repr__(self):
         """Dunder repr method."""

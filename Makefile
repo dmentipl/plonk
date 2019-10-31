@@ -14,7 +14,9 @@ help: ## Display this help
 development: ## Setup Plonk for development
 	@echo ">>> Install Plonk in 'conda development' mode"
 	@echo
-	@conda develop .
+	@conda env create --file environment.yml
+	@conda develop --name plonk-dev .
+	@echo "To use, type: 'conda activate plonk-dev'"
 
 .PHONY: conda
 conda: ## Build Conda package

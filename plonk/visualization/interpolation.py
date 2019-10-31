@@ -11,8 +11,6 @@ from KDEpy import FFTKDE
 from numpy import ndarray
 from scipy.interpolate import RectBivariateSpline
 
-_IVERBOSE = -2
-_NUMBER_OF_PIXELS = (512, 512)
 _H_FACT = 1.2
 _C_NORM_3D = 1 / np.pi
 
@@ -26,7 +24,7 @@ def scalar_interpolation(
     extent: Tuple[float, float, float, float],
     smoothing_length: ndarray,
     particle_mass: ndarray,
-    number_of_pixels: Optional[Tuple[float, float]] = None,
+    number_of_pixels: Tuple[float, float],
     cross_section: Optional[float] = None,
     density_weighted: Optional[bool] = None,
 ) -> ndarray:
@@ -49,9 +47,9 @@ def scalar_interpolation(
         The smoothing length on each particle.
     particle_mass
         The particle mass on each particle.
-    number_pixels, optional
+    number_pixels
         The pixel grid to interpolate the scalar quantity to, as
-        (npixx, npixy). Default is (512, 512).
+        (npixx, npixy).
     cross_section, optional
         Cross section slice position as a z-value. If None, cross
         section interpolation is turned off. Default is off.
@@ -88,7 +86,7 @@ def vector_interpolation(
     extent: Tuple[float, float, float, float],
     smoothing_length: ndarray,
     particle_mass: ndarray,
-    number_of_pixels: Optional[Tuple[float, float]] = None,
+    number_of_pixels: Tuple[float, float],
     cross_section: Optional[float] = None,
     density_weighted: Optional[bool] = None,
 ) -> ndarray:
@@ -113,9 +111,9 @@ def vector_interpolation(
         The smoothing length on each particle.
     particle_mass
         The particle mass on each particle.
-    number_pixels, optional
+    number_pixels
         The pixel grid to interpolate the scalar quantity to, as
-        (npixx, npixy). Default is (512, 512).
+        (npixx, npixy).
     cross_section, optional
         Cross section slice position as a z-value. If None, cross
         section interpolation is turned off. Default is off.
@@ -164,7 +162,7 @@ def _interpolate(
     extent: Tuple[float, float, float, float],
     smoothing_length: ndarray,
     particle_mass: ndarray,
-    number_of_pixels: Optional[Tuple[float, float]] = None,
+    number_of_pixels: Tuple[float, float],
     cross_section: Optional[float] = None,
     density_weighted: Optional[bool] = None,
 ) -> ndarray:
@@ -221,8 +219,8 @@ def _interpolate(
     x_grid = np.linspace(grid[0, 0], grid[-1, 0], number_of_pixels[0])
     y_grid = np.linspace(grid[0, 1], grid[-1, 1], number_of_pixels[1])
     spl = RectBivariateSpline(x_grid, y_grid, z)
-    x_regrid = np.linspace(extent[0], extent[1], number_of_pixels[0])
-    y_regrid = np.linspace(extent[2], extent[3], number_of_pixels[1])
+    x_regrid = np.linspace(*extent[:2], number_of_pixels[0])
+    y_regrid = np.linspace(*extent[2:], number_of_pixels[1])
     z_regrid = spl(x_regrid, y_regrid)
 
     return z_regrid.T

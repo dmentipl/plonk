@@ -13,7 +13,16 @@ __version__ = re.search(
     io.open('plonk/__init__.py', encoding='utf_8_sig').read(),
 ).group(1)
 
-install_requires = ['KDEpy', 'astropy', 'h5py', 'matplotlib', 'numpy', 'pandas']
+install_requires = [
+    'KDEpy',
+    'astropy',
+    'h5py',
+    'matplotlib',
+    'numpy',
+    'pandas',
+    'scipy',
+    'skimage>=0.16',
+]
 
 description = 'Smoothed particle hydrodynamics analysis and visualization with Python.'
 

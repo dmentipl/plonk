@@ -19,12 +19,20 @@ dependencies:
   - coverage
   - coveralls
   - cython
+  - flake8
   - h5py
+  - ipython
   - isort
+  - jupyterlab
   - matplotlib
+  - mypy
   - numpy
   - pandas
   - pip
+  - pydocstyle
+  - pylint
+  - scikit-image>=0.16
+  - scipy
   - sphinx
   - sphinx_rtd_theme
   - pip:
