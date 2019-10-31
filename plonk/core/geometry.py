@@ -77,6 +77,7 @@ def _cartesian_to_cylindrical(
 ) -> Optional[ndarray]:
     x, y, z = position[:, 0], position[:, 1], position[:, 2]
     r, phi = np.hypot(x, y), np.arctan2(y, x)
+    phi[phi < 0] += 2 * np.pi
     if velocity is not None:
         vx, vy, vz = velocity[:, 0], velocity[:, 1], velocity[:, 2]
         vr = (x * vx + y * vy) / r
