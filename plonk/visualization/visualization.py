@@ -3,6 +3,8 @@
 This class contains methods for visualizing smoothed particle
 hydrodynamics simulation data.
 """
+
+from copy import copy
 from typing import Any, Dict, Optional, Tuple
 
 import matplotlib as mpl
@@ -102,6 +104,10 @@ class Visualization:
         }
         self.vector: Dict[str, Any] = {'quiver': None, 'streamplot': None, 'data': None}
 
+        _scalar_options = copy(scalar_options)
+        _vector_options = copy(vector_options)
+        _interpolation_options = copy(interpolation_options)
+
         if axis is None:
             self.fig, self.axis = plt.subplots()
         else:
@@ -127,8 +133,8 @@ class Visualization:
                 extent=extent,
                 fig=self.fig,
                 axis=self.axis,
-                plot_options=scalar_options,
-                interpolation_options=interpolation_options,
+                plot_options=_scalar_options,
+                interpolation_options=_interpolation_options,
             )
             if not np.allclose(self.scalar['extent'], extent):
                 new_extent = self.scalar['extent']
@@ -143,8 +149,8 @@ class Visualization:
                 smoothing_length=smoothing_length,
                 extent=extent,
                 axis=self.axis,
-                plot_options=vector_options,
-                interpolation_options=interpolation_options,
+                plot_options=_vector_options,
+                interpolation_options=_interpolation_options,
             )
             try:
                 if not np.allclose(self.vector['extent'], new_extent):
