@@ -17,6 +17,6 @@ Rendering the surface density.
 ... )
 """
 
-from .visualization import Visualization
+from .visualization import Visualization, render
 
-__all__ = ['Visualization']
+__all__ = ['Visualization', 'render']
