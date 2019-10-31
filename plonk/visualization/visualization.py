@@ -15,6 +15,21 @@ from skimage import transform
 
 from .interpolation import scalar_interpolation, vector_interpolation
 
+_plot_render = True
+_plot_contour = False
+_contour_color = 'black'
+_contour_format = '%.2g'
+_norm = 'linear'
+_cmap = 'gist_heat'
+_polar_coordinates = False
+_number_of_pixels = (512, 512)
+_plot_stream = False
+_vector_color = 'black'
+_vector_scale = None
+_vector_scale_units = None
+_normalize_vectors = False
+_number_of_arrows = (25, 25)
+
 
 class Visualization:
     """Visualize scalar and vector smoothed particle hydrodynamics data.
@@ -136,14 +151,14 @@ class Visualization:
             except NameError:
                 pass
 
-        # self.axis.set_aspect('equal')
-
         try:
             extent = new_extent
         except NameError:
             pass
         self.axis.set_xlim(*extent[:2])
         self.axis.set_ylim(*extent[2:])
+
+        self.axis.set_aspect('equal')
 
     def _particle_plot(
         self,
@@ -180,13 +195,13 @@ class Visualization:
         if plot_options is None:
             plot_options = {}
 
-        plot_render = plot_options.pop('plot_render', True)
-        plot_contour = plot_options.pop('plot_contour', False)
-        colors = plot_options.pop('contour_color', 'black')
-        fmt = plot_options.pop('contour_format', '%.2g')
-        _norm = plot_options.pop('norm')
-        cmap = plot_options.pop('cmap')
-        polar_coordinates = plot_options.pop('polar_coordinates')
+        plot_render = plot_options.pop('plot_render', _plot_render)
+        plot_contour = plot_options.pop('plot_contour', _plot_contour)
+        colors = plot_options.pop('contour_color', _contour_color)
+        fmt = plot_options.pop('contour_format', _contour_format)
+        norm_str = plot_options.pop('norm', _norm)
+        cmap = plot_options.pop('cmap', _cmap)
+        polar_coordinates = plot_options.pop('polar_coordinates', _polar_coordinates)
 
         if len(plot_options) > 0:
             raise ValueError(f'plot_options: {list(plot_options.keys())} not available')
@@ -194,7 +209,9 @@ class Visualization:
         if interpolation_options is None:
             interpolation_options = {}
 
-        number_of_pixels = interpolation_options.pop('number_of_pixels', (512, 512))
+        number_of_pixels = interpolation_options.pop(
+            'number_of_pixels', _number_of_pixels
+        )
 
         data = scalar_interpolation(
             data=data,
@@ -227,17 +244,12 @@ class Visualization:
         image = None
         colorbar = None
         if plot_render:
-            norm = mpl.colors.Normalize()
-            if _norm is not None:
-                if _norm.lower() in ('linear', 'lin'):
-                    norm = mpl.colors.Normalize()
-                elif _norm.lower() in ('logarithic', 'logarithm', 'log', 'log10'):
-                    norm = mpl.colors.LogNorm()
-                else:
-                    raise ValueError('Cannot determine normalization for colorbar')
-
-            if cmap is None:
-                cmap = 'gist_heat'
+            if norm_str.lower() in ('linear', 'lin'):
+                norm = mpl.colors.Normalize()
+            elif norm_str.lower() in ('logarithic', 'logarithm', 'log', 'log10'):
+                norm = mpl.colors.LogNorm()
+            else:
+                raise ValueError('Cannot determine normalization for colorbar')
 
             image = axis.imshow(
                 data, origin='lower', norm=norm, extent=extent, cmap=cmap
@@ -283,12 +295,12 @@ class Visualization:
         if plot_options is None:
             plot_options = {}
 
-        plot_stream = plot_options.pop('plot_stream', False)
-        color = plot_options.pop('vector_color', 'black')
-        scale = plot_options.pop('vector_scale', None)
-        scale_units = plot_options.pop('vector_scale_units', None)
-        normalize_vectors = plot_options.pop('normalize_vectors', None)
-        number_of_arrows = plot_options.pop('number_of_arrows', (25, 25))
+        plot_stream = plot_options.pop('plot_stream', _plot_stream)
+        color = plot_options.pop('vector_color', _vector_color)
+        scale = plot_options.pop('vector_scale', _vector_scale)
+        scale_units = plot_options.pop('vector_scale_units', _vector_scale_units)
+        normalize_vectors = plot_options.pop('normalize_vectors', _normalize_vectors)
+        number_of_arrows = plot_options.pop('number_of_arrows', _number_of_arrows)
 
         if len(plot_options) > 0:
             raise ValueError(f'plot_options: {list(plot_options.keys())} not available')
@@ -296,7 +308,9 @@ class Visualization:
         if interpolation_options is None:
             interpolation_options = {}
 
-        number_of_pixels = interpolation_options.pop('number_of_pixels', (512, 512))
+        number_of_pixels = interpolation_options.pop(
+            'number_of_pixels', _number_of_pixels
+        )
 
         data = vector_interpolation(
             x_data=data[:, 0],
