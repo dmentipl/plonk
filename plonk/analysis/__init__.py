@@ -5,16 +5,12 @@ hydrodynamics post-simulation analysis tasks.
 
 Examples
 --------
-Analyzing a disc by radially binning from the central object.
+Create a radial profile in the xy-plane.
 
->>> radial_averages = plonk.analysis.disc(
-...     dump=dump,
-...     radius_in=radius_in,
-...     radius_out=radius_out,
-...     number_radial_bins=number_radial_bins,
-... )
+>>> p = Profile(dump, radius_min=10, radius_max=200, n_bins=100)
+>>> p.plot('radius', 'density')
 """
 
-from .disc import disc_analysis as disc
+from .profile import Profile
 
-__all__ = ['disc']
+__all__ = ['Profile']
