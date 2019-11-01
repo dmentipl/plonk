@@ -204,75 +204,75 @@ class Profile:
 
 
 @Profile.profile_property
-def mass(profile: Profile) -> ndarray:
+def mass(self) -> ndarray:
     """Mass profile."""
-    mass = np.zeros(profile.n_bins)
-    M = profile.dump.mass[profile._mask]
-    for idx, bin_ind in enumerate(profile.bin_indicies):
+    mass = np.zeros(self.n_bins)
+    M = self.dump.mass[self._mask]
+    for idx, bin_ind in enumerate(self.bin_indicies):
         mass[idx] = M[bin_ind].sum()
     return mass
 
 
 @Profile.profile_property
-def density(profile: Profile) -> ndarray:
+def density(self) -> ndarray:
     """Density profile.
 
     Units are [mass / length ** ndim], which depends on ndim of profile.
     """
-    return profile._get_profile('mass') / profile.bin_sizes
+    return self._get_profile('mass') / self.bin_sizes
 
 
 @Profile.profile_property
-def angmom_mag(profile: Profile) -> ndarray:
+def angmom_mag(self) -> ndarray:
     """Magnitude of specific angular momentum profile."""
-    angmom_mag = np.zeros(profile.n_bins)
+    angmom_mag = np.zeros(self.n_bins)
 
-    mass = profile.dump.mass[:, np.newaxis]
-    pos = profile.dump.particles.arrays['xyz'][:]
-    vel = profile.dump.particles.arrays['vxyz'][:]
+    mass = self.dump.mass[:, np.newaxis]
+    pos = self.dump.particles.arrays['xyz'][:]
+    vel = self.dump.particles.arrays['vxyz'][:]
 
     J = mass * np.cross(pos, vel)
     J_mag = np.hypot(np.hypot(J[:, 0], J[:, 1]), J[:, 2])
 
-    for idx, bin_ind in enumerate(profile.bin_indicies):
-        angmom_mag[idx] = J_mag[bin_ind].mean() / profile._get_profile('mass')[idx]
+    for idx, bin_ind in enumerate(self.bin_indicies):
+        angmom_mag[idx] = J_mag[bin_ind].mean() / self._get_profile('mass')[idx]
     return angmom_mag
 
 
 @Profile.profile_property
-def angmom_theta(profile: Profile) -> ndarray:
+def angmom_theta(self) -> ndarray:
     """Angle between angular momentum and xy-plane."""
-    angmom_theta = np.zeros(profile.n_bins)
+    angmom_theta = np.zeros(self.n_bins)
 
-    mass = profile.dump.mass[:, np.newaxis]
-    pos = profile.dump.particles.arrays['xyz'][:]
-    vel = profile.dump.particles.arrays['vxyz'][:]
+    mass = self.dump.mass[:, np.newaxis]
+    pos = self.dump.particles.arrays['xyz'][:]
+    vel = self.dump.particles.arrays['vxyz'][:]
 
     J = mass * np.cross(pos, vel)
     J_z = J[:, 2]
     J_mag = np.hypot(np.hypot(J[:, 0], J[:, 1]), J[:, 2])
 
-    for idx, bin_ind in enumerate(profile.bin_indicies):
-        j_z = J_z[bin_ind].mean() / profile._get_profile('mass')[idx]
-        j_mag = J_mag[bin_ind].mean() / profile._get_profile('mass')[idx]
+    for idx, bin_ind in enumerate(self.bin_indicies):
+        j_z = J_z[bin_ind].mean() / self._get_profile('mass')[idx]
+        j_mag = J_mag[bin_ind].mean() / self._get_profile('mass')[idx]
         angmom_theta[idx] = np.arccos(j_z / j_mag)
     return angmom_theta
 
 
 @Profile.profile_property
-def angmom_phi(profile: Profile) -> ndarray:
+def angmom_phi(self) -> ndarray:
     """Angle between angular momentum and x-axis in xy-plane."""
-    angmom_phi = np.zeros(profile.n_bins)
+    angmom_phi = np.zeros(self.n_bins)
 
-    mass = profile.dump.mass[:, np.newaxis]
-    pos = profile.dump.particles.arrays['xyz'][:]
-    vel = profile.dump.particles.arrays['vxyz'][:]
+    mass = self.dump.mass[:, np.newaxis]
+    pos = self.dump.particles.arrays['xyz'][:]
+    vel = self.dump.particles.arrays['vxyz'][:]
 
     J = mass * np.cross(pos, vel)
     J_x, J_y = (J[:, 0], J[:, 1])
 
-    for idx, bin_ind in enumerate(profile.bin_indicies):
-        j_x = J_x[bin_ind].mean() / profile._get_profile('mass')[idx]
-        j_y = J_y[bin_ind].mean() / profile._get_profile('mass')[idx]
+    for idx, bin_ind in enumerate(self.bin_indicies):
+        j_x = J_x[bin_ind].mean() / self._get_profile('mass')[idx]
+        j_y = J_y[bin_ind].mean() / self._get_profile('mass')[idx]
         angmom_phi[idx] = np.arctan2(j_y, j_x)
     return angmom_phi
