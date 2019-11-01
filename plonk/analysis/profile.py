@@ -301,3 +301,29 @@ def angmom_phi(self) -> ndarray:
         j_y = J_y[bin_ind].mean() / self._get_profile('mass')[idx]
         angmom_phi[idx] = np.arctan2(j_y, j_x)
     return angmom_phi
+
+
+@Profile.profile_property
+def eccentricity(self, gravitational_parameter: float):
+    """Orbital eccentricity profile."""
+    mu = gravitational_parameter
+
+    pos = self.dump.particles.arrays['xyz'][:][self._mask]
+    vel = self.dump.particles.arrays['vxyz'][:][self._mask]
+
+    r = np.hypot(np.hypot(pos[:, 0], pos[:, 1]), pos[:, 2])
+    v = np.hypot(np.hypot(vel[:, 0], vel[:, 1]), vel[:, 2])
+
+    h = np.cross(pos, vel)
+    h_mag = np.hypot(np.hypot(h[:, 0], h[:, 1]), h[:, 2])
+
+    ke = 0.5 * v ** 2
+    pe = -mu / r
+    e = ke + pe
+    term = 2 * e * h_mag ** 2 / mu ** 2
+    ecc = np.sqrt(1 + term)
+
+    eccentricity = np.zeros(self.n_bins)
+    for idx, bin_ind in enumerate(self.bin_indicies):
+        eccentricity[idx] = ecc[bin_ind].mean()
+    return eccentricity
