@@ -137,6 +137,9 @@ class Profile:
 
     def __getitem__(self, name: str) -> ndarray:
         """Return the profile of a given kind."""
+        if isinstance(name, tuple):
+            name, *args = name
+            return self._get_profile(name, args)
         return self._get_profile(name)
 
     def __setitem__(self, name: str, values: ndarray):
@@ -220,6 +223,28 @@ def density(self) -> ndarray:
     Units are [mass / length ** ndim], which depends on ndim of profile.
     """
     return self._get_profile('mass') / self.bin_sizes
+
+
+@Profile.profile_property
+def smooth(self) -> ndarray:
+    """Smoothing length profile."""
+    smooth = np.zeros(self.n_bins)
+    _h = self.dump.particles.arrays['h'][:]
+    h = _h[self._mask]
+    for idx, bin_ind in enumerate(self.bin_indicies):
+        smooth[idx] = h[bin_ind].mean()
+    return smooth
+
+
+@Profile.profile_property
+def scale_height(self) -> ndarray:
+    """Scale height profile."""
+    scale_height = np.zeros(self.n_bins)
+    pos = self.dump.particles.arrays['xyz'][:]
+    z = pos[self._mask, 2]
+    for idx, bin_ind in enumerate(self.bin_indicies):
+        scale_height[idx] = z[bin_ind].std()
+    return scale_height
 
 
 @Profile.profile_property
