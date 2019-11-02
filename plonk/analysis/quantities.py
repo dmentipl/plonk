@@ -11,7 +11,7 @@ from typing import Optional
 import numpy as np
 from numpy import ndarray
 
-from ..core.dump import Dump
+from ..dump.dump import Dump
 
 
 def center_of_mass(dump: Dump, mask: Optional[ndarray] = None) -> ndarray:

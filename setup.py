@@ -23,6 +23,14 @@ install_requires = [
     'scipy',
     'skimage>=0.16',
 ]
+packages = [
+    'plonk',
+    'plonk.analysis',
+    'plonk.dump',
+    'plonk.simulation',
+    'dump.utils',
+    'plonk.visualization',
+]
 
 description = 'Smoothed particle hydrodynamics analysis and visualization with Python.'
 
@@ -33,7 +41,7 @@ setup(
     author_email='d.mentiplay@gmail.com',
     url='https://github.com/dmentipl/plonk',
     description=description,
-    packages=['plonk', 'plonk.analysis', 'plonk.core', 'plonk.visualization'],
+    packages=packages,
     license='MIT',
     install_requires=install_requires,
 )

@@ -8,7 +8,7 @@ evolution files an Evolution objects.
 
 from pathlib import Path
 
-from .dump import FILE_TYPES, Dump
+from ..dump.dump import Dump
 from .evolution import Evolution
 
 
@@ -200,12 +200,17 @@ class Simulation:
 
         file_ext = file_types.pop()[1:]
 
-        for ft in FILE_TYPES:
-            if file_ext == ft.extension:
-                return ft.filetype, ft.extension
+        if file_ext == 'h5':
+            file_type = 'HDF5'
+
+        return file_type, file_ext
 
     def __repr__(self):
         return self.__str__()
 
     def __str__(self):
         return f'<plonk.Simulation: "{self.prefix}", ' f'directory="{self.path.name}">'
+
+
+def load_simulation():
+    raise NotImplementedError

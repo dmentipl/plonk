@@ -16,7 +16,7 @@ from scipy.interpolate import RectBivariateSpline
 from skimage import transform
 
 from .interpolation import scalar_interpolation, vector_interpolation
-from ..core.dump import Dump
+from ..dump.dump import Dump
 
 _plot_render = True
 _plot_contour = False

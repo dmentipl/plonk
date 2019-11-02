@@ -152,3 +152,7 @@ def _check_file_consistency(filenames):
         columns = _get_columns(filename)
         if columns != columns_previous:
             raise ValueError('files have different columns')
+
+
+def load_evolution():
+    raise NotImplementedError

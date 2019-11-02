@@ -50,18 +50,18 @@ See https://plonk.readthedocs.io/ for documentation. The source code is
 available at https://github.com/dmentipl/plonk.
 """
 
-from . import analysis, visualization
-from .core.dump import Dump
-from .core.evolution import Evolution
-from .core.simulation import Simulation
-from .visualization import Visualization
+from . import analysis, dump, simulation, utils, visualization
+from .dump import load_dump
+from .simulation import load_evolution, load_simulation
 
 __all__ = [
-    'Dump',
-    'Evolution',
-    'Simulation',
-    'Visualization',
     'analysis',
+    'dump',
+    'load_dump',
+    'load_evolution',
+    'load_simulation',
+    'simulation',
+    'utils',
     'visualization',
 ]
 
