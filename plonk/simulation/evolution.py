@@ -5,12 +5,14 @@ This module contains the Evolution class for tracking global quantities
 in smoothed particle hydrodynamics simulations as time series.
 Evolution files track quantities more frequently than dump file output.
 """
+
+from __future__ import annotations
 from pathlib import Path
+from typing import List, Tuple, Union
 
-import matplotlib.pyplot as plt
 import numpy as np
-
-FLOAT_TYPE = '<f8'
+import pandas as pd
+from pandas import DataFrame
 
 
 class Evolution:
@@ -22,129 +24,128 @@ class Evolution:
     smaller than the dump file output time. These files are typically
     stored as text files.
 
-    Parameters
-    ----------
-    filename(s) : list of str
-        List of paths to evolution file(s) in chronological order.
-        These should all contain the same columns.
+    The data is stored as a pandas DataFrame.
 
     Examples
     --------
     Reading a single evolution file into an Evolution object.
 
     >>> file_name = 'simulation.ev'
-    >>> evol = plonk.Evolution(file_name)
+    >>> evol = plonk.load_ev(file_name)
 
-    Reading a list of evolution files into an Evolution object.
+    Reading a tuple of evolution files into an Evolution object.
 
-    >>> file_names = ['sim01.ev', 'sim02.ev', 'sim03.ev']
+    >>> file_names = ('sim01.ev', 'sim02.ev', 'sim03.ev')
     >>> evol = plonk.Evolution(file_names)
 
-    Accessing the data.
+    Accessing the data as a pandas DataFrame.
 
     >>> evol.data['time']
     >>> evol.data['etherm']
 
     Plotting kinetic and thermal energy against time.
 
-    >>> evol.plot('ekin', 'etherm')
+    >>> evol.data.plot('ekin', 'etherm')
     """
 
-    def __init__(self, filenames):
+    def __init__(self):
 
+        self.file_paths: Tuple[Path, ...]
+        self.file_names: Tuple[str, ...]
+
+    def load_from_file(
+        self,
+        filenames: Union[str, Path, Tuple[str], Tuple[Path], List[str], Tuple[Path]],
+    ) -> Evolution:
+        """Load from file(s).
+
+        Parameters
+        ----------
+        filename(s)
+            Collection of paths to evolution file(s) in chronological order.
+            These should all contain the same columns.
+        """
         if isinstance(filenames, (str, Path)):
-            filenames = [filenames]
+            _filenames = [filenames]
+        elif isinstance(filenames, (list, tuple)):
+            _filenames = list(filenames)
+        else:
+            raise ValueError('filenames is not a known type')
 
-        self.file_paths = list()
-        self.file_names = list()
-        for filename in filenames:
-            if not isinstance(filename, str) and not isinstance(filename, Path):
-                raise TypeError('filenames must be a list of str or pathlib.Path')
+        _file_paths = list()
+        _file_names = list()
+        for filename in _filenames:
             path = Path(filename)
-            self.file_paths.append(path.resolve())
-            self.file_names.append(path.name)
+            _file_paths.append(path.resolve())
+            _file_names.append(path.name)
 
-        _check_file_consistency(filenames)
+        self.file_paths = tuple(_file_paths)
+        self.file_names = tuple(_file_names)
+        _check_file_consistency(self.file_paths)
 
-        self._columns = _get_columns(filenames[0])
+        self._columns = _get_columns(self.file_paths[0])
         self._data = self._get_data()
 
+        return self
+
     @property
-    def columns(self):
+    def columns(self) -> Tuple[str, ...]:
         """List of available time evolution data."""
         return self._columns
 
     @property
-    def data(self):
-        """Time evolution data as a Numpy recarray."""
+    def data(self) -> DataFrame:
+        """Time evolution data as a pandas DataFrame."""
         return self._data
 
-    def plot(self, *args, **kwargs):
-        """
-        Plot evolution data as lines or markers against time.
-
-        Parameters
-        ----------
-        *args : str
-            The evolution data to plot against time.
-
-        **kwargs
-            Keyword arguments to pass to matplotlib.pyplot.plot.
-        """
-
-        ydata = list()
-        for arg in args:
-            if isinstance(arg, str):
-                if arg in self._columns:
-                    ydata.append(self.data[arg])
-                else:
-                    raise ValueError('data not available')
-            else:
-                raise TypeError('must specifiy column name with a string')
-
-        xdat = self.data['time']
-        for ydat in ydata:
-            plt.plot(xdat, ydat, **kwargs)
-
-    def _get_data(self):
+    def _get_data(self) -> DataFrame:
 
         times = list()
         for filename in self.file_paths:
             times.append(np.loadtxt(filename, usecols=0))
 
-        final_row_index = [
-            np.where(t1 < t2[0])[0][-1] for t1, t2 in zip(times, times[1:])
-        ]
+        _skiprows = [0]
+        if len(times) > 1:
+            for t1, t2 in zip(times, times[1:]):
+                _skiprows.append(np.where(t2 < t1[-1])[0][-1] + 2)
 
-        dtype = [(column, FLOAT_TYPE) for column in self._columns]
+        df = pd.concat(
+            (
+                pd.read_csv(
+                    f,
+                    names=self._columns,
+                    skiprows=skiprows,
+                    skipinitialspace=True,
+                    delim_whitespace=True,
+                    comment='#',
+                )
+                for f, skiprows in zip(self.file_paths, _skiprows)
+            )
+        )
 
-        arr = [
-            np.loadtxt(filename)[: final_row_index[idx]]
-            for idx, filename in enumerate(self.file_paths[:-1])
-        ]
-        arr.append(np.loadtxt(self.file_paths[-1]))
-        arr = np.concatenate(arr)
-
-        return np.core.records.fromarrays(arr.T, dtype=dtype)
+        df.reset_index(inplace=True, drop=True)
+        return df
 
     def __repr__(self):
+        """Dunder repr method."""
         return self.__str__()
 
     def __str__(self):
+        """Dunder str method."""
         return f'<plonk.Evolution: "{self.file_names}">'
 
 
-def _get_columns(filename):
+def _get_columns(filename: Path) -> Tuple[str, ...]:
 
     with open(filename) as f:
         column_line = f.readline().strip('\n')
 
-    column_line = [item.strip('] ')[2:].strip(' ') for item in column_line.split('[')]
+    _column_line = [item.strip('] ')[2:].strip(' ') for item in column_line.split('[')]
 
-    return column_line[1:]
+    return tuple(_column_line[1:])
 
 
-def _check_file_consistency(filenames):
+def _check_file_consistency(filenames: Tuple[Path, ...]) -> None:
 
     columns = _get_columns(filenames[0])
     for filename in filenames:
@@ -154,5 +155,15 @@ def _check_file_consistency(filenames):
             raise ValueError('files have different columns')
 
 
-def load_evolution():
-    raise NotImplementedError
+def load_ev(
+    filenames: Union[str, Path, Tuple[str], Tuple[Path], List[str], Tuple[Path]],
+) -> Evolution:
+    """Load Evolution from file(s).
+
+    Parameters
+    ----------
+    filename(s)
+        Collection of paths to evolution file(s) in chronological order.
+        These should all contain the same columns.
+    """
+    return Evolution().load_from_file(filenames)

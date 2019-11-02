@@ -37,9 +37,7 @@ class Simulation:
     --------
     Reading simulation data into a Simulation object.
 
-    >>> prefix = 'disc'
-    >>> directory = '2019-01-01'
-    >>> simulation = plonk.Simulation(prefix, directory)
+    >>> simulation = plonk.load_simulation('prefix', path_to_directory)
 
     Accessing the particles object, and particles arrays.
 
@@ -212,5 +210,5 @@ class Simulation:
         return f'<plonk.Simulation: "{self.prefix}", ' f'directory="{self.path.name}">'
 
 
-def load_simulation():
+def load_sim():
     raise NotImplementedError

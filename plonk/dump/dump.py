@@ -71,6 +71,7 @@ class Dump:
 
     @property
     def num_particles(self):
+        """Return number of particles."""
         if self._num_particles == 0:
             self._num_particles = self['smooth'].size
         return self._num_particles

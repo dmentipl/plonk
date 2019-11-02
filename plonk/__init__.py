@@ -52,14 +52,14 @@ available at https://github.com/dmentipl/plonk.
 
 from . import analysis, dump, simulation, utils, visualization
 from .dump import load_dump
-from .simulation import load_evolution, load_simulation
+from .simulation import load_ev, load_sim
 
 __all__ = [
     'analysis',
     'dump',
     'load_dump',
-    'load_evolution',
-    'load_simulation',
+    'load_ev',
+    'load_sim',
     'simulation',
     'utils',
     'visualization',
