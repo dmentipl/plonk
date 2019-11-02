@@ -26,6 +26,15 @@ class Dump:
 
     _array_registry: Dict[str, Callable] = {}
 
+    _array_name_mapper = {
+        'xyz': 'position',
+        'pos': 'position',
+        'vxyz': 'velocity',
+        'vel': 'velocity',
+        'h': 'smooth',
+        'rho': 'density',
+    }
+
     @staticmethod
     def add_array(fn):
         """Add array to Dump."""
@@ -38,6 +47,7 @@ class Dump:
         self.properties = {}
         self._arrays = {}
         self._file_pointer = {}
+        self._num_particles = 0
 
     def loaded_arrays(self):
         """Return a list of loaded arrays."""
@@ -59,6 +69,12 @@ class Dump:
         else:
             raise ValueError('Array not available')
 
+    @property
+    def num_particles(self):
+        if self._num_particles == 0:
+            self._num_particles = self['smooth'].size
+        return self._num_particles
+
     def __getitem__(self, name: Union[str, ndarray]) -> ndarray:
         """Return an array, or family, or subset."""
         if isinstance(name, str):
@@ -66,6 +82,8 @@ class Dump:
                 raise NotImplementedError('')
             elif name in self.available_arrays():
                 return self._get_array(name)
+            elif name in self._array_name_mapper.keys():
+                return self._get_array(self._array_name_mapper[name])
             else:
                 raise ValueError('Cannot determine item to return')
         elif isinstance(name, ndarray):
@@ -74,6 +92,10 @@ class Dump:
     def __delitem__(self, name):
         """Delete an array from memory."""
         del self._arrays[name]
+
+    def __len__(self):
+        """Length as number of particles."""
+        return self.num_particles
 
     def __repr__(self):
         """Dunder repr method."""
