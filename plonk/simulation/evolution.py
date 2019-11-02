@@ -1,5 +1,4 @@
-"""
-Evolution class for global quantites.
+"""Evolution class for global quantites.
 
 This module contains the Evolution class for tracking global quantities
 in smoothed particle hydrodynamics simulations as time series.
@@ -16,8 +15,7 @@ from pandas import DataFrame
 
 
 class Evolution:
-    """
-    Smoothed particle hydrodynamics simulation time evolution object.
+    """Smoothed particle hydrodynamics simulation time evolution object.
 
     Evolution files track global quantities, such as energy, momentum,
     and density, over time. The time increments in these files is
