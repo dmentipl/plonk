@@ -74,14 +74,14 @@ class Profile:
     ) -> ndarray:
         if ignore_accreted is False:
             if mask is None:
-                return np.ones(self.dump.particles.number, dtype=bool)
+                return np.ones(len(self.dump), dtype=bool)
             return mask
         if mask is None:
-            return self.dump.particles.arrays['h'][:] > 0.0
-        return mask & self.dump.particles.arrays['h'][:] > 0.0
+            return self.dump['h'] > 0.0
+        return mask & self.dump['h'] > 0.0
 
     def _calculate_x(self) -> ndarray:
-        pos = self.dump.particles.arrays['xyz'][:]
+        pos = self.dump['xyz']
         pos = pos[self._mask]
         if self.ndim == 2:
             return np.hypot(pos[:, 0], pos[:, 1])
@@ -204,7 +204,7 @@ class Profile:
 def mass(self) -> ndarray:
     """Mass profile."""
     mass = np.zeros(self.n_bins)
-    M = self.dump.mass[self._mask]
+    M = self.dump['mass'][self._mask]
     for idx, bin_ind in enumerate(self.bin_indicies):
         mass[idx] = M[bin_ind].sum()
     return mass
@@ -223,7 +223,7 @@ def density(self) -> ndarray:
 def smooth(self) -> ndarray:
     """Smoothing length profile."""
     smooth = np.zeros(self.n_bins)
-    _h = self.dump.particles.arrays['h'][:]
+    _h = self.dump['h']
     h = _h[self._mask]
     for idx, bin_ind in enumerate(self.bin_indicies):
         smooth[idx] = h[bin_ind].mean()
@@ -234,7 +234,7 @@ def smooth(self) -> ndarray:
 def scale_height(self) -> ndarray:
     """Scale height profile."""
     scale_height = np.zeros(self.n_bins)
-    pos = self.dump.particles.arrays['xyz'][:]
+    pos = self.dump['xyz']
     z = pos[self._mask, 2]
     for idx, bin_ind in enumerate(self.bin_indicies):
         scale_height[idx] = z[bin_ind].std()
@@ -246,9 +246,9 @@ def angmom_mag(self) -> ndarray:
     """Magnitude of specific angular momentum profile."""
     angmom_mag = np.zeros(self.n_bins)
 
-    mass = self.dump.mass[:, np.newaxis]
-    pos = self.dump.particles.arrays['xyz'][:]
-    vel = self.dump.particles.arrays['vxyz'][:]
+    mass = self.dump['mass'][:, np.newaxis]
+    pos = self.dump['xyz']
+    vel = self.dump['vxyz']
 
     J = mass * np.cross(pos, vel)
     J_mag = np.hypot(np.hypot(J[:, 0], J[:, 1]), J[:, 2])
@@ -263,9 +263,9 @@ def angmom_theta(self) -> ndarray:
     """Angle between angular momentum and xy-plane."""
     angmom_theta = np.zeros(self.n_bins)
 
-    mass = self.dump.mass[:, np.newaxis]
-    pos = self.dump.particles.arrays['xyz'][:]
-    vel = self.dump.particles.arrays['vxyz'][:]
+    mass = self.dump['mass'][:, np.newaxis]
+    pos = self.dump['xyz']
+    vel = self.dump['vxyz']
 
     J = mass * np.cross(pos, vel)
     J_z = J[:, 2]
@@ -283,9 +283,9 @@ def angmom_phi(self) -> ndarray:
     """Angle between angular momentum and x-axis in xy-plane."""
     angmom_phi = np.zeros(self.n_bins)
 
-    mass = self.dump.mass[:, np.newaxis]
-    pos = self.dump.particles.arrays['xyz'][:]
-    vel = self.dump.particles.arrays['vxyz'][:]
+    mass = self.dump['mass'][:, np.newaxis]
+    pos = self.dump['xyz']
+    vel = self.dump['vxyz']
 
     J = mass * np.cross(pos, vel)
     J_x, J_y = (J[:, 0], J[:, 1])
@@ -302,8 +302,8 @@ def eccentricity(self, gravitational_parameter: float):
     """Orbital eccentricity profile."""
     mu = gravitational_parameter
 
-    pos = self.dump.particles.arrays['xyz'][:][self._mask]
-    vel = self.dump.particles.arrays['vxyz'][:][self._mask]
+    pos = self.dump['xyz'][self._mask]
+    vel = self.dump['vxyz'][self._mask]
 
     r = np.hypot(np.hypot(pos[:, 0], pos[:, 1]), pos[:, 2])
     v = np.hypot(np.hypot(vel[:, 0], vel[:, 1]), vel[:, 2])
