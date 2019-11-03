@@ -7,7 +7,7 @@ Examples
 --------
 Rendering the surface density.
 
->>> viz = plonk.Visualization(
+>>> viz = plonk.visualize.plot(
 ...     scalar_data=density,
 ...     x_coordinate=x_position,
 ...     y_coordinate=y_position,
@@ -15,8 +15,12 @@ Rendering the surface density.
 ...     particle_mass=particle_mass,
 ...     smoothing_length=smoothing_length,
 ... )
+
+Or via the helper 'render' function.
+>>> viz = plonk.visualize.render(snap=snap, quantity='density')
 """
 
-from .visualization import Visualization, render
+from .visualization import Visualization
+from .plot import plot, render
 
-__all__ = ['Visualization', 'render']
+__all__ = ['Visualization', 'plot', 'render']

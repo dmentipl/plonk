@@ -4,6 +4,7 @@ This class contains methods for visualizing smoothed particle
 hydrodynamics simulation data.
 """
 
+from __future__ import annotations
 from copy import copy
 from typing import Any, Dict, Optional, Tuple
 
@@ -16,7 +17,6 @@ from scipy.interpolate import RectBivariateSpline
 from skimage import transform
 
 from .interpolation import scalar_interpolation, vector_interpolation
-from ..snap.snap import Snap
 
 _plot_render = True
 _plot_contour = False
@@ -37,47 +37,25 @@ _number_of_arrows = (25, 25)
 class Visualization:
     """Visualize scalar and vector smoothed particle hydrodynamics data.
 
-    Visualize SPH data as a particle plot, a rendered image, a vector
-    plot, or a combination. The x, y coordinates are the particle
-    Cartesian coordinates, corresponding to the x and y axes of the
-    plot.
-
-    Pass in options for scalar plots, vector plots, and for
-    interpolation via the 'scalar_options', 'vector_options', and
-    'interpolation_options' dictionaries.
-
-    Parameters
-    ----------
-    scalar_data, optional
-        The 1d array (N,) of scalar data to visualize.
-    vector_data, optional
-        The 2d array (N, 2) of vector data to visualize.
-    x_coordinate
-        The x-position on the particles, where x is the required plot
-        x-axis.
-    y_coordinate
-        The y-position on the particles, where y is the required plot
-        y-axis.
-    z_coordinate, optional
-        The z-position on the particles, where z is the depth-axis for
-        the required plot.
-    extent
-        The range in the x- and y-direction as (xmin, xmax, ymin, ymax).
-    particle_mass
-        The particle mass for each particle.
-    smoothing_length
-        The smoothing length for each particle.
-    axis, optional
-        A matplotlib axis handle.
-    scalar_options, optional
-        A dictionary of options for scalar plots.
-    vector_options, optional
-        A dictionary of options for vector plots.
-    interpolation_options, optional
-        A dictionary of options for interpolation.
+    Visualize SPH data as:
+        - a particle plot,
+        - a rendered image,
+        - a vector plot,
+        - or a combination.
     """
 
-    def __init__(
+    def __init__(self):
+        self.fig: Any = None
+        self.axis: Any = None
+        self.scalar: Dict[str, Any] = {
+            'image': None,
+            'contours': None,
+            'colorbar': None,
+            'data': None,
+        }
+        self.vector: Dict[str, Any] = {'quiver': None, 'streamplot': None, 'data': None}
+
+    def plot(
         self,
         *,
         scalar_data: Optional[ndarray] = None,
@@ -92,18 +70,48 @@ class Visualization:
         scalar_options: Dict[str, Any] = None,
         vector_options: Dict[str, Any] = None,
         interpolation_options: Dict[str, Any] = None,
-    ):
+    ) -> Visualization:
+        """Plot scalar and vector smoothed particle hydrodynamics data.
 
-        self.fig: Any = None
-        self.axis: Any = None
-        self.scalar: Dict[str, Any] = {
-            'image': None,
-            'contours': None,
-            'colorbar': None,
-            'data': None,
-        }
-        self.vector: Dict[str, Any] = {'quiver': None, 'streamplot': None, 'data': None}
+        Visualize SPH data as a particle plot, a rendered image, a vector
+        plot, or a combination. The x, y coordinates are the particle
+        Cartesian coordinates, corresponding to the x and y axes of the
+        plot.
 
+        Pass in options for scalar plots, vector plots, and for
+        interpolation via the 'scalar_options', 'vector_options', and
+        'interpolation_options' dictionaries.
+
+        Parameters
+        ----------
+        scalar_data, optional
+            The 1d array (N,) of scalar data to visualize.
+        vector_data, optional
+            The 2d array (N, 2) of vector data to visualize.
+        x_coordinate
+            The x-position on the particles, where x is the required plot
+            x-axis.
+        y_coordinate
+            The y-position on the particles, where y is the required plot
+            y-axis.
+        z_coordinate, optional
+            The z-position on the particles, where z is the depth-axis for
+            the required plot.
+        extent
+            The range in the x- and y-direction as (xmin, xmax, ymin, ymax).
+        particle_mass
+            The particle mass for each particle.
+        smoothing_length
+            The smoothing length for each particle.
+        axis, optional
+            A matplotlib axis handle.
+        scalar_options, optional
+            A dictionary of options for scalar plots.
+        vector_options, optional
+            A dictionary of options for vector plots.
+        interpolation_options, optional
+            A dictionary of options for interpolation.
+        """
         _scalar_options = copy(scalar_options)
         _vector_options = copy(vector_options)
         _interpolation_options = copy(interpolation_options)
@@ -166,6 +174,8 @@ class Visualization:
         self.axis.set_ylim(*extent[2:])
 
         self.axis.set_aspect('equal')
+
+        return self
 
     def _particle_plot(
         self,
@@ -367,102 +377,3 @@ class Visualization:
     def __repr__(self):
         """Dunder repr method."""
         return '<plonk.Visualization>'
-
-
-def render(
-    snap: Snap,
-    quantity: str,
-    extent: Optional[Tuple[float, float, float, float]] = None,
-    scalar_options: Optional[Dict[Any, Any]] = None,
-    interpolation_options: Optional[Dict[Any, Any]] = None,
-) -> Visualization:
-    """Produce a rendered image of a quantity on the snapshot.
-
-    Parameters
-    ----------
-    snap
-        The snapshot containing the quantity.
-    quantity
-        The quantity to render, as a string.
-    extent
-        The xy extent of the image as (xmin, xmax, ymin, ymax), by
-        default None.
-    scalar_options
-        Options passed to the scalar rendering function, by default
-        None.
-    interpolation_options
-        Options passed to the interpolation function, by default None.
-
-    Returns
-    -------
-    Visualization
-        The Visualization object for the rendered image.
-    """
-    if scalar_options is None:
-        scalar_options = {}
-    if interpolation_options is None:
-        interpolation_options = {}
-
-    polar = False
-    if scalar_options.get('polar_coordinates'):
-        polar = True
-
-    need_z = False
-    if interpolation_options.get('cross_section') is not None:
-        need_z = True
-
-    if quantity is None:
-        quantity = 'density'
-
-    if quantity in ('rho', 'density'):
-        scalar_data = snap['density']
-    elif quantity in ('vx', 'velocity_x'):
-        scalar_data = snap['velocity'][:, 0]
-    elif quantity in ('vy', 'velocity_y'):
-        scalar_data = snap['velocity'][:, 1]
-    elif quantity in ('vz', 'velocity_z'):
-        scalar_data = snap['velocity'][:, 2]
-    else:
-        raise ValueError(
-            'Cannot determine quantity to render. See Visualization for more details.'
-        )
-
-    position = snap['position']
-    smoothing_length = snap['smooth']
-    particle_mass = snap['mass']
-
-    minimum_xy = np.percentile(position[:, :2], 1, axis=0)
-    maximum_xy = np.percentile(position[:, :2], 99, axis=0)
-    if extent is None:
-        extent = (minimum_xy[0], maximum_xy[0]) + (minimum_xy[1], maximum_xy[1])
-        if polar:
-            # extent must be square for polar plots
-            extent = (
-                max(minimum_xy),
-                min(maximum_xy),
-                max(minimum_xy),
-                min(maximum_xy),
-            )
-
-    x_coordinate = position[:, 0]
-    y_coordinate = position[:, 1]
-    z_coordinate = None
-    if need_z:
-        z_coordinate = position[:, 2]
-
-    viz = Visualization(
-        scalar_data=scalar_data,
-        x_coordinate=x_coordinate,
-        y_coordinate=y_coordinate,
-        z_coordinate=z_coordinate,
-        extent=extent,
-        particle_mass=particle_mass,
-        smoothing_length=smoothing_length,
-        scalar_options=scalar_options,
-        interpolation_options=interpolation_options,
-    )
-
-    if polar:
-        viz.axis.set_aspect('auto')
-
-    return viz

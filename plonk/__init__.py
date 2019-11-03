@@ -9,7 +9,7 @@ Features
 --------
 
 - Read in Phantom HDF snapshot files.
-- Read in global evolution files.
+- Read in global quantity evolution files.
 - Encapsulate entire simulation data as Simulation object.
 - Access particle and sink arrays.
 - Access simulation parameters and units.
@@ -40,7 +40,7 @@ Subpackages
     Contains classes and functions for performing analysis on snapshot
     files.
 
-- visualization
+- visualize
     Contains classes and functions for visualization of snapshot files.
 
 Documentation
@@ -50,25 +50,16 @@ See https://plonk.readthedocs.io/ for documentation. The source code is
 available at https://github.com/dmentipl/plonk.
 """
 
-from . import analysis, simulation, snap, utils, visualization
+from . import analysis, simulation, snap, utils, visualize
 from .snap import Snap, load_snap
 from .simulation import Evolution, Simulation, load_ev, load_sim
-from .visualization import Visualization
+from .visualize import Visualization
 
-__all__ = [
-    'Evolution',
-    'Simulation',
-    'Snap',
-    'analysis',
-    'snap',
-    'load_snap',
-    'load_ev',
-    'load_sim',
-    'simulation',
-    'utils',
-    'visualization',
-    'Visualization',
-]
+__all__ = (
+    ['Evolution', 'Simulation', 'Snap', 'Visualization']  # Classes
+    + ['analysis', 'simulation', 'snap', 'utils', 'visualize']  # Packages
+    + ['load_snap', 'load_ev', 'load_sim']  # User functions
+)
 
 # Canonical version number
 __version__ = '0.1.0'
