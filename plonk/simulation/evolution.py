@@ -1,8 +1,8 @@
 """Evolution class for global quantites.
 
 This module contains the Evolution class for tracking global quantities
-in smoothed particle hydrodynamics simulations as time series.
-Evolution files track quantities more frequently than dump file output.
+and sink particle time series data. These files track averaged
+quantities that are more frequently output than dump files.
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ from pandas import DataFrame
 
 
 class Evolution:
-    """Smoothed particle hydrodynamics simulation time evolution object.
+    """Smoothed particle hydrodynamics simulation time series object.
 
     Evolution files track global quantities, such as energy, momentum,
     and density, over time. The time increments in these files is
@@ -29,21 +29,21 @@ class Evolution:
     Reading a single evolution file into an Evolution object.
 
     >>> file_name = 'simulation.ev'
-    >>> evol = plonk.load_ev(file_name)
+    >>> ev = plonk.load_ev(file_name)
 
-    Reading a tuple of evolution files into an Evolution object.
+    Reading a collection of evolution files into an Evolution object.
 
     >>> file_names = ('sim01.ev', 'sim02.ev', 'sim03.ev')
-    >>> evol = plonk.Evolution(file_names)
+    >>> ev = plonk.load_ev(file_names)
 
-    Accessing the data as a pandas DataFrame.
+    Accessing the data as a pandas DataFrame or Series.
 
-    >>> evol.data['time']
-    >>> evol.data['etherm']
+    >>> df = ev.data
+    >>> time = ev.data['time']
 
-    Plotting kinetic and thermal energy against time.
+    Plotting kinetic and thermal energy against time using pandas.
 
-    >>> evol.data.plot('ekin', 'etherm')
+    >>> ev.plot('time', ['ekin', 'etherm'])
     """
 
     def __init__(self):
@@ -96,6 +96,10 @@ class Evolution:
         """Time evolution data as a pandas DataFrame."""
         return self._data
 
+    def plot(self, *args, **kwargs):
+        """Plot using pandas."""
+        return self.data.plot(*args, **kwargs)
+
     def _get_data(self) -> DataFrame:
 
         times = list()
@@ -131,6 +135,10 @@ class Evolution:
     def __str__(self):
         """Dunder str method."""
         return f'<plonk.Evolution: "{self.file_names}">'
+
+    def __len__(self):
+        """Dunder len method."""
+        return len(self.data)
 
 
 def _get_columns(filename: Path) -> Tuple[str, ...]:
