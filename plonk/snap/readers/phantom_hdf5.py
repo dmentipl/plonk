@@ -18,7 +18,7 @@ class PhantomHDF5Snap:
         self.snap = Snap()
         self.snap._file_pointer = None
 
-    def generate_snap(self, filename: Union[str, Path]) -> Snap:
+    def generate_snap_from_file(self, filename: Union[str, Path]) -> Snap:
         """Generate a Snap object from a Phantom HDF5 file.
 
         Parameters

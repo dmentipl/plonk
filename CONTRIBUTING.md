@@ -123,5 +123,5 @@ Coming up with ideas of what to test is useful.
 Suggestions for new features include:
 
 - more analysis functions;
-- a framework for modifying dump files;
+- a framework for modifying snapshot files;
 - handling extra physics, such as magnetic fields, dust, and binary discs, etc.

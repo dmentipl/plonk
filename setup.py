@@ -26,9 +26,10 @@ install_requires = [
 packages = [
     'plonk',
     'plonk.analysis',
-    'plonk.dump',
     'plonk.simulation',
-    'dump.utils',
+    'plonk.snap',
+    'plonk.snap.readers',
+    'plonk.utils',
     'plonk.visualization',
 ]
 

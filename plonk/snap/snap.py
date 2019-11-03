@@ -22,6 +22,12 @@ class Snap:
     Other data stored in the snapshot file include equation of state,
     dust, and magnetic field information, as well as numerical
     quantities related to time-stepping.
+
+    Examples
+    --------
+    To access arrays on the particles.
+    >>> snap['position']
+    >>> snap['density']
     """
 
     _array_registry: Dict[str, Callable] = {}

@@ -22,35 +22,35 @@ Plonk supports the following SPH file formats:
 
 + [Phantom](https://phantomsph.bitbucket.io/) output in [HDF5](https://en.wikipedia.org/wiki/Hierarchical_Data_Format) format.
 
-*Note: you can convert Phantom standard dumps to HDF5. See the [Phantom docs](https://phantomsph.readthedocs.io).*
+*Note: you can convert Phantom non-HDF5 snapshots to HDF5. See the [Phantom docs](https://phantomsph.readthedocs.io).*
 
 ### Accessing data
 
-To read in a simulation with dump files like `disc_00000.h5`, ..., and evolution files like `disc01.ev`, ..., in the current directory, and see what dumps there are:
+To read in a simulation with snapshot files like `disc_00000.h5`, ..., and evolution files like `disc01.ev`, ..., in the current directory, and see what snapshots there are:
 
 ```python
 >>> import plonk
 
->>> simulation = plonk.Simulation(prefix='disc')
->>> simulation.dumps
-[<plonk.Dump: "disc_00000.h5">,
+>>> simulation = plonk.load_sim(prefix='disc')
+>>> simulation.snaps
+[<plonk.Snap: "disc_00000.h5">,
  ...
- <plonk.Dump: "disc_01000.h5">]
+ <plonk.Snap: "disc_01000.h5">]
 ```
 
-The Dump objects contain the particle and sinks arrays, lazily loaded from the HDF5 file, as well as the dump header stored as a dictionary.
+The Snap objects contain the particle arrays, lazily loaded from the HDF5 file, as well as simulation metadata properties stored as a dictionary.
 
 ### Visualization
 
-To visualize a single dump file:
+To visualize a single snapshot:
 
 ```python
->>> dump = plonk.Dump('disc_00000.h5')
+>>> snap = plonk.load_snap('disc_00000.h5')
 
->>> plonk.Visualization(
-...     dump=dump,
-...     render='density',
-...     extent=[-200, 200, -200, 200]
+>>> plonk.visualization.render(
+...     snap=snap,
+...     quantity='density',
+...     extent=(-200, 200, -200, 200),
 ...     )
 ```
 
@@ -62,7 +62,7 @@ For example, here is the deviation from Keplerian velocity around a planet embed
 
 ### More
 
-For further usage, see `examples` folder and documentation. The code is internally documented with docstrings. Try, for example, `help(plonk.Dump)` or `help(plonk.Visualization)`.
+For further usage, see `examples` folder and documentation. The code is internally documented with docstrings. Try, for example, `help(plonk.Snap)` or `help(plonk.load_snap)`.
 
 Install
 -------
