@@ -16,7 +16,7 @@ from scipy.interpolate import RectBivariateSpline
 from skimage import transform
 
 from .interpolation import scalar_interpolation, vector_interpolation
-from ..dump.dump import Dump
+from ..snap.snap import Snap
 
 _plot_render = True
 _plot_contour = False
@@ -370,18 +370,18 @@ class Visualization:
 
 
 def render(
-    dump: Dump,
+    snap: Snap,
     quantity: str,
     extent: Optional[Tuple[float, float, float, float]] = None,
     scalar_options: Optional[Dict[Any, Any]] = None,
     interpolation_options: Optional[Dict[Any, Any]] = None,
 ) -> Visualization:
-    """Produce a rendered image of a quantity on the dump.
+    """Produce a rendered image of a quantity on the snapshot.
 
     Parameters
     ----------
-    dump
-        The dump file containing the quantity.
+    snap
+        The snapshot containing the quantity.
     quantity
         The quantity to render, as a string.
     extent
@@ -415,21 +415,21 @@ def render(
         quantity = 'density'
 
     if quantity in ('rho', 'density'):
-        scalar_data = dump.density
+        scalar_data = snap['density']
     elif quantity in ('vx', 'velocity_x'):
-        scalar_data = dump.particles.arrays['vxyz'][:, 0]
+        scalar_data = snap['velocity'][:, 0]
     elif quantity in ('vy', 'velocity_y'):
-        scalar_data = dump.particles.arrays['vxyz'][:, 1]
+        scalar_data = snap['velocity'][:, 1]
     elif quantity in ('vz', 'velocity_z'):
-        scalar_data = dump.particles.arrays['vxyz'][:, 2]
+        scalar_data = snap['velocity'][:, 2]
     else:
         raise ValueError(
             'Cannot determine quantity to render. See Visualization for more details.'
         )
 
-    position = dump.particles.arrays['xyz'][:]
-    smoothing_length = dump.particles.arrays['h'][:]
-    particle_mass = dump.mass
+    position = snap['position']
+    smoothing_length = snap['smooth']
+    particle_mass = snap['mass']
 
     minimum_xy = np.percentile(position[:, :2], 1, axis=0)
     maximum_xy = np.percentile(position[:, :2], 99, axis=0)

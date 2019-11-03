@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy import ndarray
 
-from ..dump import Dump
+from ..snap import Snap
 
 
 class Profile:
@@ -18,8 +18,8 @@ class Profile:
 
     Parameters
     ----------
-    dump
-        The Dump object.
+    snap
+        The Snap object.
     ndim, optional
         The dimension of the profile. For ndim == 2, the radial binning
         is cylindrical in the xy-plane. For ndim == 3, the radial
@@ -42,7 +42,7 @@ class Profile:
 
     def __init__(
         self,
-        dump: Dump,
+        snap: Snap,
         ndim: Optional[int] = 2,
         radius_min: Optional[float] = None,
         radius_max: Optional[float] = None,
@@ -51,7 +51,7 @@ class Profile:
         mask: Optional[ndarray] = None,
     ):
 
-        self.dump = dump
+        self.snap = snap
         self.ndim = ndim
 
         self._mask = self._setup_particle_mask(ignore_accreted, mask)
@@ -74,14 +74,14 @@ class Profile:
     ) -> ndarray:
         if ignore_accreted is False:
             if mask is None:
-                return np.ones(len(self.dump), dtype=bool)
+                return np.ones(len(self.snap), dtype=bool)
             return mask
         if mask is None:
-            return self.dump['h'] > 0.0
-        return mask & self.dump['h'] > 0.0
+            return self.snap['h'] > 0.0
+        return mask & self.snap['h'] > 0.0
 
     def _calculate_x(self) -> ndarray:
-        pos = self.dump['xyz']
+        pos = self.snap['xyz']
         pos = pos[self._mask]
         if self.ndim == 2:
             return np.hypot(pos[:, 0], pos[:, 1])
@@ -204,7 +204,7 @@ class Profile:
 def mass(self) -> ndarray:
     """Mass profile."""
     mass = np.zeros(self.n_bins)
-    M = self.dump['mass'][self._mask]
+    M = self.snap['mass'][self._mask]
     for idx, bin_ind in enumerate(self.bin_indicies):
         mass[idx] = M[bin_ind].sum()
     return mass
@@ -223,7 +223,7 @@ def density(self) -> ndarray:
 def smooth(self) -> ndarray:
     """Smoothing length profile."""
     smooth = np.zeros(self.n_bins)
-    _h = self.dump['h']
+    _h = self.snap['h']
     h = _h[self._mask]
     for idx, bin_ind in enumerate(self.bin_indicies):
         smooth[idx] = h[bin_ind].mean()
@@ -234,7 +234,7 @@ def smooth(self) -> ndarray:
 def scale_height(self) -> ndarray:
     """Scale height profile."""
     scale_height = np.zeros(self.n_bins)
-    pos = self.dump['xyz']
+    pos = self.snap['xyz']
     z = pos[self._mask, 2]
     for idx, bin_ind in enumerate(self.bin_indicies):
         scale_height[idx] = z[bin_ind].std()
@@ -246,9 +246,9 @@ def angmom_mag(self) -> ndarray:
     """Magnitude of specific angular momentum profile."""
     angmom_mag = np.zeros(self.n_bins)
 
-    mass = self.dump['mass'][:, np.newaxis]
-    pos = self.dump['xyz']
-    vel = self.dump['vxyz']
+    mass = self.snap['mass'][:, np.newaxis]
+    pos = self.snap['xyz']
+    vel = self.snap['vxyz']
 
     J = mass * np.cross(pos, vel)
     J_mag = np.hypot(np.hypot(J[:, 0], J[:, 1]), J[:, 2])
@@ -263,9 +263,9 @@ def angmom_theta(self) -> ndarray:
     """Angle between angular momentum and xy-plane."""
     angmom_theta = np.zeros(self.n_bins)
 
-    mass = self.dump['mass'][:, np.newaxis]
-    pos = self.dump['xyz']
-    vel = self.dump['vxyz']
+    mass = self.snap['mass'][:, np.newaxis]
+    pos = self.snap['xyz']
+    vel = self.snap['vxyz']
 
     J = mass * np.cross(pos, vel)
     J_z = J[:, 2]
@@ -283,9 +283,9 @@ def angmom_phi(self) -> ndarray:
     """Angle between angular momentum and x-axis in xy-plane."""
     angmom_phi = np.zeros(self.n_bins)
 
-    mass = self.dump['mass'][:, np.newaxis]
-    pos = self.dump['xyz']
-    vel = self.dump['vxyz']
+    mass = self.snap['mass'][:, np.newaxis]
+    pos = self.snap['xyz']
+    vel = self.snap['vxyz']
 
     J = mass * np.cross(pos, vel)
     J_x, J_y = (J[:, 0], J[:, 1])
@@ -302,8 +302,8 @@ def eccentricity(self, gravitational_parameter: float):
     """Orbital eccentricity profile."""
     mu = gravitational_parameter
 
-    pos = self.dump['xyz'][self._mask]
-    vel = self.dump['vxyz'][self._mask]
+    pos = self.snap['xyz'][self._mask]
+    vel = self.Snap['vxyz'][self._mask]
 
     r = np.hypot(np.hypot(pos[:, 0], pos[:, 1]), pos[:, 2])
     v = np.hypot(np.hypot(vel[:, 0], vel[:, 1]), vel[:, 2])

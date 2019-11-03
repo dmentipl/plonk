@@ -14,8 +14,7 @@ def coordinate_transform(
     geometry_to: str,
     in_place: bool = False,
 ) -> Optional[ndarray]:
-    """
-    Coordinate transformation.
+    """Coordinate transformation.
 
     Transform 3d coordinates from one system to another. Coordinate
     systems supported: 'cartesian', 'cylindrical', 'spherical'.

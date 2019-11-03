@@ -8,7 +8,7 @@ particle hydrodynamics simulation data.
 Features
 --------
 
-- Read in Phantom HDF dump files.
+- Read in Phantom HDF snapshot files.
 - Read in global evolution files.
 - Encapsulate entire simulation data as Simulation object.
 - Access particle and sink arrays.
@@ -19,8 +19,8 @@ Features
 Classes
 -------
 
-- Dump
-    Represents a smoothed particle hydrodynamics dump file,
+- Snap
+    Represents a smoothed particle hydrodynamics snapshot file,
     containing particles, sinks, and file header information.
 
 - Evolution
@@ -28,20 +28,20 @@ Classes
 
 - Simulation
     Represents an entire smoothed particle hydrodynamics simulation.
-    It contains instances of Dump and Evolution objects.
+    It contains instances of Snap and Evolution objects.
 
 - Visualization
-    Represents a visualization of a Dump object.
+    Represents a visualization of a Snap object.
 
 Subpackages
 -----------
 
 - analysis
-    Contains classes and functions for performing analysis on dump
+    Contains classes and functions for performing analysis on snapshot
     files.
 
 - visualization
-    Contains classes and functions for visualization of dump files.
+    Contains classes and functions for visualization of snapshot files.
 
 Documentation
 -------------
@@ -50,19 +50,24 @@ See https://plonk.readthedocs.io/ for documentation. The source code is
 available at https://github.com/dmentipl/plonk.
 """
 
-from . import analysis, dump, simulation, utils, visualization
-from .dump import load_dump
-from .simulation import load_ev, load_sim
+from . import analysis, simulation, snap, utils, visualization
+from .snap import Snap, load_snap
+from .simulation import Evolution, Simulation, load_ev, load_sim
+from .visualization import Visualization
 
 __all__ = [
+    'Evolution',
+    'Simulation',
+    'Snap',
     'analysis',
-    'dump',
-    'load_dump',
+    'snap',
+    'load_snap',
     'load_ev',
     'load_sim',
     'simulation',
     'utils',
     'visualization',
+    'Visualization',
 ]
 
 # Canonical version number

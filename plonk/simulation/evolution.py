@@ -2,7 +2,7 @@
 
 This module contains the Evolution class for tracking global quantities
 and sink particle time series data. These files track averaged
-quantities that are more frequently output than dump files.
+quantities that are more frequently output than snapshot files.
 """
 
 from __future__ import annotations
@@ -19,8 +19,8 @@ class Evolution:
 
     Evolution files track global quantities, such as energy, momentum,
     and density, over time. The time increments in these files is
-    smaller than the dump file output time. These files are typically
-    stored as text files.
+    smaller than the snapshot file output time. These files are
+    typically stored as text files.
 
     The data is stored as a pandas DataFrame.
 
