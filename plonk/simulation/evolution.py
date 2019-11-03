@@ -53,7 +53,7 @@ class Evolution:
 
     def load_from_file(
         self,
-        filenames: Union[str, Path, Tuple[str], Tuple[Path], List[str], Tuple[Path]],
+        filenames: Union[str, Path, Tuple[str], Tuple[Path], List[str], List[Path]],
     ) -> Evolution:
         """Load from file(s).
 
@@ -162,7 +162,7 @@ def _check_file_consistency(filenames: Tuple[Path, ...]) -> None:
 
 
 def load_ev(
-    filenames: Union[str, Path, Tuple[str], Tuple[Path], List[str], Tuple[Path]],
+    filenames: Union[str, Path, Tuple[str], Tuple[Path], List[str], List[Path]],
 ) -> Evolution:
     """Load Evolution from file(s).
 
