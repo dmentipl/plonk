@@ -6,6 +6,7 @@ hydrodynamics simulation snapshot file.
 
 from typing import Callable, Dict, List, Optional, Tuple, Union
 
+import numpy as np
 from numpy import ndarray
 
 
@@ -107,21 +108,30 @@ class Snap:
             self._num_particles = self['smooth'].size
         return self._num_particles
 
-    def __getitem__(self, name: Union[str, ndarray]) -> ndarray:
+    def __getitem__(self, inp: Union[str, ndarray, int, slice]) -> ndarray:
         """Return an array, or family, or subset."""
-        if isinstance(name, str):
-            if name in self.families:
-                raise NotImplementedError('')
-            elif name in self.available_arrays():
-                return self._get_array(name)
-            elif name in self._array_name_mapper.keys():
-                return self._get_array(self._array_name_mapper[name])
-            elif name in self._array_split_mapper.keys():
-                return self._get_array(*self._array_split_mapper[name])
-            else:
-                raise ValueError('Cannot determine item to return')
-        elif isinstance(name, ndarray):
-            raise NotImplementedError('')
+        if isinstance(inp, str):
+            if inp in self.families:
+                raise NotImplementedError
+            elif inp in self.available_arrays():
+                return self._get_array(inp)
+            elif inp in self._array_name_mapper.keys():
+                return self._get_array(self._array_name_mapper[inp])
+            elif inp in self._array_split_mapper.keys():
+                return self._get_array(*self._array_split_mapper[inp])
+        elif isinstance(inp, ndarray):
+            if np.issubdtype(np.bool, inp.dtype):
+                return SubSnap(self, np.flatnonzero(inp))
+            elif np.issubdtype(np.int, inp.dtype):
+                return SubSnap(self, inp)
+        elif isinstance(inp, int):
+            raise NotImplementedError
+        elif isinstance(inp, slice):
+            i1, i2, step = inp.start, inp.stop, inp.step
+            if step is not None:
+                return SubSnap(self, np.arange(i1, i2, step))
+            return SubSnap(self, np.arange(i1, i2))
+        raise ValueError('Cannot determine item to return')
 
     def __delitem__(self, name):
         """Delete an array from memory."""
@@ -138,6 +148,48 @@ class Snap:
     def __str__(self):
         """Dunder str method."""
         return f'<plonk.Snap>'
+
+
+class SubSnap(Snap):
+    """A Snap subset of particles.
+
+    The sub-snap is generated via an index array.
+
+    Parameters
+    ----------
+    base
+        The base snapshot.
+    indices
+        A (N,) array of particle indices to include in the sub-snap.
+    """
+
+    def __init__(self, base: Snap, indices: ndarray):
+        super().__init__()
+        self.base = base
+        self.properties = self.base.properties
+        self._file_pointer = self.base._file_pointer
+        self._indices = indices
+        self._num_particles = len(indices)
+
+    def __repr__(self):
+        """Dunder repr method."""
+        return self.__str__()
+
+    def __str__(self):
+        """Dunder str method."""
+        return f'<plonk.SubSnap>'
+
+    def _get_array(self, name: str, index: Optional[int] = None):
+        """Get an array by name."""
+        if name in self.base._arrays:
+            if index is None:
+                return self.base._arrays[name][self._indices]
+            return self.base._arrays[name][:, index][self._indices]
+        elif name in Snap._array_registry:
+            self.base._arrays[name] = Snap._array_registry[name](self)
+            return self.base._arrays[name][self._indices]
+        else:
+            raise ValueError('Array not available')
 
 
 class Sinks:
@@ -190,17 +242,17 @@ class Sinks:
         """Available sink quantities."""
         return self._data.dtype.names
 
-    def __getitem__(self, name: Union[str, int, slice, List[int]]) -> ndarray:
+    def __getitem__(self, inp: Union[str, int, slice, List[int]]) -> ndarray:
         """Return an array."""
-        if isinstance(name, (int, slice, list)):
-            return self._data[name]
-        elif isinstance(name, str):
-            if name in self.columns:
-                return self._data[name]
-            elif name in self._array_name_mapper:
-                return self._data[self._array_name_mapper[name]]
-            elif name in self._array_split_mapper:
-                array, index = self._array_split_mapper[name]
+        if isinstance(inp, (int, slice, list)):
+            return self._data[inp]
+        elif isinstance(inp, str):
+            if inp in self.columns:
+                return self._data[inp]
+            elif inp in self._array_name_mapper:
+                return self._data[self._array_name_mapper[inp]]
+            elif inp in self._array_split_mapper:
+                array, index = self._array_split_mapper[inp]
                 return self._data[array][:, index]
         raise ValueError('Cannot determine quantity to return')
 
