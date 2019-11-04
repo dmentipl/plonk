@@ -47,13 +47,13 @@ class Visualization:
     def __init__(self):
         self.fig: Any = None
         self.axis: Any = None
-        self.scalar: Dict[str, Any] = {
-            'image': None,
-            'contours': None,
-            'colorbar': None,
-            'data': None,
-        }
-        self.vector: Dict[str, Any] = {'quiver': None, 'streamplot': None, 'data': None}
+        self.image: Any = None
+        self.colorbar: Any = None
+        self.contours: Any = None
+        self.quiver: Any = None
+        self.streamplot: Any = None
+        self.extent: Tuple[float, float, float, float] = None
+        self.data: Dict[str, ndarray] = {'scalar': None, 'vector': None}
 
     def plot(
         self,
@@ -144,8 +144,8 @@ class Visualization:
                 plot_options=_scalar_options,
                 interpolation_options=_interpolation_options,
             )
-            if not np.allclose(self.scalar['extent'], extent):
-                new_extent = self.scalar['extent']
+            if not np.allclose(self.extent, extent):
+                new_extent = self.extent
 
         if vector_data is not None:
             self._vector_plot(
@@ -161,7 +161,7 @@ class Visualization:
                 interpolation_options=_interpolation_options,
             )
             try:
-                if not np.allclose(self.vector['extent'], new_extent):
+                if not np.allclose(self.extent, new_extent):
                     raise ValueError('scalar and vector plot have different extent')
             except NameError:
                 pass
@@ -287,11 +287,11 @@ class Visualization:
             contour = axis.contour(X, Y, data, colors=colors)
             contour.clabel(inline=True, fmt=fmt, fontsize=8)
 
-        self.scalar['image'] = image
-        self.scalar['contours'] = contour
-        self.scalar['colorbar'] = colorbar
-        self.scalar['data'] = data
-        self.scalar['extent'] = extent
+        self.image = image
+        self.contours = contour
+        self.colorbar = colorbar
+        self.data['scalar'] = data
+        self.extent = extent
         return
 
     def _vector_plot(
@@ -368,10 +368,10 @@ class Visualization:
         else:
             streamplot = axis.streamplot(X, Y, U, V, color=color)
 
-        self.vector['quiver'] = quiver
-        self.vector['streamplot'] = streamplot
-        self.vector['data'] = data
-        self.vector['extent'] = extent
+        self.quiver = quiver
+        self.streamplot = streamplot
+        self.data['vector'] = data
+        self.extent = extent
         return
 
     def __repr__(self):
