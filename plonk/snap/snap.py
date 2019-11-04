@@ -4,7 +4,7 @@ The Snap class contains all information related to a smoothed particle
 hydrodynamics simulation snapshot file.
 """
 
-from typing import Callable, Dict, Union
+from typing import Callable, Dict, Optional, Union
 
 from numpy import ndarray
 
@@ -39,6 +39,19 @@ class Snap:
         'vel': 'velocity',
         'h': 'smooth',
         'rho': 'density',
+        'Bxyz': 'magfield',
+    }
+
+    _array_split_mapper = {
+        'x': ('position', 0),
+        'y': ('position', 1),
+        'z': ('position', 2),
+        'vx': ('velocity', 0),
+        'vy': ('velocity', 1),
+        'vz': ('velocity', 2),
+        'Bx': ('magfield', 0),
+        'By': ('magfield', 1),
+        'Bz': ('magfield', 2),
     }
 
     @staticmethod
@@ -63,15 +76,15 @@ class Snap:
         """Return a list of available arrays."""
         return tuple(sorted(self._array_registry.keys()))
 
-    def _get_array(self, name: str):
+    def _get_array(self, name: str, index: Optional[int] = None):
         """Get an array by name."""
         if name in self._arrays:
-            return self._arrays[name]
-
+            if index is None:
+                return self._arrays[name]
+            return self._arrays[name][:, index]
         elif name in Snap._array_registry:
             self._arrays[name] = Snap._array_registry[name](self)
             return self._arrays[name]
-
         else:
             raise ValueError('Array not available')
 
@@ -91,6 +104,8 @@ class Snap:
                 return self._get_array(name)
             elif name in self._array_name_mapper.keys():
                 return self._get_array(self._array_name_mapper[name])
+            elif name in self._array_split_mapper.keys():
+                return self._get_array(*self._array_split_mapper[name])
             else:
                 raise ValueError('Cannot determine item to return')
         elif isinstance(name, ndarray):
