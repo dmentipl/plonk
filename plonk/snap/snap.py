@@ -4,7 +4,7 @@ The Snap class contains all information related to a smoothed particle
 hydrodynamics simulation snapshot file.
 """
 
-from typing import Callable, Dict, Optional, Tuple, Union
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
 from numpy import ndarray
 
@@ -190,17 +190,19 @@ class Sinks:
         """Available sink quantities."""
         return self._data.dtype.names
 
-    def __getitem__(self, name: str) -> ndarray:
+    def __getitem__(self, name: Union[str, int, slice, List[int]]) -> ndarray:
         """Return an array."""
-        if name in self.columns:
+        if isinstance(name, (int, slice, list)):
             return self._data[name]
-        elif name in self._array_name_mapper:
-            return self._data[self._array_name_mapper[name]]
-        elif name in self._array_split_mapper:
-            array, index = self._array_split_mapper[name]
-            return self._data[array][:, index]
-        else:
-            raise ValueError('Cannot determine quantity to return')
+        elif isinstance(name, str):
+            if name in self.columns:
+                return self._data[name]
+            elif name in self._array_name_mapper:
+                return self._data[self._array_name_mapper[name]]
+            elif name in self._array_split_mapper:
+                array, index = self._array_split_mapper[name]
+                return self._data[array][:, index]
+        raise ValueError('Cannot determine quantity to return')
 
     def __len__(self):
         """Dunder len method."""
