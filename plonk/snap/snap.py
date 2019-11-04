@@ -4,7 +4,7 @@ The Snap class contains all information related to a smoothed particle
 hydrodynamics simulation snapshot file.
 """
 
-from typing import Callable, Dict, Optional, Union
+from typing import Callable, Dict, Optional, Tuple, Union
 
 from numpy import ndarray
 
@@ -28,6 +28,10 @@ class Snap:
     To access arrays on the particles.
     >>> snap['position']
     >>> snap['density']
+
+    To access sink arrays.
+    >>> snap.sinks['position']
+    >>> snap.sinks['spin']
     """
 
     _array_registry: Dict[str, Callable] = {}
@@ -40,6 +44,7 @@ class Snap:
         'h': 'smooth',
         'rho': 'density',
         'Bxyz': 'magfield',
+        'spinxyz': 'spin',
     }
 
     _array_split_mapper = {
@@ -49,9 +54,15 @@ class Snap:
         'vx': ('velocity', 0),
         'vy': ('velocity', 1),
         'vz': ('velocity', 2),
+        'velx': ('velocity', 0),
+        'vely': ('velocity', 1),
+        'velz': ('velocity', 2),
         'Bx': ('magfield', 0),
         'By': ('magfield', 1),
         'Bz': ('magfield', 2),
+        'sx': ('spin', 0),
+        'sy': ('spin', 1),
+        'sz': ('spin', 2),
     }
 
     @staticmethod
@@ -64,6 +75,7 @@ class Snap:
 
         self.families = {}
         self.properties = {}
+        self.sinks = Sinks()
         self._arrays = {}
         self._file_pointer = {}
         self._num_particles = 0
@@ -126,3 +138,78 @@ class Snap:
     def __str__(self):
         """Dunder str method."""
         return f'<plonk.Snap>'
+
+
+class Sinks:
+    """Sink particles in a Snap."""
+
+    _array_name_mapper = {
+        'xyz': 'position',
+        'pos': 'position',
+        'vxyz': 'velocity',
+        'vel': 'velocity',
+        'h': 'smooth',
+        'spinxyz': 'spin',
+    }
+
+    _array_split_mapper = {
+        'x': ('position', 0),
+        'y': ('position', 1),
+        'z': ('position', 2),
+        'vx': ('velocity', 0),
+        'vy': ('velocity', 1),
+        'vz': ('velocity', 2),
+        'velx': ('velocity', 0),
+        'vely': ('velocity', 1),
+        'velz': ('velocity', 2),
+        'sx': ('spin', 0),
+        'sy': ('spin', 1),
+        'sz': ('spin', 2),
+        'spinx': ('spin', 0),
+        'spiny': ('spin', 1),
+        'spinz': ('spin', 2),
+    }
+
+    def __init__(self):
+        self._data = None
+
+    def add_sinks(self, structured_array: ndarray) -> None:
+        """Add sinks via structured array.
+
+        Parameters
+        ----------
+        structured_array
+            A structured ndarray with labels such as 'position',
+            'velocity', and so on, representing quantities on the sink
+            particles.
+        """
+        self._data = structured_array
+
+    @property
+    def columns(self) -> Tuple[str, ...]:
+        """Available sink quantities."""
+        return self._data.dtype.names
+
+    def __getitem__(self, name: str) -> ndarray:
+        """Return an array."""
+        if name in self.columns:
+            return self._data[name]
+        elif name in self._array_name_mapper:
+            return self._data[self._array_name_mapper[name]]
+        elif name in self._array_split_mapper:
+            array, index = self._array_split_mapper[name]
+            return self._data[array][:, index]
+        else:
+            raise ValueError('Cannot determine quantity to return')
+
+    def __len__(self):
+        """Dunder len method."""
+        return len(self._data)
+
+    def __repr__(self):
+        """Dunder repr method."""
+        return self.__str__()
+
+    def __str__(self):
+        """Dunder str method."""
+        return f'<plonk.snap.Sinks>'

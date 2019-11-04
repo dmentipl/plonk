@@ -5,10 +5,11 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Callable, Union
 
-import h5py
+import numpy as np
 from numpy import ndarray
 
 from ..snap import Snap
+from .hdf5 import HDF5File
 
 
 class PhantomHDF5Snap:
@@ -31,25 +32,18 @@ class PhantomHDF5Snap:
         Snap
             A Snap object.
         """
-        self.hdf5_file = _HDF5File(filename)
+        self.hdf5_file = HDF5File(filename)
         self.snap._file_pointer = self.hdf5_file.file_handle
 
         self._header = {
             key: val[()] for key, val in self.hdf5_file.file_handle['header'].items()
         }
-
-        self._particle_array_handles = {
-            field: self.hdf5_file.file_handle[f'particles/{field}']
-            for field in self.hdf5_file.file_handle['particles']
-        }
-
-        self._sink_array_handles = {
-            field: self.hdf5_file.file_handle[f'sinks/{field}']
-            for field in self.hdf5_file.file_handle['sinks']
-        }
-
         self._header_to_properties(self._header)
+
         self._populate_array_registry()
+
+        if self._header['nptmass'] > 0:
+            self._populate_sink_arrays()
 
         return self.snap
 
@@ -73,20 +67,16 @@ class PhantomHDF5Snap:
             self.snap.properties['grain size'] = header['grainsize'][:n_dust]
             self.snap.properties['grain density'] = header['graindens'][:n_dust]
 
-    def _header_to_mass(self):
-
-        return self._header['massoftype'][_get_dataset('itype') - 1]
-
     def _populate_array_registry(self):
 
         arrays = list(self.hdf5_file.file_handle['particles'])
 
-        self.snap._array_registry['position'] = _get_dataset('xyz')
-        self.snap._array_registry['smooth'] = _get_dataset('h')
-        self.snap._array_registry['itype'] = _get_dataset('itype')
+        self.snap._array_registry['position'] = _get_dataset('xyz', 'particles')
+        self.snap._array_registry['smooth'] = _get_dataset('h', 'particles')
+        self.snap._array_registry['itype'] = _get_dataset('itype', 'particles')
 
         if 'vxyz' in self.snap._file_pointer['particles']:
-            self.snap._array_registry['velocity'] = _get_dataset('vxyz')
+            self.snap._array_registry['velocity'] = _get_dataset('vxyz', 'particles')
             arrays.remove('vxyz')
 
         self.snap._array_registry['mass'] = _mass
@@ -96,52 +86,44 @@ class PhantomHDF5Snap:
             arrays.remove(array)
 
         for array in arrays:
-            self.snap._array_registry[array] = _get_dataset(array)
+            self.snap._array_registry[array] = _get_dataset(array, 'particles')
+
+    def _populate_sink_arrays(self):
+
+        name_map = {
+            'xyz': ('position', 'f8', (3,)),
+            'vxyz': ('velocity', 'f8', (3,)),
+            'm': ('mass', 'f8'),
+            'h': ('smooth', 'f8'),
+            'hsoft': ('softening', 'f8'),
+            'maccreted': ('maccreted', 'f8'),
+            'spinxyz': ('spin', 'f8', (3,)),
+            'tlast': ('tlast', 'f8'),
+        }
+        dtype = np.dtype([dt for dt in name_map.values()])
+        sinks = np.zeros(self._header['nptmass'], dtype=dtype)
+
+        for name_on_file, array in name_map.items():
+            sinks[array[0]] = self.hdf5_file.file_handle[f'sinks/{name_on_file}'][:]
+
+        self.snap.sinks.add_sinks(sinks)
 
 
-def _get_dataset(name: str) -> Callable:
+def _get_dataset(dataset: str, group: str) -> Callable:
     def func(snap: Snap) -> ndarray:
-        return snap._file_pointer[f'particles/{name}'][:]
+        return snap._file_pointer[f'{group}/{dataset}'][:]
 
     return func
 
 
 def _mass(snap: Snap) -> ndarray:
     massoftype = snap._file_pointer['header/massoftype'][:]
-    itype = _get_dataset('itype')(snap)
+    itype = _get_dataset('itype', 'particles')(snap)
     return massoftype[itype - 1]
 
 
 def _density(snap: Snap) -> ndarray:
     m = _mass(snap)
-    h = _get_dataset('h')(snap)
+    h = _get_dataset('h', 'particles')(snap)
     hfact = snap.properties['hfact']
     return m * (hfact / h) ** 3
-
-
-class _HDF5File:
-    def __init__(self, filename: Union[str, Path]):
-        if isinstance(filename, str):
-            path = Path(filename)
-        else:
-            path = filename
-
-        self.file_path = path.expanduser().resolve()
-        self.file_name = path.name
-        self.file_extension = path.suffix[1:]
-        self.file_type = 'HDF5'
-        self.file_handle = self.open_file()
-
-    def __repr__(self):
-        return self.__str__()
-
-    def __str__(self):
-        return str(self.file_handle)
-
-    def open_file(self):
-        if not self.file_path.is_file():
-            raise FileNotFoundError('Cannot find snapshot file')
-        return h5py.File(self.file_path, mode='r')
-
-    def close_file(self):
-        self.file_handle.close()
