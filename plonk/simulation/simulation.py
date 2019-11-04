@@ -43,7 +43,7 @@ class Simulation:
         self.prefix: str
         self.path: Path
 
-        self._snap: List[Snap] = None
+        self._snaps: List[Snap] = None
         self._global_quantities: Evolution = None
         self._sink_quantities: List[Evolution] = None
 
