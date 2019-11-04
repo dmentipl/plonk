@@ -26,7 +26,7 @@ Plonk supports the following SPH file formats:
 
 ### Accessing data
 
-To read in a simulation with snapshot files like `disc_00000.h5`, ..., and evolution files like `disc01.ev`, ..., in the current directory, and see what snapshots there are:
+To read in a simulation with snapshot files like `disc_00000.h5`, and global quantity time series files like `disc01.ev`, in the current directory, and see what snapshots there are:
 
 ```python
 >>> import plonk
@@ -42,19 +42,14 @@ The Snap objects contain the particle arrays, lazily loaded from the HDF5 file, 
 
 ### Visualization
 
-To visualize a single snapshot:
+To render the density on a snapshot:
 
 ```python
 >>> snap = plonk.load_snap('disc_00000.h5')
-
->>> plonk.visualization.render(
-...     snap=snap,
-...     quantity='density',
-...     extent=(-200, 200, -200, 200),
-...     )
+>>> plonk.visualize.render(snap=snap, quantity='density')
 ```
 
-For example, here is the deviation from Keplerian velocity around a planet embedded in a protoplanetary disc.
+For a more complicated example, here is the deviation from Keplerian velocity around a planet embedded in a protoplanetary disc.
 
 ![Planet embedded in protoplanetary disc](image.svg)
 
@@ -88,7 +83,7 @@ If you need help, try the following, in order:
 2. Ask questions on Stack Overflow using the [plonk](https://stackoverflow.com/questions/tagged/plonk) tag.
 3. File an issue, as a [bug report](https://github.com/dmentipl/plonk/issues/new?assignees=&labels=&template=bug_report.md&title=) or [feature request](https://github.com/dmentipl/plonk/issues/new?assignees=&labels=&template=feature_request.md&title=), using the issue tracker.
 
-If you don't get an immediate response, please be patient. Plonk is run by one person, [@dmentipl](https://github.com/dmentipl).
+If you don't get an immediate response, please be patient. Plonk is maintained by one person, [@dmentipl](https://github.com/dmentipl).
 
 Contributing
 ------------
