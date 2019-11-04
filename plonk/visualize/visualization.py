@@ -24,6 +24,7 @@ _contour_color = 'black'
 _contour_format = '%.2g'
 _norm = 'linear'
 _cmap = 'gist_heat'
+_plot_colorbar = True
 _polar_coordinates = False
 _number_of_pixels = (512, 512)
 _plot_stream = False
@@ -218,6 +219,7 @@ class Visualization:
         fmt = plot_options.pop('contour_format', _contour_format)
         norm_str = plot_options.pop('norm', _norm)
         cmap = plot_options.pop('cmap', _cmap)
+        plot_colorbar = plot_options.pop('plot_colorbar', _plot_colorbar)
         polar_coordinates = plot_options.pop('polar_coordinates', _polar_coordinates)
 
         if len(plot_options) > 0:
@@ -272,9 +274,10 @@ class Visualization:
                 data, origin='lower', norm=norm, extent=extent, cmap=cmap
             )
 
-            divider = make_axes_locatable(axis)
-            cax = divider.append_axes("right", size="5%", pad=0.05)
-            colorbar = fig.colorbar(image, cax)
+            if plot_colorbar:
+                divider = make_axes_locatable(axis)
+                cax = divider.append_axes("right", size="5%", pad=0.05)
+                colorbar = fig.colorbar(image, cax)
 
         contour = None
         if plot_contour:
