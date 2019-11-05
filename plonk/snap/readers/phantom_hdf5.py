@@ -123,13 +123,13 @@ def _get_dataset(dataset: str, group: str) -> Callable:
 
 
 def _id(snap: Snap) -> ndarray:
-    particle_id = _get_dataset('itype', 'particles')(snap)
+    particle_id = np.abs(_get_dataset('itype', 'particles')(snap))
     particle_id[particle_id >= 7] = 2
     return particle_id
 
 
 def _dust_id(snap: Snap) -> ndarray:
-    particle_id = _get_dataset('itype', 'particles')(snap)
+    particle_id = np.abs(_get_dataset('itype', 'particles')(snap))
     dust_id = np.zeros(particle_id.shape, dtype=np.int8)
     dust_id[particle_id >= 7] = particle_id[particle_id >= 7] - 6
     return dust_id
