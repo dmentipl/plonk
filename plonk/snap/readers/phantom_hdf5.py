@@ -73,11 +73,14 @@ class PhantomHDF5Snap:
 
         self.snap._array_registry['position'] = _get_dataset('xyz', 'particles')
         self.snap._array_registry['smooth'] = _get_dataset('h', 'particles')
-        self.snap._array_registry['itype'] = _get_dataset('itype', 'particles')
 
         if 'vxyz' in self.snap._file_pointer['particles']:
             self.snap._array_registry['velocity'] = _get_dataset('vxyz', 'particles')
             arrays.remove('vxyz')
+
+        self.snap._array_registry['id'] = _id
+        if self._header['ndustlarge'] > 0:
+            self.snap._array_registry['dust_id'] = _dust_id
 
         self.snap._array_registry['mass'] = _mass
         self.snap._array_registry['density'] = _density
@@ -116,10 +119,23 @@ def _get_dataset(dataset: str, group: str) -> Callable:
     return func
 
 
+def _id(snap: Snap) -> ndarray:
+    particle_id = _get_dataset('itype', 'particles')(snap)
+    particle_id[particle_id >= 7] = 2
+    return particle_id
+
+
+def _dust_id(snap: Snap) -> ndarray:
+    particle_id = _get_dataset('itype', 'particles')(snap)
+    dust_id = np.zeros(particle_id.shape, dtype=np.int8)
+    dust_id[particle_id >= 7] = particle_id[particle_id >= 7] - 6
+    return dust_id
+
+
 def _mass(snap: Snap) -> ndarray:
     massoftype = snap._file_pointer['header/massoftype'][:]
-    itype = _get_dataset('itype', 'particles')(snap)
-    return massoftype[itype - 1]
+    particle_id = _get_dataset('itype', 'particles')(snap)
+    return massoftype[particle_id - 1]
 
 
 def _density(snap: Snap) -> ndarray:

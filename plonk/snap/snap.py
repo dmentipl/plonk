@@ -9,6 +9,15 @@ from typing import Callable, Dict, List, Optional, Tuple, Union
 import numpy as np
 from numpy import ndarray
 
+PARTICLE_ID = {
+    'gas': 1,
+    'dust': 2,
+    'boundary': 3,
+    'star': 4,
+    'darkmatter': 5,
+    'bulge': 6,
+}
+
 
 class Snap:
     """Smoothed particle hydrodynamics Snap object.
