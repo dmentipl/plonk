@@ -9,15 +9,6 @@ from typing import Callable, Dict, List, Optional, Tuple, Union
 import numpy as np
 from numpy import ndarray
 
-PARTICLE_ID = {
-    'gas': 1,
-    'dust': 2,
-    'boundary': 3,
-    'star': 4,
-    'darkmatter': 5,
-    'bulge': 6,
-}
-
 
 class Snap:
     """Smoothed particle hydrodynamics Snap object.
@@ -42,6 +33,11 @@ class Snap:
     To access sink arrays.
     >>> snap.sinks['position']
     >>> snap.sinks['spin']
+
+    To access a subset of particles as a SubSnap.
+    >>> subsnap = snap[:100]
+    >>> subsnap = snap[snap['x'] > 0]
+    >>> subsnap = snap['gas']
     """
 
     _array_registry: Dict[str, Callable] = {}
@@ -75,6 +71,15 @@ class Snap:
         'sz': ('spin', 2),
     }
 
+    _particle_id = {
+        'gas': 1,
+        'dust': 2,
+        'boundary': 3,
+        'star': 4,
+        'darkmatter': 5,
+        'bulge': 6,
+    }
+
     @staticmethod
     def add_array(fn):
         """Add array to Snap."""
@@ -83,12 +88,12 @@ class Snap:
 
     def __init__(self):
 
-        self.families = {}
         self.properties = {}
         self.sinks = Sinks()
         self._arrays = {}
         self._file_pointer = {}
         self._num_particles = 0
+        self._families = {key: None for key in Snap._particle_id.keys()}
 
     def loaded_arrays(self):
         """Return a list of loaded arrays."""
@@ -97,6 +102,17 @@ class Snap:
     def available_arrays(self):
         """Return a list of available arrays."""
         return tuple(sorted(self._array_registry.keys()))
+
+    def _get_family_indices(self, name: str):
+        """Get a family by name."""
+        if name in self._families:
+            if self._families[name] is None:
+                self._families[name] = np.flatnonzero(
+                    self['id'] == Snap._particle_id[name]
+                )
+            return self._families[name]
+        else:
+            raise ValueError('Family not available')
 
     def _get_array(self, name: str, index: Optional[int] = None):
         """Get an array by name."""
@@ -114,14 +130,14 @@ class Snap:
     def num_particles(self):
         """Return number of particles."""
         if self._num_particles == 0:
-            self._num_particles = self['smooth'].size
+            self._num_particles = self['id'].size
         return self._num_particles
 
     def __getitem__(self, inp: Union[str, ndarray, int, slice]) -> ndarray:
         """Return an array, or family, or subset."""
         if isinstance(inp, str):
-            if inp in self.families:
-                raise NotImplementedError
+            if inp in self._families:
+                return SubSnap(self, self._get_family_indices(inp))
             elif inp in self.available_arrays():
                 return self._get_array(inp)
             elif inp in self._array_name_mapper.keys():
