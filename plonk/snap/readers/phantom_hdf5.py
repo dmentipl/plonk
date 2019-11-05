@@ -107,7 +107,10 @@ class PhantomHDF5Snap:
         sinks = np.zeros(self._header['nptmass'], dtype=dtype)
 
         for name_on_file, array in name_map.items():
-            sinks[array[0]] = self.hdf5_file.file_handle[f'sinks/{name_on_file}'][:]
+            try:
+                sinks[array[0]] = self.hdf5_file.file_handle[f'sinks/{name_on_file}'][:]
+            except KeyError:
+                pass
 
         self.snap.sinks.add_sinks(sinks)
 
