@@ -1,5 +1,9 @@
 language: python
 
+python:
+  - "3.6"
+  - "3.7"
+
 before_install:
 
   # Install Miniconda.
@@ -18,16 +22,16 @@ install:
   - python setup.py install
 
 script:
-  - python -m coverage run -m unittest discover
+  - python -m coverage run -m pytest
   - isort --check-only -rc
-  - black --check --skip-string-normalization .
+  - black --check --skip-string-normalization plonk tests
+  - mypy --no-strict-optional --ignore-missing-imports plonk tests
 
 after_success:
   - coveralls
 
 notifications:
   email:
-    recipients:
-      - d.mentiplay@gmail.com
+    recipients: d.mentiplay@gmail.com
     on_success: change
     on_failure: always

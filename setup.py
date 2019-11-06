@@ -1,6 +1,7 @@
 """Plonk setup.py."""
 
 import io
+import pathlib
 import re
 
 from setuptools import setup
@@ -35,6 +36,7 @@ packages = [
 ]
 
 description = 'Smoothed particle hydrodynamics analysis and visualization with Python.'
+long_description = (pathlib.Path(__file__).parent / 'README.md').read_text()
 
 setup(
     name='plonk',
@@ -43,6 +45,8 @@ setup(
     author_email='d.mentiplay@gmail.com',
     url='https://github.com/dmentipl/plonk',
     description=description,
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     packages=packages,
     license='MIT',
     install_requires=install_requires,
