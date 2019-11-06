@@ -32,7 +32,7 @@ packages = [
     'plonk.snap',
     'plonk.snap.readers',
     'plonk.utils',
-    'plonk.visualization',
+    'plonk.visualize',
 ]
 
 description = 'Smoothed particle hydrodynamics analysis and visualization with Python.'
