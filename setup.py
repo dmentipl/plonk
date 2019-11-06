@@ -6,9 +6,6 @@ import re
 
 from setuptools import setup
 
-# ---------------------------------------------------------------------------- #
-# --- Plonk ---
-
 __version__ = re.search(
     r'__version__\s*=\s*[\'"]([^\'"]*)[\'"]',  # It excludes inline comment too
     io.open('plonk/__init__.py', encoding='utf_8_sig').read(),
