@@ -128,10 +128,14 @@ class Snap:
         self.properties = {}
         self.sinks = Sinks()
         self._arrays = {}
-        self._file_pointer = {}
+        self._file_pointer = None
         self._num_particles = 0
         self._families = {key: None for key in Snap._particle_id.keys()}
         self._rotation = None
+
+    def close_file(self):
+        """Close access to underlying file."""
+        self._file_pointer.close()
 
     def loaded_arrays(self):
         """Return a list of loaded arrays."""
