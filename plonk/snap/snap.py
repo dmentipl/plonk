@@ -4,6 +4,7 @@ The Snap class contains all information related to a smoothed particle
 hydrodynamics simulation snapshot file.
 """
 
+from __future__ import annotations
 from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -38,6 +39,15 @@ class Snap:
     >>> subsnap = snap[:100]
     >>> subsnap = snap[snap['x'] > 0]
     >>> subsnap = snap['gas']
+
+    To set a new array.
+    >>> snap['r'] = np.sqrt(snap['x'] ** 2 + snap['y'] ** 2)
+
+    Alternatively, define a function.
+    >>> @plonk.Snap.add_array
+    ... def radius(snap) -> ndarray:
+    ...     radius = np.hypot(snap['x'], snap['y'])
+    ...     return radius
     """
 
     _array_registry: Dict[str, Callable] = {}
@@ -48,6 +58,7 @@ class Snap:
         'vxyz': 'velocity',
         'vel': 'velocity',
         'h': 'smooth',
+        'm': 'mass',
         'rho': 'density',
         'Bxyz': 'magfield',
         'spinxyz': 'spin',
@@ -81,10 +92,35 @@ class Snap:
     }
 
     @staticmethod
-    def add_array(fn):
-        """Add array to Snap."""
+    def add_array(fn: Callable) -> Callable:
+        """Decorator to add array to Snap.
+
+        Parameters
+        ----------
+        fn
+            A function that returns the array. The name of the function
+            is the string with which to reference the array.
+
+        Returns
+        -------
+        Callable
+            The function which returns the array.
+        """
         Snap._array_registry[fn.__name__] = fn
         return fn
+
+    @staticmethod
+    def add_alias(name: str, alias: str) -> None:
+        """Add alias to array.
+
+        Parameters
+        ----------
+        name
+            The name of the array.
+        alias
+            The alias to reference the array.
+        """
+        Snap._array_name_mapper[alias] = name
 
     def __init__(self):
 
@@ -101,7 +137,16 @@ class Snap:
 
     def available_arrays(self):
         """Return a list of available arrays."""
-        return tuple(sorted(self._array_registry.keys()))
+        loaded = self.loaded_arrays()
+        array_reg = tuple(sorted(self._array_registry.keys()))
+        return tuple(sorted(set(loaded + array_reg)))
+
+    @property
+    def num_particles(self):
+        """Return number of particles."""
+        if self._num_particles == 0:
+            self._num_particles = self['id'].size
+        return self._num_particles
 
     def _get_family_indices(self, name: str):
         """Get a family by name."""
@@ -114,7 +159,7 @@ class Snap:
         else:
             raise ValueError('Family not available')
 
-    def _get_array(self, name: str, index: Optional[int] = None):
+    def _get_array(self, name: str, index: Optional[int] = None) -> ndarray:
         """Get an array by name."""
         if name in self._arrays:
             if index is None:
@@ -122,18 +167,15 @@ class Snap:
             return self._arrays[name][:, index]
         elif name in Snap._array_registry:
             self._arrays[name] = Snap._array_registry[name](self)
-            return self._arrays[name]
+            if index is None:
+                return self._arrays[name]
+            return self._arrays[name][:, index]
         else:
             raise ValueError('Array not available')
 
-    @property
-    def num_particles(self):
-        """Return number of particles."""
-        if self._num_particles == 0:
-            self._num_particles = self['id'].size
-        return self._num_particles
-
-    def __getitem__(self, inp: Union[str, ndarray, int, slice]) -> ndarray:
+    def __getitem__(
+        self, inp: Union[str, ndarray, int, slice]
+    ) -> Union[ndarray, SubSnap]:
         """Return an array, or family, or subset."""
         if isinstance(inp, str):
             if inp in self._families:
@@ -144,6 +186,8 @@ class Snap:
                 return self._get_array(self._array_name_mapper[inp])
             elif inp in self._array_split_mapper.keys():
                 return self._get_array(*self._array_split_mapper[inp])
+            elif inp in self._arrays:
+                return self._arrays[inp]
         elif isinstance(inp, ndarray):
             if np.issubdtype(np.bool, inp.dtype):
                 return SubSnap(self, np.flatnonzero(inp))
@@ -157,6 +201,25 @@ class Snap:
                 return SubSnap(self, np.arange(i1, i2, step))
             return SubSnap(self, np.arange(i1, i2))
         raise ValueError('Cannot determine item to return')
+
+    def __setitem__(self, name: str, item: ndarray, force: bool = False):
+        """Set an array."""
+        if not isinstance(item, ndarray):
+            raise ValueError('"item" must be ndarray')
+        if item.shape[0] != len(self):
+            raise ValueError('Length of array does not match particle number')
+        if force:
+            self._arrays[name] = item
+        else:
+            if (
+                name in self.available_arrays()
+                or name in self._array_split_mapper.keys()
+                or name in self._array_name_mapper.keys()
+            ):
+                raise ValueError(
+                    'Attempting to overwrite array. Set force=True to continue.'
+                )
+            self._arrays[name] = item
 
     def __delitem__(self, name):
         """Delete an array from memory."""
