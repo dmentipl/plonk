@@ -31,6 +31,7 @@ dependencies:
   - pip
   - pydocstyle
   - pylint
+  - pytest
   - scikit-image>=0.16
   - scipy
   - sphinx
