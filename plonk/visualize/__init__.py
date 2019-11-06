@@ -20,7 +20,7 @@ Or via the helper 'render' function.
 >>> viz = plonk.visualize.render(snap=snap, quantity='density')
 """
 
-from .visualization import Visualization
 from .plot import plot, render
+from .visualization import Visualization
 
 __all__ = ['Visualization', 'plot', 'render']

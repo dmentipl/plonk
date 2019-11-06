@@ -6,8 +6,9 @@ and sink quantity time series files an Evolution objects.
 """
 
 from __future__ import annotations
-from typing import List, Optional, Tuple, Union
+
 from pathlib import Path
+from typing import List, Optional, Tuple, Union
 
 from ..snap import Snap, load_snap
 from .evolution import Evolution, load_ev

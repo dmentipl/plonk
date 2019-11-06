@@ -5,8 +5,8 @@ from typing import Any, Dict, Optional, Tuple
 import numpy as np
 from numpy import ndarray
 
-from .visualization import Visualization
 from ..snap.snap import Snap
+from .visualization import Visualization
 
 
 def plot(

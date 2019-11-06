@@ -37,7 +37,7 @@ test: ## Run tests
 	@echo
 	@echo ">>> Run tests"
 	@echo
-	@python -m coverage run -m unittest discover && coverage html
+	@python -m coverage run -m pytest discover && coverage html
 	@echo
 	@echo ">>> Check formatting with isort and black"
 	@echo

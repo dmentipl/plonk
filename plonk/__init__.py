@@ -55,9 +55,10 @@ import pint
 units = pint.UnitRegistry()
 
 from . import analysis, simulation, snap, utils, visualize
-from .snap import Snap, load_snap
 from .simulation import Evolution, Simulation, load_ev, load_sim
+from .snap import Snap, load_snap
 from .visualize import Visualization
+
 
 __all__ = (
     ['Evolution', 'Simulation', 'Snap', 'Visualization']  # Classes

@@ -3,8 +3,9 @@
 import pathlib
 
 import numpy as np
-import plonk
 import pytest
+
+import plonk
 
 from .stubdata.phantom_snapshot import array_name_map, mean_array_values, properties
 

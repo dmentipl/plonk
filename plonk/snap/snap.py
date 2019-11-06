@@ -5,6 +5,7 @@ hydrodynamics simulation snapshot file.
 """
 
 from __future__ import annotations
+
 from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np

@@ -23,7 +23,7 @@ install:
 
 script:
   - python -m coverage run -m pytest
-  - isort --check-only -rc
+  - isort --skip plonk/__init__.py --check-only -rc
   - black --check --skip-string-normalization plonk tests
   - mypy --no-strict-optional --ignore-missing-imports plonk tests
 

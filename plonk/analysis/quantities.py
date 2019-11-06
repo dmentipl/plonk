@@ -29,8 +29,8 @@ def center_of_mass(snap: Snap, mask: Optional[ndarray] = None) -> ndarray:
     ndarray
         The center of mass as a vector (cx, cy, cz).
     """
-    mass = snap.mass[:, np.newaxis]
-    pos = snap.particles.arrays['xyz'][:]
+    mass: ndarray = snap['mass']
+    pos: ndarray = snap['position']
     if mask is None:
         return (mass * pos).sum(axis=0)
     return (mass * pos)[mask].sum(axis=0)
@@ -51,8 +51,8 @@ def momentum(snap: Snap, mask: Optional[ndarray] = None) -> ndarray:
     ndarray
         The total momentum as a vector (px, py, pz).
     """
-    mass = snap.mass[:, np.newaxis]
-    vel = snap.particles.arrays['vxyz'][:]
+    mass: ndarray = snap['mass']
+    vel: ndarray = snap['velocity']
     if mask is None:
         return (mass * vel).sum(axis=0)
     return (mass * vel)[mask].sum(axis=0)
@@ -73,9 +73,9 @@ def angular_momentum(snap: Snap, mask: Optional[ndarray] = None) -> ndarray:
     ndarray
         The total angular momentum as a vector (lx, ly, lz).
     """
-    mass = snap.mass[:, np.newaxis]
-    pos = snap.particles.arrays['xyz'][:]
-    vel = snap.particles.arrays['vxyz'][:]
+    mass: ndarray = snap['mass']
+    pos: ndarray = snap['position']
+    vel: ndarray = snap['velocity']
     if mask is None:
         return (mass * np.cross(pos, vel)).sum(axis=0)
     return (mass * np.cross(pos, vel))[mask].sum(axis=0)

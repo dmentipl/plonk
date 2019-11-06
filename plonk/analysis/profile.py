@@ -78,9 +78,10 @@ class Profile:
             if mask is None:
                 return np.ones(len(self.snap), dtype=bool)
             return mask
+        h: ndarray = self.snap['h']
         if mask is None:
-            return self.snap['h'] > 0.0
-        return mask & self.snap['h'] > 0.0
+            return h > 0
+        return mask & h > 0
 
     def _calculate_x(self) -> ndarray:
         pos = self.snap['xyz']
