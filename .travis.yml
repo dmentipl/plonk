@@ -13,9 +13,10 @@ before_install:
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
+  - conda info -a
 
   # Install Python dependencies with conda using environment.yml.
-  - conda env create --file environment.yml
+  - conda env create --file environment.yml python=$TRAVIS_PYTHON_VERSION
   - source activate plonk-dev
 
 install:
