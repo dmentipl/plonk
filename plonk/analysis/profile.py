@@ -8,7 +8,9 @@ from typing import Any, Callable, Collection, Dict, List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from numpy import ndarray
+from pandas import DataFrame
 
 from ..snap import Snap
 
@@ -163,7 +165,9 @@ class Profile:
 
     def available_keys(self):
         """Return a listing of available profiles."""
-        return tuple(sorted({self._profile_functions.keys()} - {self._profiles.keys()}))
+        loaded = list(self.loaded_keys())
+        available = list(self._profile_functions.keys())
+        return tuple(sorted(set(loaded + available)))
 
     @staticmethod
     def profile_property(fn):
@@ -198,6 +202,24 @@ class Profile:
         else:
             raise ValueError('Cannot determine y axis to plot')
         return plt.gcf(), plt.gca()
+
+    def to_dataframe(self, all_available: bool = False) -> DataFrame:
+        """Convert Profile to DataFrame.
+
+        Parameters
+        ----------
+        all_available
+            If True, this will calculate all available profiles before
+            converting to a DataFrame.
+        """
+        if all_available:
+            columns = self.available_keys()
+        else:
+            columns = self.loaded_keys()
+        data = dict()
+        for column in columns:
+            data[column] = self[column]
+        return pd.DataFrame(data)
 
 
 @Profile.profile_property
