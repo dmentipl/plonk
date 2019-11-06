@@ -9,6 +9,7 @@ from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 from numpy import ndarray
+from scipy.spatial.transform import Rotation
 
 
 class Snap:
@@ -130,6 +131,7 @@ class Snap:
         self._file_pointer = {}
         self._num_particles = 0
         self._families = {key: None for key in Snap._particle_id.keys()}
+        self._rotation = None
 
     def loaded_arrays(self):
         """Return a list of loaded arrays."""
@@ -147,6 +149,30 @@ class Snap:
         if self._num_particles == 0:
             self._num_particles = self['id'].size
         return self._num_particles
+
+    def rotate(self, rotation: Rotation) -> Snap:
+        """Rotate snapshot.
+
+        Parameters
+        ----------
+        rotation
+            The rotation as a scipy.spatial.transform.Rotation object.
+
+        Returns
+        -------
+        Snap
+            The rotated Snap. Note that the rotation operation is
+            in-place.
+        """
+        for arr in self._rotation_required():
+            if arr in self.loaded_arrays():
+                self._arrays[arr] = rotation.apply(self._arrays[arr])
+
+        self._rotation = rotation
+        return self
+
+    def _rotation_required(self):
+        return set([val[0] for val in self._array_split_mapper.values()])
 
     def _get_family_indices(self, name: str):
         """Get a family by name."""
@@ -166,6 +192,11 @@ class Snap:
                 return self._arrays[name]
             return self._arrays[name][:, index]
         elif name in Snap._array_registry:
+            if self._rotation is not None:
+                if name in self._rotation_required():
+                    self._arrays[name] = self._rotation.apply(
+                        Snap._array_registry[name](self)
+                    )
             self._arrays[name] = Snap._array_registry[name](self)
             if index is None:
                 return self._arrays[name]
