@@ -11,6 +11,7 @@ Smoothed particle hydrodynamics analysis and visualization with Python.
 [![Documentation Status](https://readthedocs.org/projects/plonk/badge/?version=latest)](https://plonk.readthedocs.io/en/latest/?badge=latest)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/dmentipl/plonk/blob/master/LICENSE)
 
+[![PyPI](https://img.shields.io/pypi/v/plonk)](https://pypi.org/project/plonk/)
 [![Anaconda Version](https://img.shields.io/conda/v/dmentipl/plonk.svg)](https://anaconda.org/dmentipl/plonk)
 [![Anaconda Platform](https://img.shields.io/conda/pn/dmentipl/plonk.svg)](https://anaconda.org/dmentipl/plonk)
 [![ASCL](https://img.shields.io/badge/ascl-1907.009-blue.svg?colorB=262255)](http://ascl.net/1907.009)
@@ -51,7 +52,7 @@ To render the density on a snapshot:
 
 For a more complicated example, here is the deviation from Keplerian velocity around a planet embedded in a protoplanetary disc.
 
-![Planet embedded in protoplanetary disc](image.svg)
+![Planet embedded in protoplanetary disc](https://raw.githubusercontent.com/dmentipl/plonk/master/image.png)
 
 *Deviation from Keplerian velocity around a planet: at the disc midplane (left), and 10 (middle) and 20 au (right) above the disc midplane. Data from a Phantom simulation.*
 
