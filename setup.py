@@ -19,7 +19,7 @@ install_requires = [
     'numpy',
     'pandas',
     'pint',
-    'skimage>=0.16',
+    'scikit-image>=0.16',
     'scipy',
 ]
 packages = [
