@@ -8,6 +8,7 @@ from typing import Callable, Union
 import numpy as np
 from numpy import ndarray
 
+from ... import units
 from ..snap import Snap
 from .hdf5 import HDF5File
 
@@ -51,9 +52,9 @@ class PhantomHDF5Snap:
 
         self.snap.properties['time'] = header['time']
 
-        self.snap.properties['udist'] = header['udist']
-        self.snap.properties['utime'] = header['utime']
-        self.snap.properties['umass'] = header['umass']
+        self.snap.properties['udist'] = header['udist'] * units.cm
+        self.snap.properties['utime'] = header['utime'] * units.s
+        self.snap.properties['umass'] = header['umass'] * units.g
 
         self.snap.properties['hfact'] = header['hfact']
 

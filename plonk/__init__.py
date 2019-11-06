@@ -50,6 +50,10 @@ See https://plonk.readthedocs.io/ for documentation. The source code is
 available at https://github.com/dmentipl/plonk.
 """
 
+import pint
+
+units = pint.UnitRegistry()
+
 from . import analysis, simulation, snap, utils, visualize
 from .snap import Snap, load_snap
 from .simulation import Evolution, Simulation, load_ev, load_sim
@@ -59,6 +63,7 @@ __all__ = (
     ['Evolution', 'Simulation', 'Snap', 'Visualization']  # Classes
     + ['analysis', 'simulation', 'snap', 'utils', 'visualize']  # Packages
     + ['load_snap', 'load_ev', 'load_sim']  # User functions
+    + ['units']
 )
 
 # Canonical version number

@@ -20,8 +20,9 @@ install_requires = [
     'matplotlib',
     'numpy',
     'pandas',
-    'scipy',
+    'pint',
     'skimage>=0.16',
+    'scipy',
 ]
 packages = [
     'plonk',
