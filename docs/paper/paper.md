@@ -8,7 +8,10 @@ tags:
 authors:
   - name: Daniel Mentiplay
     orcid: 0000-0002-5526-8798
-    affiliation: School of Physics and Astronomy, Monash University
+    affiliation: 1
+affiliations:
+ - name: School of Physics and Astronomy, Monash University
+   index: 1
 date: 08 November 2019
 bibliography: paper.bib
 ---
