@@ -8,16 +8,16 @@ Data file formats
 
 Plonk supports the following SPH file formats:
 
-* Phantom output in `HDF
-<https://en.wikipedia.org/wiki/Hierarchical_Data_Format>`_ form (as opposed to
-the sphNG-based Fortran binary format).
+* Phantom output in
+  `HDF <https://en.wikipedia.org/wiki/Hierarchical_Data_Format>`_
+  form (as opposed to the sphNG-based Fortran binary format).
 
 .. note::
-    HDF output was added to Phantom as an option with git commit
+    HDF5 output was added to Phantom as an option with git commit
     `9b22ded <https://bitbucket.org/danielprice/phantom/commits/9b22ded9e7b4d512966f2b2e4b84d693b1afc9e6>`_
-    on the 14th of March 2019. See the `Phantom wiki
-    <https://bitbucket.org/danielprice/phantom/wiki/Home>`_ for instructions on
-    how to compile with HDF output and to convert from the Fortran binary
+    on the 14th of March 2019. See the `Phantom documentation
+    <https://phantomsph.readthedocs.io/>`_ for instructions on
+    how to compile with HDF5 output and to convert from the sphNG-based
     output.
 
 ---------------------
@@ -64,7 +64,7 @@ is equivalent to the interpolation routines in Splash. Instantiation of a
 
 .. code-block:: pycon
 
-    >>> viz = plonk.visualization.render(
+    >>> viz = plonk.visualize.render(
     ...    snap=snap,
     ...    quantity='density',
     ... )

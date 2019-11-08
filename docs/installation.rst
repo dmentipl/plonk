@@ -2,27 +2,26 @@
 Installation
 ============
 
-The easiest and recommended way to install Plonk is via the package manager
-Conda
+Plonk can be installed with pip or Conda:
 
 ::
 
-    conda install plonk --channel dmentipl
+    pip install plonk
 
 or
 
 ::
 
-    conda config --add channels dmentipl
-    conda install plonk
+    conda install plonk --channel dmentipl
 
-This will install the required dependencies. For details on Conda, see
-https://docs.conda.io/.
 
 ------------
 Requirements
 ------------
 
-Plonk has Python requirements listed in `environment.yml
-<https://github.com/dmentipl/plonk/blob/master/environment.yml>`_ located in the
-git repository. These requirements are satisfied by Conda.
+Plonk has run time Python requirements listed in `setup.py
+<https://github.com/dmentipl/plonk/blob/master/setup.py>`_.
+
+To set up a Conda environment for development of Plonk see
+`environment.yml
+<https://github.com/dmentipl/plonk/blob/master/environment.yml>`_.

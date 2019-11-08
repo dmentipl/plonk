@@ -14,7 +14,7 @@ Smoothed particle hydrodynamics analysis and visualization with Python.
 
 .. warning::
     Plonk is under development. The API may change. It may contain bugs.
-    However, please use Plonk, and provide feedback, positive or negative.
+    However, please use Plonk and provide feedback.
 
 --------
 Overview
@@ -22,11 +22,10 @@ Overview
 
 Plonk is a Python tool for analysis and visualization of smoothed particle
 hydrodynamics data with a focus on astrophysical fluid dynamics, as opposed to
-cosmology. For example, simulations of accretion discs, or star formation.
+cosmology.
 
-Plonk aims to provide an alternative to tools such as the Phantom analysis tools
-and Splash. A problem with both of those tools is that they are compiled, and as
-such they are less flexible and scriptable than interpreted Python code.
+With Plonk we aim to provide a Python alternative to tools such as the analysis
+tools bundled with Phantom, and to the visualization tool Splash.
 
 .. toctree::
     :maxdepth: 2
@@ -34,32 +33,29 @@ such they are less flexible and scriptable than interpreted Python code.
 
     installation
     getting-started
-    examples
 
 .. role:: math(raw)
     :format: html latex
 ..
 
-----------
-References
-----------
+--------
+Citation
+--------
 
-* https://github.com/dmentipl/plonk
-* Mentiplay, D., 2019, ASCL, ascl:1907.009
+If you use Plonk in a scientific publication, please cite the Astrophysics
+Source Code Library record
 [`ADS <https://ui.adsabs.harvard.edu/abs/2019ascl.soft07009M/>`_,
-`DOI <http://ascl.net/1907.009>`_]
+`DOI <http://ascl.net/1907.009>`_].
 
-============
+------------
 Contributors
-============
+------------
 
-Author:
+The main author is `Daniel Mentiplay <https://github.com/dmentipl>`_.
 
-* `Daniel Mentiplay <https://github.com/dmentipl>`_
-
-=======
+-------
 License
-=======
+-------
 
 Copyright 2019 Daniel Mentiplay and contributors.
 
