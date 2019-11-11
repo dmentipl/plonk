@@ -9,7 +9,9 @@ from __future__ import annotations
 from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
+import pandas as pd
 from numpy import ndarray
+from pandas import DataFrame
 from scipy.spatial.transform import Rotation
 
 
@@ -175,6 +177,29 @@ class Snap:
 
         self._rotation = rotation
         return self
+
+    def to_dataframe(self, columns: Union[Tuple[str, ...], List[str]]) -> DataFrame:
+        """Convert Snap to DataFrame.
+
+        Parameters
+        ----------
+        columns
+            A list of columns to add to the data frame.
+
+        Returns
+        -------
+        DataFrame
+        """
+        d = dict()
+        cols = list(columns)
+        for col in cols:
+            arr = self[col]
+            if arr.ndim == 2:
+                for idx in range(arr.shape[1]):
+                    d[f'{col}.{idx+1}'] = arr[:, idx]
+            else:
+                d[col] = arr
+        return pd.DataFrame(d)
 
     def _rotation_required(self):
         return set([val[0] for val in self._array_split_mapper.values()])
