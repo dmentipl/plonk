@@ -65,15 +65,23 @@ Install
 
 ### Conda
 
-The easiest and recommended way to install Plonk is via the package manager Conda
+You can install Plonk via the package manager Conda
 
 ```bash
 conda install plonk --channel dmentipl
 ```
 
-*Note*: Using this method you don't need to have this repository on your machine.
-
 This will install the required dependencies. For details on Conda, see <https://docs.conda.io/>.
+
+### pip
+
+You can also install Plonk via pip.
+
+```bash
+pip install plonk
+```
+
+This should install the required dependencies. For details on pip, see <https://pip.pypa.io/>.
 
 Getting help
 ------------
