@@ -6,7 +6,7 @@ hydrodynamics simulation snapshot file.
 
 from __future__ import annotations
 
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Callable, Dict, List, Optional, Tuple, Union, cast
 
 import numpy as np
 import pandas as pd
@@ -194,6 +194,7 @@ class Snap:
         cols = list(columns)
         for col in cols:
             arr = self[col]
+            arr = cast(ndarray, arr)
             if arr.ndim == 2:
                 for idx in range(arr.shape[1]):
                     d[f'{col}.{idx+1}'] = arr[:, idx]

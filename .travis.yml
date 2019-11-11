@@ -25,7 +25,7 @@ script:
   - python -m coverage run -m pytest
   - isort --skip plonk/__init__.py --check-only -rc
   - black --check --skip-string-normalization plonk tests
-  - mypy --no-strict-optional --ignore-missing-imports plonk tests
+  - mypy --ignore-missing-imports plonk tests
 
 after_success:
   - coveralls
