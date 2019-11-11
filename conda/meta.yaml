@@ -1,23 +1,31 @@
 {% set data = load_setup_py_data() %}
+{% set name = "plonk" %}
+
+# Need to set version here, as opposed to reading from setup.py.
+{% set version = "0.2.0" %}
+# The sha256 hash corresponds to the source distribution from PyPI.
+{% set sha256 = "9950573bf731d88d2f7e249572d64faeb6dcece77450c37d14a42ad2d10bb1aa" %}
 
 package:
-  name: plonk
-  version: {{ data.get('version') }}
+  name: {{ name|lower }}
+  version: {{ version }}
 
 source:
-  path: ..
+  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
+  sha256: {{ sha256 }}
 
 extra:
   channels:
-    - conda-forge
     - dmentipl
+
+build:
+  script: "{{ PYTHON }} -m pip install . -vv"
 
 requirements:
   host:
-    - python>=3.6
-    - setuptools
+    - python
   run:
-    - python>=3.6
+    - python
     - KDEpy
     - astropy
     - h5py
@@ -32,5 +40,3 @@ about:
   home: {{ data["url"] }}
   license: {{ data["license"] }}
   summary: {{ data["description"] }}
-  description: {{ data["long_description"] }}
-  doc_url: https://plonk.readthedocs.io

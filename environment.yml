@@ -9,6 +9,7 @@ name: plonk-dev
 
 channels:
   - conda-forge
+  - dmentipl
 
 dependencies:
   - python>=3.6
@@ -23,6 +24,7 @@ dependencies:
   - ipython
   - isort
   - jupyterlab
+  - KDEpy
   - matplotlib
   - mypy
   - numpy
@@ -36,5 +38,3 @@ dependencies:
   - scipy
   - sphinx
   - sphinx_rtd_theme
-  - pip:
-    - KDEpy
