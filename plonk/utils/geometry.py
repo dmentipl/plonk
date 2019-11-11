@@ -24,13 +24,13 @@ def coordinate_transform(
     ----------
     position
         The 3d coordinates to transform, as a (N, 3) ndarray.
-    velocity, optional
+    velocity
         The 3d velocity components to transform, as a (N, 3) ndarray.
     geometry_from
         The geometry that the coordinates are in.
     geometry_to
         The geometry to convert to.
-    in_place, optional
+    in_place
         If True, the coordinate transformation operates on the the
         array in place, and the function returns None. Default: False.
 

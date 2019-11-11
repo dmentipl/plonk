@@ -1,7 +1,8 @@
-"""Snap class for snapshot files.
+"""Snap, SubSnap, Sinks classes for snapshot files.
 
 The Snap class contains all information related to a smoothed particle
-hydrodynamics simulation snapshot file.
+hydrodynamics simulation snapshot file. The SubSnap class is for
+accessing a subset of particles in a Snap.
 """
 
 from __future__ import annotations
@@ -32,22 +33,27 @@ class Snap:
     Examples
     --------
     To access arrays on the particles.
+
     >>> snap['position']
     >>> snap['density']
 
     To access sink arrays.
+
     >>> snap.sinks['position']
     >>> snap.sinks['spin']
 
     To access a subset of particles as a SubSnap.
+
     >>> subsnap = snap[:100]
     >>> subsnap = snap[snap['x'] > 0]
     >>> subsnap = snap['gas']
 
     To set a new array.
+
     >>> snap['r'] = np.sqrt(snap['x'] ** 2 + snap['y'] ** 2)
 
     Alternatively, define a function.
+
     >>> @plonk.Snap.add_array
     ... def radius(snap) -> ndarray:
     ...     radius = np.hypot(snap['x'], snap['y'])

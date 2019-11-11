@@ -40,6 +40,17 @@ Subpackages
     Contains classes and functions for performing analysis on snapshot
     files.
 
+- simulation
+    Contains classes and functions for accessing multiple simulation
+    files as a coherent object.
+
+- snap
+    Contains classes and functions for reading and accessing snapshot
+    files.
+
+- utils
+    Contains utility classes and functions.
+
 - visualize
     Contains classes and functions for visualization of snapshot files.
 

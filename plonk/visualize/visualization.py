@@ -86,9 +86,9 @@ class Visualization:
 
         Parameters
         ----------
-        scalar_data, optional
+        scalar_data
             The 1d array (N,) of scalar data to visualize.
-        vector_data, optional
+        vector_data
             The 2d array (N, 2) of vector data to visualize.
         x_coordinate
             The x-position on the particles, where x is the required plot
@@ -96,7 +96,7 @@ class Visualization:
         y_coordinate
             The y-position on the particles, where y is the required plot
             y-axis.
-        z_coordinate, optional
+        z_coordinate
             The z-position on the particles, where z is the depth-axis for
             the required plot.
         extent
@@ -105,13 +105,13 @@ class Visualization:
             The particle mass for each particle.
         smoothing_length
             The smoothing length for each particle.
-        axis, optional
+        axis
             A matplotlib axis handle.
-        scalar_options, optional
+        scalar_options
             A dictionary of options for scalar plots.
-        vector_options, optional
+        vector_options
             A dictionary of options for vector plots.
-        interpolation_options, optional
+        interpolation_options
             A dictionary of options for interpolation.
         """
         _scalar_options = copy(scalar_options)

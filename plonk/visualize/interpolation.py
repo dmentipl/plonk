@@ -38,7 +38,7 @@ def scalar_interpolation(
         Particle coordinate for x-axis in interpolation.
     y_coordinate
         Particle coordinate for y-axis in interpolation.
-    z_coordinate, optional
+    z_coordinate
         Particle coordinate for z-axis. Only required for cross section
         interpolation.
     extent
@@ -50,10 +50,10 @@ def scalar_interpolation(
     number_pixels
         The pixel grid to interpolate the scalar quantity to, as
         (npixx, npixy).
-    cross_section, optional
+    cross_section
         Cross section slice position as a z-value. If None, cross
         section interpolation is turned off. Default is off.
-    density_weighted, optional
+    density_weighted
         Use density weighted interpolation. Default is off.
 
     Returns
@@ -102,7 +102,7 @@ def vector_interpolation(
         Particle coordinate for x-axis in interpolation.
     y_coordinate
         Particle coordinate for y-axis in interpolation.
-    z_coordinate, optional
+    z_coordinate
         Particle coordinate for z-axis. Only required for cross section
         interpolation.
     extent
@@ -114,10 +114,10 @@ def vector_interpolation(
     number_pixels
         The pixel grid to interpolate the scalar quantity to, as
         (npixx, npixy).
-    cross_section, optional
+    cross_section
         Cross section slice position as a z-value. If None, cross
         section interpolation is turned off. Default is off.
-    density_weighted, optional
+    density_weighted
         Use density weighted interpolation. Default is off.
 
     Returns

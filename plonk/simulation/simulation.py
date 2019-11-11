@@ -58,7 +58,7 @@ class Simulation:
         prefix
             Simulation prefix, e.g. 'disc', if files are named like
             disc_00000.h5, disc01.ev, discSink0001N01.ev, etc.
-        directory, optional
+        directory
             Directory containing simulation snapshot files and auxiliary
             files.
         """
@@ -211,7 +211,7 @@ def load_sim(prefix: str, directory: Optional[Union[str, Path]] = None) -> Simul
     prefix
         Simulation prefix, e.g. 'disc', if files are named like
         disc_00000.h5, disc01.ev, discSink0001N01.ev, etc.
-    directory, optional
+    directory
         Directory containing simulation snapshot files and auxiliary
         files.
     """

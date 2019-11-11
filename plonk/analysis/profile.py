@@ -22,21 +22,21 @@ class Profile:
     ----------
     snap
         The Snap object.
-    ndim, optional
+    ndim
         The dimension of the profile. For ndim == 2, the radial binning
         is cylindrical in the xy-plane. For ndim == 3, the radial
         binning is spherical. Default is 2.
-    radius_min, optional
+    radius_min
         The minimum radius for binning. Defaults to minimum on the
         particles.
-    radius_max, optional
+    radius_max
         The maximum radius for binning. Defaults to the 99 percentile
         distance.
-    n_bins, optional
+    n_bins
         The number of radial bins. Default is 100.
-    ignore_accreted, optional
+    ignore_accreted
         Ignore particles accreted onto sinks. Default is True.
-    mask, optional
+    mask
         Select a subset of all particles via a NumPy mask array.
     """
 

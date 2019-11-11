@@ -21,7 +21,7 @@ def center_of_mass(snap: Snap, mask: Optional[ndarray] = None) -> ndarray:
     ----------
     snap
         The Snap object.
-    mask, optional
+    mask
         Mask the particle arrays. Default is None.
 
     Returns
@@ -43,7 +43,7 @@ def momentum(snap: Snap, mask: Optional[ndarray] = None) -> ndarray:
     ----------
     snap
         The Snap object.
-    mask, optional
+    mask
         Mask the particle arrays. Default is None.
 
     Returns
@@ -65,7 +65,7 @@ def angular_momentum(snap: Snap, mask: Optional[ndarray] = None) -> ndarray:
     ----------
     snap
         The Snap object.
-    mask, optional
+    mask
         Mask the particle arrays. Default is None.
 
     Returns

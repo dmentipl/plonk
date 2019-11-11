@@ -1,8 +1,3 @@
-.. Plonk documentation master file, created by
-   sphinx-quickstart on Mon Mar 18 15:51:00 2019.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 =====
 Plonk
 =====
@@ -14,7 +9,8 @@ Smoothed particle hydrodynamics analysis and visualization with Python.
 
 .. warning::
     Plonk is under development. The API may change. It may contain bugs.
-    However, please use Plonk and provide feedback.
+    However, please use Plonk and provide feedback by raising a `GitHub issue
+    <https://github.com/dmentipl/plonk/issues/new/choose>`_.
 
 --------
 Overview
@@ -33,6 +29,7 @@ tools bundled with Phantom, and to the visualization tool Splash.
 
     installation
     getting-started
+    api
 
 .. role:: math(raw)
     :format: html latex
@@ -53,11 +50,23 @@ Contributors
 
 The main author is `Daniel Mentiplay <https://github.com/dmentipl>`_.
 
+If you would like to contribute, see `CONTRIBUTING.md
+<https://github.com/dmentipl/plonk/blob/master/CONTRIBUTING.md>`_.
+
 -------
 License
 -------
 
 Copyright 2019 Daniel Mentiplay and contributors.
 
-Plonk is available under the MIT license. For details see the `LICENSE
-<https://github.com/dmentipl/plonk/blob/master/LICENSE>`_ file.
+Plonk is available under the MIT license. For details see `LICENSE
+<https://github.com/dmentipl/plonk/blob/master/LICENSE>`_.
+
+
+------------------
+Indices and tables
+------------------
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
