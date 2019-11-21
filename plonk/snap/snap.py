@@ -229,12 +229,12 @@ class Snap:
                 return self._arrays[name]
             return self._arrays[name][:, index]
         elif name in Snap._array_registry:
-            if self._rotation is not None:
-                if name in self._rotation_required():
-                    self._arrays[name] = self._rotation.apply(
-                        Snap._array_registry[name](self)
-                    )
-            self._arrays[name] = Snap._array_registry[name](self)
+            if self._rotation is not None and name in self._rotation_required():
+                self._arrays[name] = self._rotation.apply(
+                    Snap._array_registry[name](self)
+                )
+            else:
+                self._arrays[name] = Snap._array_registry[name](self)
             if index is None:
                 return self._arrays[name]
             return self._arrays[name][:, index]
