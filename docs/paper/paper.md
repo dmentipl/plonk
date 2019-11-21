@@ -34,7 +34,7 @@ SPH simulations typically output files which contain quantities defined on the p
 
 Given that ``Plonk`` is a Python package it can be used via a Jupyter notebook [@Kluyver:2016]. The Jupyter notebook is a platform which allows for exploratory data analysis and visualization, combined with the ability to share the notebook, as a record of analysis, with collaborators. A user can install Plonk, using a package manager such as pip or Conda, on the supercomputer where their data resides, and analyze and visualize their data via a web browser running on their local machine. The expensive computations take place on the remote machine.
 
-Similar existing Python packages such as ``pynbody`` [@Pontzen:2013] and ``Py-SPHViewer`` [@Benitez-Llambay:2015] focus on cosmological simulations. In contrast, ``Plonk`` is focussed on astrophysical fluid dynamics simulations, such as protoplanetary and black hole accretion disks, star formation, and molecular clouds. Users of the Phantom SPH code [@Price:2018] may find ``Plonk`` useful.
+Similar existing Python packages such as ``pynbody`` [@Pontzen:2013] and ``Py-SPHViewer`` [@Benitez-Llambay:2015] focus on cosmological simulations.  The package ``yt`` [@Turk:2011] supports analyzing SPH calculations as well. In contrast, ``Plonk`` is focussed on astrophysical fluid dynamics simulations, such as protoplanetary and black hole accretion disks, star formation, and molecular clouds. Users of the Phantom SPH code [@Price:2018] may find ``Plonk`` useful.
 
 # Acknowledgements
 
