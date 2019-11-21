@@ -12,10 +12,6 @@ Smoothed particle hydrodynamics analysis and visualization with Python.
     However, please use Plonk and provide feedback by raising a `GitHub issue
     <https://github.com/dmentipl/plonk/issues/new/choose>`_.
 
---------
-Overview
---------
-
 Plonk is a Python tool for analysis and visualization of smoothed particle
 hydrodynamics data with a focus on astrophysical fluid dynamics, as opposed to
 cosmology.
@@ -25,10 +21,12 @@ tools bundled with Phantom, and to the visualization tool Splash.
 
 .. toctree::
     :maxdepth: 2
-    :caption: User Guide:
+    :caption: User Guide
 
     installation
-    getting-started
+    overview
+    quickstart
+    getting-help
     api
 
 .. role:: math(raw)
@@ -61,6 +59,26 @@ Copyright 2019 Daniel Mentiplay and contributors.
 
 Plonk is available under the MIT license. For details see `LICENSE
 <https://github.com/dmentipl/plonk/blob/master/LICENSE>`_.
+
+--------------
+Other Packages
+--------------
+
+Here are some other, mature, Python analysis and visualization packages for
+smoothed particle hydrodynamics, and other scientific, data:
+
+* `pynbody <http://pynbody.github.io/pynbody/>`_ --- "an analysis package for
+  astrophysical N-body and Smooth Particle Hydrodynamics simulations".
+* `Py-SPHViewer <http://alejandrobll.github.io/py-sphviewer/>`_ --- "a parallel
+  Python package to visualise and explore N-body + Hydrodynamics simulations
+  using the Smoothed Particle Hydrodynamics (SPH) scheme".
+* `yt <https://yt-project.org/>`_ project --- "yt is an open-source,
+  permissively-licensed Python package for analyzing and visualizing volumetric
+  data".
+
+In addition, `SPLASH <https://github.com/danieljprice/splash>`_ is a mature,
+Unix command line, "free and open source visualisation tool for Smoothed
+Particle Hydrodynamics (SPH) simulations", written in Fortran.
 
 
 ------------------

@@ -12,10 +12,17 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
+import io
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.abspath('../..'))
+
+__version__ = re.search(
+    r'__version__\s*=\s*[\'"]([^\'"]*)[\'"]',  # It excludes inline comment too
+    io.open('../../plonk/__init__.py', encoding='utf_8_sig').read(),
+).group(1)
 
 
 # -- Project information -----------------------------------------------------
@@ -25,9 +32,9 @@ copyright = '2019, Daniel Mentiplay'
 author = 'Daniel Mentiplay'
 
 # The short X.Y version
-version = ''
+version = __version__.split(':')[0]
 # The full version, including alpha/beta/rc tags
-release = ''
+release = __version__
 
 
 # -- General configuration ---------------------------------------------------
@@ -72,7 +79,7 @@ language = None
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = None
+pygments_style = 'sphinx'
 
 
 # -- Options for HTML output -------------------------------------------------
