@@ -1,6 +1,6 @@
 """Geometry, and coordinate transformations."""
 
-from typing import Optional
+from typing import Optional, Tuple
 
 import numpy as np
 from numpy import ndarray
@@ -13,7 +13,7 @@ def coordinate_transform(
     geometry_from: str,
     geometry_to: str,
     in_place: bool = False,
-) -> Optional[ndarray]:
+) -> Optional[Tuple[ndarray, Optional[ndarray]]]:
     """Coordinate transformation.
 
     Transform 3d coordinates from one system to another. Coordinate
@@ -73,7 +73,7 @@ def coordinate_transform(
 
 def _cartesian_to_cylindrical(
     position: ndarray, velocity: ndarray = None, in_place: bool = False
-) -> Optional[ndarray]:
+) -> Optional[Tuple[ndarray, Optional[ndarray]]]:
     x, y, z = position[:, 0], position[:, 1], position[:, 2]
     r, phi = np.hypot(x, y), np.arctan2(y, x)
     phi[phi < 0] += 2 * np.pi
@@ -103,7 +103,7 @@ def _cartesian_to_cylindrical(
 
 def _cylindrical_to_cartesian(
     position: ndarray, velocity: ndarray = None, in_place: bool = False
-) -> Optional[ndarray]:
+) -> Optional[Tuple[ndarray, Optional[ndarray]]]:
     r, phi, z = position[:, 0], position[:, 1], position[:, 2]
     x = r * np.cos(phi)
     y = r * np.sin(phi)
@@ -133,7 +133,7 @@ def _cylindrical_to_cartesian(
 
 def _cartesian_to_spherical(
     position: ndarray, velocity: ndarray = None, in_place: bool = False
-) -> Optional[ndarray]:
+) -> Optional[Tuple[ndarray, Optional[ndarray]]]:
     x, y, z = position[:, 0], position[:, 1], position[:, 2]
     xy = np.hypot(x, y)
     r = np.hypot(xy, z)
@@ -168,7 +168,7 @@ def _cartesian_to_spherical(
 
 def _spherical_to_cartesian(
     position: ndarray, velocity: ndarray = None, in_place: bool = False
-) -> Optional[ndarray]:
+) -> Optional[Tuple[ndarray, Optional[ndarray]]]:
     r, theta, phi = position[:, 0], position[:, 1], position[:, 2]
     x = r * np.sin(theta) * np.cos(phi)
     y = r * np.sin(theta) * np.sin(phi)
