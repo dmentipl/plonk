@@ -326,6 +326,7 @@ class SubSnap(Snap):
         self._file_pointer = self.base._file_pointer
         self._indices = indices
         self._num_particles = len(indices)
+        self._arrays = self.base._arrays
 
     def __repr__(self):
         """Dunder repr method."""
