@@ -26,6 +26,7 @@ tools bundled with Phantom, and to the visualization tool Splash.
     installation
     overview
     quickstart
+    examples
     getting-help
     api
 
