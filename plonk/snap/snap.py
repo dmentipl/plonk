@@ -103,7 +103,7 @@ class Snap:
 
     @staticmethod
     def add_array(fn: Callable) -> Callable:
-        """Decorator to add array to Snap.
+        """Decorate function to add array to Snap.
 
         Parameters
         ----------
