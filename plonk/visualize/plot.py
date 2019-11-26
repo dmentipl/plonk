@@ -126,29 +126,20 @@ def render(
     if interpolation_options.get('cross_section') is not None:
         need_z = True
 
-    if quantity is None:
-        quantity = 'density'
+    try:
+        scalar_data: ndarray = snap[quantity]
+    except ValueError:
+        raise ValueError('Cannot determine quantity to render.')
+    if scalar_data.ndim > 1:
+        raise ValueError('Quantity to render must be 1-dimensional')
 
-    if quantity in ('rho', 'density'):
-        scalar_data = snap['density']
-    elif quantity in ('vx', 'velocity_x'):
-        scalar_data = snap['velocity'][:, 0]
-    elif quantity in ('vy', 'velocity_y'):
-        scalar_data = snap['velocity'][:, 1]
-    elif quantity in ('vz', 'velocity_z'):
-        scalar_data = snap['velocity'][:, 2]
-    else:
-        raise ValueError(
-            'Cannot determine quantity to render. See Visualization for more details.'
-        )
+    position: ndarray = snap['position']
+    smoothing_length: ndarray = snap['smooth']
+    particle_mass: ndarray = snap['mass']
 
-    position = snap['position']
-    smoothing_length = snap['smooth']
-    particle_mass = snap['mass']
-
-    minimum_xy = np.percentile(position[:, :2], 1, axis=0)
-    maximum_xy = np.percentile(position[:, :2], 99, axis=0)
     if extent is None:
+        minimum_xy = position[:, :2].min(axis=0)
+        maximum_xy = position[:, :2].max(axis=0)
         extent = (minimum_xy[0], maximum_xy[0], minimum_xy[1], maximum_xy[1])
         if polar:
             # extent must be square for polar plots
