@@ -102,7 +102,7 @@ Plot dust and gas side-by-side.
 Vector plot with coordinate tranform
 ------------------------------------
 
-Transform to cylindrical coordinates and plot velocity vectors.
+Transform to cylindrical coordinates and plot velocity vectors in the rz-plane.
 
 .. code-block:: pycon
 

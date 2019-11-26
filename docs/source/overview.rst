@@ -198,7 +198,7 @@ writes text files with the suffix :code:`.ev`. These files are output every time
 step rather than at the frequency of the snapshot files.
 
 The Plonk :py:class:`Evolution` class encapsulates this data. Use
-:py:meth`load_ev` to instantiate.
+:py:meth:`load_ev` to instantiate.
 
 .. code-block:: pycon
 
@@ -311,8 +311,8 @@ have been plotting the total density. We may want to visualize the dust and gas
 separately.
 
 To do this we take a :py:class:`SubSnap`. The 'dust_id' array distinguishes
-between dust and gas particles. Gas particles have a 'dust_id' or 0. Dust
-particles have a 'dust_id' 1 (or greater for multiple species). In this
+between dust and gas particles. Gas particles have a 'dust_id' of 0. Dust
+particles have a 'dust_id' of 1 (or greater for multiple species). In this
 simulation there is only one dust species.
 
 .. code-block:: pycon
@@ -353,8 +353,7 @@ Derived arrays
 ~~~~~~~~~~~~~~
 
 Sometimes you need new arrays on the particles that are not available in the
-snapshot files. You can create a new, derived array on the particles , as
-follows.
+snapshot files. You can create a new, derived array on the particles as follows.
 
 .. code-block:: pycon
 
@@ -383,9 +382,9 @@ the decorator :py:meth:`add_array`.
 Profiles
 ~~~~~~~~
 
-Taking a radial profile is a convenient method to reduce the dimensionality and
-the full data set. For example, we may want to see how the surface density and
-aspect ratio of the disc vary with radius.
+Generating a radial profile is a convenient method to reduce the dimensionality
+of the full data set. For example, we may want to see how the surface density
+and aspect ratio of the disc vary with radius.
 
 To do this we use the :py:class:`Profile` class in the :mod:`analysis`
 module.
@@ -397,7 +396,7 @@ module.
     <plonk.Profile: 100 bins>
 
 To see what profiles are loaded and what are available use the
-:py:meth:`loaded_keys` :py:meth:`available_keys` methods.
+:py:meth:`loaded_keys` and :py:meth:`available_keys` methods.
 
 .. code-block:: pycon
 

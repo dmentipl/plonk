@@ -87,8 +87,7 @@ Visualization
 Projection plot
 ~~~~~~~~~~~~~~~
 
-Produce a projection plot of density of the initial condition and final
-snapshot.
+Produce a projection rendering of density.
 
 .. code-block:: python
 
