@@ -16,6 +16,7 @@ Smoothed particle hydrodynamics analysis and visualization with Python.
 [![Anaconda Platform](https://img.shields.io/conda/pn/dmentipl/plonk.svg)](https://anaconda.org/dmentipl/plonk)
 
 [![JOSS](https://joss.theoj.org/papers/e785dbbbc29d77211041264315d7d3c6/status.svg)](https://joss.theoj.org/papers/e785dbbbc29d77211041264315d7d3c6)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3554568.svg)](https://doi.org/10.5281/zenodo.3554568)
 [![ASCL](https://img.shields.io/badge/ascl-1907.009-blue.svg?colorB=262255)](http://ascl.net/1907.009)
 
 Usage
