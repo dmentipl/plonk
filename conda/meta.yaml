@@ -2,9 +2,9 @@
 {% set name = "plonk" %}
 
 # Need to set version here, as opposed to reading from setup.py.
-{% set version = "0.2.0" %}
+{% set version = "0.2.1" %}
 # The sha256 hash corresponds to the source distribution from PyPI.
-{% set sha256 = "9950573bf731d88d2f7e249572d64faeb6dcece77450c37d14a42ad2d10bb1aa" %}
+{% set sha256 = "c78416c177b8cf139436950a31a15087af84f17ec0d29621584722e36088a4a5" %}
 
 package:
   name: {{ name|lower }}
