@@ -101,7 +101,7 @@ Contributing
 
 Thank you for considering contributing to Plonk. *Contributions are welcome.*
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to contribute.
+See [CONTRIBUTING.md](https://github.com/dmentipl/plonk/blob/master/CONTRIBUTING.md) for guidelines on how to contribute.
 
 Citation
 --------

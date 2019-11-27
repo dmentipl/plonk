@@ -129,3 +129,58 @@ Suggestions for new features include:
 - extra visualization features, e.g. widgets in a Jupyter notebook with Bokeh;
 - tracking particles through multiple snapshots;
 - handling extra physics, such as magnetic fields.
+
+PyPI and Conda packages
+-----------------------
+
+**Note: these instructions are for the Plonk maintainers only (e.g. [@dmentipl](https://github.com/dmentipl)).**
+
+### PyPI and pip
+
+To generate a package installable from PyPI, first install twine (via the PyPI or Conda package). Then build a source and wheel distribution.
+
+```bash
+python setup.py sdist bdist_wheel
+```
+
+You can check that the build succeeded with the following.
+
+```bash
+python -m twine check dist/*
+```
+
+Then upload the package to the test PyPI to check that everything looks correct. You will be required to use your credentials.
+
+```bash
+python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+```
+
+If everything is good, upload to PyPI. The credentials are separate from the test PyPI.
+
+```bash
+python -m twine upload dist/*
+```
+
+### Conda
+
+*Note: you must build a Conda package for each operating system. We support macOS and Linux.*
+
+From the root directory of the repository build the Conda package.
+
+```bash
+conda build conda
+```
+
+Then upload to Anaconda Cloud, with the correct path to the Conda package.
+
+```bash
+anaconda upload path_to_plonk_conda_package.tar.bz2
+```
+
+The path will be something like `~/conda/conda-bld/<os>/plonk-<v.v.v>-py3<x>_0.tar.bz2`, replacing:
+
+* `<os>` with either `osx-64` for macOS or `linux-64` for Linux,
+* `<v.v.v>` with the version number, e.g. `0.2.1`, and
+* `<x>` with the Python minor version number, e.g. `7`.
+
+The first time you run this command you will be required to enter credentials. However, they are usually cached for future uploads.
