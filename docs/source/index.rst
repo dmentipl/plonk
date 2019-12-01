@@ -38,10 +38,15 @@ tools bundled with Phantom, and to the visualization tool Splash.
 Citation
 --------
 
-If you use Plonk in a scientific publication, please cite the Astrophysics
-Source Code Library record
-[`ADS <https://ui.adsabs.harvard.edu/abs/2019ascl.soft07009M/>`_,
-`DOI <http://ascl.net/1907.009>`_].
+If you use Plonk in a scientific publication, please cite the paper published in
+JOSS.
+
+    Mentiplay, (2019). Plonk: Smoothed particle hydrodynamics analysis and
+    visualization with Python. Journal of Open Source Software, 4(44), 1884,
+    `<https://doi.org/10.21105/joss.01884>`_.
+
+For BibTeX entry, see
+`CITATION.bib <https://github.com/dmentipl/plonk/blob/master/CITATION.bib>`_.
 
 ------------
 Contributors
