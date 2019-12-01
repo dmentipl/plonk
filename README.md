@@ -15,9 +15,8 @@ Smoothed particle hydrodynamics analysis and visualization with Python.
 [![Anaconda Version](https://img.shields.io/conda/v/dmentipl/plonk.svg)](https://anaconda.org/dmentipl/plonk)
 [![Anaconda Platform](https://img.shields.io/conda/pn/dmentipl/plonk.svg)](https://anaconda.org/dmentipl/plonk)
 
-[![JOSS](https://joss.theoj.org/papers/e785dbbbc29d77211041264315d7d3c6/status.svg)](https://joss.theoj.org/papers/e785dbbbc29d77211041264315d7d3c6)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3554568.svg)](https://doi.org/10.5281/zenodo.3554568)
-[![ASCL](https://img.shields.io/badge/ascl-1907.009-blue.svg?colorB=262255)](http://ascl.net/1907.009)
+[![JOSS](https://joss.theoj.org/papers/10.21105/joss.01884/status.svg)](https://doi.org/10.21105/joss.01884)
+[![Zenodo](https://zenodo.org/badge/DOI/10.5281/zenodo.3554568.svg)](https://doi.org/10.5281/zenodo.3554568)
 
 Usage
 -----
@@ -107,8 +106,8 @@ See [CONTRIBUTING.md](https://github.com/dmentipl/plonk/blob/master/CONTRIBUTING
 Citation
 --------
 
-If you use Plonk in a scientific publication, please cite
+If you use Plonk in a scientific publication, please cite the paper published in JOSS.
 
-> [Plonk: Smoothed particle hydrodynamics data analysis and visualization](https://ui.adsabs.harvard.edu/abs/2019ascl.soft07009M/abstract)
+> [Plonk: Smoothed particle hydrodynamics analysis and visualization with Python](https://joss.theoj.org/papers/10.21105/joss.01884#)
 
 You should also consider citing any other scientific software packages that you use.
