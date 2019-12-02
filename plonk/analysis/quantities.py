@@ -4,25 +4,26 @@ Quantities include:
 - center of mass
 - momentum
 - angular momentum
+- kinetic energy
 """
 
-from typing import Optional
+from typing import Union
 
 import numpy as np
 from numpy import ndarray
 
-from ..snap.snap import Snap
+from ..snap.snap import Snap, SubSnap
+
+SnapLike = Union[Snap, SubSnap]
 
 
-def center_of_mass(snap: Snap, mask: Optional[ndarray] = None) -> ndarray:
+def center_of_mass(snap: SnapLike) -> ndarray:
     """Calculate the center of mass on a snapshot.
 
     Parameters
     ----------
     snap
         The Snap object.
-    mask
-        Mask the particle arrays. Default is None.
 
     Returns
     -------
@@ -31,20 +32,16 @@ def center_of_mass(snap: Snap, mask: Optional[ndarray] = None) -> ndarray:
     """
     mass: ndarray = snap['mass']
     pos: ndarray = snap['position']
-    if mask is None:
-        return (mass * pos).sum(axis=0)
-    return (mass * pos)[mask].sum(axis=0)
+    return (mass[:, np.newaxis] * pos).sum(axis=0)
 
 
-def momentum(snap: Snap, mask: Optional[ndarray] = None) -> ndarray:
+def momentum(snap: SnapLike) -> ndarray:
     """Calculate the total momentum vector on a snapshot.
 
     Parameters
     ----------
     snap
         The Snap object.
-    mask
-        Mask the particle arrays. Default is None.
 
     Returns
     -------
@@ -53,12 +50,10 @@ def momentum(snap: Snap, mask: Optional[ndarray] = None) -> ndarray:
     """
     mass: ndarray = snap['mass']
     vel: ndarray = snap['velocity']
-    if mask is None:
-        return (mass * vel).sum(axis=0)
-    return (mass * vel)[mask].sum(axis=0)
+    return (mass[:, np.newaxis] * vel).sum(axis=0)
 
 
-def angular_momentum(snap: Snap, mask: Optional[ndarray] = None) -> ndarray:
+def angular_momentum(snap: SnapLike) -> ndarray:
     """Calculate the total angular momentum vector on a snapshot.
 
     Parameters
@@ -76,6 +71,24 @@ def angular_momentum(snap: Snap, mask: Optional[ndarray] = None) -> ndarray:
     mass: ndarray = snap['mass']
     pos: ndarray = snap['position']
     vel: ndarray = snap['velocity']
-    if mask is None:
-        return (mass * np.cross(pos, vel)).sum(axis=0)
-    return (mass * np.cross(pos, vel))[mask].sum(axis=0)
+    return (mass[:, np.newaxis] * np.cross(pos, vel)).sum(axis=0)
+
+
+def kinetic_energy(snap: SnapLike) -> ndarray:
+    """Calculate the kinetic energy on a snapshot.
+
+    Parameters
+    ----------
+    snap
+        The Snap object.
+    mask
+        Mask the particle arrays. Default is None.
+
+    Returns
+    -------
+    ndarray
+        The total kinetic energy.
+    """
+    mass: ndarray = snap['mass']
+    vel: ndarray = snap['velocity']
+    return (1 / 2 * mass * np.linalg.norm(vel, axis=1) ** 2).sum(axis=0)

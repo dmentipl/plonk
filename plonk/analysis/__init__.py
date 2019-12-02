@@ -12,5 +12,6 @@ Create a radial profile in the xy-plane.
 """
 
 from .profile import Profile
+from . import quantities
 
-__all__ = ['Profile']
+__all__ = ['Profile', 'quantities']
