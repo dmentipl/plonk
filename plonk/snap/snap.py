@@ -339,14 +339,14 @@ class SubSnap(Snap):
     def _get_array(self, name: str, index: Optional[int] = None):
         """Get an array by name."""
         if name in self.base._arrays:
-            if index is None:
-                return self.base._arrays[name][self._indices]
-            return self.base._arrays[name][:, index][self._indices]
+            pass
         elif name in Snap._array_registry:
             self.base._arrays[name] = Snap._array_registry[name](self)
-            return self.base._arrays[name][self._indices]
         else:
             raise ValueError('Array not available')
+        if index is None:
+            return self.base._arrays[name][self._indices]
+        return self.base._arrays[name][:, index][self._indices]
 
 
 class Sinks:
