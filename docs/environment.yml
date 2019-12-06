@@ -6,8 +6,8 @@ dependencies:
   - python>=3.6
   - astropy
   - h5py
-  - KDEpy
   - matplotlib
+  - numba
   - numpy
   - pandas
   - pint

@@ -235,9 +235,9 @@ class Visualization:
 
         data = scalar_interpolation(
             data=data,
-            x_position=x_coordinate,
-            y_position=y_coordinate,
-            z_position=z_coordinate,
+            x_coordinate=x_coordinate,
+            y_coordinate=y_coordinate,
+            z_coordinate=z_coordinate,
             extent=extent,
             smoothing_length=smoothing_length,
             particle_mass=particle_mass,
@@ -336,9 +336,9 @@ class Visualization:
         data = vector_interpolation(
             x_data=data[:, 0],
             y_data=data[:, 1],
-            x_position=x_coordinate,
-            y_position=y_coordinate,
-            z_position=z_coordinate,
+            x_coordinate=x_coordinate,
+            y_coordinate=y_coordinate,
+            z_coordinate=z_coordinate,
             extent=extent,
             smoothing_length=smoothing_length,
             particle_mass=particle_mass,

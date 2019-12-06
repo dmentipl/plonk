@@ -12,10 +12,10 @@ __version__ = re.search(
 ).group(1)
 
 install_requires = [
-    'KDEpy',
     'astropy',
     'h5py',
     'matplotlib',
+    'numba',
     'numpy',
     'pandas',
     'pint',

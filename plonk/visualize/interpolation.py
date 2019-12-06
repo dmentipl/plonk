@@ -1,26 +1,23 @@
 """Interpolation to a pixel grid.
 
 There are two functions: one for interpolation of scalar fields, and one
-for interpolation of vector fields. They both make use of KDEpy.
+for interpolation of vector fields.
 """
 
 from typing import Optional, Tuple
 
 import numpy as np
-from KDEpy import FFTKDE
 from numpy import ndarray
-from scipy.interpolate import RectBivariateSpline
 
-_H_FACT = 1.2
-_C_NORM_3D = 1 / np.pi
+from .splash import hfact, interpolate_projection, interpolate_cross_section
 
 
 def scalar_interpolation(
     *,
     data: ndarray,
-    x_position: ndarray,
-    y_position: ndarray,
-    z_position: Optional[ndarray] = None,
+    x_coordinate: ndarray,
+    y_coordinate: ndarray,
+    z_coordinate: Optional[ndarray] = None,
     extent: Tuple[float, float, float, float],
     smoothing_length: ndarray,
     particle_mass: ndarray,
@@ -64,9 +61,9 @@ def scalar_interpolation(
     """
     return _interpolate(
         data=data,
-        x_position=x_position,
-        y_position=y_position,
-        z_position=z_position,
+        x_coordinate=x_coordinate,
+        y_coordinate=y_coordinate,
+        z_coordinate=z_coordinate,
         extent=extent,
         smoothing_length=smoothing_length,
         particle_mass=particle_mass,
@@ -80,9 +77,9 @@ def vector_interpolation(
     *,
     x_data: ndarray,
     y_data: ndarray,
-    x_position: ndarray,
-    y_position: ndarray,
-    z_position: Optional[ndarray] = None,
+    x_coordinate: ndarray,
+    y_coordinate: ndarray,
+    z_coordinate: Optional[ndarray] = None,
     extent: Tuple[float, float, float, float],
     smoothing_length: ndarray,
     particle_mass: ndarray,
@@ -128,9 +125,9 @@ def vector_interpolation(
     """
     vecsmoothx = _interpolate(
         data=x_data,
-        x_position=x_position,
-        y_position=y_position,
-        z_position=z_position,
+        x_coordinate=x_coordinate,
+        y_coordinate=y_coordinate,
+        z_coordinate=z_coordinate,
         extent=extent,
         smoothing_length=smoothing_length,
         particle_mass=particle_mass,
@@ -140,9 +137,9 @@ def vector_interpolation(
     )
     vecsmoothy = _interpolate(
         data=y_data,
-        x_position=x_position,
-        y_position=y_position,
-        z_position=z_position,
+        x_coordinate=x_coordinate,
+        y_coordinate=y_coordinate,
+        z_coordinate=z_coordinate,
         extent=extent,
         smoothing_length=smoothing_length,
         particle_mass=particle_mass,
@@ -156,9 +153,9 @@ def vector_interpolation(
 def _interpolate(
     *,
     data: ndarray,
-    x_position: ndarray,
-    y_position: ndarray,
-    z_position: Optional[ndarray] = None,
+    x_coordinate: ndarray,
+    y_coordinate: ndarray,
+    z_coordinate: Optional[ndarray] = None,
     extent: Tuple[float, float, float, float],
     smoothing_length: ndarray,
     particle_mass: ndarray,
@@ -166,61 +163,65 @@ def _interpolate(
     cross_section: Optional[float] = None,
     density_weighted: Optional[bool] = None,
 ) -> ndarray:
+    if cross_section is None:
+        do_cross_section = False
+    else:
+        do_cross_section = True
+        zslice = cross_section
     normalized = False
     if density_weighted is None:
         density_weighted = False
     if density_weighted:
         normalized = True
 
-    mask = smoothing_length > 0.0
-    mask = mask & (
-        (x_position >= extent[0])
-        & (x_position <= extent[1])
-        & (y_position >= extent[2])
-        & (y_position <= extent[3])
-    )
-    if cross_section is not None:
-        if z_position is None:
-            raise ValueError('Must specify z position for cross section')
-        mask = mask & (np.abs(z_position - cross_section) < 2 * smoothing_length)
+    npixx, npixy = number_of_pixels
+    xmin, ymin = extent[0], extent[2]
+    pixwidthx = (extent[1] - extent[0]) / npixx
+    pixwidthy = (extent[3] - extent[2]) / npixy
+    npart = len(smoothing_length)
 
-    xy = np.vstack((x_position[mask], y_position[mask])).T
-    scalar = data[mask]
-    h = smoothing_length[mask]
-    m = particle_mass[mask]
-
+    itype = np.ones(smoothing_length.shape)
     if density_weighted:
-        if cross_section is not None:
-            weights = scalar * m / h * _C_NORM_3D
-        else:
-            weights = scalar * m
+        weight = particle_mass / smoothing_length ** 2
     else:
-        if cross_section is not None:
-            weights = scalar * h ** 2 * _C_NORM_3D / _H_FACT ** 3
-        else:
-            weights = scalar * h ** 3 / _H_FACT ** 3
-    if normalized:
-        weights_norm = weights / scalar
+        weight = hfact * np.ones(smoothing_length.shape)
 
-    kde = FFTKDE(kernel='gaussian')
-    grid, points = kde.fit(xy, weights=weights).evaluate(number_of_pixels)
-    z = points.reshape(number_of_pixels)
+    if do_cross_section:
+        data = interpolate_cross_section(
+            x=x_coordinate,
+            y=y_coordinate,
+            z=z_coordinate,
+            hh=smoothing_length,
+            weight=weight,
+            dat=data,
+            itype=itype,
+            npart=npart,
+            xmin=xmin,
+            ymin=ymin,
+            zslice=zslice,
+            npixx=npixx,
+            npixy=npixy,
+            pixwidthx=pixwidthx,
+            pixwidthy=pixwidthy,
+            normalise=normalized,
+        )
+    else:
+        data = interpolate_projection(
+            x=x_coordinate,
+            y=y_coordinate,
+            z=z_coordinate,
+            hh=smoothing_length,
+            weight=weight,
+            dat=data,
+            itype=itype,
+            npart=npart,
+            xmin=xmin,
+            ymin=ymin,
+            npixx=npixx,
+            npixy=npixy,
+            pixwidthx=pixwidthx,
+            pixwidthy=pixwidthy,
+            normalise=normalized,
+        )
 
-    if normalized:
-        _, points_norm = kde.fit(xy, weights=weights_norm).evaluate(number_of_pixels)
-        z_norm = points_norm.reshape(number_of_pixels)
-        z /= z_norm
-
-    normalization = np.sum(weights)
-    if normalized:
-        normalization /= np.sum(m)
-    z *= normalization
-
-    x_grid = np.linspace(grid[0, 0], grid[-1, 0], number_of_pixels[0])
-    y_grid = np.linspace(grid[0, 1], grid[-1, 1], number_of_pixels[1])
-    spl = RectBivariateSpline(x_grid, y_grid, z)
-    x_regrid = np.linspace(*extent[:2], number_of_pixels[0])
-    y_regrid = np.linspace(*extent[2:], number_of_pixels[1])
-    z_regrid = spl(x_regrid, y_regrid)
-
-    return z_regrid.T
+    return data

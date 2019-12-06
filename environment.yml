@@ -25,9 +25,9 @@ dependencies:
   - ipython
   - isort
   - jupyterlab
-  - KDEpy
   - matplotlib
   - mypy
+  - numba
   - numpy
   - pandas
   - pint

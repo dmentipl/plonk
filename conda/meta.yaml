@@ -26,10 +26,10 @@ requirements:
     - python
   run:
     - python
-    - KDEpy
     - astropy
     - h5py
     - matplotlib
+    - numba
     - numpy
     - pandas
     - pint
