@@ -68,6 +68,7 @@ class Visualization:
         extent: Tuple[float, float, float, float],
         particle_mass: ndarray,
         smoothing_length: ndarray,
+        hfact: float,
         axis: Optional[Any] = None,
         scalar_options: Dict[str, Any] = None,
         vector_options: Dict[str, Any] = None,
@@ -105,6 +106,8 @@ class Visualization:
             The particle mass for each particle.
         smoothing_length
             The smoothing length for each particle.
+        hfact
+            The smoothing length factor.
         axis
             A matplotlib axis handle.
         scalar_options
@@ -140,6 +143,7 @@ class Visualization:
                 z_coordinate=z_coordinate,
                 particle_mass=particle_mass,
                 smoothing_length=smoothing_length,
+                hfact=hfact,
                 extent=extent,
                 fig=self.fig,
                 axis=self.axis,
@@ -157,6 +161,7 @@ class Visualization:
                 z_coordinate=z_coordinate,
                 particle_mass=particle_mass,
                 smoothing_length=smoothing_length,
+                hfact=hfact,
                 extent=extent,
                 axis=self.axis,
                 plot_options=_vector_options,
@@ -204,6 +209,7 @@ class Visualization:
         z_coordinate: Optional[ndarray] = None,
         particle_mass: ndarray,
         smoothing_length: ndarray,
+        hfact: float,
         extent: Tuple[float, float, float, float],
         axis: Any,
         fig: Any,
@@ -241,6 +247,7 @@ class Visualization:
             extent=extent,
             smoothing_length=smoothing_length,
             particle_mass=particle_mass,
+            hfact=hfact,
             number_of_pixels=number_of_pixels,
             **interpolation_options,
         )
@@ -307,6 +314,7 @@ class Visualization:
         z_coordinate: Optional[ndarray] = None,
         particle_mass: ndarray,
         smoothing_length: ndarray,
+        hfact: float,
         extent: Tuple[float, float, float, float],
         axis: Any,
         plot_options: Dict[str, Any] = None,
@@ -342,6 +350,7 @@ class Visualization:
             extent=extent,
             smoothing_length=smoothing_length,
             particle_mass=particle_mass,
+            hfact=hfact,
             number_of_pixels=number_of_pixels,
             **interpolation_options,
         )

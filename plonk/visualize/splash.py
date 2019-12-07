@@ -7,7 +7,6 @@ import numba
 import numpy as np
 from numpy import ndarray
 
-hfact = 1.2
 radkernel = 2.0
 radkernel2 = 4.0
 cnormk3D = 1.0 / np.pi

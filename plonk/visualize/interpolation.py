@@ -9,7 +9,7 @@ from typing import Optional, Tuple
 import numpy as np
 from numpy import ndarray
 
-from .splash import hfact, interpolate_projection, interpolate_cross_section
+from .splash import interpolate_projection, interpolate_cross_section
 
 
 def scalar_interpolation(
@@ -21,6 +21,7 @@ def scalar_interpolation(
     extent: Tuple[float, float, float, float],
     smoothing_length: ndarray,
     particle_mass: ndarray,
+    hfact: float,
     number_of_pixels: Tuple[float, float],
     cross_section: Optional[float] = None,
     density_weighted: Optional[bool] = None,
@@ -44,6 +45,8 @@ def scalar_interpolation(
         The smoothing length on each particle.
     particle_mass
         The particle mass on each particle.
+    hfact
+        The smoothing length factor.
     number_pixels
         The pixel grid to interpolate the scalar quantity to, as
         (npixx, npixy).
@@ -67,6 +70,7 @@ def scalar_interpolation(
         extent=extent,
         smoothing_length=smoothing_length,
         particle_mass=particle_mass,
+        hfact=hfact,
         number_of_pixels=number_of_pixels,
         cross_section=cross_section,
         density_weighted=density_weighted,
@@ -83,6 +87,7 @@ def vector_interpolation(
     extent: Tuple[float, float, float, float],
     smoothing_length: ndarray,
     particle_mass: ndarray,
+    hfact: float,
     number_of_pixels: Tuple[float, float],
     cross_section: Optional[float] = None,
     density_weighted: Optional[bool] = None,
@@ -108,6 +113,8 @@ def vector_interpolation(
         The smoothing length on each particle.
     particle_mass
         The particle mass on each particle.
+    hfact
+        The smoothing length factor.
     number_pixels
         The pixel grid to interpolate the scalar quantity to, as
         (npixx, npixy).
@@ -131,6 +138,7 @@ def vector_interpolation(
         extent=extent,
         smoothing_length=smoothing_length,
         particle_mass=particle_mass,
+        hfact=hfact,
         number_of_pixels=number_of_pixels,
         cross_section=cross_section,
         density_weighted=density_weighted,
@@ -143,6 +151,7 @@ def vector_interpolation(
         extent=extent,
         smoothing_length=smoothing_length,
         particle_mass=particle_mass,
+        hfact=hfact,
         number_of_pixels=number_of_pixels,
         cross_section=cross_section,
         density_weighted=density_weighted,
@@ -159,6 +168,7 @@ def _interpolate(
     extent: Tuple[float, float, float, float],
     smoothing_length: ndarray,
     particle_mass: ndarray,
+    hfact: float,
     number_of_pixels: Tuple[float, float],
     cross_section: Optional[float] = None,
     density_weighted: Optional[bool] = None,
@@ -182,9 +192,9 @@ def _interpolate(
 
     itype = np.ones(smoothing_length.shape)
     if density_weighted:
-        weight = particle_mass / smoothing_length ** 2
+        weight = particle_mass / smoothing_length ** 3
     else:
-        weight = hfact * np.ones(smoothing_length.shape)
+        weight = hfact ** -3 * np.ones(smoothing_length.shape)
 
     if do_cross_section:
         data = interpolate_cross_section(

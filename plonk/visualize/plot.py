@@ -18,6 +18,7 @@ def plot(
     extent: Tuple[float, float, float, float],
     particle_mass: ndarray,
     smoothing_length: ndarray,
+    hfact: float,
     axis: Optional[Any] = None,
     scalar_options: Dict[str, Any] = None,
     vector_options: Dict[str, Any] = None,
@@ -55,6 +56,8 @@ def plot(
         The particle mass for each particle.
     smoothing_length
         The smoothing length for each particle.
+    hfact
+        The smoothing length factor.
     axis
         A matplotlib axis handle.
     scalar_options
@@ -73,6 +76,7 @@ def plot(
         extent=extent,
         particle_mass=particle_mass,
         smoothing_length=smoothing_length,
+        hfact=hfact,
         axis=axis,
         scalar_options=scalar_options,
         vector_options=vector_options,
@@ -135,6 +139,7 @@ def render(
     position: ndarray = snap['position']
     smoothing_length: ndarray = snap['smooth']
     particle_mass: ndarray = snap['mass']
+    hfact = snap.properties['hfact']
 
     if extent is None:
         minimum_xy = position[:, :2].min(axis=0)
@@ -163,6 +168,7 @@ def render(
         extent=extent,
         particle_mass=particle_mass,
         smoothing_length=smoothing_length,
+        hfact=hfact,
         scalar_options=scalar_options,
         interpolation_options=interpolation_options,
         axis=axis,
