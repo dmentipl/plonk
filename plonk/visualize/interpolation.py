@@ -178,11 +178,11 @@ def _interpolate(
     else:
         do_cross_section = True
         zslice = cross_section
-    normalized = False
+    normalise = False
     if density_weighted is None:
         density_weighted = False
     if density_weighted:
-        normalized = True
+        normalise = True
 
     npixx, npixy = number_of_pixels
     xmin, ymin = extent[0], extent[2]
@@ -213,7 +213,7 @@ def _interpolate(
             npixy=npixy,
             pixwidthx=pixwidthx,
             pixwidthy=pixwidthy,
-            normalise=normalized,
+            normalise=normalise,
         )
     else:
         data = interpolate_projection(
@@ -231,7 +231,7 @@ def _interpolate(
             npixy=npixy,
             pixwidthx=pixwidthx,
             pixwidthy=pixwidthy,
-            normalise=normalized,
+            normalise=normalise,
         )
 
     return data

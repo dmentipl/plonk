@@ -236,9 +236,9 @@ def interpolate_projection(
         # Loop over pixels, adding the contribution from this particle
         # copy by quarters if all pixels within domain
         ipixmin = int((xi - radkern - xmin) / pixwidthx)
-        ipixmax = int((xi + radkern - xmin) / pixwidthx)
+        ipixmax = int((xi + radkern - xmin) / pixwidthx) + 1
         jpixmin = int((yi - radkern - ymin) / pixwidthy)
-        jpixmax = int((yi + radkern - ymin) / pixwidthy)
+        jpixmax = int((yi + radkern - ymin) / pixwidthy) + 1
 
         # Make sure they only contribute to pixels in the image
         # (note that this optimises much better than using min/max)
@@ -252,14 +252,14 @@ def interpolate_projection(
             jpixmax = npixy
 
         # Precalculate an array of dx2 for this particle (optimisation)
-        for ipix in range(ipixmin, ipixmax + 1):
+        for ipix in range(ipixmin, ipixmax):
             dx2i[ipix] = ((xpix[ipix] - xi) ** 2) * hi21
 
-        for jpix in range(jpixmin, jpixmax + 1):
+        for jpix in range(jpixmin, jpixmax):
             ypix = yminpix + jpix * pixwidthy
             dy = ypix - yi
             dy2 = dy * dy * hi21
-            for ipix in range(ipixmin, ipixmax + 1):
+            for ipix in range(ipixmin, ipixmax):
                 # dx2 pre-calculated; dy2 pre-multiplied by hi21
                 q2 = dx2i[ipix] + dy2
                 # SPH kernel - integral through cubic spline
@@ -383,9 +383,9 @@ def interpolate_cross_section(
             # Loop over pixels, adding the contribution from this particle
             # copy by quarters if all pixels within domain
             ipixmin = int((xi - radkern - xmin) / pixwidthx)
-            ipixmax = int((xi + radkern - xmin) / pixwidthx)
+            ipixmax = int((xi + radkern - xmin) / pixwidthx) + 1
             jpixmin = int((yi - radkern - ymin) / pixwidthy)
-            jpixmax = int((yi + radkern - ymin) / pixwidthy)
+            jpixmax = int((yi + radkern - ymin) / pixwidthy) + 1
 
             # Make sure they only contribute to pixels in the image
             # (note that this optimises much better than using min/max)
@@ -399,15 +399,15 @@ def interpolate_cross_section(
                 jpixmax = npixy
 
             # Precalculate an array of dx2 for this particle (optimisation)
-            for ipix in range(ipixmin, ipixmax + 1):
+            for ipix in range(ipixmin, ipixmax):
                 dx2i[ipix] = ((xmin + (ipix - 0.5) * pixwidthx - xi) ** 2) * hi21 + dz2
 
             # Loop over pixels, adding the contribution from this particle
-            for jpix in range(jpixmin, jpixmax + 1):
+            for jpix in range(jpixmin, jpixmax):
                 ypix = ymin + (jpix - 0.5) * pixwidthy
                 dy = ypix - yi
                 dy2 = dy * dy * hi21
-                for ipix in range(ipixmin, ipixmax + 1):
+                for ipix in range(ipixmin, ipixmax):
                     q2 = dx2i[ipix] + dy2
                     # SPH kernel - cubic spline
                     if q2 < radkernel2:
