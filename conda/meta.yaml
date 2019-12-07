@@ -26,7 +26,6 @@ requirements:
     - python
   run:
     - python
-    - astropy
     - h5py
     - matplotlib
     - numba

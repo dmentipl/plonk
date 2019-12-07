@@ -9,12 +9,10 @@ name: plonk-dev
 
 channels:
   - conda-forge
-  - dmentipl
 
 dependencies:
   - python>=3.6
   - anaconda-client
-  - astropy
   - black
   - conda-build
   - coverage

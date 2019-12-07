@@ -12,7 +12,6 @@ __version__ = re.search(
 ).group(1)
 
 install_requires = [
-    'astropy',
     'h5py',
     'matplotlib',
     'numba',
