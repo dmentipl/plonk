@@ -27,18 +27,20 @@ Y_DATA = np.ones(N)
 EXTENT = (0, 1, 0, 1)
 PIX = (10, 10)
 ZSLICE = 0.5
+HFACT = 1.0
 
 
 def test_scalar_interpolation_projection():
     """Test projection interpolation."""
     im = plonk.visualize.interpolation.scalar_interpolation(
         data=S_DATA,
-        x_position=XX,
-        y_position=YY,
-        z_position=ZZ,
+        x_coordinate=XX,
+        y_coordinate=YY,
+        z_coordinate=ZZ,
         extent=EXTENT,
         smoothing_length=HH,
         particle_mass=MM,
+        hfact=HFACT,
         number_of_pixels=PIX,
     )
 
@@ -49,12 +51,13 @@ def test_scalar_interpolation_cross_section():
     """Test cross section interpolation."""
     im = plonk.visualize.interpolation.scalar_interpolation(
         data=S_DATA,
-        x_position=XX,
-        y_position=YY,
-        z_position=ZZ,
+        x_coordinate=XX,
+        y_coordinate=YY,
+        z_coordinate=ZZ,
         extent=EXTENT,
         smoothing_length=HH,
         particle_mass=MM,
+        hfact=HFACT,
         number_of_pixels=PIX,
         cross_section=ZSLICE,
     )
@@ -67,12 +70,13 @@ def test_vector_interpolation_projection():
     vec = plonk.visualize.interpolation.vector_interpolation(
         x_data=X_DATA,
         y_data=Y_DATA,
-        x_position=XX,
-        y_position=YY,
-        z_position=ZZ,
+        x_coordinate=XX,
+        y_coordinate=YY,
+        z_coordinate=ZZ,
         extent=EXTENT,
         smoothing_length=HH,
         particle_mass=MM,
+        hfact=HFACT,
         number_of_pixels=PIX,
     )
 
@@ -84,12 +88,13 @@ def test_vector_interpolation_cross_section():
     vec = plonk.visualize.interpolation.vector_interpolation(
         x_data=X_DATA,
         y_data=Y_DATA,
-        x_position=XX,
-        y_position=YY,
-        z_position=ZZ,
+        x_coordinate=XX,
+        y_coordinate=YY,
+        z_coordinate=ZZ,
         extent=EXTENT,
         smoothing_length=HH,
         particle_mass=MM,
+        hfact=HFACT,
         number_of_pixels=PIX,
         cross_section=ZSLICE,
     )

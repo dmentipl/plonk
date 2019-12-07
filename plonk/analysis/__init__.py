@@ -11,7 +11,7 @@ Create a radial profile in the xy-plane.
 >>> p.plot('radius', 'density')
 """
 
-from .profile import Profile
 from . import quantities
+from .profile import Profile
 
 __all__ = ['Profile', 'quantities']

@@ -9,7 +9,7 @@ from typing import Optional, Tuple
 import numpy as np
 from numpy import ndarray
 
-from .splash import interpolate_projection, interpolate_cross_section
+from .splash import interpolate_cross_section, interpolate_projection
 
 
 def scalar_interpolation(

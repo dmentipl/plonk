@@ -28,6 +28,7 @@ def test_initialization():
         extent=extent,
         particle_mass=snap['m'],
         smoothing_length=snap['h'],
+        hfact=snap.properties['hfact'],
         scalar_options=scalar_options,
         interpolation_options=interpolation_options,
     )
