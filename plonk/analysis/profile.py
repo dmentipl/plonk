@@ -326,7 +326,7 @@ def eccentricity(self, gravitational_parameter: float):
     mu = gravitational_parameter
 
     pos = self.snap['xyz'][self._mask]
-    vel = self.Snap['vxyz'][self._mask]
+    vel = self.snap['vxyz'][self._mask]
 
     r = np.hypot(np.hypot(pos[:, 0], pos[:, 1]), pos[:, 2])
     v = np.hypot(np.hypot(vel[:, 0], vel[:, 1]), vel[:, 2])
