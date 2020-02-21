@@ -12,8 +12,8 @@ Smoothed particle hydrodynamics analysis and visualization with Python.
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/dmentipl/plonk/blob/master/LICENSE)
 
 [![PyPI](https://img.shields.io/pypi/v/plonk)](https://pypi.org/project/plonk/)
-[![Anaconda Version](https://img.shields.io/conda/v/dmentipl/plonk.svg)](https://anaconda.org/dmentipl/plonk)
-[![Anaconda Platform](https://img.shields.io/conda/pn/dmentipl/plonk.svg)](https://anaconda.org/dmentipl/plonk)
+[![Anaconda Version](https://img.shields.io/conda/v/conda-forge/plonk.svg)](https://anaconda.org/conda-forge/plonk)
+[![Anaconda Platform](https://img.shields.io/conda/pn/conda-forge/plonk.svg)](https://anaconda.org/conda-forge/plonk)
 
 [![JOSS](https://joss.theoj.org/papers/10.21105/joss.01884/status.svg)](https://doi.org/10.21105/joss.01884)
 [![Zenodo](https://zenodo.org/badge/DOI/10.5281/zenodo.3554568.svg)](https://doi.org/10.5281/zenodo.3554568)
