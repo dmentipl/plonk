@@ -3,8 +3,8 @@ Plonk
 
 Smoothed particle hydrodynamics analysis and visualization with Python.
 
-+ Docs: https://plonk.readthedocs.io/
-+ Repo: https://www.github.com/dmentipl/plonk
++ Docs: <https://plonk.readthedocs.io/>
++ Repo: <https://www.github.com/dmentipl/plonk>
 
 [![Build Status](https://travis-ci.org/dmentipl/plonk.svg?branch=master)](https://travis-ci.org/dmentipl/plonk)
 [![Coverage Status](https://coveralls.io/repos/github/dmentipl/plonk/badge.svg?branch=master)](https://coveralls.io/github/dmentipl/plonk?branch=master)
