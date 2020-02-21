@@ -60,7 +60,7 @@ For a more complicated example, here is the deviation from Keplerian velocity ar
 
 ### More
 
-For further usage, see `examples` folder and documentation. The code is internally documented with docstrings. Try, for example, `help(plonk.Snap)` or `help(plonk.load_snap)`.
+For further usage, see documentation. The code is internally documented with docstrings. Try, for example, `help(plonk.Snap)` or `help(plonk.load_snap)`.
 
 Install
 -------
