@@ -25,7 +25,7 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 **Test Configuration**:
 
 + OS: [e.g. macOS 10.14.6, Ubuntu 18.04]
-+ Python: [e.g. Python 3.7, Anaconda with conda 4.7.5, using Jupyter notebook]
++ Python: [e.g. Python 3.8, Anaconda with conda 4.7.5, using Jupyter notebook]
 + SPH code: [e.g. Phantom, version `6666c55f`, compiled with `DUST=yes`]
 
 ## Checklist:
