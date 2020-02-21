@@ -254,8 +254,9 @@ plot the particles as a scatter plot, and possibly color the particles with the
 magnitude of a quantity of interest. An alternative is to interpolate any
 quantity on the particles to a pixel grid with weighted kernel density
 estimation. For the technical details, see Price (2007), `PASA, 24, 3, 159
-<https://ui.adsabs.harvard.edu/abs/2007PASA...24..159P>`_. We use the Python
-package `KDEpy <https://github.com/tommyod/KDEpy/>`_ for this.
+<https://ui.adsabs.harvard.edu/abs/2007PASA...24..159P>`_. We use the same
+numerical method as SPLASH, with the function compiled with Numba so it has the
+same performance as the Fortran code from SPLASH.
 
 You can use the :py:func:`visualize.render` function to interpolate a quantity
 to a pixel grid to show as an image. For example, in the following we produce a

@@ -13,10 +13,10 @@ Plonk can be installed with Conda.
 
 .. code-block:: console
 
-    $ conda install plonk --channel dmentipl
+    $ conda install plonk
 
-The Conda package is hosted on Anaconda Cloud at
-`<https://anaconda.org/dmentipl/plonk/>`_.
+The Conda package is available via conda-forge at
+`<https://anaconda.org/conda-forge/plonk/>`_.
 
 If you're unfamiliar with Conda, see `<https://docs.conda.io/>`_.
 

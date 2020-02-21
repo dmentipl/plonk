@@ -14,10 +14,6 @@ source:
   url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
   sha256: {{ sha256 }}
 
-extra:
-  channels:
-    - dmentipl
-
 build:
   script: "{{ PYTHON }} -m pip install . -vv"
 
