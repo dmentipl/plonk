@@ -73,7 +73,7 @@ You can install Plonk via the package manager Conda from conda-forge.
 conda install plonk
 ```
 
-Note: you may need to first add the `conda-forge` channel with `conda config --add channels conda-forge`. This will install the required dependencies. For details on Conda, see <https://docs.conda.io/>.
+This will install the required dependencies. Note: you may need to first add the `conda-forge` channel with `conda config --add channels conda-forge`. I also recommend strictly using conda-forge which you can do with `conda config --set channel_priority true`. For details on Conda, see <https://docs.conda.io/>.
 
 ### pip
 
