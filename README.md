@@ -88,18 +88,20 @@ This should install the required dependencies. For details on pip, see <https://
 Getting help
 ------------
 
-If you need help, try the following, in order:
+If you need help, please try the following, in order:
 
-1. Check the documentation.
-2. Ask questions on Stack Overflow using the [plonk](https://stackoverflow.com/questions/tagged/plonk) tag.
-3. File an issue, as a [bug report](https://github.com/dmentipl/plonk/issues/new?assignees=&labels=&template=bug_report.md&title=) or [feature request](https://github.com/dmentipl/plonk/issues/new?assignees=&labels=&template=feature_request.md&title=), using the issue tracker.
+1. Check the [documentation](https://plonk.readthedocs.io/).
+2. Check the built-in help, e.g. `help(plonk.load_snap)`.
+3. Raise an issue, as a [bug report](https://github.com/dmentipl/plonk/issues/new?assignees=&labels=&template=bug_report.md&title=) or [feature request](https://github.com/dmentipl/plonk/issues/new?assignees=&labels=&template=feature_request.md&title=), using the issue tracker.
+
+Please don't be afraid to raise an issue. Even if your issue is not a bug, it's nice to have the question and answer available in a public forum so we can all learn from it together.
 
 If you don't get an immediate response, please be patient. Plonk is maintained by one person, [@dmentipl](https://github.com/dmentipl).
 
 Contributing
 ------------
 
-Thank you for considering contributing to Plonk. *Contributions are welcome.*
+Thank you for considering contributing to Plonk. *All types of contributions are welcome from all types of people with different skill levels.*
 
 See [CONTRIBUTING.md](https://github.com/dmentipl/plonk/blob/master/CONTRIBUTING.md) for guidelines on how to contribute.
 
