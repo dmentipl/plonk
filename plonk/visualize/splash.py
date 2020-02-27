@@ -191,7 +191,7 @@ def interpolate_projection(
         # Set h related quantities
         hi = hh[idx]
         horigi = hi
-        if hi < 0.0:
+        if not hi > 0.0:
             continue
 
         # Radius of the smoothing kernel
@@ -361,7 +361,7 @@ def interpolate_cross_section(
 
         # Set h related quantities
         hi = hh[idx]
-        if hi < 0.0:
+        if not hi > 0.0:
             continue
         hi1 = 1.0 / hi
         hi21 = hi1 * hi1
