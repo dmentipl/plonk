@@ -13,6 +13,8 @@ from numpy import ndarray
 from pandas import DataFrame
 
 from ..snap import Snap
+from .quantities import eccentricity as _eccentricity
+from .quantities import specific_angular_momentum
 
 
 class Profile:
@@ -36,8 +38,6 @@ class Profile:
         The number of radial bins. Default is 100.
     ignore_accreted
         Ignore particles accreted onto sinks. Default is True.
-    mask
-        Select a subset of all particles via a NumPy mask array.
     """
 
     _profile_functions: Dict[str, Callable] = {}
@@ -50,13 +50,12 @@ class Profile:
         radius_max: Optional[float] = None,
         n_bins: int = 100,
         ignore_accreted: bool = True,
-        mask: Optional[ndarray] = None,
     ):
 
         self.snap = snap
         self.ndim = ndim
 
-        self._mask = self._setup_particle_mask(ignore_accreted, mask)
+        self._mask = self._setup_particle_mask(ignore_accreted)
         self._x = self._calculate_x()
         self.range = self._set_range(radius_min, radius_max)
         self.n_bins = n_bins
@@ -71,17 +70,11 @@ class Profile:
         self._profiles['radius'] = self.bin_centers
         self._profiles['number'] = np.histogram(self._x, self.bin_edges)[0]
 
-    def _setup_particle_mask(
-        self, ignore_accreted: bool, mask: Optional[ndarray]
-    ) -> ndarray:
+    def _setup_particle_mask(self, ignore_accreted: bool) -> ndarray:
         if ignore_accreted is False:
-            if mask is None:
-                return np.ones(len(self.snap), dtype=bool)
-            return mask
+            return np.ones(len(self.snap), dtype=bool)
         h: ndarray = self.snap['h']
-        if mask is None:
-            return h > 0
-        return mask & h > 0
+        return h > 0
 
     def _calculate_x(self) -> ndarray:
         pos = self.snap['xyz']
@@ -132,7 +125,8 @@ class Profile:
         elif name in Profile._profile_functions:
             if args is not None:
                 self._profiles[name] = Profile._profile_functions[name](self, *args)
-            self._profiles[name] = Profile._profile_functions[name](self)
+            else:
+                self._profiles[name] = Profile._profile_functions[name](self)
             return self._profiles[name]
 
         else:
@@ -222,15 +216,21 @@ class Profile:
             data[column] = self[column]
         return pd.DataFrame(data)
 
+    def _particles_to_binned_quantity(self, function, *args) -> ndarray:
+        """General profile."""
+        binned_quantity = np.zeros(self.n_bins)
+        for idx, bin_ind in enumerate(self.bin_indicies):
+            binned_quantity[idx] = function(
+                tuple([arg[self._mask][bin_ind] for arg in args])
+            )
+        return binned_quantity
+
 
 @Profile.profile_property
 def mass(self) -> ndarray:
     """Mass profile."""
-    mass = np.zeros(self.n_bins)
-    M = self.snap['mass'][self._mask]
-    for idx, bin_ind in enumerate(self.bin_indicies):
-        mass[idx] = M[bin_ind].sum()
-    return mass
+    M = self.snap['mass']
+    return self._particles_to_binned_quantity(np.sum, M)
 
 
 @Profile.profile_property
@@ -245,102 +245,72 @@ def density(self) -> ndarray:
 @Profile.profile_property
 def smooth(self) -> ndarray:
     """Smoothing length profile."""
-    smooth = np.zeros(self.n_bins)
-    _h = self.snap['h']
-    h = _h[self._mask]
-    for idx, bin_ind in enumerate(self.bin_indicies):
-        smooth[idx] = h[bin_ind].mean()
-    return smooth
+    h = self.snap['smooth']
+    return self._particles_to_binned_quantity(np.mean, h)
 
 
 @Profile.profile_property
 def scale_height(self) -> ndarray:
     """Scale height profile."""
-    scale_height = np.zeros(self.n_bins)
-    pos = self.snap['xyz']
-    z = pos[self._mask, 2]
-    for idx, bin_ind in enumerate(self.bin_indicies):
-        scale_height[idx] = z[bin_ind].std()
-    return scale_height
+    z = self.snap['z']
+    return self._particles_to_binned_quantity(np.std, z)
 
 
 @Profile.profile_property
 def angmom_mag(self) -> ndarray:
     """Magnitude of specific angular momentum profile."""
-    angmom_mag = np.zeros(self.n_bins)
+    angmom = specific_angular_momentum(self.snap)
+    angmom_mag = np.linalg.norm(angmom, axis=1)
 
-    mass = self.snap['mass'][:, np.newaxis]
-    pos = self.snap['xyz']
-    vel = self.snap['vxyz']
+    return self._particles_to_binned_quantity(np.mean, angmom_mag)
 
-    J = mass * np.cross(pos, vel)
-    J_mag = np.hypot(np.hypot(J[:, 0], J[:, 1]), J[:, 2])
 
-    for idx, bin_ind in enumerate(self.bin_indicies):
-        angmom_mag[idx] = J_mag[bin_ind].mean() / self._get_profile('mass')[idx]
-    return angmom_mag
+@Profile.profile_property
+def angmom_x(self) -> ndarray:
+    """x-component of specific angular momentum profile."""
+    angmom = specific_angular_momentum(self.snap)
+    angmom_x = angmom[:, 0]
+
+    return self._particles_to_binned_quantity(np.mean, angmom_x)
+
+
+@Profile.profile_property
+def angmom_y(self) -> ndarray:
+    """y-component of specific angular momentum profile."""
+    angmom = specific_angular_momentum(self.snap)
+    angmom_y = angmom[:, 1]
+
+    return self._particles_to_binned_quantity(np.mean, angmom_y)
+
+
+@Profile.profile_property
+def angmom_z(self) -> ndarray:
+    """z-component of specific angular momentum profile."""
+    angmom = specific_angular_momentum(self.snap)
+    angmom_z = angmom[:, 2]
+
+    return self._particles_to_binned_quantity(np.mean, angmom_z)
 
 
 @Profile.profile_property
 def angmom_theta(self) -> ndarray:
-    """Angle between angular momentum and xy-plane."""
-    angmom_theta = np.zeros(self.n_bins)
+    """Angle between specific angular momentum and xy-plane."""
+    angmom_z = self['angmom_z']
+    angmom_mag = self['angmom_mag']
 
-    mass = self.snap['mass'][:, np.newaxis]
-    pos = self.snap['xyz']
-    vel = self.snap['vxyz']
-
-    J = mass * np.cross(pos, vel)
-    J_z = J[:, 2]
-    J_mag = np.hypot(np.hypot(J[:, 0], J[:, 1]), J[:, 2])
-
-    for idx, bin_ind in enumerate(self.bin_indicies):
-        j_z = J_z[bin_ind].mean() / self._get_profile('mass')[idx]
-        j_mag = J_mag[bin_ind].mean() / self._get_profile('mass')[idx]
-        angmom_theta[idx] = np.arccos(j_z / j_mag)
-    return angmom_theta
+    return np.arccos(angmom_z / angmom_mag)
 
 
 @Profile.profile_property
 def angmom_phi(self) -> ndarray:
-    """Angle between angular momentum and x-axis in xy-plane."""
-    angmom_phi = np.zeros(self.n_bins)
-
-    mass = self.snap['mass'][:, np.newaxis]
-    pos = self.snap['xyz']
-    vel = self.snap['vxyz']
-
-    J = mass * np.cross(pos, vel)
-    J_x, J_y = (J[:, 0], J[:, 1])
-
-    for idx, bin_ind in enumerate(self.bin_indicies):
-        j_x = J_x[bin_ind].mean() / self._get_profile('mass')[idx]
-        j_y = J_y[bin_ind].mean() / self._get_profile('mass')[idx]
-        angmom_phi[idx] = np.arctan2(j_y, j_x)
-    return angmom_phi
+    """Angle between specific angular momentum and x-axis in xy-plane."""
+    angmom_x = self['angmom_x']
+    angmom_y = self['angmom_y']
+    return np.arctan2(angmom_y, angmom_x)
 
 
 @Profile.profile_property
 def eccentricity(self, gravitational_parameter: float):
     """Orbital eccentricity profile."""
-    mu = gravitational_parameter
-
-    pos = self.snap['xyz'][self._mask]
-    vel = self.snap['vxyz'][self._mask]
-
-    r = np.hypot(np.hypot(pos[:, 0], pos[:, 1]), pos[:, 2])
-    v = np.hypot(np.hypot(vel[:, 0], vel[:, 1]), vel[:, 2])
-
-    h = np.cross(pos, vel)
-    h_mag = np.hypot(np.hypot(h[:, 0], h[:, 1]), h[:, 2])
-
-    ke = 0.5 * v ** 2
-    pe = -mu / r
-    e = ke + pe
-    term = 2 * e * h_mag ** 2 / mu ** 2
-    ecc = np.sqrt(1 + term)
-
-    eccentricity = np.zeros(self.n_bins)
-    for idx, bin_ind in enumerate(self.bin_indicies):
-        eccentricity[idx] = ecc[bin_ind].mean()
-    return eccentricity
+    ecc = _eccentricity(self.snap, gravitational_parameter)
+    return self._particles_to_binned_quantity(np.mean, ecc)

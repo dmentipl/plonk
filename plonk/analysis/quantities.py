@@ -1,10 +1,6 @@
 """Analysis quantities.
 
-Quantities include:
-- center of mass
-- momentum
-- angular momentum
-- kinetic energy
+Calculate various quantities on the particles.
 """
 
 from typing import Union
@@ -36,7 +32,7 @@ def center_of_mass(snap: SnapLike) -> ndarray:
 
 
 def momentum(snap: SnapLike) -> ndarray:
-    """Calculate the total momentum vector on a snapshot.
+    """Calculate the momentum.
 
     Parameters
     ----------
@@ -46,49 +42,102 @@ def momentum(snap: SnapLike) -> ndarray:
     Returns
     -------
     ndarray
-        The total momentum as a vector (px, py, pz).
+        The linear momentum on the particles.
     """
     mass: ndarray = snap['mass']
     vel: ndarray = snap['velocity']
-    return (mass[:, np.newaxis] * vel).sum(axis=0)
+    return mass[:, np.newaxis] * vel
 
 
 def angular_momentum(snap: SnapLike) -> ndarray:
-    """Calculate the total angular momentum vector on a snapshot.
+    """Calculate the angular momentum.
 
     Parameters
     ----------
     snap
         The Snap object.
-    mask
-        Mask the particle arrays. Default is None.
 
     Returns
     -------
     ndarray
-        The total angular momentum as a vector (lx, ly, lz).
+        The angular momentum on the particles.
     """
     mass: ndarray = snap['mass']
     pos: ndarray = snap['position']
     vel: ndarray = snap['velocity']
-    return (mass[:, np.newaxis] * np.cross(pos, vel)).sum(axis=0)
+    return mass[:, np.newaxis] * np.cross(pos, vel)
 
 
-def kinetic_energy(snap: SnapLike) -> ndarray:
-    """Calculate the kinetic energy on a snapshot.
+def specific_angular_momentum(snap: SnapLike) -> ndarray:
+    """Calculate the specific angular momentum.
 
     Parameters
     ----------
     snap
         The Snap object.
-    mask
-        Mask the particle arrays. Default is None.
 
     Returns
     -------
     ndarray
-        The total kinetic energy.
+        The angular momentum on the particles.
+    """
+    pos: ndarray = snap['position']
+    vel: ndarray = snap['velocity']
+    return np.cross(pos, vel)
+
+
+def kinetic_energy(snap: SnapLike) -> ndarray:
+    """Calculate the kinetic energy.
+
+    Parameters
+    ----------
+    snap
+        The Snap object.
+
+    Returns
+    -------
+    ndarray
+        The kinetic energy on the particles.
     """
     mass: ndarray = snap['mass']
     vel: ndarray = snap['velocity']
-    return (1 / 2 * mass * np.linalg.norm(vel, axis=1) ** 2).sum(axis=0)
+    return 1 / 2 * mass * np.linalg.norm(vel, axis=1) ** 2
+
+
+def eccentricity(snap: SnapLike, gravitational_parameter: float) -> ndarray:
+    """Calculate the eccentricity.
+
+    The eccentricity of particles around some object specified at the
+    origin with some gravitational parameter.
+
+
+    Parameters
+    ----------
+    snap
+        The Snap object.
+    gravitational_parameter
+        The gravitational parameter (G*M).
+
+    Returns
+    -------
+    ndarray
+        The eccentricity on the particles.
+    """
+    mu = gravitational_parameter
+
+    pos: ndarray = snap['position']
+    vel: ndarray = snap['velocity']
+
+    r = np.sqrt(pos[:, 0] ** 2 + pos[:, 1] ** 2 + pos[:, 2] ** 2)
+    v = np.sqrt(vel[:, 0] ** 2 + vel[:, 1] ** 2 + vel[:, 2] ** 2)
+
+    h = np.cross(pos, vel)
+    h_mag = np.sqrt(h[:, 0] ** 2 + h[:, 1] ** 2 + h[:, 2] ** 2)
+
+    ke = 0.5 * v ** 2
+    pe = -mu / r
+    e = ke + pe
+    term = 2 * e * h_mag ** 2 / mu ** 2
+    ecc = np.sqrt(1 + term)
+
+    return ecc
