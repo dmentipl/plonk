@@ -217,3 +217,25 @@ def inclination(snap: SnapLike, ignore_accreted: bool = True) -> float:
     """
     angmom = angular_momentum(snap=snap, ignore_accreted=ignore_accreted)
     return np.arccos(angmom[2] / np.linalg.norm(angmom))
+
+
+def position_angle(snap: SnapLike, ignore_accreted: bool = True) -> float:
+    """Calculate the position angle of inclination.
+
+    The position angle is taken from the x-axis in the xy-plane. It
+    defines a unit vector around which the snap is inclined.
+
+    Parameters
+    ----------
+    snap
+        The Snap object.
+    ignore_accreted : optional
+        Ignore accreted particles. Default is True.
+
+    Returns
+    -------
+    float
+        The mean inclination.
+    """
+    angmom = angular_momentum(snap=snap, ignore_accreted=ignore_accreted)
+    return np.arctan2(angmom[1], angmom[0]) + np.pi / 2
