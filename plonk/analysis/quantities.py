@@ -78,7 +78,7 @@ def angular_momentum(
         The Snap object.
     origin : optional
         The origin around which to compute the angular momentum as a
-        ndarray or tuple (x, y, z).
+        ndarray or tuple (x, y, z). Default is (0, 0, 0).
     ignore_accreted : optional
         Ignore accreted particles. Default is True.
 
@@ -116,7 +116,7 @@ def specific_angular_momentum(
         The Snap object.
     origin : optional
         The origin around which to compute the angular momentum as a
-        ndarray or tuple (x, y, z).
+        ndarray or tuple (x, y, z). Default is (0, 0, 0).
     ignore_accreted : optional
         Ignore accreted particles. Default is True.
 
@@ -189,6 +189,66 @@ def specific_kinetic_energy(snap: SnapLike, ignore_accreted: bool = True) -> nda
     return 1 / 2 * np.linalg.norm(vel, axis=1) ** 2
 
 
+def semi_major_axis(
+    snap: SnapLike,
+    gravitational_parameter: float,
+    origin: Union[ndarray, Tuple[float, float, float]] = (0.0, 0.0, 0.0),
+    ignore_accreted: bool = True,
+) -> ndarray:
+    """Calculate the semi-major axis.
+
+    The semi-major axis of particles around a mass specified by
+    gravitational parameter with an optional to specify the position of
+    the mass.
+
+    Parameters
+    ----------
+    snap
+        The Snap object.
+    gravitational_parameter
+        The gravitational parameter (G*M).
+    origin : optional
+        The origin around which to compute the angular momentum as a
+        ndarray or tuple (x, y, z). Default is (0, 0, 0).
+    ignore_accreted : optional
+        Ignore accreted particles. Default is True.
+
+    Returns
+    -------
+    ndarray
+        The semi-major axis on the particles.
+    """
+    if ignore_accreted:
+        h: ndarray = snap['smooth']
+        pos: ndarray = snap['position'][h > 0]
+        vel: ndarray = snap['velocity'][h > 0]
+    else:
+        pos = snap['position']
+        vel = snap['velocity']
+
+    origin = np.array(origin)
+    pos = pos - origin
+
+    mu = gravitational_parameter
+
+    radius = np.linalg.norm(pos, axis=1)
+
+    specific_angular_momentum = np.cross(pos, vel)
+    specific_angular_momentum_magnitude = np.linalg.norm(
+        specific_angular_momentum, axis=1
+    )
+
+    specific_kinetic_energy = 1 / 2 * np.linalg.norm(vel, axis=1) ** 2
+    specific_potential_energy = -mu / radius
+    specific_energy = specific_kinetic_energy + specific_potential_energy
+
+    eccentricity = np.sqrt(
+        1 + 2 * specific_energy * (specific_angular_momentum_magnitude / mu) ** 2
+    )
+
+    return specific_angular_momentum_magnitude ** 2 / (mu * (1 - eccentricity ** 2))
+
+
 def eccentricity(
     snap: SnapLike,
     gravitational_parameter: float,
@@ -209,7 +269,7 @@ def eccentricity(
         The gravitational parameter (G*M).
     origin : optional
         The origin around which to compute the angular momentum as a
-        ndarray or tuple (x, y, z).
+        ndarray or tuple (x, y, z). Default is (0, 0, 0).
     ignore_accreted : optional
         Ignore accreted particles. Default is True.
 
@@ -231,19 +291,20 @@ def eccentricity(
 
     mu = gravitational_parameter
 
-    r = np.sqrt(pos[:, 0] ** 2 + pos[:, 1] ** 2 + pos[:, 2] ** 2)
-    v = np.sqrt(vel[:, 0] ** 2 + vel[:, 1] ** 2 + vel[:, 2] ** 2)
+    radius = np.linalg.norm(pos, axis=1)
 
-    h = np.cross(pos, vel)
-    h_mag = np.sqrt(h[:, 0] ** 2 + h[:, 1] ** 2 + h[:, 2] ** 2)
+    specific_angular_momentum = np.cross(pos, vel)
+    specific_angular_momentum_magnitude = np.linalg.norm(
+        specific_angular_momentum, axis=1
+    )
 
-    ke = 0.5 * v ** 2
-    pe = -mu / r
-    e = ke + pe
-    term = 2 * e * h_mag ** 2 / mu ** 2
-    ecc = np.sqrt(1 + term)
+    specific_kinetic_energy = 1 / 2 * np.linalg.norm(vel, axis=1) ** 2
+    specific_potential_energy = -mu / radius
+    specific_energy = specific_kinetic_energy + specific_potential_energy
 
-    return ecc
+    return np.sqrt(
+        1 + 2 * specific_energy * (specific_angular_momentum_magnitude / mu) ** 2
+    )
 
 
 def Roche_sphere(m1: float, m2: float, separation: float):
