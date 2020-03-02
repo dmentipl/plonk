@@ -13,8 +13,7 @@ from numpy import ndarray
 from pandas import DataFrame
 
 from ..snap import Snap
-from .quantities import eccentricity as _eccentricity
-from .quantities import specific_angular_momentum
+from . import quantities
 
 
 class Profile:
@@ -259,7 +258,7 @@ def scale_height(self) -> ndarray:
 @Profile.profile_property
 def angmom_mag(self) -> ndarray:
     """Magnitude of specific angular momentum profile."""
-    angmom = specific_angular_momentum(self.snap)
+    angmom = quantities.specific_angular_momentum(snap=self.snap, ignore_accreted=False)
     angmom_mag = np.linalg.norm(angmom, axis=1)
 
     return self._particles_to_binned_quantity(np.mean, angmom_mag)
@@ -268,7 +267,7 @@ def angmom_mag(self) -> ndarray:
 @Profile.profile_property
 def angmom_x(self) -> ndarray:
     """x-component of specific angular momentum profile."""
-    angmom = specific_angular_momentum(self.snap)
+    angmom = quantities.specific_angular_momentum(snap=self.snap, ignore_accreted=False)
     angmom_x = angmom[:, 0]
 
     return self._particles_to_binned_quantity(np.mean, angmom_x)
@@ -277,7 +276,7 @@ def angmom_x(self) -> ndarray:
 @Profile.profile_property
 def angmom_y(self) -> ndarray:
     """y-component of specific angular momentum profile."""
-    angmom = specific_angular_momentum(self.snap)
+    angmom = quantities.specific_angular_momentum(snap=self.snap, ignore_accreted=False)
     angmom_y = angmom[:, 1]
 
     return self._particles_to_binned_quantity(np.mean, angmom_y)
@@ -286,7 +285,7 @@ def angmom_y(self) -> ndarray:
 @Profile.profile_property
 def angmom_z(self) -> ndarray:
     """z-component of specific angular momentum profile."""
-    angmom = specific_angular_momentum(self.snap)
+    angmom = quantities.specific_angular_momentum(snap=self.snap, ignore_accreted=False)
     angmom_z = angmom[:, 2]
 
     return self._particles_to_binned_quantity(np.mean, angmom_z)
@@ -312,5 +311,9 @@ def angmom_phi(self) -> ndarray:
 @Profile.profile_property
 def eccentricity(self, gravitational_parameter: float):
     """Orbital eccentricity profile."""
-    ecc = _eccentricity(self.snap, gravitational_parameter)
+    ecc = quantities.eccentricity(
+        snap=self.snap,
+        gravitational_parameter=gravitational_parameter,
+        ignore_accreted=False,
+    )
     return self._particles_to_binned_quantity(np.mean, ecc)
