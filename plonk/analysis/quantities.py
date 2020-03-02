@@ -14,7 +14,7 @@ SnapLike = Union[Snap, SubSnap]
 
 
 def center_of_mass(snap: SnapLike, ignore_accreted: bool = True) -> ndarray:
-    """Calculate the center of mass on a snapshot.
+    """Calculate the center of mass.
 
     Parameters
     ----------
@@ -37,6 +37,49 @@ def center_of_mass(snap: SnapLike, ignore_accreted: bool = True) -> ndarray:
         pos = snap['position']
 
     return (mass[:, np.newaxis] * pos).sum(axis=0)
+
+
+def total_mass(snap: SnapLike, ignore_accreted: bool = True) -> float:
+    """Calculate the total mass.
+
+    Parameters
+    ----------
+    snap
+        The Snap object.
+    ignore_accreted : optional
+        Ignore accreted particles. Default is True.
+
+    Returns
+    -------
+    float
+        The total mass.
+    """
+    if ignore_accreted:
+        h: ndarray = snap['smooth']
+        mass: ndarray = snap['mass'][h > 0]
+    else:
+        mass = snap['mass']
+
+    return mass.sum()
+
+
+def accreted_mass(snap: SnapLike) -> float:
+    """Calculate the accreted mass.
+
+    Parameters
+    ----------
+    snap
+        The Snap object.
+
+    Returns
+    -------
+    float
+        The accreted mass.
+    """
+    h: ndarray = snap['smooth']
+    mass: ndarray = snap['mass'][~(h > 0)]
+
+    return mass.sum()
 
 
 def momentum(snap: SnapLike, ignore_accreted: bool = True) -> ndarray:
