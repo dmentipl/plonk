@@ -1,4 +1,4 @@
-"""Analysis quantities.
+"""Particle quantities.
 
 Calculate various quantities on the particles.
 """
@@ -11,75 +11,6 @@ from numpy import ndarray
 from ..snap.snap import Snap, SubSnap
 
 SnapLike = Union[Snap, SubSnap]
-
-
-def center_of_mass(snap: SnapLike, ignore_accreted: bool = True) -> ndarray:
-    """Calculate the center of mass.
-
-    Parameters
-    ----------
-    snap
-        The Snap object.
-    ignore_accreted : optional
-        Ignore accreted particles. Default is True.
-
-    Returns
-    -------
-    ndarray
-        The center of mass as a vector (cx, cy, cz).
-    """
-    if ignore_accreted:
-        h: ndarray = snap['smooth']
-        mass: ndarray = snap['mass'][h > 0]
-        pos: ndarray = snap['position'][h > 0]
-    else:
-        mass = snap['mass']
-        pos = snap['position']
-
-    return (mass[:, np.newaxis] * pos).sum(axis=0)
-
-
-def total_mass(snap: SnapLike, ignore_accreted: bool = True) -> float:
-    """Calculate the total mass.
-
-    Parameters
-    ----------
-    snap
-        The Snap object.
-    ignore_accreted : optional
-        Ignore accreted particles. Default is True.
-
-    Returns
-    -------
-    float
-        The total mass.
-    """
-    if ignore_accreted:
-        h: ndarray = snap['smooth']
-        mass: ndarray = snap['mass'][h > 0]
-    else:
-        mass = snap['mass']
-
-    return mass.sum()
-
-
-def accreted_mass(snap: SnapLike) -> float:
-    """Calculate the accreted mass.
-
-    Parameters
-    ----------
-    snap
-        The Snap object.
-
-    Returns
-    -------
-    float
-        The accreted mass.
-    """
-    h: ndarray = snap['smooth']
-    mass: ndarray = snap['mass'][~(h > 0)]
-
-    return mass.sum()
 
 
 def momentum(snap: SnapLike, ignore_accreted: bool = True) -> ndarray:
@@ -166,7 +97,7 @@ def specific_angular_momentum(
     Returns
     -------
     ndarray
-        The angular momentum on the particles.
+        The specific angular momentum on the particles.
     """
     if ignore_accreted:
         h: ndarray = snap['smooth']
@@ -350,23 +281,43 @@ def eccentricity(
     )
 
 
-def Roche_sphere(m1: float, m2: float, separation: float):
-    """Calculate an estimate of the Roche sphere.
+def inclination(snap: SnapLike, ignore_accreted: bool = True) -> ndarray:
+    """Calculate the inclination with respect to the xy-plane.
 
-    Uses the formula from Eggleton (1983) ApJ 268, 368-369.
+    The inclination is calculated by taking the angle between the
+    angular momentum vector and the z-axis, with the angular momentum
+    calculated with respect to the center of mass.
 
     Parameters
     ----------
-    m1
-        The mass of the body around which to calculate the Roche sphere.
-    m2
-        The mass of the second body.
+    snap
+        The Snap object.
+    ignore_accreted : optional
+        Ignore accreted particles. Default is True.
 
+    Returns
+    -------
+    ndarray
+        The inclination on the particles.
     """
-    q = m1 / m2
-    return (
-        separation
-        * 0.49
-        * q ** (2 / 3)
-        / (0.6 * q ** (2 / 3) + np.log(1.0 + q ** (1 / 3)))
+    if ignore_accreted:
+        h: ndarray = snap['smooth']
+        mass: ndarray = snap['mass'][h > 0]
+        pos: ndarray = snap['position'][h > 0]
+        vel: ndarray = snap['velocity'][h > 0]
+    else:
+        mass = snap['mass']
+        pos = snap['position']
+        vel = snap['velocity']
+
+    origin = (mass[:, np.newaxis] * pos).sum(axis=0)
+    pos = pos - origin
+
+    specific_angular_momentum = np.cross(pos, vel)
+
+    inclination = np.arccos(
+        specific_angular_momentum[:, 2]
+        / np.linalg.norm(specific_angular_momentum, axis=1)
     )
+
+    return inclination
