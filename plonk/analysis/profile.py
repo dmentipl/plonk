@@ -13,8 +13,8 @@ from numpy import ndarray
 from pandas import DataFrame
 
 from ..snap import Snap
-from .particles import specific_angular_momentum
 from .particles import eccentricity as _eccentricity
+from .particles import specific_angular_momentum
 
 
 class Profile:

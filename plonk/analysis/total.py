@@ -8,8 +8,8 @@ from typing import Tuple, Union
 import numpy as np
 from numpy import ndarray
 
-from . import particles
 from ..snap.snap import Snap, SubSnap
+from . import particles
 
 SnapLike = Union[Snap, SubSnap]
 
