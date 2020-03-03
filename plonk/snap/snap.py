@@ -270,24 +270,23 @@ class Snap:
             return SubSnap(self, np.arange(i1, i2))
         raise ValueError('Cannot determine item to return')
 
-    def __setitem__(self, name: str, item: ndarray, force: bool = False):
+    def __setitem__(self, name: str, item: ndarray):
         """Set an array."""
         if not isinstance(item, ndarray):
             raise ValueError('"item" must be ndarray')
         if item.shape[0] != len(self):
             raise ValueError('Length of array does not match particle number')
-        if force:
-            self._arrays[name] = item
-        else:
-            if (
-                name in self.available_arrays()
-                or name in self._array_split_mapper.keys()
-                or name in self._array_name_mapper.keys()
-            ):
-                raise ValueError(
-                    'Attempting to overwrite array. Set force=True to continue.'
-                )
-            self._arrays[name] = item
+        if (
+            name in self.available_arrays()
+            or name in self._array_split_mapper.keys()
+            or name in self._array_name_mapper.keys()
+        ):
+            raise ValueError(
+                'Attempting to overwrite array. '
+                'To do so, first delete the array (e.g.\n'
+                'with del snap["array"]), then try again.'
+            )
+        self._arrays[name] = item
 
     def __delitem__(self, name):
         """Delete an array from memory."""
