@@ -276,15 +276,19 @@ class Snap:
             raise ValueError('"item" must be ndarray')
         if item.shape[0] != len(self):
             raise ValueError('Length of array does not match particle number')
-        if (
+        if name in self.loaded_arrays():
+            raise ValueError(
+                'Attempting to overwrite existing array. To do so, first delete the '
+                'array\nwith del snap["array"], then try again.'
+            )
+        elif (
             name in self.available_arrays()
             or name in self._array_split_mapper.keys()
             or name in self._array_name_mapper.keys()
         ):
             raise ValueError(
-                'Attempting to overwrite array. '
-                'To do so, first delete the array (e.g.\n'
-                'with del snap["array"]), then try again.'
+                'Attempting to set array already available. '
+                'See snap.available_arrays().'
             )
         self._arrays[name] = item
 

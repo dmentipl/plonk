@@ -139,16 +139,31 @@ class Profile:
             return self._get_profile(name, args)
         return self._get_profile(name)
 
-    def __setitem__(self, name: str, values: ndarray):
+    def __setitem__(self, name: str, item: ndarray):
         """Set the profile directly."""
-        if name in self._profiles:
-            self._profiles[name] = values
-        else:
-            raise KeyError(f'{name} is not a valid profile')
+        if not isinstance(item, ndarray):
+            raise ValueError('"item" must be ndarray')
+        if item.shape[0] != self.n_bins:
+            raise ValueError('Length of array does not match number of bins')
+        if name in self.loaded_keys():
+            raise ValueError(
+                'Attempting to overwrite existing profile. To do so, first delete the '
+                'profile\nwith del prof["profile"], then try again.'
+            )
+        elif name in self.available_keys():
+            raise ValueError(
+                'Attempting to set profile already available. '
+                'See prof.available_keys().'
+            )
+        self._profiles[name] = item
 
     def __delitem__(self, name):
         """Delete a profile from memory."""
         del self._profiles[name]
+
+    def __len__(self):
+        """Length as number of bins."""
+        return self.n_bins
 
     def __repr__(self):
         """Object repr method."""
