@@ -13,7 +13,7 @@ from ..snap.snap import Snap, SubSnap
 SnapLike = Union[Snap, SubSnap]
 
 
-def momentum(snap: SnapLike, ignore_accreted: bool = True) -> ndarray:
+def momentum(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
     """Calculate the momentum.
 
     Parameters
@@ -21,7 +21,7 @@ def momentum(snap: SnapLike, ignore_accreted: bool = True) -> ndarray:
     snap
         The Snap object.
     ignore_accreted : optional
-        Ignore accreted particles. Default is True.
+        Ignore accreted particles. Default is False.
 
     Returns
     -------
@@ -42,7 +42,7 @@ def momentum(snap: SnapLike, ignore_accreted: bool = True) -> ndarray:
 def angular_momentum(
     snap: SnapLike,
     origin: Union[ndarray, Tuple[float, float, float]] = (0.0, 0.0, 0.0),
-    ignore_accreted: bool = True,
+    ignore_accreted: bool = False,
 ) -> ndarray:
     """Calculate the angular momentum.
 
@@ -54,7 +54,7 @@ def angular_momentum(
         The origin around which to compute the angular momentum as a
         ndarray or tuple (x, y, z). Default is (0, 0, 0).
     ignore_accreted : optional
-        Ignore accreted particles. Default is True.
+        Ignore accreted particles. Default is False.
 
     Returns
     -------
@@ -80,7 +80,7 @@ def angular_momentum(
 def specific_angular_momentum(
     snap: SnapLike,
     origin: Union[ndarray, Tuple[float, float, float]] = (0.0, 0.0, 0.0),
-    ignore_accreted: bool = True,
+    ignore_accreted: bool = False,
 ) -> ndarray:
     """Calculate the specific angular momentum.
 
@@ -92,7 +92,7 @@ def specific_angular_momentum(
         The origin around which to compute the angular momentum as a
         ndarray or tuple (x, y, z). Default is (0, 0, 0).
     ignore_accreted : optional
-        Ignore accreted particles. Default is True.
+        Ignore accreted particles. Default is False.
 
     Returns
     -------
@@ -113,7 +113,7 @@ def specific_angular_momentum(
     return np.cross(pos, vel)
 
 
-def kinetic_energy(snap: SnapLike, ignore_accreted: bool = True) -> ndarray:
+def kinetic_energy(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
     """Calculate the kinetic energy.
 
     Parameters
@@ -121,7 +121,7 @@ def kinetic_energy(snap: SnapLike, ignore_accreted: bool = True) -> ndarray:
     snap
         The Snap object.
     ignore_accreted : optional
-        Ignore accreted particles. Default is True.
+        Ignore accreted particles. Default is False.
 
     Returns
     -------
@@ -139,7 +139,7 @@ def kinetic_energy(snap: SnapLike, ignore_accreted: bool = True) -> ndarray:
     return 1 / 2 * mass * np.linalg.norm(vel, axis=1) ** 2
 
 
-def specific_kinetic_energy(snap: SnapLike, ignore_accreted: bool = True) -> ndarray:
+def specific_kinetic_energy(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
     """Calculate the specific kinetic energy.
 
     Parameters
@@ -147,7 +147,7 @@ def specific_kinetic_energy(snap: SnapLike, ignore_accreted: bool = True) -> nda
     snap
         The Snap object.
     ignore_accreted : optional
-        Ignore accreted particles. Default is True.
+        Ignore accreted particles. Default is False.
 
     Returns
     -------
@@ -167,7 +167,7 @@ def semi_major_axis(
     snap: SnapLike,
     gravitational_parameter: float,
     origin: Union[ndarray, Tuple[float, float, float]] = (0.0, 0.0, 0.0),
-    ignore_accreted: bool = True,
+    ignore_accreted: bool = False,
 ) -> ndarray:
     """Calculate the semi-major axis.
 
@@ -185,7 +185,7 @@ def semi_major_axis(
         The origin around which to compute the angular momentum as a
         ndarray or tuple (x, y, z). Default is (0, 0, 0).
     ignore_accreted : optional
-        Ignore accreted particles. Default is True.
+        Ignore accreted particles. Default is False.
 
     Returns
     -------
@@ -227,7 +227,7 @@ def eccentricity(
     snap: SnapLike,
     gravitational_parameter: float,
     origin: Union[ndarray, Tuple[float, float, float]] = (0.0, 0.0, 0.0),
-    ignore_accreted: bool = True,
+    ignore_accreted: bool = False,
 ) -> ndarray:
     """Calculate the eccentricity.
 
@@ -245,7 +245,7 @@ def eccentricity(
         The origin around which to compute the angular momentum as a
         ndarray or tuple (x, y, z). Default is (0, 0, 0).
     ignore_accreted : optional
-        Ignore accreted particles. Default is True.
+        Ignore accreted particles. Default is False.
 
     Returns
     -------
@@ -281,7 +281,7 @@ def eccentricity(
     )
 
 
-def inclination(snap: SnapLike, ignore_accreted: bool = True) -> ndarray:
+def inclination(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
     """Calculate the inclination with respect to the xy-plane.
 
     The inclination is calculated by taking the angle between the
@@ -293,7 +293,7 @@ def inclination(snap: SnapLike, ignore_accreted: bool = True) -> ndarray:
     snap
         The Snap object.
     ignore_accreted : optional
-        Ignore accreted particles. Default is True.
+        Ignore accreted particles. Default is False.
 
     Returns
     -------
