@@ -89,7 +89,7 @@ To see what arrays are loaded into memory you can use the
 .. code-block:: pycon
 
     >>> snap.loaded_arrays()
-    ('id', 'position')
+    ('position', 'type')
 
 Use :py:meth:`available_arrays` to see what arrays are available.
 
@@ -99,13 +99,13 @@ Use :py:meth:`available_arrays` to see what arrays are available.
     ('density',
     'divv',
     'dt',
-    'dust_id',
+    'dust_type',
     'dustfrac',
-    'id',
     'mass',
     'position',
     'smooth',
     'tstop',
+    'type',
     'velocity')
 
 You can also define your own alias to access arrays. For example, if you prefer
@@ -311,15 +311,16 @@ example, the simulation we have been working with has dust and gas. So far we
 have been plotting the total density. We may want to visualize the dust and gas
 separately.
 
-To do this we take a :py:class:`SubSnap`. The 'dust_id' array distinguishes
-between dust and gas particles. Gas particles have a 'dust_id' of 0. Dust
-particles have a 'dust_id' of 1 (or greater for multiple species). In this
-simulation there is only one dust species.
+To do this we take a :py:class:`SubSnap`. We can use the tags 'gas' and 'dust'
+to access those particles. Alternatively, we can use the 'dust_type' array. Gas
+particles have a 'dust_type' of 0. Dust particles have a 'dust_type' of 1 (or
+greater for multiple species). In this simulation there is only one dust
+species.
 
 .. code-block:: pycon
 
-    >>> gas = snap[snap['dust_id'] == 0]
-    >>> dust = snap[snap['dust_id'] == 1]
+    >>> gas = snap[snap['dust_type'] == 0]
+    >>> dust = snap[snap['dust_type'] == 1]
 
 You can access arrays on the :py:class:`SubSnap` objects as for any
 :py:class:`Snap` object.

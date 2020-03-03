@@ -74,8 +74,8 @@ Plot dust and gas side-by-side.
     >>> snap = plonk.load_snap('disc_00030.h5')
 
     # Specify dust and gas subsnaps
-    >>> gas = snap[snap['dust_id'] == 0]
-    >>> dust = snap[snap['dust_id'] == 1]
+    >>> gas = snap['gas']
+    >>> dust = snap['dust']
     >>> extent = (-150, 150, -150, 150)
 
     # Make plot
