@@ -92,7 +92,7 @@ class Snap:
         'sz': ('spin', 2),
     }
 
-    _particle_id = {
+    _particle_type = {
         'gas': 1,
         'dust': 2,
         'boundary': 3,
@@ -139,7 +139,7 @@ class Snap:
         self._arrays = {}
         self._file_pointer = None
         self._num_particles = 0
-        self._families = {key: None for key in Snap._particle_id.keys()}
+        self._families = {key: None for key in Snap._particle_type.keys()}
         self._rotation = None
 
     def close_file(self):
@@ -160,7 +160,7 @@ class Snap:
     def num_particles(self):
         """Return number of particles."""
         if self._num_particles == 0:
-            self._num_particles = self['id'].size
+            self._num_particles = self['type'].size
         return self._num_particles
 
     def rotate(self, rotation: Rotation) -> Snap:
@@ -216,7 +216,7 @@ class Snap:
         if name in self._families:
             if self._families[name] is None:
                 self._families[name] = np.flatnonzero(
-                    self['id'] == Snap._particle_id[name]
+                    self['type'] == Snap._particle_type[name]
                 )
             return self._families[name]
         else:

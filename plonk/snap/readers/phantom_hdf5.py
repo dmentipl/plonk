@@ -79,9 +79,9 @@ class PhantomHDF5Snap:
             self.snap._array_registry['velocity'] = _get_dataset('vxyz', 'particles')
             arrays.remove('vxyz')
 
-        self.snap._array_registry['id'] = _id
+        self.snap._array_registry['type'] = _particle_type
         if self._header['ndustlarge'] > 0:
-            self.snap._array_registry['dust_id'] = _dust_id
+            self.snap._array_registry['dust_type'] = _dust_particle_type
 
         self.snap._array_registry['mass'] = _mass
         self.snap._array_registry['density'] = _density
@@ -118,28 +118,32 @@ class PhantomHDF5Snap:
 
 def _get_dataset(dataset: str, group: str) -> Callable:
     def func(snap: Snap) -> ndarray:
-        return snap._file_pointer[f'{group}/{dataset}'][:]
+        return snap._file_pointer[f'{group}/{dataset}'][()]
 
     return func
 
 
-def _id(snap: Snap) -> ndarray:
-    particle_id = np.abs(_get_dataset('itype', 'particles')(snap))
-    particle_id[particle_id >= 7] = 2
-    return particle_id
+def _particle_type(snap: Snap) -> ndarray:
+    idust = _get_dataset('idust', 'header')(snap)
+    particle_type = np.abs(_get_dataset('itype', 'particles')(snap))
+    particle_type[particle_type >= idust] = 2
+    return particle_type
 
 
-def _dust_id(snap: Snap) -> ndarray:
-    particle_id = np.abs(_get_dataset('itype', 'particles')(snap))
-    dust_id = np.zeros(particle_id.shape, dtype=np.int8)
-    dust_id[particle_id >= 7] = particle_id[particle_id >= 7] - 6
-    return dust_id
+def _dust_particle_type(snap: Snap) -> ndarray:
+    idust = _get_dataset('idust', 'header')(snap)
+    particle_type = np.abs(_get_dataset('itype', 'particles')(snap))
+    dust_type = np.zeros(particle_type.shape, dtype=np.int8)
+    dust_type[particle_type >= idust] = (
+        particle_type[particle_type >= idust] - idust + 1
+    )
+    return dust_type
 
 
 def _mass(snap: Snap) -> ndarray:
     massoftype = snap._file_pointer['header/massoftype'][:]
-    particle_id = _get_dataset('itype', 'particles')(snap)
-    return massoftype[particle_id - 1]
+    particle_type = _get_dataset('itype', 'particles')(snap)
+    return massoftype[particle_type - 1]
 
 
 def _density(snap: Snap) -> ndarray:
