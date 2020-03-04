@@ -1,13 +1,16 @@
-"""Plot functions using Visualization."""
+"""Plot helper functions."""
 
 from typing import Any, Dict, Optional, Tuple, Union
 
 from numpy import ndarray
 
 from ..snap.snap import Snap, SubSnap
+from .interpolation import scalar_interpolation
 from .visualization import Visualization
 
 SnapLike = Union[Snap, SubSnap]
+
+_number_of_pixels = (512, 512)
 
 
 def plot(
@@ -190,3 +193,85 @@ def render(
         viz.axis.set_aspect('auto')
 
     return viz
+
+
+def interpolate(
+    snap: SnapLike,
+    quantity: Union[str, ndarray],
+    extent: Tuple[float, float, float, float],
+    scalar_options: Optional[Dict[Any, Any]] = None,
+    interpolation_options: Optional[Dict[Any, Any]] = None,
+) -> ndarray:
+    """Interpolate a quantity on the snapshot to a pixel grid.
+
+    Parameters
+    ----------
+    snap
+        The Snap or SubSnap containing the quantity.
+    quantity
+        The quantity to interpolate, as a string or ndarray. If quantity
+        is a string it must be accessible via snap[quantity]. If the
+        quantity is an ndarray it must have the same number of particles
+        as the snap.
+    extent
+        The xy extent of the image as (xmin, xmax, ymin, ymax).
+    scalar_options
+        Options passed to the scalar rendering function, by default
+        None.
+    interpolation_options
+        Options passed to the interpolation function, by default None.
+
+    Returns
+    -------
+    ndarray
+        The interpolated data as an ndarray.
+    """
+    if scalar_options is None:
+        scalar_options = {}
+    if interpolation_options is None:
+        interpolation_options = {}
+
+    number_of_pixels = interpolation_options.pop('number_of_pixels', _number_of_pixels)
+    cross_section = interpolation_options.get('cross_section')
+    density_weighted = interpolation_options.get('density_weighted')
+
+    if isinstance(quantity, str):
+        try:
+            data: ndarray = snap[quantity]
+        except ValueError:
+            raise ValueError('Cannot determine quantity to render.')
+    elif isinstance(quantity, ndarray):
+        if quantity.shape[0] != len(snap):
+            raise ValueError(
+                'Quantity to render must have same length as number of particles'
+            )
+        data = quantity
+    if data.ndim > 1:
+        raise ValueError('Quantity to render must be 1-dimensional')
+
+    position: ndarray = snap['position']
+    smoothing_length: ndarray = snap['smooth']
+    particle_mass: ndarray = snap['mass']
+    hfact = snap.properties['hfact']
+
+    x_coordinate = position[:, 0]
+    y_coordinate = position[:, 1]
+    z_coordinate = None
+    if cross_section is not None:
+        z_coordinate = position[:, 2]
+
+    interpolated_data = scalar_interpolation(
+        data=data,
+        x_coordinate=x_coordinate,
+        y_coordinate=y_coordinate,
+        z_coordinate=z_coordinate,
+        extent=extent,
+        particle_mass=particle_mass,
+        smoothing_length=smoothing_length,
+        hfact=hfact,
+        number_of_pixels=number_of_pixels,
+        cross_section=cross_section,
+        density_weighted=density_weighted,
+    )
+
+    return interpolated_data

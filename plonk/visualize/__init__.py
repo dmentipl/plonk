@@ -17,10 +17,20 @@ Rendering the surface density.
 ... )
 
 Or via the helper 'render' function.
+
 >>> viz = plonk.visualize.render(snap=snap, quantity='density')
+>>> viz = plonk.visualize.render(snap=snap, quantity=snap['density'])
+
+Get the interpolation to grid directly (without plotting).
+
+>>> grid_data = plonk.visualize.interpolate(
+...     snap=snap,
+...     quantity='density',
+...     extent=(-100, 100, -100, 100),
+... )
 """
 
-from .plot import plot, render
+from .plot import interpolate, plot, render
 from .visualization import Visualization
 
-__all__ = ['Visualization', 'plot', 'render']
+__all__ = ['Visualization', 'interpolate', 'plot', 'render']
