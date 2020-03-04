@@ -427,3 +427,74 @@ def dust_density(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
         density = snap['density']
 
     return dustfrac * density[:, np.newaxis]
+
+
+def radial_velocity(
+    snap: SnapLike, coordinates: str = 'cylindrical', ignore_accreted: bool = False
+) -> ndarray:
+    """Calculate the radial velocity.
+
+    Parameters
+    ----------
+    snap
+        The Snap object.
+    coordinates : optional
+        Either 'cylindrical' or 'spherical'. Default is 'cylindrical'.
+    ignore_accreted : optional
+        Ignore accreted particles. Default is False.
+
+    Returns
+    -------
+    ndarray
+        The dust density per species on the particles.
+    """
+    if ignore_accreted:
+        h: ndarray = snap['smooth']
+        pos: ndarray = snap['position'][h > 0]
+        vel: ndarray = snap['velocity'][h > 0]
+    else:
+        pos = snap['position']
+        vel = snap['velocity']
+
+    x, y, z = pos[:, 0], pos[:, 1], pos[:, 2]
+    vx, vy, vz = vel[:, 0], vel[:, 1], vel[:, 2]
+
+    if coordinates == 'cylindrical':
+        vr = (x * vx + y * vy) / np.sqrt(x ** 2 + y ** 2)
+    elif coordinates == 'spherical':
+        vr = (x * vx + y * vy + z * vz) / np.sqrt(x ** 2 + y ** 2 + z ** 2)
+    else:
+        raise ValueError('Cannot determine coordinates')
+
+    return vr
+
+
+def angular_velocity(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
+    """Calculate the angular velocity.
+
+    Parameters
+    ----------
+    snap
+        The Snap object.
+    ignore_accreted : optional
+        Ignore accreted particles. Default is False.
+
+    Returns
+    -------
+    ndarray
+        The dust density per species on the particles.
+    """
+    if ignore_accreted:
+        h: ndarray = snap['smooth']
+        pos: ndarray = snap['position'][h > 0]
+        vel: ndarray = snap['velocity'][h > 0]
+    else:
+        pos = snap['position']
+        vel = snap['velocity']
+
+    x, y = pos[:, 0], pos[:, 1]
+    vx, vy = vel[:, 0], vel[:, 1]
+
+    vphi = (x * vy - y * vx) / (x ** 2 + y ** 2)
+
+    return vphi
