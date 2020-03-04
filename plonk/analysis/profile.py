@@ -41,6 +41,9 @@ class Profile:
         distance.
     n_bins : optional
         The number of radial bins. Default is 100.
+    spacing : optional
+        The spacing of radial bins. Can be 'linear' or 'log'. Default is
+        'linear'.
     ignore_accreted : optional
         Ignore particles accreted onto sinks. Default is True.
 
@@ -96,11 +99,13 @@ class Profile:
         radius_min: Optional[float] = None,
         radius_max: Optional[float] = None,
         n_bins: int = 100,
+        spacing: str = 'linear',
         ignore_accreted: bool = True,
     ):
 
         self.snap = snap
         self.ndim = ndim
+        self.spacing = self._check_spacing(spacing)
         self.properties: Dict[str, Any] = {}
 
         self._profiles: Dict[str, ndarray] = {}
@@ -118,6 +123,15 @@ class Profile:
         self._profiles['radius'] = self.bin_centers
         self._profiles['number'] = np.histogram(self._x, self.bin_edges)[0]
 
+    def _check_spacing(self, spacing):
+        if spacing.lower() in ('lin', 'linear'):
+            spacing = 'linear'
+        elif spacing.lower() in ('log', 'logarithm', 'logarithmic'):
+            spacing = 'log'
+        else:
+            raise ValueError('Cannot determine spacing')
+        return spacing
+
     def _setup_particle_mask(self, ignore_accreted: bool) -> ndarray:
         if ignore_accreted is False:
             return np.ones(len(self.snap), dtype=bool)
@@ -125,12 +139,12 @@ class Profile:
         return h > 0
 
     def _calculate_x(self) -> ndarray:
-        pos = self.snap['xyz']
+        pos: ndarray = self.snap['xyz']
         pos = pos[self._mask]
         if self.ndim == 2:
-            return np.hypot(pos[:, 0], pos[:, 1])
+            return np.sqrt(pos[:, 0] ** 2 + pos[:, 1] ** 2)
         elif self.ndim == 3:
-            return np.hypot(np.hypot(pos[:, 0], pos[:, 1]), pos[:, 2])
+            return np.sqrt(pos[:, 0] ** 2 + pos[:, 1] ** 2 + pos[:, 2] ** 2)
 
     def _set_range(
         self, radius_min: Optional[float], radius_max: Optional[float]
@@ -147,7 +161,14 @@ class Profile:
         return rmin, rmax
 
     def _setup_bins(self) -> ndarray:
-        bin_edges = np.linspace(self.range[0], self.range[1], self.n_bins + 1)
+        if self.spacing == 'linear':
+            bin_edges = np.linspace(self.range[0], self.range[1], self.n_bins + 1)
+        elif self.spacing == 'log':
+            bin_edges = np.logspace(
+                np.log10(self.range[0]), np.log10(self.range[1]), self.n_bins + 1
+            )
+        else:
+            raise ValueError('Cannot determine spacing to setup bins')
         if self.ndim == 2:
             bin_sizes = np.pi * (bin_edges[1:] ** 2 - bin_edges[:-1] ** 2)
         elif self.ndim == 3:
