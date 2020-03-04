@@ -1,11 +1,13 @@
 """Plot functions using Visualization."""
 
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple, Union
 
 from numpy import ndarray
 
-from ..snap.snap import Snap
+from ..snap.snap import Snap, SubSnap
 from .visualization import Visualization
+
+SnapLike = Union[Snap, SubSnap]
 
 
 def plot(
@@ -85,8 +87,8 @@ def plot(
 
 
 def render(
-    snap: Snap,
-    quantity: str,
+    snap: SnapLike,
+    quantity: Union[str, ndarray],
     extent: Optional[Tuple[float, float, float, float]] = None,
     scalar_options: Optional[Dict[Any, Any]] = None,
     interpolation_options: Optional[Dict[Any, Any]] = None,
@@ -97,9 +99,12 @@ def render(
     Parameters
     ----------
     snap
-        The snapshot containing the quantity.
+        The Snap or SubSnap containing the quantity.
     quantity
-        The quantity to render, as a string.
+        The quantity to render, as a string or ndarray. If quantity is
+        a string it must be accessible via snap[quantity]. If the
+        quantity is an ndarray it must have the same number of particles
+        as the snap.
     extent
         The xy extent of the image as (xmin, xmax, ymin, ymax), by
         default None.
@@ -129,10 +134,17 @@ def render(
     if interpolation_options.get('cross_section') is not None:
         need_z = True
 
-    try:
-        scalar_data: ndarray = snap[quantity]
-    except ValueError:
-        raise ValueError('Cannot determine quantity to render.')
+    if isinstance(quantity, str):
+        try:
+            scalar_data: ndarray = snap[quantity]
+        except ValueError:
+            raise ValueError('Cannot determine quantity to render.')
+    elif isinstance(quantity, ndarray):
+        if quantity.shape[0] != len(snap):
+            raise ValueError(
+                'Quantity to render must have same length as number of particles'
+            )
+        scalar_data = quantity
     if scalar_data.ndim > 1:
         raise ValueError('Quantity to render must be 1-dimensional')
 
