@@ -321,3 +321,56 @@ def inclination(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
     )
 
     return inclination
+
+
+def gas_density(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
+    """Calculate the gas density from the dust fraction.
+
+    Parameters
+    ----------
+    snap
+        The Snap object.
+    ignore_accreted : optional
+        Ignore accreted particles. Default is False.
+
+    Returns
+    -------
+    ndarray
+        The gas density on the particles.
+    """
+    if ignore_accreted:
+        h: ndarray = snap['smooth']
+        dustfrac: ndarray = snap['dustfrac'][h > 0]
+        density: ndarray = snap['density'][h > 0]
+    else:
+        dustfrac = snap['dustfrac']
+        density = snap['density']
+
+    gasfrac = 1 - dustfrac.sum(axis=1)
+    return gasfrac * density
+
+
+def dust_density(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
+    """Calculate the dust density per species from the dust fraction.
+
+    Parameters
+    ----------
+    snap
+        The Snap object.
+    ignore_accreted : optional
+        Ignore accreted particles. Default is False.
+
+    Returns
+    -------
+    ndarray
+        The dust density per species on the particles.
+    """
+    if ignore_accreted:
+        h: ndarray = snap['smooth']
+        dustfrac: ndarray = snap['dustfrac'][h > 0]
+        density: ndarray = snap['density'][h > 0]
+    else:
+        dustfrac = snap['dustfrac']
+        density = snap['density']
+
+    return dustfrac * density[:, np.newaxis]

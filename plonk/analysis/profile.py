@@ -261,7 +261,7 @@ class Profile:
         return pd.DataFrame(data)
 
     def particles_to_binned_quantity(self, function, *args) -> ndarray:
-        """Calculate binned quantities.
+        """Calculate binned quantities from particles.
 
         This takes care of the bin indices and ignoring accreted
         particles (if requested in instantiating the profile).
