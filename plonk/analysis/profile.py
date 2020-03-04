@@ -316,6 +316,14 @@ def scale_height(prof) -> ndarray:
 
 
 @Profile.profile_property
+def aspect_ratio(prof) -> ndarray:
+    """Aspect ratio profile."""
+    H = prof['scale_height']
+    R = prof['radius']
+    return H / R
+
+
+@Profile.profile_property
 def angmom_mag(prof) -> ndarray:
     """Magnitude of specific angular momentum profile."""
     angmom = specific_angular_momentum(snap=prof.snap)
