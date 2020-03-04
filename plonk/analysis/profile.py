@@ -20,27 +20,64 @@ from .particles import specific_angular_momentum
 class Profile:
     """Radial profiles.
 
+    A radial profile is a binning of particles in cylindrical or
+    spherical shells around the origin, i.e. (0, 0, 0). For cylindrical
+    profiles the cylindrical cells are perpendicular to the xy-plane,
+    i.e. the bins are averaged azimuthally and in the z-direction.
+
     Parameters
     ----------
     snap
         The Snap object.
-    ndim
+    ndim : optional
         The dimension of the profile. For ndim == 2, the radial binning
         is cylindrical in the xy-plane. For ndim == 3, the radial
         binning is spherical. Default is 2.
-    radius_min
+    radius_min : optional
         The minimum radius for binning. Defaults to minimum on the
         particles.
-    radius_max
+    radius_max : optional
         The maximum radius for binning. Defaults to the 99 percentile
         distance.
-    n_bins
+    n_bins : optional
         The number of radial bins. Default is 100.
-    ignore_accreted
+    ignore_accreted : optional
         Ignore particles accreted onto sinks. Default is True.
+
+    Examples
+    --------
+    Generate profile from snapshot.
+
+    >>> prof = plonk.Profile(snap)
+
+    To access a profile.
+
+    >>> prof['density']
+
+    To set a new profile.
+
+    >>> prof['aspect_ratio'] = prof['scale_height'] / prof['radius']
     """
 
     _profile_functions: Dict[str, Callable] = {}
+
+    @staticmethod
+    def profile_property(fn: Callable) -> Callable:
+        """Decorate function to add profile to Profile.
+
+        Parameters
+        ----------
+        fn
+            A function that returns the profile as an array. The name of
+            the function is the string with which to reference the array.
+
+        Returns
+        -------
+        Callable
+            The function which returns the array.
+        """
+        Profile._profile_functions[fn.__name__] = fn
+        return fn
 
     def __init__(
         self,
@@ -54,18 +91,19 @@ class Profile:
 
         self.snap = snap
         self.ndim = ndim
+        self.properties: Dict[str, Any] = {}
+
+        self._profiles: Dict[str, ndarray] = {}
 
         self._mask = self._setup_particle_mask(ignore_accreted)
         self._x = self._calculate_x()
         self.range = self._set_range(radius_min, radius_max)
         self.n_bins = n_bins
 
-        self.bin_edges, self.bin_sizes = self._setup_bins()
+        self.bin_edges, self['size'] = self._setup_bins()
         self.bin_centers = 0.5 * (self.bin_edges[:-1] + self.bin_edges[1:])
         self._particle_bin = np.digitize(self._x, self.bin_edges)
         self.bin_indicies = self._set_particle_bin_indicies()
-
-        self._profiles: Dict[str, ndarray] = {}
 
         self._profiles['radius'] = self.bin_centers
         self._profiles['number'] = np.histogram(self._x, self.bin_edges)[0]
@@ -134,9 +172,6 @@ class Profile:
 
     def __getitem__(self, name: str) -> ndarray:
         """Return the profile of a given kind."""
-        if isinstance(name, tuple):
-            name, *args = name
-            return self._get_profile(name, args)
         return self._get_profile(name)
 
     def __setitem__(self, name: str, item: ndarray):
@@ -178,12 +213,6 @@ class Profile:
         loaded = list(self.loaded_keys())
         available = list(self._profile_functions.keys())
         return tuple(sorted(set(loaded + available)))
-
-    @staticmethod
-    def profile_property(fn):
-        """Decorate profile functions."""
-        Profile._profile_functions[fn.__name__] = fn
-        return fn
 
     def plot(self, x: str, y: Union[str, Collection[str]]):
         """Plot profile.
@@ -231,8 +260,23 @@ class Profile:
             data[column] = self[column]
         return pd.DataFrame(data)
 
-    def _particles_to_binned_quantity(self, function, *args) -> ndarray:
-        """General profile."""
+    def particles_to_binned_quantity(self, function, *args) -> ndarray:
+        """Calculate binned quantities.
+
+        This takes care of the bin indices and ignoring accreted
+        particles (if requested in instantiating the profile).
+
+        Parameters
+        ----------
+        function
+            The function that acts on particles in the radial bin. The
+            function should produce a single number, i.e. it is a
+            reduction. E.g. to calculate the mean of a particle quantity
+            in a radial bin use np.mean.
+        *args
+            The arguments to the function. Typically this is one or more
+            particle arrays or other quantities on a snapshot.
+        """
         binned_quantity = np.zeros(self.n_bins)
         for idx, bin_ind in enumerate(self.bin_indicies):
             binned_quantity[idx] = function(
@@ -242,94 +286,103 @@ class Profile:
 
 
 @Profile.profile_property
-def mass(self) -> ndarray:
+def mass(prof) -> ndarray:
     """Mass profile."""
-    M = self.snap['mass']
-    return self._particles_to_binned_quantity(np.sum, M)
+    M = prof.snap['mass']
+    return prof.particles_to_binned_quantity(np.sum, M)
 
 
 @Profile.profile_property
-def density(self) -> ndarray:
+def density(prof) -> ndarray:
     """Density profile.
 
     Units are [mass / length ** ndim], which depends on ndim of profile.
     """
-    return self._get_profile('mass') / self.bin_sizes
+    return prof['mass'] / prof['size']
 
 
 @Profile.profile_property
-def smooth(self) -> ndarray:
+def smooth(prof) -> ndarray:
     """Smoothing length profile."""
-    h = self.snap['smooth']
-    return self._particles_to_binned_quantity(np.mean, h)
+    h = prof.snap['smooth']
+    return prof.particles_to_binned_quantity(np.mean, h)
 
 
 @Profile.profile_property
-def scale_height(self) -> ndarray:
+def scale_height(prof) -> ndarray:
     """Scale height profile."""
-    z = self.snap['z']
-    return self._particles_to_binned_quantity(np.std, z)
+    z = prof.snap['z']
+    return prof.particles_to_binned_quantity(np.std, z)
 
 
 @Profile.profile_property
-def angmom_mag(self) -> ndarray:
+def angmom_mag(prof) -> ndarray:
     """Magnitude of specific angular momentum profile."""
-    angmom = specific_angular_momentum(snap=self.snap, ignore_accreted=False)
+    angmom = specific_angular_momentum(snap=prof.snap)
     angmom_mag = np.linalg.norm(angmom, axis=1)
 
-    return self._particles_to_binned_quantity(np.mean, angmom_mag)
+    return prof.particles_to_binned_quantity(np.mean, angmom_mag)
 
 
 @Profile.profile_property
-def angmom_x(self) -> ndarray:
+def angmom_x(prof) -> ndarray:
     """x-component of specific angular momentum profile."""
-    angmom = specific_angular_momentum(snap=self.snap, ignore_accreted=False)
+    angmom = specific_angular_momentum(snap=prof.snap)
     angmom_x = angmom[:, 0]
 
-    return self._particles_to_binned_quantity(np.mean, angmom_x)
+    return prof.particles_to_binned_quantity(np.mean, angmom_x)
 
 
 @Profile.profile_property
-def angmom_y(self) -> ndarray:
+def angmom_y(prof) -> ndarray:
     """y-component of specific angular momentum profile."""
-    angmom = specific_angular_momentum(snap=self.snap, ignore_accreted=False)
+    angmom = specific_angular_momentum(snap=prof.snap)
     angmom_y = angmom[:, 1]
 
-    return self._particles_to_binned_quantity(np.mean, angmom_y)
+    return prof.particles_to_binned_quantity(np.mean, angmom_y)
 
 
 @Profile.profile_property
-def angmom_z(self) -> ndarray:
+def angmom_z(prof) -> ndarray:
     """z-component of specific angular momentum profile."""
-    angmom = specific_angular_momentum(snap=self.snap, ignore_accreted=False)
+    angmom = specific_angular_momentum(snap=prof.snap)
     angmom_z = angmom[:, 2]
 
-    return self._particles_to_binned_quantity(np.mean, angmom_z)
+    return prof.particles_to_binned_quantity(np.mean, angmom_z)
 
 
 @Profile.profile_property
-def angmom_theta(self) -> ndarray:
+def angmom_theta(prof) -> ndarray:
     """Angle between specific angular momentum and xy-plane."""
-    angmom_z = self['angmom_z']
-    angmom_mag = self['angmom_mag']
+    angmom_z = prof['angmom_z']
+    angmom_mag = prof['angmom_mag']
 
     return np.arccos(angmom_z / angmom_mag)
 
 
 @Profile.profile_property
-def angmom_phi(self) -> ndarray:
+def angmom_phi(prof) -> ndarray:
     """Angle between specific angular momentum and x-axis in xy-plane."""
-    angmom_x = self['angmom_x']
-    angmom_y = self['angmom_y']
+    angmom_x = prof['angmom_x']
+    angmom_y = prof['angmom_y']
     return np.arctan2(angmom_y, angmom_x)
 
 
 @Profile.profile_property
-def eccentricity(self, gravitational_parameter: float):
-    """Orbital eccentricity profile."""
+def eccentricity(prof) -> ndarray:
+    """Orbital eccentricity profile.
+
+    This profile assumes the central mass is at (0, 0, 0) and that the
+    gravitational parameter (G*M) is set.
+    """
+    try:
+        gravitational_parameter = prof.properties['gravitational_parameter']
+    except KeyError:
+        raise ValueError(
+            'To generate eccentricity profile, first set the gravitational parameter\n'
+            'via prof.properties["gravitational_parameter"].'
+        )
     ecc = _eccentricity(
-        snap=self.snap,
-        gravitational_parameter=gravitational_parameter,
-        ignore_accreted=False,
+        snap=prof.snap, gravitational_parameter=gravitational_parameter,
     )
-    return self._particles_to_binned_quantity(np.mean, ecc)
+    return prof.particles_to_binned_quantity(np.mean, ecc)

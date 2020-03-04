@@ -6,9 +6,6 @@ import pandas as pd
 
 import plonk
 
-I_GAS = 1
-I_DUST = 7
-
 TEST_FILE = pathlib.Path(__file__).parent / 'stubdata/phantom_00000.h5'
 CSV_FILE = pathlib.Path(__file__).parent / 'stubdata/phantom_00000_profile.csv'
 
@@ -29,6 +26,7 @@ def test_profile():
         'number',
         'radius',
         'scale_height',
+        'size',
         'smooth',
     ):
         p[key]
