@@ -64,6 +64,59 @@ def mass(snap: SnapLike, ignore_accreted: bool = True) -> float:
     return mass.sum()
 
 
+def gas_mass(snap: SnapLike, ignore_accreted: bool = True) -> float:
+    """Calculate the total gas mass.
+
+    Parameters
+    ----------
+    snap
+        The Snap object.
+    ignore_accreted : optional
+        Ignore accreted particles. Default is True.
+
+    Returns
+    -------
+    float
+        The total gas mass.
+    """
+    if ignore_accreted:
+        h: ndarray = snap['smooth']
+        mass: ndarray = snap['mass'][h > 0]
+        dustfrac: ndarray = snap['dustfrac'][h > 0]
+    else:
+        mass = snap['mass']
+        dustfrac = snap['dustfrac']
+
+    gas_frac = 1 - dustfrac.sum(axis=1)
+    return (mass * gas_frac).sum()
+
+
+def dust_mass(snap: SnapLike, ignore_accreted: bool = True) -> float:
+    """Calculate the total dust mass per species.
+
+    Parameters
+    ----------
+    snap
+        The Snap object.
+    ignore_accreted : optional
+        Ignore accreted particles. Default is True.
+
+    Returns
+    -------
+    float
+        The total dust mass per species.
+    """
+    if ignore_accreted:
+        h: ndarray = snap['smooth']
+        mass: ndarray = snap['mass'][h > 0]
+        dustfrac: ndarray = snap['dustfrac'][h > 0]
+    else:
+        mass = snap['mass']
+        dustfrac = snap['dustfrac']
+
+    return (mass[:, np.newaxis] * dustfrac).sum(axis=0)
+
+
 def accreted_mass(snap: SnapLike) -> float:
     """Calculate the accreted mass.
 

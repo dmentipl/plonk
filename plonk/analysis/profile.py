@@ -48,15 +48,25 @@ class Profile:
     --------
     Generate profile from snapshot.
 
-    >>> prof = plonk.Profile(snap)
+    >>> prof = plonk.Profile(snap=snap)
+    >>> prof = plonk.Profile(snap=snap, n_bins=300)
+    >>> prof = plonk.Profile(snap=snap, radius_min=1, radius_max=300)
 
     To access a profile.
 
     >>> prof['density']
+    >>> prof['scale_height']
 
     To set a new profile.
 
     >>> prof['aspect_ratio'] = prof['scale_height'] / prof['radius']
+
+    Alternatively use the profile_property decorator.
+
+    >>> @Profile.profile_property
+    ... def mass(prof):
+    ...     M = prof.snap['mass']
+    ...     return prof.particles_to_binned_quantity(np.sum, M)
     """
 
     _profile_functions: Dict[str, Callable] = {}
