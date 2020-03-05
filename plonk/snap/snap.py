@@ -58,6 +58,10 @@ class Snap:
     ... def radius(snap) -> ndarray:
     ...     radius = np.hypot(snap['x'], snap['y'])
     ...     return radius
+
+    Or, use an existing one.
+
+    >>> snap['R'] = plonk.analysis.particles.radial_distance(snap)
     """
 
     _array_registry: Dict[str, Callable] = {}
@@ -181,7 +185,12 @@ class Snap:
             if arr in self.loaded_arrays():
                 self._arrays[arr] = rotation.apply(self._arrays[arr])
 
+        for arr in self.sinks._rotation_required():
+            self.sinks._data[arr] = rotation.apply(self.sinks._data[arr])
+
         self._rotation = rotation
+        self.sinks._rotation = rotation
+
         return self
 
     def to_dataframe(self, columns: Union[Tuple[str, ...], List[str]]) -> DataFrame:
@@ -384,6 +393,7 @@ class Sinks:
 
     def __init__(self):
         self._data = None
+        self._rotation = None
 
     def add_sinks(self, structured_array: ndarray) -> None:
         """Add sinks via structured array.
@@ -401,6 +411,9 @@ class Sinks:
     def columns(self) -> Tuple[str, ...]:
         """Available sink quantities."""
         return self._data.dtype.names
+
+    def _rotation_required(self):
+        return set([val[0] for val in self._array_split_mapper.values()])
 
     def __getitem__(self, inp: Union[str, int, slice, List[int]]) -> ndarray:
         """Return an array."""
