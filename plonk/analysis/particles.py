@@ -429,10 +429,13 @@ def dust_density(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
     return dustfrac * density[:, np.newaxis]
 
 
-def radial_velocity(
+def radial_distance(
     snap: SnapLike, coordinates: str = 'cylindrical', ignore_accreted: bool = False
 ) -> ndarray:
-    """Calculate the radial velocity.
+    """Calculate the radial distance.
+
+    Can compute the radial distance in cylindrical and spherical
+    coordinates.
 
     Parameters
     ----------
@@ -446,7 +449,96 @@ def radial_velocity(
     Returns
     -------
     ndarray
-        The dust density per species on the particles.
+        The radial distance on the particles.
+    """
+    if ignore_accreted:
+        h: ndarray = snap['smooth']
+        pos: ndarray = snap['position'][h > 0]
+    else:
+        pos = snap['position']
+
+    x, y, z = pos[:, 0], pos[:, 1], pos[:, 2]
+
+    if coordinates == 'cylindrical':
+        return np.sqrt(x ** 2 + y ** 2)
+    elif coordinates == 'spherical':
+        return np.sqrt(x ** 2 + y ** 2 + z ** 2)
+    else:
+        raise ValueError('Cannot determine coordinates')
+
+
+def azimuthal_angle(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
+    """Calculate the azimuthal angle.
+
+    Parameters
+    ----------
+    snap
+        The Snap object.
+    ignore_accreted : optional
+        Ignore accreted particles. Default is False.
+
+    Returns
+    -------
+    ndarray
+        The azimuthal angle on the particles.
+    """
+    if ignore_accreted:
+        h: ndarray = snap['smooth']
+        pos: ndarray = snap['position'][h > 0]
+    else:
+        pos = snap['position']
+
+    x, y = pos[:, 0], pos[:, 1]
+    return np.arctan2(y, x)
+
+
+def polar_angle(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
+    """Calculate the polar angle.
+
+    Parameters
+    ----------
+    snap
+        The Snap object.
+    ignore_accreted : optional
+        Ignore accreted particles. Default is False.
+
+    Returns
+    -------
+    ndarray
+        The azimuthal angle on the particles.
+    """
+    if ignore_accreted:
+        h: ndarray = snap['smooth']
+        pos: ndarray = snap['position'][h > 0]
+    else:
+        pos = snap['position']
+
+    x, y, z = pos[:, 0], pos[:, 1], pos[:, 2]
+    r = np.sqrt(x ** 2 + y ** 2 + z ** 2)
+    return np.arccos(z / r)
+
+
+def radial_velocity(
+    snap: SnapLike, coordinates: str = 'cylindrical', ignore_accreted: bool = False
+) -> ndarray:
+    """Calculate the radial velocity.
+
+    Can compute the radial velocity in cylindrical and spherical
+    coordinates.
+
+    Parameters
+    ----------
+    snap
+        The Snap object.
+    coordinates : optional
+        Either 'cylindrical' or 'spherical'. Default is 'cylindrical'.
+    ignore_accreted : optional
+        Ignore accreted particles. Default is False.
+
+    Returns
+    -------
+    ndarray
+        The radial velocity on the particles.
     """
     if ignore_accreted:
         h: ndarray = snap['smooth']
@@ -482,7 +574,7 @@ def angular_velocity(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
     Returns
     -------
     ndarray
-        The dust density per species on the particles.
+        The angular velocity on the particles.
     """
     if ignore_accreted:
         h: ndarray = snap['smooth']
