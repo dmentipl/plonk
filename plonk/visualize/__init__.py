@@ -28,9 +28,19 @@ Get the interpolation to grid directly (without plotting).
 ...     quantity='density',
 ...     extent=(-100, 100, -100, 100),
 ... )
+
+Make an animation of multiple snaps.
+
+>>> plonk.visualize.animation(
+...     snaps=snaps,
+...     quantity='density',
+...     extent=(-100, 100, -100, 100),
+...     filename='animation.mp4',
+... )
 """
 
+from .animation import animation
 from .plot import interpolate, plot, render
 from .visualization import Visualization
 
-__all__ = ['Visualization', 'interpolate', 'plot', 'render']
+__all__ = ['Visualization', 'animation', 'interpolate', 'plot', 'render']

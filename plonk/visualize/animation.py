@@ -56,6 +56,9 @@ def animation(
         scalar_options = {}
     _scalar_options = copy(scalar_options)
 
+    if animation_options is None:
+        animation_options = {}
+
     fig, ax = plt.subplots()
     viz = render(
         snaps[0],
