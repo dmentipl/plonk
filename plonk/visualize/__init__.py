@@ -5,15 +5,23 @@ simulations using kernel density estimation based interpolation.
 
 Examples
 --------
-Rendering the surface density.
+Plot the particles.
 
 >>> viz = plonk.visualize.plot(
-...     scalar_data=density,
-...     x_coordinate=x_position,
-...     y_coordinate=y_position,
-...     extent=extent,
-...     particle_mass=particle_mass,
-...     smoothing_length=smoothing_length,
+...     snap=snap,
+...     x_coordinate=snap['x'],
+...     y_coordinate=snap['y'],
+...     extent=(-100, 100, -100, 100),
+... )
+
+Render the surface density in xz-plane.
+
+>>> viz = plonk.visualize.plot(
+...     snap=snap,
+...     scalar_data=snap['density'],
+...     x_coordinate='x',
+...     y_coordinate='z',
+...     extent=(-100, 100, -25, 25),
 ... )
 
 Or via the helper 'render' function.

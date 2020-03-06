@@ -22,13 +22,11 @@ def test_initialization():
     }
 
     plonk.visualize.plot(
+        snap=snap,
         scalar_data=snap['rho'],
         x_coordinate=snap['x'],
         y_coordinate=snap['y'],
         extent=extent,
-        particle_mass=snap['m'],
-        smoothing_length=snap['h'],
-        hfact=snap.properties['hfact'],
         scalar_options=scalar_options,
         interpolation_options=interpolation_options,
     )

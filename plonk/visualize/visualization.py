@@ -237,6 +237,12 @@ class Visualization:
         if interpolation_options is None:
             interpolation_options = {}
 
+        if interpolation_options.get('cross_section') is not None:
+            if z_coordinate is None:
+                raise ValueError(
+                    'z_coordinate required for cross section interpolation'
+                )
+
         number_of_pixels = interpolation_options.pop(
             'number_of_pixels', _number_of_pixels
         )
@@ -348,6 +354,12 @@ class Visualization:
 
         if interpolation_options is None:
             interpolation_options = {}
+
+        if interpolation_options.get('cross_section') is not None:
+            if z_coordinate is None:
+                raise ValueError(
+                    'z_coordinate required for cross section interpolation'
+                )
 
         number_of_pixels = interpolation_options.pop(
             'number_of_pixels', _number_of_pixels

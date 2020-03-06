@@ -28,7 +28,11 @@ Rotate a snapshot and plot column density.
     >>> snap.rotate(rotation)
 
     # Plot
-    >>> plonk.visualize.render(snap, quantity='rho')
+    >>> plonk.visualize.render(
+    ...     snap=snap,
+    ...     quantity='rho',
+    ...     extent=(-200, 200, -200, 200)
+    ... )
     >>> plt.show()
 
 .. figure:: _static/rotate.png
@@ -92,67 +96,11 @@ Plot dust and gas side-by-side.
     ...     quantity='rho',
     ...     extent=extent,
     ...     scalar_options={'cmap': 'Reds_r'},
-    ...     axis=axes[0],
+    ...     axis=axes[1],
     ... )
     >>> plt.show()
 
 .. figure:: _static/dust_and_gas.png
-
-------------------------------------
-Vector plot with coordinate tranform
-------------------------------------
-
-Transform to cylindrical coordinates and plot velocity vectors in the rz-plane.
-
-.. code-block:: pycon
-
-    >>> import matplotlib.pyplot as plt
-    >>> import numpy as np
-    >>> import plonk
-
-    # Load snapshot
-    >>> snap = plonk.load_snap('disc_00030.h5')
-
-    # Transform to cylindrical coordinates (r, phi, z)
-    >>> plonk.utils.coordinate_transform(
-    ...     position=snap['position'],
-    ...     velocity=snap['velocity'],
-    ...     geometry_from='cartesian',
-    ...     geometry_to='cylindrical',
-    ...     in_place=True,
-    ... )
-
-    # Planet position in cylindrical coords
-    >>> planet, _ = plonk.utils.coordinate_transform(
-    ...     position=snap.sinks['position'][1, np.newaxis],
-    ...     geometry_from='cartesian',
-    ...     geometry_to='cylindrical',
-    ...     in_place=False,
-    ... )
-    >>> planet = planet.flatten()
-
-    # Plot density and velocity in rz-plane
-    # as cross section in phi at planet location
-    >>> viz = plonk.visualize.plot(
-    ...     scalar_data=snap['density'],
-    ...     vector_data=snap['velocity'][:, 0::2],
-    ...     x_coordinate=snap['position'][:, 0],
-    ...     y_coordinate=snap['position'][:, 2],
-    ...     z_coordinate=snap['position'][:, 1],
-    ...     extent=(50, 100, -20, 20),
-    ...     particle_mass=snap['m'],
-    ...     smoothing_length=snap['h'],
-    ...     scalar_options={'cmap': 'viridis'},
-    ...     vector_options={'vector_color': 'white'},
-    ...     interpolation_options={'cross_section': planet[1]},
-    ... )
-
-    # Add planet marker
-    >>> viz.axis.plot(planet[0], planet[2], 'rx')
-
-    >>> plt.show()
-
-.. figure:: _static/vectors.png
 
 --------------------
 Accretion onto sinks
