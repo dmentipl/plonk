@@ -12,7 +12,8 @@ from typing import List, Tuple, Union
 
 import numpy as np
 import pandas as pd
-from pandas import DataFrame
+from numpy import ndarray
+from pandas import DataFrame, Series
 
 
 class Evolution:
@@ -37,14 +38,19 @@ class Evolution:
     >>> file_names = ('sim01.ev', 'sim02.ev', 'sim03.ev')
     >>> ev = plonk.load_ev(file_names)
 
-    Accessing the data as a pandas DataFrame or Series.
+    See what columns and what data are available.
 
-    >>> df = ev.data
-    >>> time = ev.data['time']
+    >>> ev.columns
+    >>> ev.data
 
-    Plotting kinetic and thermal energy against time using pandas.
+    Accessing part of the data as a pandas DataFrame or Series.
 
-    >>> ev.plot('time', ['ekin', 'etherm'])
+    >>> time = ev['time']
+    >>> first_100 = ev[:100]
+
+    Plot columns using pandas plotting methods.
+
+    >>> ev.plot('time', ['x', 'y'])
     """
 
     def __init__(self):
@@ -100,6 +106,32 @@ class Evolution:
     def plot(self, *args, **kwargs):
         """Plot using pandas."""
         return self.data.plot(*args, **kwargs)
+
+    def __getitem__(
+        self, inp: Union[str, List[str], ndarray, int, slice]
+    ) -> Union[DataFrame, Series]:
+        """Return a pandas object."""
+        if isinstance(inp, str):
+            return self.data[inp]
+        elif isinstance(inp, (ndarray, int, slice)):
+            return self.data.iloc[inp]
+        elif isinstance(inp, list):
+            if isinstance(inp[0], str):
+                return self.data[inp]
+            elif isinstance(inp[0], int):
+                return self.data.iloc[inp]
+        raise ValueError('Cannot determine item to return')
+
+    def __setitem__(self, name: str, item: Union[ndarray, Series]):
+        """Set a column with ndarray or pandas Series."""
+        if not isinstance(item, (ndarray, Series)):
+            raise ValueError('"item" must be NumPy ndarray or pandas Series')
+        if item.shape[0] != len(self):
+            raise ValueError('Length of array does not match length')
+        if name in self.columns:
+            raise ValueError('Attempting overwrite existing column')
+        else:
+            self.data[name] = item
 
     def _get_data(self) -> DataFrame:
 
