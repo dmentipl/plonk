@@ -7,11 +7,14 @@ and sink quantity time series files an Evolution objects.
 
 from __future__ import annotations
 
+from copy import copy
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from ..snap import Snap, load_snap
 from .evolution import Evolution, load_ev
+
+_properties_vary_per_snap = ('time',)
 
 
 class Simulation:
@@ -45,6 +48,7 @@ class Simulation:
         self.path: Path
 
         self._snaps: List[Snap] = None
+        self._properties: Dict[str, Any] = None
         self._global_quantities: Evolution = None
         self._sink_quantities: List[Evolution] = None
 
@@ -94,6 +98,14 @@ class Simulation:
         return self._snaps
 
     @property
+    def properties(self) -> Dict[str, Any]:
+        """Properties associated with the simulation."""
+        if self._properties is None:
+            self._generate_properties()
+
+        return self._properties
+
+    @property
     def global_quantities(self) -> Evolution:
         """Global quantity time series data."""
         if self._global_quantities is None:
@@ -115,6 +127,21 @@ class Simulation:
         for snap in self._snap_files:
             snaps.append(load_snap(snap))
         self._snaps = snaps
+
+    def _generate_properties(self):
+        """Generate sim.properties from snap.properties."""
+        prop = copy(self.snaps[0].properties)
+        for key in _properties_vary_per_snap:
+            prop[key] = list()
+        prop
+        for snap in self.snaps:
+            for key, val in snap.properties.items():
+                if isinstance(prop[key], list):
+                    prop[key].append(val)
+                else:
+                    if prop[key] != val:
+                        prop[key] = '__inconsistent__'
+        self._properties = prop
 
     def _generate_global_quantities(self):
         """Generate global quantity time series objects."""
