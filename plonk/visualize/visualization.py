@@ -25,6 +25,7 @@ _contour_color = 'black'
 _contour_format = '%.2g'
 _norm = 'linear'
 _cmap = 'gist_heat'
+_render_range = None
 _plot_colorbar = True
 _polar_coordinates = False
 _number_of_pixels = (512, 512)
@@ -226,6 +227,7 @@ class Visualization:
         fmt = plot_options.pop('contour_format', _contour_format)
         norm_str = plot_options.pop('norm', _norm)
         cmap = plot_options.pop('cmap', _cmap)
+        render_range = plot_options.pop('render_range', _render_range)
         plot_colorbar = plot_options.pop('plot_colorbar', _plot_colorbar)
         polar_coordinates = plot_options.pop('polar_coordinates', _polar_coordinates)
 
@@ -277,9 +279,19 @@ class Visualization:
                 norm = mpl.colors.LogNorm()
             else:
                 raise ValueError('Cannot determine normalization for colorbar')
+            if render_range is not None:
+                vmin, vmax = render_range[0], render_range[1]
+            else:
+                vmin, vmax = None, None
 
             image = axis.imshow(
-                data, origin='lower', norm=norm, extent=extent, cmap=cmap
+                data,
+                origin='lower',
+                norm=norm,
+                extent=extent,
+                cmap=cmap,
+                vmin=vmin,
+                vmax=vmax,
             )
 
             if plot_colorbar:
