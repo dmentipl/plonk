@@ -129,7 +129,7 @@ class Visualization:
             self.axis = axis
 
         if scalar_data is None and vector_data is None:
-            self._particle_plot(
+            particle_plot(
                 x_coordinate=x_coordinate,
                 y_coordinate=y_coordinate,
                 smoothing_length=smoothing_length,
@@ -137,7 +137,7 @@ class Visualization:
             )
 
         if scalar_data is not None:
-            self._scalar_plot(
+            image, contour, colorbar, data, extent = scalar_plot(
                 data=scalar_data,
                 x_coordinate=x_coordinate,
                 y_coordinate=y_coordinate,
@@ -151,11 +151,18 @@ class Visualization:
                 plot_options=_scalar_options,
                 interpolation_options=_interpolation_options,
             )
+
+            self.image = image
+            self.contours = contour
+            self.colorbar = colorbar
+            self.data['scalar'] = data
+            self.extent = extent
+
             if not np.allclose(self.extent, extent):
                 new_extent = self.extent
 
         if vector_data is not None:
-            self._vector_plot(
+            quiver, streamplot, data, extent = vector_plot(
                 data=vector_data,
                 x_coordinate=x_coordinate,
                 y_coordinate=y_coordinate,
@@ -168,6 +175,12 @@ class Visualization:
                 plot_options=_vector_options,
                 interpolation_options=_interpolation_options,
             )
+
+            self.quiver = quiver
+            self.streamplot = streamplot
+            self.data['vector'] = data
+            self.extent = extent
+
             try:
                 if not np.allclose(self.extent, new_extent):
                     raise ValueError('scalar and vector plot have different extent')
@@ -185,232 +198,211 @@ class Visualization:
 
         return self
 
-    def _particle_plot(
-        self,
-        x_coordinate: ndarray,
-        y_coordinate: ndarray,
-        smoothing_length: ndarray,
-        axis: Any,
-    ):
-
-        axis.plot(
-            x_coordinate[smoothing_length > 0],
-            y_coordinate[smoothing_length > 0],
-            'k.',
-            markersize=0.5,
-        )
-        return
-
-    def _scalar_plot(
-        self,
-        *,
-        data: ndarray,
-        x_coordinate: ndarray,
-        y_coordinate: ndarray,
-        z_coordinate: Optional[ndarray] = None,
-        particle_mass: ndarray,
-        smoothing_length: ndarray,
-        hfact: float,
-        extent: Tuple[float, float, float, float],
-        axis: Any,
-        fig: Any,
-        plot_options: Dict[str, Any] = None,
-        interpolation_options: Dict[str, Any] = None,
-    ):
-
-        if plot_options is None:
-            plot_options = {}
-
-        plot_render = plot_options.pop('plot_render', _plot_render)
-        plot_contour = plot_options.pop('plot_contour', _plot_contour)
-        colors = plot_options.pop('contour_color', _contour_color)
-        fmt = plot_options.pop('contour_format', _contour_format)
-        norm_str = plot_options.pop('norm', _norm)
-        cmap = plot_options.pop('cmap', _cmap)
-        render_range = plot_options.pop('render_range', _render_range)
-        plot_colorbar = plot_options.pop('plot_colorbar', _plot_colorbar)
-        polar_coordinates = plot_options.pop('polar_coordinates', _polar_coordinates)
-
-        if len(plot_options) > 0:
-            raise ValueError(f'plot_options: {list(plot_options.keys())} not available')
-
-        if interpolation_options is None:
-            interpolation_options = {}
-
-        if interpolation_options.get('cross_section') is not None:
-            if z_coordinate is None:
-                raise ValueError(
-                    'z_coordinate required for cross section interpolation'
-                )
-
-        number_of_pixels = interpolation_options.pop(
-            'number_of_pixels', _number_of_pixels
-        )
-
-        data = scalar_interpolation(
-            data=data,
-            x_coordinate=x_coordinate,
-            y_coordinate=y_coordinate,
-            z_coordinate=z_coordinate,
-            extent=extent,
-            smoothing_length=smoothing_length,
-            particle_mass=particle_mass,
-            hfact=hfact,
-            number_of_pixels=number_of_pixels,
-            **interpolation_options,
-        )
-
-        if polar_coordinates:
-            if not np.allclose(extent[1] - extent[0], extent[3] - extent[2]):
-                raise ValueError('Bad polar plot: x and y have different scales')
-            radius_pix = 0.5 * data.shape[0]
-            data = transform.warp_polar(data, radius=radius_pix)
-
-            radius = 0.5 * (extent[1] - extent[0])
-            extent = (0, radius, 0, 2 * np.pi)
-
-            x_grid = np.linspace(*extent[:2], data.shape[0])
-            y_grid = np.linspace(*extent[2:], data.shape[1])
-            spl = RectBivariateSpline(x_grid, y_grid, data)
-            x_regrid = np.linspace(extent[0], extent[1], number_of_pixels[0])
-            y_regrid = np.linspace(extent[2], extent[3], number_of_pixels[1])
-            data = spl(x_regrid, y_regrid)
-
-        image = None
-        colorbar = None
-        if plot_render:
-            if norm_str.lower() in ('linear', 'lin'):
-                norm = mpl.colors.Normalize()
-            elif norm_str.lower() in ('logarithic', 'logarithm', 'log', 'log10'):
-                norm = mpl.colors.LogNorm()
-            else:
-                raise ValueError('Cannot determine normalization for colorbar')
-            if render_range is not None:
-                vmin, vmax = render_range[0], render_range[1]
-            else:
-                vmin, vmax = None, None
-
-            image = axis.imshow(
-                data,
-                origin='lower',
-                norm=norm,
-                extent=extent,
-                cmap=cmap,
-                vmin=vmin,
-                vmax=vmax,
-            )
-
-            if plot_colorbar:
-                divider = make_axes_locatable(axis)
-                cax = divider.append_axes("right", size="5%", pad=0.05)
-                colorbar = fig.colorbar(image, cax)
-
-        contour = None
-        if plot_contour:
-            n_interp_x, n_interp_y = data.shape
-            X, Y = np.meshgrid(
-                np.linspace(*extent[:2], n_interp_x),
-                np.linspace(*extent[2:], n_interp_y),
-            )
-
-            contour = axis.contour(X, Y, data, colors=colors)
-            contour.clabel(inline=True, fmt=fmt, fontsize=8)
-
-        self.image = image
-        self.contours = contour
-        self.colorbar = colorbar
-        self.data['scalar'] = data
-        self.extent = extent
-        return
-
-    def _vector_plot(
-        self,
-        *,
-        data: ndarray,
-        x_coordinate: ndarray,
-        y_coordinate: ndarray,
-        z_coordinate: Optional[ndarray] = None,
-        particle_mass: ndarray,
-        smoothing_length: ndarray,
-        hfact: float,
-        extent: Tuple[float, float, float, float],
-        axis: Any,
-        plot_options: Dict[str, Any] = None,
-        interpolation_options: Dict[str, Any] = None,
-    ):
-
-        if plot_options is None:
-            plot_options = {}
-
-        plot_stream = plot_options.pop('plot_stream', _plot_stream)
-        color = plot_options.pop('vector_color', _vector_color)
-        scale = plot_options.pop('vector_scale', _vector_scale)
-        scale_units = plot_options.pop('vector_scale_units', _vector_scale_units)
-        normalize_vectors = plot_options.pop('normalize_vectors', _normalize_vectors)
-        number_of_arrows = plot_options.pop('number_of_arrows', _number_of_arrows)
-
-        if len(plot_options) > 0:
-            raise ValueError(f'plot_options: {list(plot_options.keys())} not available')
-
-        if interpolation_options is None:
-            interpolation_options = {}
-
-        if interpolation_options.get('cross_section') is not None:
-            if z_coordinate is None:
-                raise ValueError(
-                    'z_coordinate required for cross section interpolation'
-                )
-
-        number_of_pixels = interpolation_options.pop(
-            'number_of_pixels', _number_of_pixels
-        )
-
-        data = vector_interpolation(
-            x_data=data[:, 0],
-            y_data=data[:, 1],
-            x_coordinate=x_coordinate,
-            y_coordinate=y_coordinate,
-            z_coordinate=z_coordinate,
-            extent=extent,
-            smoothing_length=smoothing_length,
-            particle_mass=particle_mass,
-            hfact=hfact,
-            number_of_pixels=number_of_pixels,
-            **interpolation_options,
-        )
-
-        n_interp_x, n_interp_y = data[0].shape
-        X, Y = np.meshgrid(
-            np.linspace(*extent[:2], n_interp_x), np.linspace(*extent[2:], n_interp_y)
-        )
-        U, V = data[0], data[1]
-
-        quiver, streamplot = None, None
-        if not plot_stream:
-            n_x, n_y = number_of_arrows[0], number_of_arrows[1]
-            stride_x = int(n_interp_x / n_x)
-            stride_y = int(n_interp_y / n_y)
-            X = X[::stride_y, ::stride_x]
-            Y = Y[::stride_y, ::stride_x]
-            U = U[::stride_y, ::stride_x]
-            V = V[::stride_y, ::stride_x]
-            if normalize_vectors:
-                norm = np.hypot(U, V)
-                U /= norm
-                V /= norm
-            quiver = axis.quiver(
-                X, Y, U, V, scale=scale, scale_units=scale_units, color=color
-            )
-
-        else:
-            streamplot = axis.streamplot(X, Y, U, V, color=color)
-
-        self.quiver = quiver
-        self.streamplot = streamplot
-        self.data['vector'] = data
-        self.extent = extent
-        return
-
     def __repr__(self):
         """Dunder repr method."""
         return '<plonk.Visualization>'
+
+
+def particle_plot(
+    x_coordinate: ndarray, y_coordinate: ndarray, smoothing_length: ndarray, axis: Any,
+):
+
+    axis.plot(
+        x_coordinate[smoothing_length > 0],
+        y_coordinate[smoothing_length > 0],
+        'k.',
+        markersize=0.5,
+    )
+    return
+
+
+def scalar_plot(
+    *,
+    data: ndarray,
+    x_coordinate: ndarray,
+    y_coordinate: ndarray,
+    z_coordinate: Optional[ndarray] = None,
+    particle_mass: ndarray,
+    smoothing_length: ndarray,
+    hfact: float,
+    extent: Tuple[float, float, float, float],
+    axis: Any,
+    fig: Any,
+    plot_options: Dict[str, Any] = None,
+    interpolation_options: Dict[str, Any] = None,
+):
+
+    if plot_options is None:
+        plot_options = {}
+
+    plot_render = plot_options.pop('plot_render', _plot_render)
+    plot_contour = plot_options.pop('plot_contour', _plot_contour)
+    colors = plot_options.pop('contour_color', _contour_color)
+    fmt = plot_options.pop('contour_format', _contour_format)
+    norm_str = plot_options.pop('norm', _norm)
+    cmap = plot_options.pop('cmap', _cmap)
+    render_range = plot_options.pop('render_range', _render_range)
+    plot_colorbar = plot_options.pop('plot_colorbar', _plot_colorbar)
+    polar_coordinates = plot_options.pop('polar_coordinates', _polar_coordinates)
+
+    if len(plot_options) > 0:
+        raise ValueError(f'plot_options: {list(plot_options.keys())} not available')
+
+    if interpolation_options is None:
+        interpolation_options = {}
+
+    if interpolation_options.get('cross_section') is not None:
+        if z_coordinate is None:
+            raise ValueError('z_coordinate required for cross section interpolation')
+
+    number_of_pixels = interpolation_options.pop('number_of_pixels', _number_of_pixels)
+
+    data = scalar_interpolation(
+        data=data,
+        x_coordinate=x_coordinate,
+        y_coordinate=y_coordinate,
+        z_coordinate=z_coordinate,
+        extent=extent,
+        smoothing_length=smoothing_length,
+        particle_mass=particle_mass,
+        hfact=hfact,
+        number_of_pixels=number_of_pixels,
+        **interpolation_options,
+    )
+
+    if polar_coordinates:
+        if not np.allclose(extent[1] - extent[0], extent[3] - extent[2]):
+            raise ValueError('Bad polar plot: x and y have different scales')
+        radius_pix = 0.5 * data.shape[0]
+        data = transform.warp_polar(data, radius=radius_pix)
+
+        radius = 0.5 * (extent[1] - extent[0])
+        extent = (0, radius, 0, 2 * np.pi)
+
+        x_grid = np.linspace(*extent[:2], data.shape[0])
+        y_grid = np.linspace(*extent[2:], data.shape[1])
+        spl = RectBivariateSpline(x_grid, y_grid, data)
+        x_regrid = np.linspace(extent[0], extent[1], number_of_pixels[0])
+        y_regrid = np.linspace(extent[2], extent[3], number_of_pixels[1])
+        data = spl(x_regrid, y_regrid)
+
+    image = None
+    colorbar = None
+    if plot_render:
+        if norm_str.lower() in ('linear', 'lin'):
+            norm = mpl.colors.Normalize()
+        elif norm_str.lower() in ('logarithic', 'logarithm', 'log', 'log10'):
+            norm = mpl.colors.LogNorm()
+        else:
+            raise ValueError('Cannot determine normalization for colorbar')
+        if render_range is not None:
+            vmin, vmax = render_range[0], render_range[1]
+        else:
+            vmin, vmax = None, None
+
+        image = axis.imshow(
+            data,
+            origin='lower',
+            norm=norm,
+            extent=extent,
+            cmap=cmap,
+            vmin=vmin,
+            vmax=vmax,
+        )
+
+        if plot_colorbar:
+            divider = make_axes_locatable(axis)
+            cax = divider.append_axes("right", size="5%", pad=0.05)
+            colorbar = fig.colorbar(image, cax)
+
+    contour = None
+    if plot_contour:
+        n_interp_x, n_interp_y = data.shape
+        X, Y = np.meshgrid(
+            np.linspace(*extent[:2], n_interp_x), np.linspace(*extent[2:], n_interp_y),
+        )
+
+        contour = axis.contour(X, Y, data, colors=colors)
+        contour.clabel(inline=True, fmt=fmt, fontsize=8)
+
+    return image, contour, colorbar, data, extent
+
+
+def vector_plot(
+    *,
+    data: ndarray,
+    x_coordinate: ndarray,
+    y_coordinate: ndarray,
+    z_coordinate: Optional[ndarray] = None,
+    particle_mass: ndarray,
+    smoothing_length: ndarray,
+    hfact: float,
+    extent: Tuple[float, float, float, float],
+    axis: Any,
+    plot_options: Dict[str, Any] = None,
+    interpolation_options: Dict[str, Any] = None,
+):
+
+    if plot_options is None:
+        plot_options = {}
+
+    plot_stream = plot_options.pop('plot_stream', _plot_stream)
+    color = plot_options.pop('vector_color', _vector_color)
+    scale = plot_options.pop('vector_scale', _vector_scale)
+    scale_units = plot_options.pop('vector_scale_units', _vector_scale_units)
+    normalize_vectors = plot_options.pop('normalize_vectors', _normalize_vectors)
+    number_of_arrows = plot_options.pop('number_of_arrows', _number_of_arrows)
+
+    if len(plot_options) > 0:
+        raise ValueError(f'plot_options: {list(plot_options.keys())} not available')
+
+    if interpolation_options is None:
+        interpolation_options = {}
+
+    if interpolation_options.get('cross_section') is not None:
+        if z_coordinate is None:
+            raise ValueError('z_coordinate required for cross section interpolation')
+
+    number_of_pixels = interpolation_options.pop('number_of_pixels', _number_of_pixels)
+
+    data = vector_interpolation(
+        x_data=data[:, 0],
+        y_data=data[:, 1],
+        x_coordinate=x_coordinate,
+        y_coordinate=y_coordinate,
+        z_coordinate=z_coordinate,
+        extent=extent,
+        smoothing_length=smoothing_length,
+        particle_mass=particle_mass,
+        hfact=hfact,
+        number_of_pixels=number_of_pixels,
+        **interpolation_options,
+    )
+
+    n_interp_x, n_interp_y = data[0].shape
+    X, Y = np.meshgrid(
+        np.linspace(*extent[:2], n_interp_x), np.linspace(*extent[2:], n_interp_y)
+    )
+    U, V = data[0], data[1]
+
+    quiver, streamplot = None, None
+    if not plot_stream:
+        n_x, n_y = number_of_arrows[0], number_of_arrows[1]
+        stride_x = int(n_interp_x / n_x)
+        stride_y = int(n_interp_y / n_y)
+        X = X[::stride_y, ::stride_x]
+        Y = Y[::stride_y, ::stride_x]
+        U = U[::stride_y, ::stride_x]
+        V = V[::stride_y, ::stride_x]
+        if normalize_vectors:
+            norm = np.hypot(U, V)
+            U /= norm
+            V /= norm
+        quiver = axis.quiver(
+            X, Y, U, V, scale=scale, scale_units=scale_units, color=color
+        )
+
+    else:
+        streamplot = axis.streamplot(X, Y, U, V, color=color)
+
+    return quiver, streamplot, data, extent
