@@ -56,6 +56,9 @@ def interpolate(
         is 0.0.
     extent
         The xy extent of the image as (xmin, xmax, ymin, ymax).
+    **kwargs
+        Additional keyword arguments to pass to scalar_interpolation
+        and vector_interpolation.
 
     Returns
     -------
@@ -144,7 +147,7 @@ def scalar_interpolation(
         The particle mass on each particle.
     hfact
         The smoothing length factor.
-    number_pixels
+    number_of_pixels
         The pixel grid to interpolate the scalar quantity to, as
         (npixx, npixy).
     cross_section
@@ -212,7 +215,7 @@ def vector_interpolation(
         The particle mass on each particle.
     hfact
         The smoothing length factor.
-    number_pixels
+    number_of_pixels
         The pixel grid to interpolate the scalar quantity to, as
         (npixx, npixy).
     cross_section
