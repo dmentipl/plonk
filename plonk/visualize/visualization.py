@@ -36,39 +36,36 @@ class Visualization:
         The associated Snap (or SubSnap) object to visualize.
     fig
         The matplotlib Figure object of the plot.
-    ax
+    axis
         The matplotlib Axis object of the plot.
-    lines
-        A list of matplotlib Line2D objects for particle plots.
-    image
-        A matplotlib AxesImage object for rendered plots.
-    colorbar
-        A matplotlib Colorbar object for rendered plots.
-    contour
-        A matplotlib QuadContourSet object for contour plots.
-    quiver
-        A matplotlib Quiver object for quiver (arrow) plots.
-    streamplot
-        A matplotlib StreamplotSet for stream plots.
     extent
         A tuple (xmin, xmax, ymin, ymax) of the extent of the plot.
+    objects
+        A dictionary containing the matplotlib plot objects:
+        - 'lines' : list of matplotlib Line2D objects for particle plots
+        - 'image' : matplotlib AxesImage object for rendered plots
+        - 'colorbar' : matplotlib Colorbar object for rendered plots
+        - 'contour' : matplotlib QuadContourSet object for contour plots
+        - 'quiver' : matplotlib Quiver object for quiver (arrow) plots
+        - 'streamplot' : matplotlib StreamplotSet for stream plots
     data
-        A dictionary containing the data interpolated to a pixel grid.
-        The dictionary keys are: 'render', 'contour', 'quiver',
-        'stream'.
+        A dictionary containing the data interpolated to a pixel grid:
+        'render', 'contour', 'quiver', 'stream'.
     """
 
     def __init__(self, snap: SnapLike):
         self.snap = snap
         self.fig: Any = None
         self.axis: Any = None
-        self.lines: Any = None
-        self.image: Any = None
-        self.colorbar: Any = None
-        self.contour: Any = None
-        self.quiver: Any = None
-        self.streamplot: Any = None
         self.extent: Tuple[float, float, float, float] = (-1, -1, -1, -1)
+        self.objects: Dict[str, Any] = {
+            'lines': None,
+            'image': None,
+            'colorbar': None,
+            'contour': None,
+            'quiver': None,
+            'streamplot': None,
+        }
         self.data: Dict[str, ndarray] = {
             'render': None,
             'contour': None,
@@ -221,13 +218,14 @@ class Visualization:
             )
 
         if kind == 'particle':
-            self.lines = _particle_plot(
+            self.objects['lines'] = _particle_plot(
                 snap=self.snap, x=x, y=y, extent=extent, axis=self.axis, **kwargs,
             )
 
         elif kind == 'render':
             show_colorbar = kwargs.pop('show_colorbar', True)
-            self.image = _render_plot(
+            self.data[kind] = interpolated_data
+            self.objects['image'] = _render_plot(
                 interpolated_data=interpolated_data,
                 extent=extent,
                 axis=self.axis,
@@ -236,10 +234,11 @@ class Visualization:
             if show_colorbar:
                 divider = make_axes_locatable(self.axis)
                 cax = divider.append_axes("right", size="5%", pad=0.05)
-                self.colorbar = self.fig.colorbar(self.image, cax)
+                self.objects['colorbar'] = self.fig.colorbar(self.objects['image'], cax)
 
         elif kind == 'contour':
-            self.contour = _contour_plot(
+            self.data[kind] = interpolated_data
+            self.objects['contour'] = _contour_plot(
                 interpolated_data=interpolated_data,
                 extent=extent,
                 axis=self.axis,
@@ -247,7 +246,8 @@ class Visualization:
             )
 
         elif kind == 'quiver':
-            self.quiver = _quiver_plot(
+            self.data[kind] = interpolated_data
+            self.objects['quiver'] = _quiver_plot(
                 interpolated_data=interpolated_data,
                 extent=extent,
                 axis=self.axis,
@@ -255,7 +255,8 @@ class Visualization:
             )
 
         elif kind == 'stream':
-            self.streamplot = _stream_plot(
+            self.data[kind] = interpolated_data
+            self.objects['streamplot'] = _stream_plot(
                 interpolated_data=interpolated_data,
                 extent=extent,
                 axis=self.axis,
