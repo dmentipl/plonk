@@ -10,7 +10,7 @@ from matplotlib import animation as _animation
 from numpy import ndarray
 
 from ..snap.snap import Snap, SubSnap
-from .plot import plot
+from .visualization import plot
 
 SnapLike = Union[Snap, SubSnap]
 

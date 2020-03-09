@@ -45,7 +45,6 @@ Make an animation of multiple snaps.
 
 from .animation import animation
 from .interpolation import interpolate
-from .plot import plot
-from .visualization import Visualization
+from .visualization import Visualization, plot
 
 __all__ = ['Visualization', 'animation', 'interpolate', 'plot']
