@@ -79,7 +79,7 @@ class Visualization:
     def plot(
         self,
         *,
-        data: Optional[Union[str, ndarray]] = None,
+        quantity: Optional[Union[str, ndarray]] = None,
         x: Union[str, ndarray] = 'x',
         y: Union[str, ndarray] = 'y',
         z: Union[str, ndarray] = 'z',
@@ -98,8 +98,8 @@ class Visualization:
 
         Parameters
         ----------
-        data
-            The data to visualize. Can be a string to pass to Snap, or
+        quantity
+            The quantity to visualize. Can be a string to pass to Snap, or
             a 1d array (N,) of scalar data, or a 2d array (N, 3) of
             vector data. Default is None.
         x
@@ -114,11 +114,12 @@ class Visualization:
             cross-section plots. Default is 'z'.
         kind
             The type of plot.
-            - 'particle' : particle plot (default if data is None)
-            - 'render' : rendered image (default for scalar data)
-            - 'contour' : contour plot (scalar data)
-            - 'quiver' : quiver (arrow) plot (default for vector data)
-            - 'stream' : stream plot (vector data)
+            - 'particle' : particle plot (default if quantity is None)
+            - 'render' : rendered image (default for scalar quantities)
+            - 'contour' : contour plot (scalar quantity)
+            - 'quiver' : quiver (arrow) plot (default for vector
+              quantities)
+            - 'stream' : stream plot (vector quantity)
         interp
             The interpolation type.
             - 'projection' : 2d interpolation via projection to xy-plane
@@ -196,11 +197,11 @@ class Visualization:
 
         self.extent = extent
 
-        data, x, y, z, kind = _check_input(
-            snap=self.snap, data=data, x=x, y=y, z=z, kind=kind
+        quantity, x, y, z, kind = _check_input(
+            snap=self.snap, quantity=quantity, x=x, y=y, z=z, kind=kind
         )
 
-        if data is not None:
+        if quantity is not None:
             interpolation_kwargs = ('number_of_pixels', 'density_weighted')
             _kwargs = {
                 key: val for key, val in kwargs.items() if key in interpolation_kwargs
@@ -209,7 +210,7 @@ class Visualization:
                 kwargs.pop(key)
             interpolated_data = interpolate(
                 snap=self.snap,
-                data=data,
+                quantity=quantity,
                 x=x,
                 y=y,
                 z=z,
@@ -226,8 +227,11 @@ class Visualization:
 
         elif kind == 'render':
             show_colorbar = kwargs.pop('show_colorbar', True)
-            self.image, self.data['render'] = _render_plot(
-                data=interpolated_data, extent=extent, axis=self.axis, **kwargs,
+            self.image = _render_plot(
+                interpolated_data=interpolated_data,
+                extent=extent,
+                axis=self.axis,
+                **kwargs,
             )
             if show_colorbar:
                 divider = make_axes_locatable(self.axis)
@@ -235,18 +239,27 @@ class Visualization:
                 self.colorbar = self.fig.colorbar(self.image, cax)
 
         elif kind == 'contour':
-            self.contour, self.data['contour'] = _contour_plot(
-                data=interpolated_data, extent=extent, axis=self.axis, **kwargs,
+            self.contour = _contour_plot(
+                interpolated_data=interpolated_data,
+                extent=extent,
+                axis=self.axis,
+                **kwargs,
             )
 
         elif kind == 'quiver':
-            self.quiver, self.data['quiver'] = _quiver_plot(
-                data=interpolated_data, extent=extent, axis=self.axis, **kwargs,
+            self.quiver = _quiver_plot(
+                interpolated_data=interpolated_data,
+                extent=extent,
+                axis=self.axis,
+                **kwargs,
             )
 
         elif kind == 'stream':
-            self.streamplot, self.data['stream'] = _stream_plot(
-                data=interpolated_data, extent=extent, axis=self.axis, **kwargs,
+            self.streamplot = _stream_plot(
+                interpolated_data=interpolated_data,
+                extent=extent,
+                axis=self.axis,
+                **kwargs,
             )
 
         else:
@@ -282,7 +295,11 @@ def _particle_plot(
 
 
 def _render_plot(
-    *, data: ndarray, extent: Tuple[float, float, float, float], axis: Any, **kwargs,
+    *,
+    interpolated_data: ndarray,
+    extent: Tuple[float, float, float, float],
+    axis: Any,
+    **kwargs,
 ):
     try:
         norm = kwargs.pop('norm')
@@ -295,32 +312,42 @@ def _render_plot(
     else:
         raise ValueError('Cannot determine normalization for colorbar')
 
-    image = axis.imshow(data, origin='lower', extent=extent, norm=norm, **kwargs)
+    image = axis.imshow(
+        interpolated_data, origin='lower', extent=extent, norm=norm, **kwargs
+    )
 
-    return image, data
+    return image
 
 
 def _contour_plot(
-    *, data: ndarray, extent: Tuple[float, float, float, float], axis: Any, **kwargs,
+    *,
+    interpolated_data: ndarray,
+    extent: Tuple[float, float, float, float],
+    axis: Any,
+    **kwargs,
 ):
-    n_interp_x, n_interp_y = data.shape
+    n_interp_x, n_interp_y = interpolated_data.shape
     X, Y = np.meshgrid(
         np.linspace(*extent[:2], n_interp_x), np.linspace(*extent[2:], n_interp_y),
     )
 
-    contour = axis.contour(X, Y, data, **kwargs)
+    contour = axis.contour(X, Y, interpolated_data, **kwargs)
 
-    return contour, data
+    return contour
 
 
 def _quiver_plot(
-    *, data: ndarray, extent: Tuple[float, float, float, float], axis: Any, **kwargs,
+    *,
+    interpolated_data: ndarray,
+    extent: Tuple[float, float, float, float],
+    axis: Any,
+    **kwargs,
 ):
-    n_interp_x, n_interp_y = data[0].shape
+    n_interp_x, n_interp_y = interpolated_data[0].shape
     X, Y = np.meshgrid(
         np.linspace(*extent[:2], n_interp_x), np.linspace(*extent[2:], n_interp_y)
     )
-    U, V = data[0], data[1]
+    U, V = interpolated_data[0], interpolated_data[1]
 
     number_of_arrows = kwargs.pop('number_of_arrows', (25, 25))
     normalize_vectors = kwargs.pop('normalize_vectors', False)
@@ -339,60 +366,64 @@ def _quiver_plot(
 
     quiver = axis.quiver(X, Y, U, V, **kwargs)
 
-    return quiver, data
+    return quiver
 
 
 def _stream_plot(
-    *, data: ndarray, extent: Tuple[float, float, float, float], axis: Any, **kwargs,
+    *,
+    interpolated_data: ndarray,
+    extent: Tuple[float, float, float, float],
+    axis: Any,
+    **kwargs,
 ):
-    n_interp_x, n_interp_y = data[0].shape
+    n_interp_x, n_interp_y = interpolated_data[0].shape
     X, Y = np.meshgrid(
         np.linspace(*extent[:2], n_interp_x), np.linspace(*extent[2:], n_interp_y)
     )
-    U, V = data[0], data[1]
+    U, V = interpolated_data[0], interpolated_data[1]
 
     streamplot = axis.streamplot(X, Y, U, V, **kwargs)
 
-    return streamplot, data
+    return streamplot
 
 
-def _check_input(*, snap, data, x, y, z, kind):
+def _check_input(*, snap, quantity, x, y, z, kind):
 
     try:
-        data = get_array_from_input(snap, data)
+        quantity = get_array_from_input(snap, quantity)
     except ValueError:
-        data = None
+        quantity = None
 
     x = get_array_from_input(snap, x, 'x')
     y = get_array_from_input(snap, y, 'y')
     z = get_array_from_input(snap, z, 'z')
 
-    if data is not None:
-        if data.ndim > 2:
-            raise ValueError('Cannot interpret data')
-        if kind in ('render', 'contour') and data.ndim != 1:
-            raise ValueError('Data is wrong shape for render or contour')
-        if kind in ('quiver', 'stream') and data.ndim != 2:
-            raise ValueError('Data is wrong shape for quiver or streamplot')
+    if quantity is not None:
+        if quantity.ndim > 2:
+            raise ValueError('Cannot interpret quantity')
+        if kind in ('render', 'contour') and quantity.ndim != 1:
+            raise ValueError('quantity is wrong shape for render or contour')
+        if kind in ('quiver', 'stream') and quantity.ndim != 2:
+            raise ValueError('quantity is wrong shape for quiver or streamplot')
         if kind is None:
-            if data.ndim == 1:
+            if quantity.ndim == 1:
                 kind = 'render'
-            elif data.ndim == 2:
+            elif quantity.ndim == 2:
                 kind = 'quiver'
     else:
         if kind is None:
             kind = 'particle'
         else:
-            raise ValueError(f'No data: can only do particle plot')
+            raise ValueError(f'No quantity: can only do particle plot')
 
-    return data, x, y, z, kind
+    return quantity, x, y, z, kind
 
 
 @is_documented_by(Visualization.plot)
 def plot(
     *,
     snap: SnapLike,
-    data: Optional[Union[str, ndarray]] = None,
+    quantity: Optional[Union[str, ndarray]] = None,
     x: Union[str, ndarray] = 'x',
     y: Union[str, ndarray] = 'y',
     z: Union[str, ndarray] = 'z',
@@ -405,7 +436,7 @@ def plot(
 ) -> Visualization:
     viz = Visualization(snap)
     viz.plot(
-        data=data,
+        quantity=quantity,
         x=x,
         y=y,
         z=z,

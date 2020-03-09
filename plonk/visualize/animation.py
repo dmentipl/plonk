@@ -11,11 +11,6 @@ from numpy import ndarray
 from ..snap.snap import SnapLike
 from .visualization import plot
 
-# TODO:
-# - fix color scale
-# - remove axis labels
-# - black background
-
 
 def animation(
     *,
@@ -77,6 +72,6 @@ def animation(
 
 
 def _get_data(data):
-    for k, v in data.items():
+    for v in data.keys():
         if v is not None:
             return v

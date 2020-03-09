@@ -15,7 +15,7 @@ def test_initialization():
     viz = plonk.Visualization(snap=snap)
     viz.plot(
         snap=snap,
-        data='density',
+        quantity='density',
         x='x',
         y='y',
         extent=(-150, 150, -150, 150),

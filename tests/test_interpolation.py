@@ -33,7 +33,7 @@ HFACT = 1.0
 def test_scalar_interpolation_projection():
     """Test projection interpolation."""
     im = plonk.visualize.interpolation.scalar_interpolation(
-        data=S_DATA,
+        quantity=S_DATA,
         x_coordinate=XX,
         y_coordinate=YY,
         z_coordinate=ZZ,
@@ -50,7 +50,7 @@ def test_scalar_interpolation_projection():
 def test_scalar_interpolation_cross_section():
     """Test cross section interpolation."""
     im = plonk.visualize.interpolation.scalar_interpolation(
-        data=S_DATA,
+        quantity=S_DATA,
         x_coordinate=XX,
         y_coordinate=YY,
         z_coordinate=ZZ,
@@ -68,8 +68,8 @@ def test_scalar_interpolation_cross_section():
 def test_vector_interpolation_projection():
     """Test projection interpolation."""
     vec = plonk.visualize.interpolation.vector_interpolation(
-        x_data=X_DATA,
-        y_data=Y_DATA,
+        quantity_x=X_DATA,
+        quantity_y=Y_DATA,
         x_coordinate=XX,
         y_coordinate=YY,
         z_coordinate=ZZ,
@@ -86,8 +86,8 @@ def test_vector_interpolation_projection():
 def test_vector_interpolation_cross_section():
     """Test cross section interpolation."""
     vec = plonk.visualize.interpolation.vector_interpolation(
-        x_data=X_DATA,
-        y_data=Y_DATA,
+        quantity_x=X_DATA,
+        quantity_y=Y_DATA,
         x_coordinate=XX,
         y_coordinate=YY,
         z_coordinate=ZZ,
