@@ -32,7 +32,9 @@ def animation(
     quantity
         The quantity to visualize. Can be a string to pass to Snap, or
         a 1d array (N,) of scalar data, or a 2d array (N, 3) of
-        vector data. Default is None.
+        vector data. If quantity is 2d, only the first two components
+        are interpolated, i.e. quantity[:, 0] and quantity[:, 1].
+        Default is None.
     extent
         The range in the x and y-coord as (xmin, xmax, ymin, ymax).
     animation_kwargs : optional
