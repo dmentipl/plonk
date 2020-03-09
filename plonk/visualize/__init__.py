@@ -18,7 +18,7 @@ Render the surface density in xz-plane.
 
 >>> viz = plonk.visualize.plot(
 ...     snap=snap,
-...     data=snap['density'],
+...     quantity=snap['density'],
 ...     x='x',
 ...     y='z',
 ...     extent=(-100, 100, -25, 25),
@@ -28,7 +28,7 @@ Get the interpolation to grid directly (without plotting).
 
 >>> grid_data = plonk.visualize.interpolate(
 ...     snap=snap,
-...     data='density',
+...     quantity='density',
 ...     interp='projection',
 ...     extent=(-100, 100, -100, 100),
 ... )
