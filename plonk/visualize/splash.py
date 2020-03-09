@@ -1,22 +1,22 @@
 """Splash interpolation functions.
 
-Derived from Splash.
+Derived from Splash: https://github.com/danieljprice/splash.
 """
 
 import numba
 import numpy as np
 from numpy import ndarray
 
-radkernel = 2.0
-radkernel2 = 4.0
-cnormk3D = 1.0 / np.pi
+RADKERNEL = 2.0
+RADKERNEL2 = 4.0
+CNORMK3D = 1.0 / np.pi
 
-npts = 100
-maxcoltable = 1000
-dq2table = radkernel2 / maxcoltable
-ddq2table = 1.0 / dq2table
+NPTS = 100
+MAXCOLTABLE = 1000
+DQ2TABLE = RADKERNEL2 / MAXCOLTABLE
+DDQ2TABLE = 1.0 / DQ2TABLE
 
-iverbose = -1
+IVERBOSE = -1
 
 
 @numba.njit
@@ -52,26 +52,26 @@ def setup_integratedkernel():
     -------
     coltable
     """
-    coltable = np.zeros(maxcoltable + 1)
+    coltable = np.zeros(MAXCOLTABLE + 1)
 
-    for idx in range(maxcoltable):
-        # Tabulate for (cylindrical) r**2 between 0 and radkernel**2
-        rxy2 = idx * dq2table
+    for idx in range(MAXCOLTABLE):
+        # Tabulate for (cylindrical) r**2 between 0 and RADKERNEL**2
+        rxy2 = idx * DQ2TABLE
 
-        # Integrate z between 0 and sqrt(radkernel^2 - rxy^2)
-        deltaz = np.sqrt(radkernel2 - rxy2)
-        dz = deltaz / (npts - 1)
+        # Integrate z between 0 and sqrt(RADKERNEL^2 - rxy^2)
+        deltaz = np.sqrt(RADKERNEL2 - rxy2)
+        dz = deltaz / (NPTS - 1)
         coldens = 0
-        for j in range(npts):
+        for j in range(NPTS):
             z = j * dz
             q2 = rxy2 + z * z
             wkern = w_cubic(q2)
-            if j == 0 or j == npts - 1:
+            if j == 0 or j == NPTS - 1:
                 coldens = coldens + 0.5 * wkern * dz
             else:
                 coldens = coldens + wkern * dz
-        coltable[idx] = 2.0 * coldens * cnormk3D
-    coltable[maxcoltable] = 0.0
+        coltable[idx] = 2.0 * coldens * CNORMK3D
+    coltable[MAXCOLTABLE] = 0.0
 
     return coltable
 
@@ -90,14 +90,14 @@ def wfromtable(q2, coltable):
     w
     """
     # Find nearest index in table
-    index = int(q2 * ddq2table)
-    index1 = min(index, maxcoltable)
+    index = int(q2 * DDQ2TABLE)
+    index1 = min(index, MAXCOLTABLE)
 
     # Find increment along from this index
-    dxx = q2 - index * dq2table
+    dxx = q2 - index * DQ2TABLE
 
     # Find gradient
-    dwdx = (coltable[index1] - coltable[index]) * ddq2table
+    dwdx = (coltable[index1] - coltable[index]) * DDQ2TABLE
 
     # Compute value of integrated kernel
     wfromtable = coltable[index] + dwdx * dxx
@@ -192,7 +192,7 @@ def interpolate_projection(
             continue
 
         # Radius of the smoothing kernel
-        radkern = radkernel * hi
+        radkern = RADKERNEL * hi
 
         # Cycle as soon as we know the particle does not contribute
         xi = x[idx]
@@ -216,18 +216,15 @@ def interpolate_projection(
             hminall = min(hi, hminall)
             nsubgrid = nsubgrid + 1
             hsmooth = hmin
-            # factor by which to adjust the weight
-            fac = 1.0
         else:
-            fac = 1.0
             hsmooth = hi
             nok = nok + 1
-        radkern = radkernel * hsmooth
+        radkern = RADKERNEL * hsmooth
 
         # Set kernel related quantities
         hi1 = 1.0 / hsmooth
         hi21 = hi1 * hi1
-        termnorm = weight[idx] * fac * horigi
+        termnorm = weight[idx] * horigi
         term = termnorm * dat[idx]
 
         # Loop over pixels, adding the contribution from this particle
@@ -261,7 +258,7 @@ def interpolate_projection(
                 q2 = dx2i[ipix] + dy2
                 # SPH kernel - integral through cubic spline
                 # interpolate from a pre-calculated table
-                if q2 < radkernel2:
+                if q2 < RADKERNEL2:
                     wab = wfromtable(q2, coltable)
                     # Calculate data value at this pixel using the summation interpolant
                     datsmooth[ipix, jpix] = datsmooth[ipix, jpix] + term * wab
@@ -279,7 +276,7 @@ def interpolate_projection(
     # Warn about subgrid interpolation
     if nsubgrid > 1:
         nfull = int((xmax - xmin) / (hminall)) + 1
-        if nsubgrid > 0.1 * nok and iverbose > -1:
+        if nsubgrid > 0.1 * nok and IVERBOSE > -1:
             print('Warning: pixel size > 2h for ', nsubgrid, ' particles')
             print('need ', nfull, ' pixels for full resolution')
 
@@ -347,7 +344,7 @@ def interpolate_cross_section(
     datsmooth = np.zeros((npixx, npixy))
     datnorm = np.zeros((npixx, npixy))
     dx2i = np.zeros(npixx)
-    const = cnormk3D
+    const = CNORMK3D
 
     # Loop over particles
     for idx in range(npart):
@@ -362,7 +359,7 @@ def interpolate_cross_section(
             continue
         hi1 = 1.0 / hi
         hi21 = hi1 * hi1
-        radkern = radkernel * hi
+        radkern = RADKERNEL * hi
 
         # For each particle, work out distance from the cross section slice
         dz = zslice - z[idx]
@@ -370,7 +367,7 @@ def interpolate_cross_section(
 
         # If this is < 2h then add the particle's contribution to the pixels
         # otherwise skip all this and start on the next particle
-        if dz2 < radkernel2:
+        if dz2 < RADKERNEL2:
 
             xi = x[idx]
             yi = y[idx]
@@ -407,7 +404,7 @@ def interpolate_cross_section(
                 for ipix in range(ipixmin, ipixmax):
                     q2 = dx2i[ipix] + dy2
                     # SPH kernel - cubic spline
-                    if q2 < radkernel2:
+                    if q2 < RADKERNEL2:
                         wab = w_cubic(q2)
                         # Calculate data value at this pixel using the summation
                         # interpolant
