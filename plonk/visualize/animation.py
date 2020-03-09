@@ -16,7 +16,7 @@ def animation(
     *,
     filename: Union[str, Path],
     snaps: List[SnapLike],
-    data: Optional[Union[str, ndarray]] = None,
+    quantity: Optional[Union[str, ndarray]] = None,
     extent: Tuple[float, float, float, float],
     animation_kwargs: Dict[str, Any] = {},
     **kwargs,
@@ -29,8 +29,8 @@ def animation(
         The file name to save the animation to.
     snaps
         A list of Snap objects to animate.
-    data
-        The data to visualize. Can be a string to pass to Snap, or
+    quantity
+        The quantity to visualize. Can be a string to pass to Snap, or
         a 1d array (N,) of scalar data, or a 2d array (N, 3) of
         vector data. Default is None.
     extent
@@ -45,7 +45,7 @@ def animation(
         raise ValueError('filename should end in ".mp4"')
 
     fig, ax = plt.subplots()
-    viz = plot(snap=snaps[0], data=data, extent=extent, **kwargs)
+    viz = plot(snap=snaps[0], quantity=quantity, extent=extent, **kwargs)
     interp_data = _get_data(viz.data)
     im = ax.imshow(interp_data)
 
@@ -58,7 +58,12 @@ def animation(
     def animate(idx):
         print(f'Rendering image: {idx}')
         viz = plot(
-            snap=snaps[idx], data=data, extent=extent, vmin=vmin, vmax=vmax, **kwargs
+            snap=snaps[idx],
+            quantity=quantity,
+            extent=extent,
+            vmin=vmin,
+            vmax=vmax,
+            **kwargs,
         )
         interp_data = _get_data(viz.data)
         im.set_data(interp_data)
