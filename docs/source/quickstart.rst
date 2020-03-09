@@ -93,7 +93,11 @@ Produce a projection rendering of density.
 
     >>> import plonk
     >>> snap = plonk.load_snap('disc_00030.h5')
-    >>> viz = plonk.visualize.render(snap=snap, quantity='density')
+    >>> viz = plonk.visualize.plot(
+    ...    snap=snap,
+    ...    quantity='density',
+    ...    extent=(-150, 150, -150, 150)
+    ... )
 
 .. image:: _static/density.png
 

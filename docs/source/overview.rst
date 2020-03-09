@@ -258,13 +258,17 @@ estimation. For the technical details, see Price (2007), `PASA, 24, 3, 159
 numerical method as SPLASH, with the function compiled with Numba so it has the
 same performance as the Fortran code from SPLASH.
 
-You can use the :py:func:`visualize.render` function to interpolate a quantity
+You can use the :py:func:`visualize.plot` function to interpolate a quantity
 to a pixel grid to show as an image. For example, in the following we produce a
 plot of column density, i.e. a projection plot.
 
 .. code-block:: pycon
 
-    >>> viz = plonk.visualize.render(snap=snap, quantity='density')
+    >>> viz = plonk.visualize.plot(
+    ...     snap=snap,
+    ...     quantity='density',
+    ...     extent=(-150, 150, -150, 150)
+    ... )
 
 .. figure:: _static/density.png
 
@@ -277,25 +281,24 @@ limits of the colorbar.
 
 .. code-block:: pycon
 
-    >>> viz.image.set_clim(vmin=0.5e-8, vmax=1.5e-8)
+    >>> viz.objects['image'].set_clim(vmin=0.5e-8, vmax=1.5e-8)
 
-Extra options can be passed in via dictionaries. For example, we can produce a
-polar plot with the scalar_options keyword argument as follows. We also change
-the colormap.
+Extra options can be passed in as keywords. For example, we can change the
+colormap.
 
 .. code-block:: pycon
 
-    >>> viz = plonk.visualize.render(
+    >>> viz = plonk.visualize.plot(
     ...     sim.snaps[-5],
-    ...     quantity='rho',
-    ...     scalar_options={'polar_coordinates': True, 'cmap': 'viridis'},
+    ...     quantity='density',
+    ...     cmap='viridis',
     ... )
 
 .. figure:: _static/polar.png
 
     The column density in polar coordinates.
 
-More fine-grained control can be achieved by using the function
+More fine-grained control can be achieved by using the full details of
 :py:func:`visualize.plot`. See the API for more details.
 
 --------------------
@@ -342,8 +345,8 @@ Let's plot the gas and dust side-by-side.
     >>> fig, axes = plt.subplots(ncols=2, figsize=(12, 5))
 
     >>> for subsnap, axis in zip(subsnaps, axes):
-    ...     plonk.visualize.render(
-    ...         subsnap, quantity='rho', extent=extent, axis=axis
+    ...     plonk.visualize.plot(
+    ...         subsnap, quantity='density', extent=extent, axis=axis
     ...     )
 
 .. figure:: _static/dust-gas.png
