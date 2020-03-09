@@ -23,14 +23,43 @@ SnapLike = Union[Snap, SubSnap]
 class Visualization:
     """Visualize scalar and vector smoothed particle hydrodynamics data.
 
-    Visualize SPH data as:
-        - a particle plot,
-        - a rendered image,
-        - a vector plot,
-        - or a combination.
+    Visualize SPH data as a particle plot, a rendered image, a contour
+    plot, a vector plot, or a stream plot.
+
+    Parameters
+    ----------
+    snap
+        The associated Snap (or SubSnap) object to visualize.
+
+    Attributes
+    ----------
+    snap
+        The associated Snap (or SubSnap) object to visualize.
+    fig
+        The matplotlib Figure object of the plot.
+    ax
+        The matplotlib Axis object of the plot.
+    lines
+        A list of matplotlib Line2D objects for particle plots.
+    image
+        A matplotlib AxesImage object for rendered plots.
+    colorbar
+        A matplotlib Colorbar object for rendered plots.
+    contour
+        A matplotlib QuadContourSet object for contour plots.
+    quiver
+        A matplotlib Quiver object for quiver (arrow) plots.
+    streamplot
+        A matplotlib StreamplotSet for stream plots.
+    extent
+        A tuple (xmin, xmax, ymin, ymax) of the extent of the plot.
+    data
+        A dictionary containing the data interpolated to a pixel grid.
+        The dictionary keys are: 'render', 'contour', 'quiver',
+        'stream'.
     """
 
-    def __init__(self, snap):
+    def __init__(self, snap: SnapLike):
         self.snap = snap
         self.fig: Any = None
         self.axis: Any = None
@@ -44,7 +73,7 @@ class Visualization:
         self.data: Dict[str, ndarray] = {
             'render': None,
             'contour': None,
-            'arrow': None,
+            'quiver': None,
             'stream': None,
         }
 
@@ -62,16 +91,11 @@ class Visualization:
         axis: Optional[Any] = None,
         **kwargs,
     ) -> Visualization:
-        """Plot scalar and vector smoothed particle hydrodynamics data.
+        """Visualize smoothed particle hydrodynamics data.
 
-        Visualize SPH data as a particle plot, a rendered image, a vector
-        plot, or a combination. The x, y coordinates are the particle
-        Cartesian coordinates, corresponding to the x and y axes of the
-        plot.
-
-        Pass in options for scalar plots, vector plots, and for
-        interpolation via the 'scalar_options', 'vector_options', and
-        'interpolation_options' dictionaries.
+        Visualize SPH data by showing the particle positions, a rendered
+        image or a contour plot for scalar data, a quiver (arrow) plot
+        or stream plot for vector data.
 
         Parameters
         ----------
@@ -84,23 +108,24 @@ class Visualization:
             pass to Snap, or a 1d array (N,). Default is 'x'.
         y
             The y-coordinate for the visualization. Can be a string to
-            pass to Snap, or a 1d array (N,).
+            pass to Snap, or a 1d array (N,). Default is 'y'.
         z
             The z-coordinate for the visualization. Can be a string to
             pass to Snap, or a 1d array (N,). This is only required for
-            cross-section plots.
+            cross-section plots. Default is 'z'.
         kind
             The type of plot.
             - 'particle' : particle plot (default if data is None)
             - 'render' : rendered image (default for scalar data)
             - 'contour' : contour plot (scalar data)
-            - 'arrow' : quiver (arrow) plot (default for vector data)
+            - 'quiver' : quiver (arrow) plot (default for vector data)
             - 'stream' : stream plot (vector data)
         interp
             The interpolation type.
             - 'projection' : 2d interpolation via projection to xy-plane
             - 'cross_section' : 3d interpolation via cross-section in
               z-direction
+            Default is 'projection'.
         z_slice
             The z-coordinate value of the cross-section slice. Default
             is 0.0.
@@ -108,12 +133,67 @@ class Visualization:
             The range in the x and y-coord as (xmin, xmax, ymin, ymax).
         axis
             A matplotlib axis handle.
+        **kwargs
+            Additional key word arguments to pass to interpolation and
+            matplotlib functions.
+
+        Notes
+        -----
+        Additional parameters passed as key word arguments will be
+        passed to lower level functions as required. E.g. Plonk uses
+        matplotlib's imshow for a render plot, so additional arguments
+        to imshow can be passed this way.
+
+        Other Parameters
+        ----------------
+        This is a list of parameters that are passed in as key word
+        arguments to other functions inside this method.
+
+        Parameters for interpolation:
+
+            number_of_pixels : tuple
+                The number of pixels to interpolate particle quantities
+                to as a tuple (nx, ny). Default is (512, 512).
+            density_weighted : bool
+                Whether to density weight the interpolation or not.
+                Default is False.
+
+        Parameters for particle plots are passed to axis.plot except:
+
+            fmt : str
+                This is the matplotlib axis.plot method positional
+                argument format string. Default is 'k.'.
+
+        Parameters for kind='render' plots are passed to axis.imshow
+        except:
+
+            show_colorbar : bool
+                Whether or not to display a colorbar. Default is True.
+
+        Parameters for kind='contour' plots are passed to axis.contour.
+
+        Parameters for kind='quiver' plots are passed to axis.quiver
+        except:
+
+            number_of_arrows : tuple
+                The number of arrows to display by sub-sampling the
+                interpolated data. Default is (25, 25).
+            normalize_vectors : bool
+                Whether to normalize the arrows to all have the same
+                length. Default is False.
+
+        Parameters for kind='stream' plots are passed to
+        axis.streamplot.
         """
-        if axis is None:
-            self.fig, self.axis = plt.subplots()
+        if self.axis is None:
+            if axis is None:
+                self.fig, self.axis = plt.subplots()
+            else:
+                self.fig = axis.get_figure()
+                self.axis = axis
         else:
-            self.fig = axis.get_figure()
-            self.axis = axis
+            if axis is not None:
+                raise ValueError('Trying to change existing axis attribute')
 
         data, x, y, z, kind = _check_input(
             snap=self.snap, data=data, x=x, y=y, z=z, kind=kind
@@ -138,13 +218,13 @@ class Visualization:
         )
 
         if kind == 'particle':
-            self.lines = particle_plot(
+            self.lines = _particle_plot(
                 snap=self.snap, x=x, y=y, extent=extent, axis=self.axis, **kwargs,
             )
 
         elif kind == 'render':
             show_colorbar = kwargs.pop('show_colorbar', True)
-            self.image, self.data['render'] = render_plot(
+            self.image, self.data['render'] = _render_plot(
                 data=interpolated_data, extent=extent, axis=self.axis, **kwargs,
             )
             if show_colorbar:
@@ -153,19 +233,22 @@ class Visualization:
                 self.colorbar = self.fig.colorbar(self.image, cax)
 
         elif kind == 'contour':
-            self.contour, self.data['contour'] = contour_plot(
+            self.contour, self.data['contour'] = _contour_plot(
                 data=interpolated_data, extent=extent, axis=self.axis, **kwargs,
             )
 
-        elif kind == 'arrow':
-            self.quiver, self.data['arrow'] = arrow_plot(
+        elif kind == 'quiver':
+            self.quiver, self.data['quiver'] = _quiver_plot(
                 data=interpolated_data, extent=extent, axis=self.axis, **kwargs,
             )
 
         elif kind == 'stream':
-            self.streamplot, self.data['stream'] = stream_plot(
+            self.streamplot, self.data['stream'] = _stream_plot(
                 data=interpolated_data, extent=extent, axis=self.axis, **kwargs,
             )
+
+        else:
+            raise ValueError('Cannot determine plot type')
 
         self.axis.set_xlim(*extent[:2])
         self.axis.set_ylim(*extent[2:])
@@ -232,7 +315,7 @@ def _interpolate(
     return interpolated_data
 
 
-def particle_plot(
+def _particle_plot(
     *,
     snap: SnapLike,
     x: ndarray,
@@ -241,11 +324,6 @@ def particle_plot(
     axis: Any,
     **kwargs,
 ):
-    """Plot the particles.
-
-    Parameters
-    ----------
-    """
     h: ndarray = snap['smooth']
     mask = (
         (h > 0) & (x > extent[0]) & (x < extent[1]) & (y > extent[2]) & (y < extent[3])
@@ -255,23 +333,9 @@ def particle_plot(
     return lines
 
 
-def render_plot(
+def _render_plot(
     *, data: ndarray, extent: Tuple[float, float, float, float], axis: Any, **kwargs,
 ):
-    """Plot scalar data as a rendered image.
-
-    Visualize scalar SPH data as a rendered image with either projection
-    or cross section interpolation.
-
-    Parameters
-    ----------
-    extent
-        The range in the x- and y-direction as (xmin, xmax, ymin, ymax).
-    axis
-        A matplotlib axis handle.
-    interpolation_kwargs
-        A dictionary of kwargs to pass to interpolation function.
-    """
     try:
         norm = kwargs.pop('norm')
     except KeyError:
@@ -288,17 +352,9 @@ def render_plot(
     return image, data
 
 
-def contour_plot(
+def _contour_plot(
     *, data: ndarray, extent: Tuple[float, float, float, float], axis: Any, **kwargs,
 ):
-    """Plot scalar data as a contour plot.
-
-    Visualize scalar SPH data as a contour plot with either projection
-    or cross section interpolation.
-
-    Parameters
-    ----------
-    """
     n_interp_x, n_interp_y = data.shape
     X, Y = np.meshgrid(
         np.linspace(*extent[:2], n_interp_x), np.linspace(*extent[2:], n_interp_y),
@@ -309,14 +365,9 @@ def contour_plot(
     return contour, data
 
 
-def arrow_plot(
+def _quiver_plot(
     *, data: ndarray, extent: Tuple[float, float, float, float], axis: Any, **kwargs,
 ):
-    """Plot vector data as a quiver plot.
-
-    Parameters
-    ----------
-    """
     n_interp_x, n_interp_y = data[0].shape
     X, Y = np.meshgrid(
         np.linspace(*extent[:2], n_interp_x), np.linspace(*extent[2:], n_interp_y)
@@ -343,14 +394,9 @@ def arrow_plot(
     return quiver, data
 
 
-def stream_plot(
+def _stream_plot(
     *, data: ndarray, extent: Tuple[float, float, float, float], axis: Any, **kwargs,
 ):
-    """Plot vector data as a stream plot.
-
-    Parameters
-    ----------
-    """
     n_interp_x, n_interp_y = data[0].shape
     X, Y = np.meshgrid(
         np.linspace(*extent[:2], n_interp_x), np.linspace(*extent[2:], n_interp_y)
@@ -381,9 +427,9 @@ def _check_input(*, snap, data, x, y, z, kind):
     except ValueError:
         data = None
 
-    x = _get_array_from_input(snap, x)
-    y = _get_array_from_input(snap, y)
-    z = _get_array_from_input(snap, z)
+    x = _get_array_from_input(snap, x, 'x')
+    y = _get_array_from_input(snap, y, 'y')
+    z = _get_array_from_input(snap, z, 'z')
 
     if data is not None:
         if data.ndim > 2:
