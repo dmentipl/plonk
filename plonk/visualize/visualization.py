@@ -8,15 +8,28 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional, Tuple, Union
 
-import matplotlib as mpl
 import matplotlib.pyplot as plt
-import numpy as np
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ndarray
 
 from ..snap.snap import SnapLike, get_array_from_input
 from ..utils import is_documented_by
+from . import _plots
 from .interpolation import interpolate
+
+_kind_to_object = {
+    'render': 'image',
+    'contour': 'contour',
+    'quiver': 'quiver',
+    'stream': 'streamplot',
+}
+
+_kind_to_function = {
+    'render': _plots._render_plot,
+    'contour': _plots._contour_plot,
+    'quiver': _plots._quiver_plot,
+    'stream': _plots._stream_plot,
+}
 
 
 class Visualization:
@@ -217,46 +230,16 @@ class Visualization:
                 **_kwargs,
             )
 
+        show_colorbar = kwargs.pop('show_colorbar', True if kind == 'render' else False)
+
         if kind == 'particle':
-            self.objects['lines'] = _particle_plot(
+            self.objects['lines'] = _plots._particle_plot(
                 snap=self.snap, x=x, y=y, extent=extent, axis=self.axis, **kwargs,
             )
 
-        elif kind == 'render':
-            show_colorbar = kwargs.pop('show_colorbar', True)
+        elif kind in ('render', 'contour', 'quiver', 'stream'):
             self.data[kind] = interpolated_data
-            self.objects['image'] = _render_plot(
-                interpolated_data=interpolated_data,
-                extent=extent,
-                axis=self.axis,
-                **kwargs,
-            )
-            if show_colorbar:
-                divider = make_axes_locatable(self.axis)
-                cax = divider.append_axes("right", size="5%", pad=0.05)
-                self.objects['colorbar'] = self.fig.colorbar(self.objects['image'], cax)
-
-        elif kind == 'contour':
-            self.data[kind] = interpolated_data
-            self.objects['contour'] = _contour_plot(
-                interpolated_data=interpolated_data,
-                extent=extent,
-                axis=self.axis,
-                **kwargs,
-            )
-
-        elif kind == 'quiver':
-            self.data[kind] = interpolated_data
-            self.objects['quiver'] = _quiver_plot(
-                interpolated_data=interpolated_data,
-                extent=extent,
-                axis=self.axis,
-                **kwargs,
-            )
-
-        elif kind == 'stream':
-            self.data[kind] = interpolated_data
-            self.objects['streamplot'] = _stream_plot(
+            self.objects[_kind_to_object[kind]] = _kind_to_function[kind](
                 interpolated_data=interpolated_data,
                 extent=extent,
                 axis=self.axis,
@@ -265,6 +248,11 @@ class Visualization:
 
         else:
             raise ValueError('Cannot determine plot type')
+
+        if show_colorbar:
+            divider = make_axes_locatable(self.axis)
+            cax = divider.append_axes("right", size="5%", pad=0.05)
+            self.objects['colorbar'] = self.fig.colorbar(self.objects['image'], cax)
 
         self.axis.set_xlim(*extent[:2])
         self.axis.set_ylim(*extent[2:])
@@ -275,117 +263,6 @@ class Visualization:
     def __repr__(self):
         """Dunder repr method."""
         return '<plonk.Visualization>'
-
-
-def _particle_plot(
-    *,
-    snap: SnapLike,
-    x: ndarray,
-    y: ndarray,
-    extent: Tuple[float, float, float, float],
-    axis: Any,
-    **kwargs,
-):
-    h: ndarray = snap['smooth']
-    mask = (
-        (h > 0) & (x > extent[0]) & (x < extent[1]) & (y > extent[2]) & (y < extent[3])
-    )
-    fmt = kwargs.get('fmt', 'k.')
-    lines = axis.plot(x[mask], y[mask], fmt, **kwargs)
-    return lines
-
-
-def _render_plot(
-    *,
-    interpolated_data: ndarray,
-    extent: Tuple[float, float, float, float],
-    axis: Any,
-    **kwargs,
-):
-    try:
-        norm = kwargs.pop('norm')
-    except KeyError:
-        norm = 'linear'
-    if norm.lower() in ('linear', 'lin'):
-        norm = mpl.colors.Normalize()
-    elif norm.lower() in ('logarithic', 'logarithm', 'log', 'log10'):
-        norm = mpl.colors.LogNorm()
-    else:
-        raise ValueError('Cannot determine normalization for colorbar')
-
-    image = axis.imshow(
-        interpolated_data, origin='lower', extent=extent, norm=norm, **kwargs
-    )
-
-    return image
-
-
-def _contour_plot(
-    *,
-    interpolated_data: ndarray,
-    extent: Tuple[float, float, float, float],
-    axis: Any,
-    **kwargs,
-):
-    n_interp_x, n_interp_y = interpolated_data.shape
-    X, Y = np.meshgrid(
-        np.linspace(*extent[:2], n_interp_x), np.linspace(*extent[2:], n_interp_y),
-    )
-
-    contour = axis.contour(X, Y, interpolated_data, **kwargs)
-
-    return contour
-
-
-def _quiver_plot(
-    *,
-    interpolated_data: ndarray,
-    extent: Tuple[float, float, float, float],
-    axis: Any,
-    **kwargs,
-):
-    n_interp_x, n_interp_y = interpolated_data[0].shape
-    X, Y = np.meshgrid(
-        np.linspace(*extent[:2], n_interp_x), np.linspace(*extent[2:], n_interp_y)
-    )
-    U, V = interpolated_data[0], interpolated_data[1]
-
-    number_of_arrows = kwargs.pop('number_of_arrows', (25, 25))
-    normalize_vectors = kwargs.pop('normalize_vectors', False)
-
-    n_x, n_y = number_of_arrows[0], number_of_arrows[1]
-    stride_x = int(n_interp_x / n_x)
-    stride_y = int(n_interp_y / n_y)
-    X = X[::stride_y, ::stride_x]
-    Y = Y[::stride_y, ::stride_x]
-    U = U[::stride_y, ::stride_x]
-    V = V[::stride_y, ::stride_x]
-    if normalize_vectors:
-        norm = np.hypot(U, V)
-        U /= norm
-        V /= norm
-
-    quiver = axis.quiver(X, Y, U, V, **kwargs)
-
-    return quiver
-
-
-def _stream_plot(
-    *,
-    interpolated_data: ndarray,
-    extent: Tuple[float, float, float, float],
-    axis: Any,
-    **kwargs,
-):
-    n_interp_x, n_interp_y = interpolated_data[0].shape
-    X, Y = np.meshgrid(
-        np.linspace(*extent[:2], n_interp_x), np.linspace(*extent[2:], n_interp_y)
-    )
-    U, V = interpolated_data[0], interpolated_data[1]
-
-    streamplot = axis.streamplot(X, Y, U, V, **kwargs)
-
-    return streamplot
 
 
 def _check_input(*, snap, quantity, x, y, z, kind):
