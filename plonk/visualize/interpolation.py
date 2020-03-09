@@ -4,12 +4,109 @@ There are two functions: one for interpolation of scalar fields, and one
 for interpolation of vector fields.
 """
 
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 import numpy as np
 from numpy import ndarray
 
+from ..snap.snap import SnapLike, get_array_from_input
 from .splash import interpolate_cross_section, interpolate_projection
+
+
+def interpolate(
+    *,
+    snap: SnapLike,
+    data: Union[str, ndarray],
+    x: Union[str, ndarray] = 'x',
+    y: Union[str, ndarray] = 'y',
+    z: Optional[Union[str, ndarray]] = None,
+    interp: 'str',
+    z_slice: Optional[float] = None,
+    extent: Tuple[float, float, float, float],
+    **kwargs,
+) -> ndarray:
+    """Interpolate a quantity on the snapshot to a pixel grid.
+
+    Parameters
+    ----------
+    snap
+        The Snap (or SubSnap) object.
+    data
+        The data to visualize. Can be a string to pass to Snap, or
+        a 1d array (N,) of scalar data, or a 2d array (N, 3) of
+        vector data. Default is None.
+    x
+        The x-coordinate for the visualization. Can be a string to
+        pass to Snap, or a 1d array (N,). Default is 'x'.
+    y
+        The y-coordinate for the visualization. Can be a string to
+        pass to Snap, or a 1d array (N,). Default is 'y'.
+    z
+        The z-coordinate for the visualization. Can be a string to
+        pass to Snap, or a 1d array (N,). This is only required for
+        cross-section plots. Default is 'z'.
+    interp
+        The interpolation type.
+        - 'projection' : 2d interpolation via projection to xy-plane
+        - 'cross_section' : 3d interpolation via cross-section in
+            z-direction
+        Default is 'projection'.
+    z_slice
+        The z-coordinate value of the cross-section slice. Default
+        is 0.0.
+    extent
+        The xy extent of the image as (xmin, xmax, ymin, ymax).
+
+    Returns
+    -------
+    ndarray
+        The interpolated data as an ndarray.
+    """
+    data = get_array_from_input(snap, data)
+    x = get_array_from_input(snap, x, 'x')
+    y = get_array_from_input(snap, y, 'y')
+    z = get_array_from_input(snap, z, 'z')
+
+    if interp == 'projection':
+        cross_section = None
+    elif interp == 'cross_section':
+        if z_slice is None:
+            z_slice = 0.0
+        cross_section = z_slice
+
+    if data.ndim == 1:
+        interpolated_data = scalar_interpolation(
+            data=data,
+            x_coordinate=x,
+            y_coordinate=y,
+            z_coordinate=z,
+            extent=extent,
+            smoothing_length=snap['smooth'],
+            particle_mass=snap['mass'],
+            hfact=snap.properties['hfact'],
+            cross_section=cross_section,
+            **kwargs,
+        )
+
+    elif data.ndim == 2:
+        interpolated_data = vector_interpolation(
+            x_data=data[:, 0],
+            y_data=data[:, 1],
+            x_coordinate=x,
+            y_coordinate=y,
+            z_coordinate=z,
+            extent=extent,
+            smoothing_length=snap['smooth'],
+            particle_mass=snap['mass'],
+            hfact=snap.properties['hfact'],
+            cross_section=cross_section,
+            **kwargs,
+        )
+
+    else:
+        raise ValueError('data.ndim > 2: cannot determine data')
+
+    return interpolated_data
 
 
 def scalar_interpolation(
@@ -130,9 +227,6 @@ def vector_interpolation(
         An array of vector quantities interpolated to a pixel grid with
         shape (2, npixx, npixy).
     """
-    if cross_section is not None and z_coordinate is None:
-        raise ValueError('z_coordinate required for cross section interpolation')
-
     vecsmoothx = _interpolate(
         data=x_data,
         x_coordinate=x_coordinate,

@@ -14,10 +14,8 @@ import numpy as np
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ndarray
 
-from .interpolation import scalar_interpolation, vector_interpolation
-from ..snap.snap import Snap, SubSnap
-
-SnapLike = Union[Snap, SubSnap]
+from ..snap.snap import SnapLike, get_array_from_input
+from .interpolation import interpolate
 
 
 class Visualization:
@@ -69,7 +67,7 @@ class Visualization:
         self.contour: Any = None
         self.quiver: Any = None
         self.streamplot: Any = None
-        self.extent: Tuple[float, float, float, float] = None
+        self.extent: Tuple[float, float, float, float] = (-1, -1, -1, -1)
         self.data: Dict[str, ndarray] = {
             'render': None,
             'contour': None,
@@ -195,27 +193,30 @@ class Visualization:
             if axis is not None:
                 raise ValueError('Trying to change existing axis attribute')
 
+        self.extent = extent
+
         data, x, y, z, kind = _check_input(
             snap=self.snap, data=data, x=x, y=y, z=z, kind=kind
         )
 
-        interpolation_kwargs = ('number_of_pixels', 'density_weighted')
-        _kwargs = {
-            key: val for key, val in kwargs.items() if key in interpolation_kwargs
-        }
-        for key in _kwargs:
-            kwargs.pop(key)
-        interpolated_data = _interpolate(
-            snap=self.snap,
-            data=data,
-            x=x,
-            y=y,
-            z=z,
-            interp=interp,
-            z_slice=z_slice,
-            extent=extent,
-            **_kwargs,
-        )
+        if data is not None:
+            interpolation_kwargs = ('number_of_pixels', 'density_weighted')
+            _kwargs = {
+                key: val for key, val in kwargs.items() if key in interpolation_kwargs
+            }
+            for key in _kwargs:
+                kwargs.pop(key)
+            interpolated_data = interpolate(
+                snap=self.snap,
+                data=data,
+                x=x,
+                y=y,
+                z=z,
+                interp=interp,
+                z_slice=z_slice,
+                extent=extent,
+                **_kwargs,
+            )
 
         if kind == 'particle':
             self.lines = _particle_plot(
@@ -259,60 +260,6 @@ class Visualization:
     def __repr__(self):
         """Dunder repr method."""
         return '<plonk.Visualization>'
-
-
-def _interpolate(
-    *,
-    snap: SnapLike,
-    data: ndarray,
-    x: ndarray,
-    y: ndarray,
-    z: Optional[ndarray] = None,
-    interp: 'str',
-    z_slice: Optional[float] = None,
-    extent: Tuple[float, float, float, float],
-    **kwargs,
-):
-    if interp == 'projection':
-        cross_section = None
-    elif interp == 'cross_section':
-        if z_slice is None:
-            z_slice = 0.0
-        cross_section = z_slice
-
-    if data.ndim == 1:
-        interpolated_data = scalar_interpolation(
-            data=data,
-            x_coordinate=x,
-            y_coordinate=y,
-            z_coordinate=z,
-            extent=extent,
-            smoothing_length=snap['smooth'],
-            particle_mass=snap['mass'],
-            hfact=snap.properties['hfact'],
-            cross_section=cross_section,
-            **kwargs,
-        )
-
-    elif data.ndim == 2:
-        interpolated_data = vector_interpolation(
-            x_data=data[:, 0],
-            y_data=data[:, 1],
-            x_coordinate=x,
-            y_coordinate=y,
-            z_coordinate=z,
-            extent=extent,
-            smoothing_length=snap['smooth'],
-            particle_mass=snap['mass'],
-            hfact=snap.properties['hfact'],
-            cross_section=cross_section,
-            **kwargs,
-        )
-
-    else:
-        raise ValueError('data.ndim > 2: cannot determine data')
-
-    return interpolated_data
 
 
 def _particle_plot(
@@ -408,28 +355,16 @@ def _stream_plot(
     return streamplot, data
 
 
-def _get_array_from_input(
-    snap: SnapLike, inp: Union[str, ndarray], default: str = None
-) -> ndarray:
-    if isinstance(inp, str):
-        return snap[inp]
-    elif isinstance(inp, ndarray):
-        return inp
-    elif default is not None:
-        return snap[default]
-    raise ValueError('Cannot determine array to return')
-
-
 def _check_input(*, snap, data, x, y, z, kind):
 
     try:
-        data = _get_array_from_input(snap, data)
+        data = get_array_from_input(snap, data)
     except ValueError:
         data = None
 
-    x = _get_array_from_input(snap, x, 'x')
-    y = _get_array_from_input(snap, y, 'y')
-    z = _get_array_from_input(snap, z, 'z')
+    x = get_array_from_input(snap, x, 'x')
+    y = get_array_from_input(snap, y, 'y')
+    z = get_array_from_input(snap, z, 'z')
 
     if data is not None:
         if data.ndim > 2:

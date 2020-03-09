@@ -10,7 +10,7 @@ from matplotlib import animation as _animation
 from numpy import ndarray
 
 from ..snap.snap import Snap, SubSnap
-from .plot import render
+from .plot import plot
 
 SnapLike = Union[Snap, SubSnap]
 
@@ -60,7 +60,7 @@ def animation(
         animation_options = {}
 
     fig, ax = plt.subplots()
-    viz = render(
+    viz = plot(
         snaps[0],
         quantity,
         extent=extent,
@@ -78,7 +78,7 @@ def animation(
 
     def animate(idx):
         print(f'Rendering image: {idx}')
-        viz = render(
+        viz = plot(
             snaps[idx],
             quantity,
             extent=extent,

@@ -9,8 +9,8 @@ Plot the particles.
 
 >>> viz = plonk.visualize.plot(
 ...     snap=snap,
-...     x_coordinate=snap['x'],
-...     y_coordinate=snap['y'],
+...     x=snap['x'],
+...     y=snap['y'],
 ...     extent=(-100, 100, -100, 100),
 ... )
 
@@ -18,22 +18,18 @@ Render the surface density in xz-plane.
 
 >>> viz = plonk.visualize.plot(
 ...     snap=snap,
-...     scalar_data=snap['density'],
-...     x_coordinate='x',
-...     y_coordinate='z',
+...     data=snap['density'],
+...     x='x',
+...     y='z',
 ...     extent=(-100, 100, -25, 25),
 ... )
-
-Or via the helper 'render' function.
-
->>> viz = plonk.visualize.render(snap=snap, quantity='density')
->>> viz = plonk.visualize.render(snap=snap, quantity=snap['density'])
 
 Get the interpolation to grid directly (without plotting).
 
 >>> grid_data = plonk.visualize.interpolate(
 ...     snap=snap,
-...     quantity='density',
+...     data='density',
+...     interp='projection',
 ...     extent=(-100, 100, -100, 100),
 ... )
 
@@ -48,7 +44,8 @@ Make an animation of multiple snaps.
 """
 
 from .animation import animation
-from .plot import interpolate, plot, render
+from .interpolation import interpolate
+from .plot import plot
 from .visualization import Visualization
 
-__all__ = ['Visualization', 'animation', 'interpolate', 'plot', 'render']
+__all__ = ['Visualization', 'animation', 'interpolate', 'plot']
