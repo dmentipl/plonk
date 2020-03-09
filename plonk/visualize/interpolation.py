@@ -22,7 +22,7 @@ def scalar_interpolation(
     smoothing_length: ndarray,
     particle_mass: ndarray,
     hfact: float,
-    number_of_pixels: Tuple[float, float],
+    number_of_pixels: Tuple[float, float] = (512, 512),
     cross_section: Optional[float] = None,
     density_weighted: Optional[bool] = None,
 ) -> ndarray:
@@ -88,7 +88,7 @@ def vector_interpolation(
     smoothing_length: ndarray,
     particle_mass: ndarray,
     hfact: float,
-    number_of_pixels: Tuple[float, float],
+    number_of_pixels: Tuple[float, float] = (512, 512),
     cross_section: Optional[float] = None,
     density_weighted: Optional[bool] = None,
 ) -> ndarray:
@@ -130,6 +130,9 @@ def vector_interpolation(
         An array of vector quantities interpolated to a pixel grid with
         shape (2, npixx, npixy).
     """
+    if cross_section is not None and z_coordinate is None:
+        raise ValueError('z_coordinate required for cross section interpolation')
+
     vecsmoothx = _interpolate(
         data=x_data,
         x_coordinate=x_coordinate,
@@ -178,6 +181,8 @@ def _interpolate(
     else:
         do_cross_section = True
         zslice = cross_section
+        if z_coordinate is None:
+            raise ValueError('Cross section interpolation requires z_coordinate')
     normalise = False
     if density_weighted is None:
         density_weighted = False
@@ -219,7 +224,6 @@ def _interpolate(
         data = interpolate_projection(
             x=x_coordinate,
             y=y_coordinate,
-            z=z_coordinate,
             hh=smoothing_length,
             weight=weight,
             dat=data,

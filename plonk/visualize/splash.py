@@ -109,7 +109,6 @@ def wfromtable(q2, coltable):
 def interpolate_projection(
     x: ndarray,
     y: ndarray,
-    z: ndarray,
     hh: ndarray,
     weight: ndarray,
     dat: ndarray,
@@ -131,8 +130,6 @@ def interpolate_projection(
         The particle x positions.
     y
         The particle y positions.
-    z
-        The particle z positions.
     hh
         The particle smoothing length.
     weight

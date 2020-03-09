@@ -6,35 +6,18 @@ hydrodynamics simulation data.
 
 from __future__ import annotations
 
-from copy import copy
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple, Union
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ndarray
-from scipy.interpolate import RectBivariateSpline
-from skimage import transform
 
 from .interpolation import scalar_interpolation, vector_interpolation
+from ..snap.snap import Snap, SubSnap
 
-_plot_render = True
-_plot_contour = False
-_contour_color = 'black'
-_contour_format = '%.2g'
-_norm = 'linear'
-_cmap = 'gist_heat'
-_render_range = None
-_plot_colorbar = True
-_polar_coordinates = False
-_number_of_pixels = (512, 512)
-_plot_stream = False
-_vector_color = 'black'
-_vector_scale = None
-_vector_scale_units = None
-_normalize_vectors = False
-_number_of_arrows = (25, 25)
+SnapLike = Union[Snap, SubSnap]
 
 
 class Visualization:
@@ -47,33 +30,37 @@ class Visualization:
         - or a combination.
     """
 
-    def __init__(self):
+    def __init__(self, snap):
+        self.snap = snap
         self.fig: Any = None
         self.axis: Any = None
+        self.lines: Any = None
         self.image: Any = None
         self.colorbar: Any = None
-        self.contours: Any = None
+        self.contour: Any = None
         self.quiver: Any = None
         self.streamplot: Any = None
         self.extent: Tuple[float, float, float, float] = None
-        self.data: Dict[str, ndarray] = {'scalar': None, 'vector': None}
+        self.data: Dict[str, ndarray] = {
+            'render': None,
+            'contour': None,
+            'arrow': None,
+            'stream': None,
+        }
 
     def plot(
         self,
         *,
-        scalar_data: Optional[ndarray] = None,
-        vector_data: Optional[ndarray] = None,
-        x_coordinate: ndarray,
-        y_coordinate: ndarray,
-        z_coordinate: Optional[ndarray] = None,
+        data: Optional[Union[str, ndarray]] = None,
+        x: Union[str, ndarray] = 'x',
+        y: Union[str, ndarray] = 'y',
+        z: Union[str, ndarray] = 'z',
+        kind: Optional[str] = None,
+        interp: str = 'projection',
+        z_slice: float = 0.0,
         extent: Tuple[float, float, float, float],
-        particle_mass: ndarray,
-        smoothing_length: ndarray,
-        hfact: float,
         axis: Optional[Any] = None,
-        scalar_options: Dict[str, Any] = None,
-        vector_options: Dict[str, Any] = None,
-        interpolation_options: Dict[str, Any] = None,
+        **kwargs,
     ) -> Visualization:
         """Plot scalar and vector smoothed particle hydrodynamics data.
 
@@ -88,112 +75,100 @@ class Visualization:
 
         Parameters
         ----------
-        scalar_data
-            The 1d array (N,) of scalar data to visualize.
-        vector_data
-            The 2d array (N, 2) of vector data to visualize.
-        x_coordinate
-            The x-position on the particles, where x is the required plot
-            x-axis.
-        y_coordinate
-            The y-position on the particles, where y is the required plot
-            y-axis.
-        z_coordinate
-            The z-position on the particles, where z is the depth-axis for
-            the required plot.
+        data
+            The data to visualize. Can be a string to pass to Snap, or
+            a 1d array (N,) of scalar data, or a 2d array (N, 3) of
+            vector data. Default is None.
+        x
+            The x-coordinate for the visualization. Can be a string to
+            pass to Snap, or a 1d array (N,). Default is 'x'.
+        y
+            The y-coordinate for the visualization. Can be a string to
+            pass to Snap, or a 1d array (N,).
+        z
+            The z-coordinate for the visualization. Can be a string to
+            pass to Snap, or a 1d array (N,). This is only required for
+            cross-section plots.
+        kind
+            The type of plot.
+            - 'particle' : particle plot (default if data is None)
+            - 'render' : rendered image (default for scalar data)
+            - 'contour' : contour plot (scalar data)
+            - 'arrow' : quiver (arrow) plot (default for vector data)
+            - 'stream' : stream plot (vector data)
+        interp
+            The interpolation type.
+            - 'projection' : 2d interpolation via projection to xy-plane
+            - 'cross_section' : 3d interpolation via cross-section in
+              z-direction
+        z_slice
+            The z-coordinate value of the cross-section slice. Default
+            is 0.0.
         extent
-            The range in the x- and y-direction as (xmin, xmax, ymin, ymax).
-        particle_mass
-            The particle mass for each particle.
-        smoothing_length
-            The smoothing length for each particle.
-        hfact
-            The smoothing length factor.
+            The range in the x and y-coord as (xmin, xmax, ymin, ymax).
         axis
             A matplotlib axis handle.
-        scalar_options
-            A dictionary of options for scalar plots.
-        vector_options
-            A dictionary of options for vector plots.
-        interpolation_options
-            A dictionary of options for interpolation.
         """
-        _scalar_options = copy(scalar_options)
-        _vector_options = copy(vector_options)
-        _interpolation_options = copy(interpolation_options)
-
         if axis is None:
             self.fig, self.axis = plt.subplots()
         else:
             self.fig = axis.get_figure()
             self.axis = axis
 
-        if scalar_data is None and vector_data is None:
-            particle_plot(
-                x_coordinate=x_coordinate,
-                y_coordinate=y_coordinate,
-                smoothing_length=smoothing_length,
-                axis=self.axis,
+        data, x, y, z, kind = _check_input(
+            snap=self.snap, data=data, x=x, y=y, z=z, kind=kind
+        )
+
+        interpolation_kwargs = ('number_of_pixels', 'density_weighted')
+        _kwargs = {
+            key: val for key, val in kwargs.items() if key in interpolation_kwargs
+        }
+        for key in _kwargs:
+            kwargs.pop(key)
+        interpolated_data = _interpolate(
+            snap=self.snap,
+            data=data,
+            x=x,
+            y=y,
+            z=z,
+            interp=interp,
+            z_slice=z_slice,
+            extent=extent,
+            **_kwargs,
+        )
+
+        if kind == 'particle':
+            self.lines = particle_plot(
+                snap=self.snap, x=x, y=y, extent=extent, axis=self.axis, **kwargs,
             )
 
-        if scalar_data is not None:
-            image, contour, colorbar, data, extent = scalar_plot(
-                data=scalar_data,
-                x_coordinate=x_coordinate,
-                y_coordinate=y_coordinate,
-                z_coordinate=z_coordinate,
-                particle_mass=particle_mass,
-                smoothing_length=smoothing_length,
-                hfact=hfact,
-                extent=extent,
-                fig=self.fig,
-                axis=self.axis,
-                plot_options=_scalar_options,
-                interpolation_options=_interpolation_options,
+        elif kind == 'render':
+            show_colorbar = kwargs.pop('show_colorbar', True)
+            self.image, self.data['render'] = render_plot(
+                data=interpolated_data, extent=extent, axis=self.axis, **kwargs,
+            )
+            if show_colorbar:
+                divider = make_axes_locatable(self.axis)
+                cax = divider.append_axes("right", size="5%", pad=0.05)
+                self.colorbar = self.fig.colorbar(self.image, cax)
+
+        elif kind == 'contour':
+            self.contour, self.data['contour'] = contour_plot(
+                data=interpolated_data, extent=extent, axis=self.axis, **kwargs,
             )
 
-            self.image = image
-            self.contours = contour
-            self.colorbar = colorbar
-            self.data['scalar'] = data
-            self.extent = extent
-
-            if not np.allclose(self.extent, extent):
-                new_extent = self.extent
-
-        if vector_data is not None:
-            quiver, streamplot, data, extent = vector_plot(
-                data=vector_data,
-                x_coordinate=x_coordinate,
-                y_coordinate=y_coordinate,
-                z_coordinate=z_coordinate,
-                particle_mass=particle_mass,
-                smoothing_length=smoothing_length,
-                hfact=hfact,
-                extent=extent,
-                axis=self.axis,
-                plot_options=_vector_options,
-                interpolation_options=_interpolation_options,
+        elif kind == 'arrow':
+            self.quiver, self.data['arrow'] = arrow_plot(
+                data=interpolated_data, extent=extent, axis=self.axis, **kwargs,
             )
 
-            self.quiver = quiver
-            self.streamplot = streamplot
-            self.data['vector'] = data
-            self.extent = extent
+        elif kind == 'stream':
+            self.streamplot, self.data['stream'] = stream_plot(
+                data=interpolated_data, extent=extent, axis=self.axis, **kwargs,
+            )
 
-            try:
-                if not np.allclose(self.extent, new_extent):
-                    raise ValueError('scalar and vector plot have different extent')
-            except NameError:
-                pass
-
-        try:
-            extent = new_extent
-        except NameError:
-            pass
         self.axis.set_xlim(*extent[:2])
         self.axis.set_ylim(*extent[2:])
-
         self.axis.set_aspect('equal')
 
         return self
@@ -203,206 +178,229 @@ class Visualization:
         return '<plonk.Visualization>'
 
 
-def particle_plot(
-    x_coordinate: ndarray, y_coordinate: ndarray, smoothing_length: ndarray, axis: Any,
-):
-
-    axis.plot(
-        x_coordinate[smoothing_length > 0],
-        y_coordinate[smoothing_length > 0],
-        'k.',
-        markersize=0.5,
-    )
-    return
-
-
-def scalar_plot(
+def _interpolate(
     *,
+    snap: SnapLike,
     data: ndarray,
-    x_coordinate: ndarray,
-    y_coordinate: ndarray,
-    z_coordinate: Optional[ndarray] = None,
-    particle_mass: ndarray,
-    smoothing_length: ndarray,
-    hfact: float,
+    x: ndarray,
+    y: ndarray,
+    z: Optional[ndarray] = None,
+    interp: 'str',
+    z_slice: Optional[float] = None,
     extent: Tuple[float, float, float, float],
-    axis: Any,
-    fig: Any,
-    plot_options: Dict[str, Any] = None,
-    interpolation_options: Dict[str, Any] = None,
+    **kwargs,
 ):
+    if interp == 'projection':
+        cross_section = None
+    elif interp == 'cross_section':
+        if z_slice is None:
+            z_slice = 0.0
+        cross_section = z_slice
 
-    if plot_options is None:
-        plot_options = {}
-
-    plot_render = plot_options.pop('plot_render', _plot_render)
-    plot_contour = plot_options.pop('plot_contour', _plot_contour)
-    colors = plot_options.pop('contour_color', _contour_color)
-    fmt = plot_options.pop('contour_format', _contour_format)
-    norm_str = plot_options.pop('norm', _norm)
-    cmap = plot_options.pop('cmap', _cmap)
-    render_range = plot_options.pop('render_range', _render_range)
-    plot_colorbar = plot_options.pop('plot_colorbar', _plot_colorbar)
-    polar_coordinates = plot_options.pop('polar_coordinates', _polar_coordinates)
-
-    if len(plot_options) > 0:
-        raise ValueError(f'plot_options: {list(plot_options.keys())} not available')
-
-    if interpolation_options is None:
-        interpolation_options = {}
-
-    if interpolation_options.get('cross_section') is not None:
-        if z_coordinate is None:
-            raise ValueError('z_coordinate required for cross section interpolation')
-
-    number_of_pixels = interpolation_options.pop('number_of_pixels', _number_of_pixels)
-
-    data = scalar_interpolation(
-        data=data,
-        x_coordinate=x_coordinate,
-        y_coordinate=y_coordinate,
-        z_coordinate=z_coordinate,
-        extent=extent,
-        smoothing_length=smoothing_length,
-        particle_mass=particle_mass,
-        hfact=hfact,
-        number_of_pixels=number_of_pixels,
-        **interpolation_options,
-    )
-
-    if polar_coordinates:
-        if not np.allclose(extent[1] - extent[0], extent[3] - extent[2]):
-            raise ValueError('Bad polar plot: x and y have different scales')
-        radius_pix = 0.5 * data.shape[0]
-        data = transform.warp_polar(data, radius=radius_pix)
-
-        radius = 0.5 * (extent[1] - extent[0])
-        extent = (0, radius, 0, 2 * np.pi)
-
-        x_grid = np.linspace(*extent[:2], data.shape[0])
-        y_grid = np.linspace(*extent[2:], data.shape[1])
-        spl = RectBivariateSpline(x_grid, y_grid, data)
-        x_regrid = np.linspace(extent[0], extent[1], number_of_pixels[0])
-        y_regrid = np.linspace(extent[2], extent[3], number_of_pixels[1])
-        data = spl(x_regrid, y_regrid)
-
-    image = None
-    colorbar = None
-    if plot_render:
-        if norm_str.lower() in ('linear', 'lin'):
-            norm = mpl.colors.Normalize()
-        elif norm_str.lower() in ('logarithic', 'logarithm', 'log', 'log10'):
-            norm = mpl.colors.LogNorm()
-        else:
-            raise ValueError('Cannot determine normalization for colorbar')
-        if render_range is not None:
-            vmin, vmax = render_range[0], render_range[1]
-        else:
-            vmin, vmax = None, None
-
-        image = axis.imshow(
-            data,
-            origin='lower',
-            norm=norm,
+    if data.ndim == 1:
+        interpolated_data = scalar_interpolation(
+            data=data,
+            x_coordinate=x,
+            y_coordinate=y,
+            z_coordinate=z,
             extent=extent,
-            cmap=cmap,
-            vmin=vmin,
-            vmax=vmax,
+            smoothing_length=snap['smooth'],
+            particle_mass=snap['mass'],
+            hfact=snap.properties['hfact'],
+            cross_section=cross_section,
+            **kwargs,
         )
 
-        if plot_colorbar:
-            divider = make_axes_locatable(axis)
-            cax = divider.append_axes("right", size="5%", pad=0.05)
-            colorbar = fig.colorbar(image, cax)
-
-    contour = None
-    if plot_contour:
-        n_interp_x, n_interp_y = data.shape
-        X, Y = np.meshgrid(
-            np.linspace(*extent[:2], n_interp_x), np.linspace(*extent[2:], n_interp_y),
+    elif data.ndim == 2:
+        interpolated_data = vector_interpolation(
+            x_data=data[:, 0],
+            y_data=data[:, 1],
+            x_coordinate=x,
+            y_coordinate=y,
+            z_coordinate=z,
+            extent=extent,
+            smoothing_length=snap['smooth'],
+            particle_mass=snap['mass'],
+            hfact=snap.properties['hfact'],
+            cross_section=cross_section,
+            **kwargs,
         )
 
-        contour = axis.contour(X, Y, data, colors=colors)
-        contour.clabel(inline=True, fmt=fmt, fontsize=8)
+    else:
+        raise ValueError('data.ndim > 2: cannot determine data')
 
-    return image, contour, colorbar, data, extent
+    return interpolated_data
 
 
-def vector_plot(
+def particle_plot(
     *,
-    data: ndarray,
-    x_coordinate: ndarray,
-    y_coordinate: ndarray,
-    z_coordinate: Optional[ndarray] = None,
-    particle_mass: ndarray,
-    smoothing_length: ndarray,
-    hfact: float,
+    snap: SnapLike,
+    x: ndarray,
+    y: ndarray,
     extent: Tuple[float, float, float, float],
     axis: Any,
-    plot_options: Dict[str, Any] = None,
-    interpolation_options: Dict[str, Any] = None,
+    **kwargs,
 ):
+    """Plot the particles.
 
-    if plot_options is None:
-        plot_options = {}
+    Parameters
+    ----------
+    """
+    h: ndarray = snap['smooth']
+    mask = (
+        (h > 0) & (x > extent[0]) & (x < extent[1]) & (y > extent[2]) & (y < extent[3])
+    )
+    fmt = kwargs.get('fmt', 'k.')
+    lines = axis.plot(x[mask], y[mask], fmt, **kwargs)
+    return lines
 
-    plot_stream = plot_options.pop('plot_stream', _plot_stream)
-    color = plot_options.pop('vector_color', _vector_color)
-    scale = plot_options.pop('vector_scale', _vector_scale)
-    scale_units = plot_options.pop('vector_scale_units', _vector_scale_units)
-    normalize_vectors = plot_options.pop('normalize_vectors', _normalize_vectors)
-    number_of_arrows = plot_options.pop('number_of_arrows', _number_of_arrows)
 
-    if len(plot_options) > 0:
-        raise ValueError(f'plot_options: {list(plot_options.keys())} not available')
+def render_plot(
+    *, data: ndarray, extent: Tuple[float, float, float, float], axis: Any, **kwargs,
+):
+    """Plot scalar data as a rendered image.
 
-    if interpolation_options is None:
-        interpolation_options = {}
+    Visualize scalar SPH data as a rendered image with either projection
+    or cross section interpolation.
 
-    if interpolation_options.get('cross_section') is not None:
-        if z_coordinate is None:
-            raise ValueError('z_coordinate required for cross section interpolation')
+    Parameters
+    ----------
+    extent
+        The range in the x- and y-direction as (xmin, xmax, ymin, ymax).
+    axis
+        A matplotlib axis handle.
+    interpolation_kwargs
+        A dictionary of kwargs to pass to interpolation function.
+    """
+    try:
+        norm = kwargs.pop('norm')
+    except KeyError:
+        norm = 'linear'
+    if norm.lower() in ('linear', 'lin'):
+        norm = mpl.colors.Normalize()
+    elif norm.lower() in ('logarithic', 'logarithm', 'log', 'log10'):
+        norm = mpl.colors.LogNorm()
+    else:
+        raise ValueError('Cannot determine normalization for colorbar')
 
-    number_of_pixels = interpolation_options.pop('number_of_pixels', _number_of_pixels)
+    image = axis.imshow(data, origin='lower', extent=extent, norm=norm, **kwargs)
 
-    data = vector_interpolation(
-        x_data=data[:, 0],
-        y_data=data[:, 1],
-        x_coordinate=x_coordinate,
-        y_coordinate=y_coordinate,
-        z_coordinate=z_coordinate,
-        extent=extent,
-        smoothing_length=smoothing_length,
-        particle_mass=particle_mass,
-        hfact=hfact,
-        number_of_pixels=number_of_pixels,
-        **interpolation_options,
+    return image, data
+
+
+def contour_plot(
+    *, data: ndarray, extent: Tuple[float, float, float, float], axis: Any, **kwargs,
+):
+    """Plot scalar data as a contour plot.
+
+    Visualize scalar SPH data as a contour plot with either projection
+    or cross section interpolation.
+
+    Parameters
+    ----------
+    """
+    n_interp_x, n_interp_y = data.shape
+    X, Y = np.meshgrid(
+        np.linspace(*extent[:2], n_interp_x), np.linspace(*extent[2:], n_interp_y),
     )
 
+    contour = axis.contour(X, Y, data, **kwargs)
+
+    return contour, data
+
+
+def arrow_plot(
+    *, data: ndarray, extent: Tuple[float, float, float, float], axis: Any, **kwargs,
+):
+    """Plot vector data as a quiver plot.
+
+    Parameters
+    ----------
+    """
     n_interp_x, n_interp_y = data[0].shape
     X, Y = np.meshgrid(
         np.linspace(*extent[:2], n_interp_x), np.linspace(*extent[2:], n_interp_y)
     )
     U, V = data[0], data[1]
 
-    quiver, streamplot = None, None
-    if not plot_stream:
-        n_x, n_y = number_of_arrows[0], number_of_arrows[1]
-        stride_x = int(n_interp_x / n_x)
-        stride_y = int(n_interp_y / n_y)
-        X = X[::stride_y, ::stride_x]
-        Y = Y[::stride_y, ::stride_x]
-        U = U[::stride_y, ::stride_x]
-        V = V[::stride_y, ::stride_x]
-        if normalize_vectors:
-            norm = np.hypot(U, V)
-            U /= norm
-            V /= norm
-        quiver = axis.quiver(
-            X, Y, U, V, scale=scale, scale_units=scale_units, color=color
-        )
+    number_of_arrows = kwargs.pop('number_of_arrows', (25, 25))
+    normalize_vectors = kwargs.pop('normalize_vectors', False)
 
+    n_x, n_y = number_of_arrows[0], number_of_arrows[1]
+    stride_x = int(n_interp_x / n_x)
+    stride_y = int(n_interp_y / n_y)
+    X = X[::stride_y, ::stride_x]
+    Y = Y[::stride_y, ::stride_x]
+    U = U[::stride_y, ::stride_x]
+    V = V[::stride_y, ::stride_x]
+    if normalize_vectors:
+        norm = np.hypot(U, V)
+        U /= norm
+        V /= norm
+
+    quiver = axis.quiver(X, Y, U, V, **kwargs)
+
+    return quiver, data
+
+
+def stream_plot(
+    *, data: ndarray, extent: Tuple[float, float, float, float], axis: Any, **kwargs,
+):
+    """Plot vector data as a stream plot.
+
+    Parameters
+    ----------
+    """
+    n_interp_x, n_interp_y = data[0].shape
+    X, Y = np.meshgrid(
+        np.linspace(*extent[:2], n_interp_x), np.linspace(*extent[2:], n_interp_y)
+    )
+    U, V = data[0], data[1]
+
+    streamplot = axis.streamplot(X, Y, U, V, **kwargs)
+
+    return streamplot, data
+
+
+def _get_array_from_input(
+    snap: SnapLike, inp: Union[str, ndarray], default: str = None
+) -> ndarray:
+    if isinstance(inp, str):
+        return snap[inp]
+    elif isinstance(inp, ndarray):
+        return inp
+    elif default is not None:
+        return snap[default]
+    raise ValueError('Cannot determine array to return')
+
+
+def _check_input(*, snap, data, x, y, z, kind):
+
+    try:
+        data = _get_array_from_input(snap, data)
+    except ValueError:
+        data = None
+
+    x = _get_array_from_input(snap, x)
+    y = _get_array_from_input(snap, y)
+    z = _get_array_from_input(snap, z)
+
+    if data is not None:
+        if data.ndim > 2:
+            raise ValueError('Cannot interpret data')
+        if kind in ('render', 'contour') and data.ndim != 1:
+            raise ValueError('Data is wrong shape for render or contour')
+        if kind in ('quiver', 'stream') and data.ndim != 2:
+            raise ValueError('Data is wrong shape for quiver or streamplot')
+        if kind is None:
+            if data.ndim == 1:
+                kind = 'render'
+            elif data.ndim == 2:
+                kind = 'quiver'
     else:
-        streamplot = axis.streamplot(X, Y, U, V, color=color)
+        if kind is None:
+            kind = 'particle'
+        else:
+            raise ValueError(f'No data: can only do particle plot')
 
-    return quiver, streamplot, data, extent
+    return data, x, y, z, kind
