@@ -44,10 +44,10 @@ def animation(
     if filepath.suffix != '.mp4':
         raise ValueError('filename should end in ".mp4"')
 
-    fig, ax = plt.subplots()
-    viz = plot(snap=snaps[0], quantity=quantity, extent=extent, **kwargs)
+    fig, axis = plt.subplots()
+    viz = plot(snap=snaps[0], quantity=quantity, extent=extent, axis=axis, **kwargs)
     interp_data = _get_data(viz.data)
-    im = ax.imshow(interp_data)
+    im = axis.imshow(interp_data)
 
     # If plotting colorbar, must fix the render range
     vmin, vmax = None, None
@@ -61,6 +61,7 @@ def animation(
             snap=snaps[idx],
             quantity=quantity,
             extent=extent,
+            axis=axis,
             vmin=vmin,
             vmax=vmax,
             **kwargs,
@@ -77,6 +78,6 @@ def animation(
 
 
 def _get_data(data):
-    for v in data.keys():
+    for v in data.values():
         if v is not None:
             return v
