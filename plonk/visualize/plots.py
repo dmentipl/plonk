@@ -9,7 +9,7 @@ from numpy import ndarray
 from ..snap.snap import SnapLike
 
 
-def _particle_plot(
+def particle_plot(
     *,
     snap: SnapLike,
     x: ndarray,
@@ -18,6 +18,28 @@ def _particle_plot(
     axis: Any,
     **kwargs,
 ):
+    """Plot particles.
+
+    Parameters
+    ----------
+    snap
+        The Snap object to visualize.
+    x
+        The x-coordinates for the particle plot.
+    y
+        The y-coordinates for the particle plot.
+    extent
+        The range in the x and y-coord as (xmin, xmax, ymin, ymax).
+    axis
+        A matplotlib axis handle.
+    **kwargs
+        Key word arguments to pass to axis.plot method.
+
+    Returns
+    -------
+    lines
+        A list of matplotlib Line2D objects.
+    """
     h: ndarray = snap['smooth']
     mask = (
         (h > 0) & (x > extent[0]) & (x < extent[1]) & (y > extent[2]) & (y < extent[3])
@@ -27,13 +49,31 @@ def _particle_plot(
     return lines
 
 
-def _render_plot(
+def render_plot(
     *,
     interpolated_data: ndarray,
     extent: Tuple[float, float, float, float],
     axis: Any,
     **kwargs,
 ):
+    """Plot 1d interpolated data as a rendered image.
+
+    Parameters
+    ----------
+    interpolated_data
+        The data interpolated to a pixel grid.
+    extent
+        The range in the x and y-coord as (xmin, xmax, ymin, ymax).
+    axis
+        A matplotlib axis handle.
+    **kwargs
+        Key word arguments to pass to axis.imshow method.
+
+    Returns
+    -------
+    image
+        A matplotlib AxesImage object.
+    """
     try:
         norm = kwargs.pop('norm')
     except KeyError:
@@ -52,13 +92,31 @@ def _render_plot(
     return image
 
 
-def _contour_plot(
+def contour_plot(
     *,
     interpolated_data: ndarray,
     extent: Tuple[float, float, float, float],
     axis: Any,
     **kwargs,
 ):
+    """Plot 1d interpolated data as a contour plot.
+
+    Parameters
+    ----------
+    interpolated_data
+        The data interpolated to a pixel grid.
+    extent
+        The range in the x and y-coord as (xmin, xmax, ymin, ymax).
+    axis
+        A matplotlib axis handle.
+    **kwargs
+        Key word arguments to pass to axis.imshow method.
+
+    Returns
+    -------
+    contour
+        A matplotlib QuadContourSet object.
+    """
     n_interp_x, n_interp_y = interpolated_data.shape
     X, Y = np.meshgrid(
         np.linspace(*extent[:2], n_interp_x), np.linspace(*extent[2:], n_interp_y),
@@ -69,13 +127,31 @@ def _contour_plot(
     return contour
 
 
-def _quiver_plot(
+def quiver_plot(
     *,
     interpolated_data: ndarray,
     extent: Tuple[float, float, float, float],
     axis: Any,
     **kwargs,
 ):
+    """Plot 2d interpolated data as a quiver plot.
+
+    Parameters
+    ----------
+    interpolated_data
+        The data interpolated to a pixel grid.
+    extent
+        The range in the x and y-coord as (xmin, xmax, ymin, ymax).
+    axis
+        A matplotlib axis handle.
+    **kwargs
+        Key word arguments to pass to axis.imshow method.
+
+    Returns
+    -------
+    quiver
+        A matplotlib Quiver object.
+    """
     n_interp_x, n_interp_y = interpolated_data[0].shape
     X, Y = np.meshgrid(
         np.linspace(*extent[:2], n_interp_x), np.linspace(*extent[2:], n_interp_y)
@@ -102,13 +178,31 @@ def _quiver_plot(
     return quiver
 
 
-def _stream_plot(
+def stream_plot(
     *,
     interpolated_data: ndarray,
     extent: Tuple[float, float, float, float],
     axis: Any,
     **kwargs,
 ):
+    """Plot 2d interpolated data as a stream plot.
+
+    Parameters
+    ----------
+    interpolated_data
+        The data interpolated to a pixel grid.
+    extent
+        The range in the x and y-coord as (xmin, xmax, ymin, ymax).
+    axis
+        A matplotlib axis handle.
+    **kwargs
+        Key word arguments to pass to axis.imshow method.
+
+    Returns
+    -------
+    streamplot
+        A matplotlib StreamplotSet object.
+    """
     n_interp_x, n_interp_y = interpolated_data[0].shape
     X, Y = np.meshgrid(
         np.linspace(*extent[:2], n_interp_x), np.linspace(*extent[2:], n_interp_y)

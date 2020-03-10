@@ -14,7 +14,7 @@ from numpy import ndarray
 
 from ..snap.snap import SnapLike, get_array_from_input
 from ..utils import is_documented_by
-from . import _plots
+from . import plots
 from .interpolation import interpolate
 
 _kind_to_object = {
@@ -25,10 +25,10 @@ _kind_to_object = {
 }
 
 _kind_to_function = {
-    'render': _plots._render_plot,
-    'contour': _plots._contour_plot,
-    'quiver': _plots._quiver_plot,
-    'stream': _plots._stream_plot,
+    'render': plots.render_plot,
+    'contour': plots.contour_plot,
+    'quiver': plots.quiver_plot,
+    'stream': plots.stream_plot,
 }
 
 
@@ -235,7 +235,7 @@ class Visualization:
         show_colorbar = kwargs.pop('show_colorbar', True if kind == 'render' else False)
 
         if kind == 'particle':
-            self.objects['lines'] = _plots._particle_plot(
+            self.objects['lines'] = plots.particle_plot(
                 snap=self.snap, x=x, y=y, extent=extent, axis=self.axis, **kwargs,
             )
 
