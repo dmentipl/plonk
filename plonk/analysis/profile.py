@@ -102,6 +102,11 @@ class Profile:
         spacing: str = 'linear',
         ignore_accreted: bool = True,
     ):
+        if snap._physical_units:
+            raise ValueError(
+                'Profile does not (currently) work with Snap in physical units.\n'
+                'Unset physical units (snap.physical_units(unset=True)) and try again.'
+            )
 
         self.snap = snap
         self.ndim = ndim
