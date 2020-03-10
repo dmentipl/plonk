@@ -12,6 +12,8 @@ from numpy import ndarray
 from ..snap.snap import SnapLike, get_array_from_input, get_array_in_code_units
 from .splash import interpolate_cross_section, interpolate_projection
 
+Extent = Tuple[float, float, float, float]
+
 
 def interpolate(
     *,
@@ -22,7 +24,7 @@ def interpolate(
     z: Optional[Union[str, ndarray]] = None,
     interp: 'str',
     z_slice: Optional[float] = None,
-    extent: Tuple[float, float, float, float],
+    extent: Extent,
     **kwargs,
 ) -> ndarray:
     """Interpolate a quantity on the snapshot to a pixel grid.
@@ -122,7 +124,7 @@ def scalar_interpolation(
     x_coordinate: ndarray,
     y_coordinate: ndarray,
     z_coordinate: Optional[ndarray] = None,
-    extent: Tuple[float, float, float, float],
+    extent: Extent,
     smoothing_length: ndarray,
     particle_mass: ndarray,
     hfact: float,
@@ -188,7 +190,7 @@ def vector_interpolation(
     x_coordinate: ndarray,
     y_coordinate: ndarray,
     z_coordinate: Optional[ndarray] = None,
-    extent: Tuple[float, float, float, float],
+    extent: Extent,
     smoothing_length: ndarray,
     particle_mass: ndarray,
     hfact: float,
@@ -269,7 +271,7 @@ def _interpolate(
     x_coordinate: ndarray,
     y_coordinate: ndarray,
     z_coordinate: Optional[ndarray] = None,
-    extent: Tuple[float, float, float, float],
+    extent: Extent,
     smoothing_length: ndarray,
     particle_mass: ndarray,
     hfact: float,

@@ -6,7 +6,7 @@ hydrodynamics simulation data.
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, Optional, Union
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -15,7 +15,7 @@ from numpy import ndarray
 from ..snap.snap import SnapLike, get_array_from_input
 from ..utils import is_documented_by
 from . import plots
-from .interpolation import interpolate
+from .interpolation import Extent, interpolate
 
 _kind_to_object = {
     'render': 'image',
@@ -51,6 +51,9 @@ class Visualization:
         The matplotlib Figure object of the plot.
     axis
         The matplotlib Axis object of the plot.
+    units
+        The units of the plot: 'quantity', 'extent', 'projection'. The
+        values are pint Unit objects.
     extent
         A tuple (xmin, xmax, ymin, ymax) of the extent of the plot.
     objects
@@ -70,7 +73,12 @@ class Visualization:
         self.snap = snap
         self.fig: Any = None
         self.axis: Any = None
-        self.extent: Tuple[float, float, float, float] = (-1, -1, -1, -1)
+        self.units: Dict[str, Any] = {
+            'quantity': None,
+            'extent': None,
+            'projection': None,
+        }
+        self.extent: Extent = (-1, -1, -1, -1)
         self.objects: Dict[str, Any] = {
             'lines': None,
             'image': None,
@@ -96,7 +104,8 @@ class Visualization:
         kind: Optional[str] = None,
         interp: str = 'projection',
         z_slice: float = 0.0,
-        extent: Tuple[float, float, float, float],
+        extent: Extent,
+        units=None,
         axis: Optional[Any] = None,
         **kwargs,
     ) -> Visualization:
@@ -143,6 +152,9 @@ class Visualization:
             is 0.0.
         extent
             The range in the x and y-coord as (xmin, xmax, ymin, ymax).
+        units
+            The units of the plot: 'quantity', 'extent', 'projection'. The
+            values are pint Unit objects.
         axis
             A matplotlib axis handle.
         **kwargs
@@ -207,8 +219,6 @@ class Visualization:
             if axis is not None:
                 raise ValueError('Trying to change existing axis attribute')
 
-        self.extent = extent
-
         quantity, x, y, z, kind = _check_input(
             snap=self.snap, quantity=quantity, x=x, y=y, z=z, kind=kind
         )
@@ -231,6 +241,17 @@ class Visualization:
                 extent=extent,
                 **_kwargs,
             )
+            if units is not None:
+                interpolated_data, extent = _convert_units(
+                    snap=self.snap,
+                    interpolated_data=interpolated_data,
+                    extent=extent,
+                    units=units,
+                    interp=interp,
+                )
+                self.units = units
+
+        self.extent = extent
 
         show_colorbar = kwargs.pop('show_colorbar', True if kind == 'render' else False)
 
@@ -297,6 +318,31 @@ def _check_input(*, snap, quantity, x, y, z, kind):
     return quantity, x, y, z, kind
 
 
+def _convert_units(
+    *,
+    snap: SnapLike,
+    interpolated_data: ndarray,
+    extent: Extent,
+    units: Dict[str, Any],
+    interp: str,
+):
+
+    if interp == 'projection':
+        data = (
+            (interpolated_data * snap.units['density'] * snap.units['length'])
+            .to(units['quantity'] * units['projection'])
+            .magnitude
+        )
+    elif interp == 'cross_section':
+        data = (
+            (interpolated_data * snap.units['density']).to(units['quantity']).magnitude
+        )
+
+    new_extent = tuple((extent * snap.units['length']).to(units['extent']).magnitude)
+
+    return data, new_extent
+
+
 @is_documented_by(Visualization.plot)
 def plot(
     *,
@@ -308,7 +354,7 @@ def plot(
     kind: Optional[str] = None,
     interp: str = 'projection',
     z_slice: float = 0.0,
-    extent: Tuple[float, float, float, float],
+    extent: Extent,
     axis: Optional[Any] = None,
     **kwargs,
 ) -> Visualization:

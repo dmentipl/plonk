@@ -41,6 +41,21 @@ Make an animation of multiple snaps.
 ...     extent=(-100, 100, -100, 100),
 ...     filename='animation.mp4',
 ... )
+
+Set units for the plot.
+
+>>> units = {
+...     'quantity': plonk.units('g / cm ** 3'),
+...     'extent': plonk.units('au'),
+...     'projection': plonk.units('cm'),
+... }
+
+>>> viz = plonk.visualize.plot(
+...     snap=snap,
+...     quantity='density',
+...     extent=(-100, 100, -100, 100),
+...     units=units,
+... )
 """
 
 from .animation import animation

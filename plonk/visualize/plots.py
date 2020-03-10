@@ -1,22 +1,17 @@
 """Plot functions for visualization."""
 
-from typing import Any, Tuple
+from typing import Any
 
 import matplotlib as mpl
 import numpy as np
 from numpy import ndarray
 
 from ..snap.snap import SnapLike
+from .interpolation import Extent
 
 
 def particle_plot(
-    *,
-    snap: SnapLike,
-    x: ndarray,
-    y: ndarray,
-    extent: Tuple[float, float, float, float],
-    axis: Any,
-    **kwargs,
+    *, snap: SnapLike, x: ndarray, y: ndarray, extent: Extent, axis: Any, **kwargs,
 ):
     """Plot particles.
 
@@ -50,11 +45,7 @@ def particle_plot(
 
 
 def render_plot(
-    *,
-    interpolated_data: ndarray,
-    extent: Tuple[float, float, float, float],
-    axis: Any,
-    **kwargs,
+    *, interpolated_data: ndarray, extent: Extent, axis: Any, **kwargs,
 ):
     """Plot 1d interpolated data as a rendered image.
 
@@ -93,11 +84,7 @@ def render_plot(
 
 
 def contour_plot(
-    *,
-    interpolated_data: ndarray,
-    extent: Tuple[float, float, float, float],
-    axis: Any,
-    **kwargs,
+    *, interpolated_data: ndarray, extent: Extent, axis: Any, **kwargs,
 ):
     """Plot 1d interpolated data as a contour plot.
 
@@ -128,11 +115,7 @@ def contour_plot(
 
 
 def quiver_plot(
-    *,
-    interpolated_data: ndarray,
-    extent: Tuple[float, float, float, float],
-    axis: Any,
-    **kwargs,
+    *, interpolated_data: ndarray, extent: Extent, axis: Any, **kwargs,
 ):
     """Plot 2d interpolated data as a quiver plot.
 
@@ -179,11 +162,7 @@ def quiver_plot(
 
 
 def stream_plot(
-    *,
-    interpolated_data: ndarray,
-    extent: Tuple[float, float, float, float],
-    axis: Any,
-    **kwargs,
+    *, interpolated_data: ndarray, extent: Extent, axis: Any, **kwargs,
 ):
     """Plot 2d interpolated data as a stream plot.
 
