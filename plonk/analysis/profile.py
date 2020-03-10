@@ -4,7 +4,7 @@ Heavily inspired by pynbody (https://pynbody.github.io/).
 """
 
 from bisect import bisect
-from typing import Any, Callable, Collection, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -307,7 +307,14 @@ class Profile:
         available = list(self._profile_functions.keys())
         return tuple(sorted(set(loaded + available)))
 
-    def plot(self, x: str, y: Union[str, Collection[str]]):
+    def plot(
+        self,
+        x: str,
+        y: Union[str, List[str]],
+        x_unit: Optional[str] = None,
+        y_unit: Optional[Union[str, List[str]]] = None,
+        ax: Any = None,
+    ):
         """Plot profile.
 
         Parameters
@@ -315,25 +322,51 @@ class Profile:
         x
             The x axis to plot as a string.
         y
-            The y axis to plot. Can be multiple as a list or tuple.
+            The y axis to plot. Can be string or multiple as a list of
+            strings.
+        x_unit : optional
+            The x axis quantity unit as a string. Only works if using
+            physical units.
+        y_unit : optional
+            The y axis quantity unit as a string or list of strings.
+            Only works if using physical units.
+        ax : optional
+            A matplotlib Axis object to plot to.
         """
-        if x.lower() not in self.available_keys():
+        if x not in self.available_keys():
             raise ValueError('Cannot determine x axis to plot')
-        _x = self._get_profile(x)
-        if isinstance(y, (list, tuple)):
-            for yi in y:
-                if yi.lower() not in self.available_keys():
-                    raise ValueError('Cannot determine y axis to plot')
-                _y = self._get_profile(yi)
-                plt.plot(_x, _y)
-        elif isinstance(y, str):
-            if y.lower() not in self.available_keys():
-                raise ValueError('Cannot determine y axis to plot')
-            _y = self._get_profile(y)
-            plt.plot(_x, _y)
+
+        if not self.snap._physical_units:
+            if x_unit is not None or y_unit is not None:
+                raise ValueError('Cannot set unit if snap is not in physical units')
         else:
-            raise ValueError('Cannot determine y axis to plot')
-        return plt.gcf(), plt.gca()
+            if isinstance(y_unit, str):
+                y_unit = [y_unit]
+
+        if ax is None:
+            fig, ax = plt.subplots()
+        else:
+            fig = ax.get_figure()
+
+        if isinstance(y, str):
+            y = [y]
+
+        _x = self._get_profile(x)
+        if x_unit is not None:
+            _x = _x.to(x_unit)
+
+        for idx, yi in enumerate(y):
+            if yi not in self.available_keys():
+                raise ValueError('Cannot determine y axis to plot')
+            _y = self._get_profile(yi)
+            if y_unit is not None:
+                _y = _y.to(y_unit[idx])
+            if self.snap._physical_units:
+                ax.plot(_x.magnitude, _y.magnitude)
+            else:
+                ax.plot(_x, _y)
+
+        return fig, ax
 
     def to_dataframe(self, all_available: bool = False) -> DataFrame:
         """Convert Profile to DataFrame.
