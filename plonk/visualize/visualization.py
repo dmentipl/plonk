@@ -219,6 +219,7 @@ class Visualization:
             if axis is not None:
                 raise ValueError('Trying to change existing axis attribute')
 
+        quantity_str: Optional[str] = quantity if isinstance(quantity, str) else None
         quantity, x, y, z, kind = _check_input(
             snap=self.snap, quantity=quantity, x=x, y=y, z=z, kind=kind
         )
@@ -242,8 +243,15 @@ class Visualization:
                 **_kwargs,
             )
             if units is not None:
+                if quantity_str is None:
+                    raise ValueError(
+                        'Cannot set units when passing in arrays. '
+                        'Instead, use strings to access\n'
+                        'quantities on Snap. E.g. plot(..., quantity="density", ...).'
+                    )
                 interpolated_data, extent = _convert_units(
                     snap=self.snap,
+                    quantity_str=quantity_str,
                     interpolated_data=interpolated_data,
                     extent=extent,
                     units=units,
@@ -321,22 +329,22 @@ def _check_input(*, snap, quantity, x, y, z, kind):
 def _convert_units(
     *,
     snap: SnapLike,
+    quantity_str: str,
     interpolated_data: ndarray,
     extent: Extent,
     units: Dict[str, Any],
     interp: str,
 ):
 
+    _quantity_unit = snap.get_array_unit(quantity_str)
     if interp == 'projection':
         data = (
-            (interpolated_data * snap.units['density'] * snap.units['length'])
+            (interpolated_data * _quantity_unit * snap.units['length'])
             .to(units['quantity'] * units['projection'])
             .magnitude
         )
     elif interp == 'cross_section':
-        data = (
-            (interpolated_data * snap.units['density']).to(units['quantity']).magnitude
-        )
+        data = (interpolated_data * _quantity_unit).to(units['quantity']).magnitude
 
     new_extent = tuple((extent * snap.units['length']).to(units['extent']).magnitude)
 

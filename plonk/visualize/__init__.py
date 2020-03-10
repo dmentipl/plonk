@@ -9,8 +9,8 @@ Plot the particles.
 
 >>> viz = plonk.visualize.plot(
 ...     snap=snap,
-...     x=snap['x'],
-...     y=snap['y'],
+...     x='x',
+...     y='y',
 ...     extent=(-100, 100, -100, 100),
 ... )
 
@@ -18,7 +18,7 @@ Render the surface density in xz-plane.
 
 >>> viz = plonk.visualize.plot(
 ...     snap=snap,
-...     quantity=snap['density'],
+...     quantity='density',
 ...     x='x',
 ...     y='z',
 ...     extent=(-100, 100, -25, 25),
