@@ -220,8 +220,8 @@ class Snap:
             self.units[unit_str] = unit
         self._array_units[name] = unit_str
 
-    def physical_units(self) -> Snap:
-        """Set physical units.
+    def physical_units(self, unset: bool = False) -> Snap:
+        """Set/unset physical units.
 
         Uses Pint.
 
@@ -229,10 +229,14 @@ class Snap:
         -------
         Snap
         """
-        for arr in self.loaded_arrays():
-            self._arrays[arr] = self._arrays[arr] * self._get_array_unit(arr)
-
-        self._physical_units = True
+        if unset:
+            for arr in self.loaded_arrays():
+                del self._arrays[arr]
+            self._physical_units = False
+        else:
+            for arr in self.loaded_arrays():
+                self._arrays[arr] = self._arrays[arr] * self._get_array_unit(arr)
+            self._physical_units = True
 
         return self
 
