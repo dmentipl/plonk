@@ -96,6 +96,16 @@ class Snap:
         'sz': ('spin', 2),
     }
 
+    _array_units = {
+        'position': 'length',
+        'velocity': 'velocity',
+        'smooth': 'length',
+        'mass': 'mass',
+        'density': 'density',
+        'magfield': 'magnetic_field',
+        'spin': 'angular_momentum',
+    }
+
     _particle_type = {
         'gas': 1,
         'dust': 2,
@@ -106,22 +116,31 @@ class Snap:
     }
 
     @staticmethod
-    def add_array(fn: Callable) -> Callable:
+    def add_array(unit: str = None) -> Callable:
         """Decorate function to add array to Snap.
+
+        This function decorates a function that returns an array. The
+        name of the function is the string with which to reference the
+        array.
 
         Parameters
         ----------
-        fn
-            A function that returns the array. The name of the function
-            is the string with which to reference the array.
+        unit
+            A string to represent the units of the array. E.g. 'length'
+            for a 'radius' array.
 
         Returns
         -------
         Callable
-            The function which returns the array.
+            The decorator which returns the array.
         """
-        Snap._array_registry[fn.__name__] = fn
-        return fn
+
+        def _add_array(fn):
+            Snap._array_units[fn.__name__] = unit
+            Snap._array_registry[fn.__name__] = fn
+            return fn
+
+        return _add_array
 
     @staticmethod
     def add_alias(name: str, alias: str) -> None:
@@ -140,6 +159,7 @@ class Snap:
 
         self.properties = {}
         self.sinks = Sinks()
+        self.units = {}
         self._arrays = {}
         self._file_pointer = None
         self._num_particles = 0

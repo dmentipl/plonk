@@ -10,6 +10,7 @@ from numpy import ndarray
 
 from ... import units
 from ..snap import Snap
+from ..units import generate_units_dictionary
 from .hdf5 import HDF5File
 
 
@@ -52,9 +53,10 @@ class PhantomHDF5Snap:
 
         self.snap.properties['time'] = header['time']
 
-        self.snap.properties['udist'] = header['udist'] * units.cm
-        self.snap.properties['utime'] = header['utime'] * units.s
-        self.snap.properties['umass'] = header['umass'] * units.g
+        length = header['udist'] * units.cm
+        time = header['utime'] * units.s
+        mass = header['umass'] * units.g
+        self.snap.units = generate_units_dictionary(length, mass, time)
 
         self.snap.properties['hfact'] = header['hfact']
 
