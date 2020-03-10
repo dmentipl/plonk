@@ -82,3 +82,10 @@ __all__ = (
 
 # Canonical version number
 __version__ = '0.3.1'
+
+# Add units
+units.define('solarm = 1.9891e33 g')
+units.define('solarr = 6.959500e10 cm')
+units.define('earthm = 5.979e27 g')
+units.define('earthr = 6.371315e8 cm')
+units.define('jupiterm = 1.89813e30 g')
