@@ -10,22 +10,9 @@ from numpy import ndarray
 
 from .. import Quantity
 from ..snap.snap import Snap, SubSnap
+from ..utils.math import cross, norm
 
 SnapLike = Union[Snap, SubSnap]
-
-
-def _cross(x, y):
-    if isinstance(x, Quantity):
-        return np.cross(x.magnitude, y.magnitude) * x.units * y.units
-    else:
-        return np.cross(x, y)
-
-
-def _norm(x, axis=None):
-    if isinstance(x, Quantity):
-        return np.linalg.norm(x.magnitude, axis=axis) * x.units
-    else:
-        return np.linalg.norm(x, axis=axis)
 
 
 def momentum(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
@@ -89,7 +76,7 @@ def angular_momentum(
     origin = np.array(origin)
     pos = pos - origin
 
-    return mass[:, np.newaxis] * _cross(pos, vel)
+    return mass[:, np.newaxis] * cross(pos, vel)
 
 
 def specific_angular_momentum(
@@ -125,7 +112,7 @@ def specific_angular_momentum(
     origin = np.array(origin)
     pos = pos - origin
 
-    return _cross(pos, vel)
+    return cross(pos, vel)
 
 
 def kinetic_energy(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
@@ -151,7 +138,7 @@ def kinetic_energy(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
         mass = snap['mass']
         vel = snap['velocity']
 
-    return 1 / 2 * mass * _norm(vel, axis=1) ** 2
+    return 1 / 2 * mass * norm(vel, axis=1) ** 2
 
 
 def specific_kinetic_energy(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
@@ -175,7 +162,7 @@ def specific_kinetic_energy(snap: SnapLike, ignore_accreted: bool = False) -> nd
     else:
         vel = snap['velocity']
 
-    return 1 / 2 * _norm(vel, axis=1) ** 2
+    return 1 / 2 * norm(vel, axis=1) ** 2
 
 
 def semi_major_axis(
@@ -224,12 +211,12 @@ def semi_major_axis(
     else:
         mu = gravitational_parameter
 
-    radius = _norm(pos, axis=1)
+    radius = norm(pos, axis=1)
 
-    specific_angular_momentum = _cross(pos, vel)
-    specific_angular_momentum_magnitude = _norm(specific_angular_momentum, axis=1)
+    specific_angular_momentum = cross(pos, vel)
+    specific_angular_momentum_magnitude = norm(specific_angular_momentum, axis=1)
 
-    specific_kinetic_energy = 1 / 2 * _norm(vel, axis=1) ** 2
+    specific_kinetic_energy = 1 / 2 * norm(vel, axis=1) ** 2
     specific_potential_energy = -mu / radius
     specific_energy = specific_kinetic_energy + specific_potential_energy
 
@@ -286,12 +273,12 @@ def eccentricity(
     else:
         mu = gravitational_parameter
 
-    radius = _norm(pos, axis=1)
+    radius = norm(pos, axis=1)
 
-    specific_angular_momentum = _cross(pos, vel)
-    specific_angular_momentum_magnitude = _norm(specific_angular_momentum, axis=1)
+    specific_angular_momentum = cross(pos, vel)
+    specific_angular_momentum_magnitude = norm(specific_angular_momentum, axis=1)
 
-    specific_kinetic_energy = 1 / 2 * _norm(vel, axis=1) ** 2
+    specific_kinetic_energy = 1 / 2 * norm(vel, axis=1) ** 2
     specific_potential_energy = -mu / radius
     specific_energy = specific_kinetic_energy + specific_potential_energy
 
@@ -335,10 +322,10 @@ def inclination(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
     origin = (mass[:, np.newaxis] * pos).sum(axis=0) / mass.sum()
     pos = pos - origin
 
-    specific_angular_momentum = _cross(pos, vel)
+    specific_angular_momentum = cross(pos, vel)
 
     inclination = np.arccos(
-        specific_angular_momentum[:, 2] / _norm(specific_angular_momentum, axis=1)
+        specific_angular_momentum[:, 2] / norm(specific_angular_momentum, axis=1)
     )
 
     return inclination

@@ -10,16 +10,10 @@ from numpy import ndarray
 
 from .. import Quantity
 from ..snap.snap import Snap, SubSnap
+from ..utils.math import norm
 from . import particles
 
 SnapLike = Union[Snap, SubSnap]
-
-
-def _norm(x, axis=None):
-    if isinstance(x, Quantity):
-        return np.linalg.norm(x.magnitude, axis=axis) * x.units
-    else:
-        return np.linalg.norm(x, axis=axis)
 
 
 def center_of_mass(snap: SnapLike, ignore_accreted: bool = True) -> ndarray:
@@ -277,7 +271,7 @@ def inclination(snap: SnapLike, ignore_accreted: bool = True) -> float:
         The mean inclination.
     """
     angmom = angular_momentum(snap=snap, ignore_accreted=ignore_accreted)
-    return np.arccos(angmom[2] / _norm(angmom))
+    return np.arccos(angmom[2] / norm(angmom))
 
 
 def position_angle(snap: SnapLike, ignore_accreted: bool = True) -> float:
