@@ -15,8 +15,6 @@ from numpy import ndarray
 from pandas import DataFrame
 from scipy.spatial.transform import Rotation
 
-from .. import Quantity
-
 
 class Snap:
     """Smoothed particle hydrodynamics Snap object.
