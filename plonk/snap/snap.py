@@ -15,6 +15,8 @@ from numpy import ndarray
 from pandas import DataFrame
 from scipy.spatial.transform import Rotation
 
+from .. import Quantity
+
 
 class Snap:
     """Smoothed particle hydrodynamics Snap object.
@@ -62,6 +64,10 @@ class Snap:
     Or, use an existing one.
 
     >>> snap['R'] = plonk.analysis.particles.radial_distance(snap)
+
+    Set physical units. Arrays are now Pint quantities.
+
+    >>> snap.physical_units()
     """
 
     _array_registry: Dict[str, Callable] = {}
@@ -319,8 +325,7 @@ class Snap:
         array = Snap._array_registry[name](self)
         if self._rotation is not None and name in self._rotation_required():
             array = self._rotation.apply(array)
-        unit = None
-        if self._physical_units:
+        if self._physical_units and not isinstance(array, Quantity):
             unit = self._get_array_unit(name)
             self._arrays[name] = unit * array
         else:
