@@ -165,6 +165,7 @@ class Snap:
         self._num_particles = 0
         self._families = {key: None for key in Snap._particle_type.keys()}
         self._rotation = None
+        self._physical_units = False
 
     def close_file(self):
         """Close access to underlying file."""
@@ -186,6 +187,22 @@ class Snap:
         if self._num_particles == 0:
             self._num_particles = self['type'].size
         return self._num_particles
+
+    def physical_units(self) -> Snap:
+        """Set physical units.
+
+        Uses Pint.
+
+        Returns
+        -------
+        Snap
+        """
+        for arr in self.loaded_arrays():
+            self._arrays[arr] = self._arrays[arr] * self._get_array_unit(arr)
+
+        self._physical_units = True
+
+        return self
 
     def rotate(self, rotation: Rotation) -> Snap:
         """Rotate snapshot.
@@ -251,6 +268,24 @@ class Snap:
         else:
             raise ValueError('Family not available')
 
+    def _get_array_unit(self, arr):
+        if arr in self._array_split_mapper:
+            arr = self._array_split_mapper[arr][0]
+        elif arr in self._array_name_mapper:
+            arr = self._array_name_mapper[arr]
+        return self.units[self._array_units[arr]]
+
+    def _set_array_from_registry(self, name: str):
+        array = Snap._array_registry[name](self)
+        if self._rotation is not None and name in self._rotation_required():
+            array = self._rotation.apply(array)
+        unit = None
+        if self._physical_units:
+            unit = self._get_array_unit(name)
+            self._arrays[name] = unit * array
+        else:
+            self._arrays[name] = array
+
     def _get_array(self, name: str, index: Optional[int] = None) -> ndarray:
         """Get an array by name."""
         if name in self._arrays:
@@ -258,12 +293,7 @@ class Snap:
                 return self._arrays[name]
             return self._arrays[name][:, index]
         elif name in Snap._array_registry:
-            if self._rotation is not None and name in self._rotation_required():
-                self._arrays[name] = self._rotation.apply(
-                    Snap._array_registry[name](self)
-                )
-            else:
-                self._arrays[name] = Snap._array_registry[name](self)
+            self._set_array_from_registry(name)
             if index is None:
                 return self._arrays[name]
             return self._arrays[name][:, index]
