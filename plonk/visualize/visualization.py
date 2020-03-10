@@ -257,7 +257,7 @@ class Visualization:
                     units=units,
                     interp=interp,
                 )
-                self.units = units
+                self.units.update(units)
 
         self.extent = extent
 
