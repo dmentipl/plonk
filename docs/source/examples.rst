@@ -28,9 +28,9 @@ Rotate a snapshot and plot column density.
     >>> snap.rotate(rotation)
 
     # Plot
-    >>> plonk.visualize.render(
+    >>> plonk.visualize.plot(
     ...     snap=snap,
-    ...     quantity='rho',
+    ...     quantity='density',
     ...     extent=(-200, 200, -200, 200)
     ... )
     >>> plt.show()
@@ -52,11 +52,11 @@ Plot cross section at z=0.
     >>> snap = plonk.load_snap('disc_00030.h5')
 
     # Plot cross section
-    >>> interpolation_options = {'cross_section': 0.0}
-    >>> plonk.visualize.render(
-    ...     snap,
-    ...     quantity='rho',
-    ...     interpolation_options=interpolation_options,
+    >>> plonk.visualize.plot(
+    ...     snap=snap,
+    ...     quantity='density',
+    ...     interp='cross_section',
+    ...     z_slice=0.0,
     ...     extent=(-150, 150, -150, 150),
     ... )
     >>> plt.show()
@@ -84,18 +84,18 @@ Plot dust and gas side-by-side.
 
     # Make plot
     >>> fig, axes = plt.subplots(ncols=2, sharey=True, figsize=(12, 5))
-    >>> plonk.visualize.render(
+    >>> plonk.visualize.plot(
     ...     gas,
-    ...     quantity='rho',
+    ...     quantity='density',
     ...     extent=extent,
-    ...     scalar_options={'cmap': 'Blues_r'},
+    ...     cmap='Blues_r',
     ...     axis=axes[0],
     ... )
-    >>> plonk.visualize.render(
+    >>> plonk.visualize.plot(
     ...     dust,
-    ...     quantity='rho',
+    ...     quantity='density',
     ...     extent=extent,
-    ...     scalar_options={'cmap': 'Reds_r'},
+    ...     cmap='Reds_r',
     ...     axis=axes[1],
     ... )
     >>> plt.show()

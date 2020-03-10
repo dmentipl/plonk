@@ -440,3 +440,35 @@ class Sinks:
     def __str__(self):
         """Dunder str method."""
         return f'<plonk.snap.Sinks>'
+
+
+def get_array_from_input(
+    snap: SnapLike, inp: Union[str, ndarray], default: str = None
+) -> ndarray:
+    """Get array on Snap.
+
+    Parameters
+    ----------
+    snap
+        The Snap or SubSnap.
+    inp
+        The input as a string or ndarray. If a string return
+        snap[inp], otherwise return inp as a ndarray.
+    default
+        The default array as a string resolved as snap[default].
+
+    Returns
+    -------
+    ndarray
+        The array on the particles.
+    """
+    if isinstance(inp, str):
+        return snap[inp]
+    elif isinstance(inp, ndarray):
+        return inp
+    elif default is not None:
+        return snap[default]
+    raise ValueError('Cannot determine array to return')
+
+
+SnapLike = Union[Snap, SubSnap]

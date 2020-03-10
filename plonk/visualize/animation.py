@@ -1,97 +1,85 @@
 """Animations of visualizations."""
 
 import pathlib
-from copy import copy
 from pathlib import Path
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 from matplotlib import animation as _animation
 from numpy import ndarray
 
-from ..snap.snap import Snap, SubSnap
-from .plot import render
-
-SnapLike = Union[Snap, SubSnap]
-
-# TODO:
-# - fix color scale
-# - remove axis labels
-# - black background
+from ..snap.snap import SnapLike
+from .visualization import plot
 
 
 def animation(
-    snaps: List[SnapLike],
-    quantity: Union[str, ndarray],
-    extent: Tuple[float, float, float, float],
+    *,
     filename: Union[str, Path],
-    scalar_options: Dict[Any, Any] = None,
-    interpolation_options: Dict[Any, Any] = None,
-    animation_options: Dict[Any, Any] = None,
+    snaps: List[SnapLike],
+    quantity: Optional[Union[str, ndarray]] = None,
+    extent: Tuple[float, float, float, float],
+    animation_kwargs: Dict[str, Any] = {},
+    **kwargs,
 ):
     """Generate an animation.
 
     Parameters
     ----------
+    filename
+        The file name to save the animation to.
     snaps
         A list of Snap objects to animate.
     quantity
-        The quantity on the Snap objects to render.
+        The quantity to visualize. Can be a string to pass to Snap, or
+        a 1d array (N,) of scalar data, or a 2d array (N, 3) of
+        vector data. If quantity is 2d, only the first two components
+        are interpolated, i.e. quantity[:, 0] and quantity[:, 1].
+        Default is None.
     extent
-        The extent of the image like (xmin, xmax, ymin, ymax).
-    filename
-        The file name to save the animation to.
-    scalar_options : optional
-        Scalar render options to pass to the render function.
-    interpolation_options : optional
-        Interpolation options to pass to the render function.
-    animation_options : optional
-        Options to pass to matplotlib Animation.save.
+        The range in the x and y-coord as (xmin, xmax, ymin, ymax).
+    animation_kwargs : optional
+        Key word arguments to pass to matplotlib Animation.save.
+    **kwargs
+        Arguments to pass to visualize.plot.
     """
     filepath = pathlib.Path(filename)
     if filepath.suffix != '.mp4':
         raise ValueError('filename should end in ".mp4"')
 
-    if scalar_options is None:
-        scalar_options = {}
-    _scalar_options = copy(scalar_options)
-
-    if animation_options is None:
-        animation_options = {}
-
-    fig, ax = plt.subplots()
-    viz = render(
-        snaps[0],
-        quantity,
-        extent=extent,
-        axis=ax,
-        scalar_options=_scalar_options,
-        interpolation_options=interpolation_options,
-    )
-    data = viz.data['scalar']
-    im = ax.imshow(data)
+    fig, axis = plt.subplots()
+    viz = plot(snap=snaps[0], quantity=quantity, extent=extent, axis=axis, **kwargs)
+    interp_data = _get_data(viz.data)
+    im = axis.imshow(interp_data)
 
     # If plotting colorbar, must fix the render range
-    plot_colorbar = _scalar_options.get('plot_colorbar')
-    if plot_colorbar is None or plot_colorbar is True:
-        _scalar_options['render_range'] = (data.min(), data.max())
+    vmin, vmax = None, None
+    show_colorbar = kwargs.pop('show_colorbar', True)
+    if show_colorbar is None or show_colorbar is True:
+        vmin, vmax = (interp_data.min(), interp_data.max())
 
     def animate(idx):
         print(f'Rendering image: {idx}')
-        viz = render(
-            snaps[idx],
-            quantity,
+        viz = plot(
+            snap=snaps[idx],
+            quantity=quantity,
             extent=extent,
-            axis=ax,
-            scalar_options=_scalar_options,
-            interpolation_options=interpolation_options,
+            axis=axis,
+            vmin=vmin,
+            vmax=vmax,
+            **kwargs,
         )
-        data = viz.data['scalar']
-        im.set_data(data)
+        interp_data = _get_data(viz.data)
+        im.set_data(interp_data)
         return [im]
 
     anim = _animation.FuncAnimation(fig, animate, frames=len(snaps))
     anim.save(
-        filepath, extra_args=['-vcodec', 'libx264'], **animation_options,
+        filepath, extra_args=['-vcodec', 'libx264'], **animation_kwargs,
     )
     plt.close()
+
+
+def _get_data(data):
+    for v in data.values():
+        if v is not None:
+            return v

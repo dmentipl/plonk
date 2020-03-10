@@ -4,17 +4,119 @@ There are two functions: one for interpolation of scalar fields, and one
 for interpolation of vector fields.
 """
 
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 import numpy as np
 from numpy import ndarray
 
+from ..snap.snap import SnapLike, get_array_from_input
 from .splash import interpolate_cross_section, interpolate_projection
+
+
+def interpolate(
+    *,
+    snap: SnapLike,
+    quantity: Union[str, ndarray],
+    x: Union[str, ndarray] = 'x',
+    y: Union[str, ndarray] = 'y',
+    z: Optional[Union[str, ndarray]] = None,
+    interp: 'str',
+    z_slice: Optional[float] = None,
+    extent: Tuple[float, float, float, float],
+    **kwargs,
+) -> ndarray:
+    """Interpolate a quantity on the snapshot to a pixel grid.
+
+    Parameters
+    ----------
+    snap
+        The Snap (or SubSnap) object.
+    quantity
+        The quantity to visualize. Can be a string to pass to Snap, or
+        a 1d array (N,) of scalar data, or a 2d array (N, 3) of
+        vector data. If quantity is 2d, only the first two components
+        are interpolated, i.e. quantity[:, 0] and quantity[:, 1].
+        Default is None.
+    x
+        The x-coordinate for the visualization. Can be a string to
+        pass to Snap, or a 1d array (N,). Default is 'x'.
+    y
+        The y-coordinate for the visualization. Can be a string to
+        pass to Snap, or a 1d array (N,). Default is 'y'.
+    z
+        The z-coordinate for the visualization. Can be a string to
+        pass to Snap, or a 1d array (N,). This is only required for
+        cross-section plots. Default is 'z'.
+    interp
+        The interpolation type.
+        - 'projection' : 2d interpolation via projection to xy-plane
+        - 'cross_section' : 3d interpolation via cross-section in
+            z-direction
+        Default is 'projection'.
+    z_slice
+        The z-coordinate value of the cross-section slice. Default
+        is 0.0.
+    extent
+        The xy extent of the image as (xmin, xmax, ymin, ymax).
+    **kwargs
+        Additional keyword arguments to pass to scalar_interpolation
+        and vector_interpolation.
+
+    Returns
+    -------
+    ndarray
+        The interpolated quantity on a pixel grid as an ndarray.
+    """
+    quantity = get_array_from_input(snap, quantity)
+    x = get_array_from_input(snap, x, 'x')
+    y = get_array_from_input(snap, y, 'y')
+    z = get_array_from_input(snap, z, 'z')
+
+    if interp == 'projection':
+        cross_section = None
+    elif interp == 'cross_section':
+        if z_slice is None:
+            z_slice = 0.0
+        cross_section = z_slice
+
+    if quantity.ndim == 1:
+        interpolated_data = scalar_interpolation(
+            quantity=quantity,
+            x_coordinate=x,
+            y_coordinate=y,
+            z_coordinate=z,
+            extent=extent,
+            smoothing_length=snap['smooth'],
+            particle_mass=snap['mass'],
+            hfact=snap.properties['hfact'],
+            cross_section=cross_section,
+            **kwargs,
+        )
+
+    elif quantity.ndim == 2:
+        interpolated_data = vector_interpolation(
+            quantity_x=quantity[:, 0],
+            quantity_y=quantity[:, 1],
+            x_coordinate=x,
+            y_coordinate=y,
+            z_coordinate=z,
+            extent=extent,
+            smoothing_length=snap['smooth'],
+            particle_mass=snap['mass'],
+            hfact=snap.properties['hfact'],
+            cross_section=cross_section,
+            **kwargs,
+        )
+
+    else:
+        raise ValueError('quantity.ndim > 2: cannot determine quantity')
+
+    return interpolated_data
 
 
 def scalar_interpolation(
     *,
-    data: ndarray,
+    quantity: ndarray,
     x_coordinate: ndarray,
     y_coordinate: ndarray,
     z_coordinate: Optional[ndarray] = None,
@@ -22,7 +124,7 @@ def scalar_interpolation(
     smoothing_length: ndarray,
     particle_mass: ndarray,
     hfact: float,
-    number_of_pixels: Tuple[float, float],
+    number_of_pixels: Tuple[float, float] = (512, 512),
     cross_section: Optional[float] = None,
     density_weighted: Optional[bool] = None,
 ) -> ndarray:
@@ -30,7 +132,7 @@ def scalar_interpolation(
 
     Parameters
     ----------
-    data
+    quantity
         A scalar quantity on the particles to interpolate.
     x_coordinate
         Particle coordinate for x-axis in interpolation.
@@ -47,7 +149,7 @@ def scalar_interpolation(
         The particle mass on each particle.
     hfact
         The smoothing length factor.
-    number_pixels
+    number_of_pixels
         The pixel grid to interpolate the scalar quantity to, as
         (npixx, npixy).
     cross_section
@@ -63,7 +165,7 @@ def scalar_interpolation(
         shape (npixx, npixy).
     """
     return _interpolate(
-        data=data,
+        quantity=quantity,
         x_coordinate=x_coordinate,
         y_coordinate=y_coordinate,
         z_coordinate=z_coordinate,
@@ -79,8 +181,8 @@ def scalar_interpolation(
 
 def vector_interpolation(
     *,
-    x_data: ndarray,
-    y_data: ndarray,
+    quantity_x: ndarray,
+    quantity_y: ndarray,
     x_coordinate: ndarray,
     y_coordinate: ndarray,
     z_coordinate: Optional[ndarray] = None,
@@ -88,7 +190,7 @@ def vector_interpolation(
     smoothing_length: ndarray,
     particle_mass: ndarray,
     hfact: float,
-    number_of_pixels: Tuple[float, float],
+    number_of_pixels: Tuple[float, float] = (512, 512),
     cross_section: Optional[float] = None,
     density_weighted: Optional[bool] = None,
 ) -> ndarray:
@@ -96,9 +198,9 @@ def vector_interpolation(
 
     Parameters
     ----------
-    x_data
+    quantity_x
         The x-component of a vector quantity to interpolate.
-    y_data
+    quantity_y
         The y-component of a vector quantity to interpolate.
     x_coordinate
         Particle coordinate for x-axis in interpolation.
@@ -115,7 +217,7 @@ def vector_interpolation(
         The particle mass on each particle.
     hfact
         The smoothing length factor.
-    number_pixels
+    number_of_pixels
         The pixel grid to interpolate the scalar quantity to, as
         (npixx, npixy).
     cross_section
@@ -131,7 +233,7 @@ def vector_interpolation(
         shape (2, npixx, npixy).
     """
     vecsmoothx = _interpolate(
-        data=x_data,
+        quantity=quantity_x,
         x_coordinate=x_coordinate,
         y_coordinate=y_coordinate,
         z_coordinate=z_coordinate,
@@ -144,7 +246,7 @@ def vector_interpolation(
         density_weighted=density_weighted,
     )
     vecsmoothy = _interpolate(
-        data=y_data,
+        quantity=quantity_y,
         x_coordinate=x_coordinate,
         y_coordinate=y_coordinate,
         z_coordinate=z_coordinate,
@@ -161,7 +263,7 @@ def vector_interpolation(
 
 def _interpolate(
     *,
-    data: ndarray,
+    quantity: ndarray,
     x_coordinate: ndarray,
     y_coordinate: ndarray,
     z_coordinate: Optional[ndarray] = None,
@@ -178,6 +280,8 @@ def _interpolate(
     else:
         do_cross_section = True
         zslice = cross_section
+        if z_coordinate is None:
+            raise ValueError('Cross section interpolation requires z_coordinate')
     normalise = False
     if density_weighted is None:
         density_weighted = False
@@ -197,13 +301,13 @@ def _interpolate(
         weight = hfact ** -3 * np.ones(smoothing_length.shape)
 
     if do_cross_section:
-        data = interpolate_cross_section(
+        interpolated_data = interpolate_cross_section(
             x=x_coordinate,
             y=y_coordinate,
             z=z_coordinate,
             hh=smoothing_length,
             weight=weight,
-            dat=data,
+            dat=quantity,
             itype=itype,
             npart=npart,
             xmin=xmin,
@@ -216,13 +320,12 @@ def _interpolate(
             normalise=normalise,
         )
     else:
-        data = interpolate_projection(
+        interpolated_data = interpolate_projection(
             x=x_coordinate,
             y=y_coordinate,
-            z=z_coordinate,
             hh=smoothing_length,
             weight=weight,
-            dat=data,
+            dat=quantity,
             itype=itype,
             npart=npart,
             xmin=xmin,
@@ -234,4 +337,4 @@ def _interpolate(
             normalise=normalise,
         )
 
-    return data
+    return interpolated_data
