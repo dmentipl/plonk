@@ -3,7 +3,7 @@
 Calculate various quantities on the particles.
 """
 
-from typing import Tuple, Union
+from typing import Any, Tuple, Union
 
 import numpy as np
 from numpy import ndarray
@@ -180,7 +180,7 @@ def specific_kinetic_energy(snap: SnapLike, ignore_accreted: bool = False) -> nd
 
 def semi_major_axis(
     snap: SnapLike,
-    gravitational_parameter: float,
+    gravitational_parameter: Any,
     origin: Union[ndarray, Tuple[float, float, float]] = (0.0, 0.0, 0.0),
     ignore_accreted: bool = False,
 ) -> ndarray:
@@ -195,7 +195,8 @@ def semi_major_axis(
     snap
         The Snap object.
     gravitational_parameter
-        The gravitational parameter (G*M).
+        The gravitational parameter (mu = G M). Can be a float or a Pint
+        quantity.
     origin : optional
         The origin around which to compute the angular momentum as a
         ndarray or tuple (x, y, z). Default is (0, 0, 0).
@@ -241,7 +242,7 @@ def semi_major_axis(
 
 def eccentricity(
     snap: SnapLike,
-    gravitational_parameter: float,
+    gravitational_parameter: Any,
     origin: Union[ndarray, Tuple[float, float, float]] = (0.0, 0.0, 0.0),
     ignore_accreted: bool = False,
 ) -> ndarray:
@@ -256,7 +257,8 @@ def eccentricity(
     snap
         The Snap object.
     gravitational_parameter
-        The gravitational parameter (G*M).
+        The gravitational parameter (mu = G M). Can be a float or a Pint
+        quantity.
     origin : optional
         The origin around which to compute the angular momentum as a
         ndarray or tuple (x, y, z). Default is (0, 0, 0).
