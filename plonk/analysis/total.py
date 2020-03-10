@@ -8,10 +8,18 @@ from typing import Tuple, Union
 import numpy as np
 from numpy import ndarray
 
+from .. import Quantity
 from ..snap.snap import Snap, SubSnap
 from . import particles
 
 SnapLike = Union[Snap, SubSnap]
+
+
+def _norm(x, axis=None):
+    if isinstance(x, Quantity):
+        return np.linalg.norm(x.magnitude, axis=axis) * x.units
+    else:
+        return np.linalg.norm(x, axis=axis)
 
 
 def center_of_mass(snap: SnapLike, ignore_accreted: bool = True) -> ndarray:
@@ -37,7 +45,7 @@ def center_of_mass(snap: SnapLike, ignore_accreted: bool = True) -> ndarray:
         mass = snap['mass']
         pos = snap['position']
 
-    return (mass[:, np.newaxis] * pos).sum(axis=0)
+    return (mass[:, np.newaxis] * pos).sum(axis=0) / mass.sum()
 
 
 def mass(snap: SnapLike, ignore_accreted: bool = True) -> float:
@@ -269,7 +277,7 @@ def inclination(snap: SnapLike, ignore_accreted: bool = True) -> float:
         The mean inclination.
     """
     angmom = angular_momentum(snap=snap, ignore_accreted=ignore_accreted)
-    return np.arccos(angmom[2] / np.linalg.norm(angmom))
+    return np.arccos(angmom[2] / _norm(angmom))
 
 
 def position_angle(snap: SnapLike, ignore_accreted: bool = True) -> float:
@@ -291,4 +299,8 @@ def position_angle(snap: SnapLike, ignore_accreted: bool = True) -> float:
         The mean inclination.
     """
     angmom = angular_momentum(snap=snap, ignore_accreted=ignore_accreted)
-    return np.arctan2(angmom[1], angmom[0]) + np.pi / 2
+    if isinstance(angmom, Quantity):
+        pi_2 = np.pi / 2 * Quantity('radian')
+    else:
+        pi_2 = np.pi / 2
+    return np.arctan2(angmom[1], angmom[0]) + pi_2
