@@ -241,7 +241,7 @@ class Snap:
             self._physical_units = False
         else:
             for arr in self.loaded_arrays():
-                self._arrays[arr] = self._arrays[arr] * self._get_array_unit(arr)
+                self._arrays[arr] = self._arrays[arr] * self.get_array_unit(arr)
             self._physical_units = True
 
         return self
@@ -310,7 +310,19 @@ class Snap:
         else:
             raise ValueError('Family not available')
 
-    def _get_array_unit(self, arr):
+    def get_array_unit(self, arr: str) -> Any:
+        """Get array code units.
+
+        Parameters
+        ----------
+        arr
+            The string representing the quantity.
+
+        Returns
+        -------
+        unit
+            The Pint unit quantity, or the float 1.0 if no unit found.
+        """
         if arr in self._array_split_mapper:
             arr = self._array_split_mapper[arr][0]
         elif arr in self._array_name_mapper:
@@ -326,7 +338,7 @@ class Snap:
         if self._rotation is not None and name in self._rotation_required():
             array = self._rotation.apply(array)
         if self._physical_units and not isinstance(array, Quantity):
-            unit = self._get_array_unit(name)
+            unit = self.get_array_unit(name)
             self._arrays[name] = unit * array
         else:
             self._arrays[name] = array
@@ -557,13 +569,34 @@ def get_array_from_input(
     ndarray
         The array on the particles.
     """
-    if isinstance(inp, str):
-        return snap[inp]
-    elif isinstance(inp, ndarray):
+    if isinstance(inp, ndarray):
         return inp
+    elif isinstance(inp, str):
+        return get_array_in_code_units(snap, inp)
     elif default is not None:
-        return snap[default]
+        return get_array_in_code_units(snap, default)
     raise ValueError('Cannot determine array to return')
+
+
+def get_array_in_code_units(snap: SnapLike, name: str) -> ndarray:
+    """Get array in code units.
+
+    Parameters
+    ----------
+    snap
+        The Snap or SubSnap.
+    name
+        The array name.
+
+    Returns
+    -------
+    ndarray
+        The array on the particles in code units.
+    """
+    arr = snap[name]
+    if isinstance(arr, Quantity):
+        return (arr / snap.get_array_unit(name)).magnitude
+    return arr
 
 
 SnapLike = Union[Snap, SubSnap]

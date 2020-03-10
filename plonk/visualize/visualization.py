@@ -269,10 +269,8 @@ class Visualization:
 
 def _check_input(*, snap, quantity, x, y, z, kind):
 
-    try:
+    if quantity is not None:
         quantity = get_array_from_input(snap, quantity)
-    except ValueError:
-        quantity = None
 
     x = get_array_from_input(snap, x, 'x')
     y = get_array_from_input(snap, y, 'y')
