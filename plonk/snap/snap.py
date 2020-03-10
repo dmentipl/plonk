@@ -7,13 +7,15 @@ accessing a subset of particles in a Snap.
 
 from __future__ import annotations
 
-from typing import Callable, Dict, List, Optional, Tuple, Union, cast
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union, cast
 
 import numpy as np
 import pandas as pd
 from numpy import ndarray
 from pandas import DataFrame
 from scipy.spatial.transform import Rotation
+
+from .. import Quantity
 
 
 class Snap:
@@ -97,13 +99,21 @@ class Snap:
     }
 
     _array_units = {
-        'position': 'length',
-        'velocity': 'velocity',
-        'smooth': 'length',
-        'mass': 'mass',
+        'alpha': 'dimensionless',
         'density': 'density',
+        'divv': 'frequency',
+        'dt': 'time',
+        'dustfrac': 'dimensionless',
+        'dust_type': 'dimensionless',
         'magfield': 'magnetic_field',
+        'mass': 'mass',
+        'position': 'length',
+        'poten': 'energy',
+        'smooth': 'length',
         'spin': 'angular_momentum',
+        'tstop': 'time',
+        'type': 'dimensionless',
+        'velocity': 'velocity',
     }
 
     _particle_type = {
@@ -187,6 +197,30 @@ class Snap:
         if self._num_particles == 0:
             self._num_particles = self['type'].size
         return self._num_particles
+
+    def add_unit(self, name: str, unit: Any, unit_str: str):
+        """Define a unit on an array.
+
+        Parameters
+        ----------
+        name
+            The name of the array.
+        unit
+            The Pint units Quantity.
+        unit_str
+            The unit string. See units attribute for units.
+
+        Examples
+        --------
+        New array 'arr' with dimension 'length' and units 'cm'.
+
+        >>> snap.add_unit('arr', plonk.units('cm'), 'length')
+        """
+        if name in self._array_units:
+            raise ValueError('Array unit already defined on Snap')
+        if unit_str not in self.units:
+            self.units[unit_str] = unit
+        self._array_units[name] = unit_str
 
     def physical_units(self) -> Snap:
         """Set physical units.
@@ -273,7 +307,11 @@ class Snap:
             arr = self._array_split_mapper[arr][0]
         elif arr in self._array_name_mapper:
             arr = self._array_name_mapper[arr]
-        return self.units[self._array_units[arr]]
+        try:
+            unit = self.units[self._array_units[arr]]
+        except KeyError:
+            unit = 1.0
+        return unit
 
     def _set_array_from_registry(self, name: str):
         array = Snap._array_registry[name](self)

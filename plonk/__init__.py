@@ -64,6 +64,7 @@ available at https://github.com/dmentipl/plonk.
 import pint
 
 units = pint.UnitRegistry()
+Quantity = units.Quantity
 
 from . import analysis, simulation, snap, utils, visualize
 from .analysis import Profile
@@ -76,7 +77,7 @@ __all__ = (
     ['Evolution', 'Profile', 'Simulation', 'Snap', 'Visualization']  # Classes
     + ['analysis', 'simulation', 'snap', 'utils', 'visualize']  # Packages
     + ['load_snap', 'load_ev', 'load_sim']  # User functions
-    + ['units']
+    + ['units', 'Quantity']
 )
 
 # Canonical version number

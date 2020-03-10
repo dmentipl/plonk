@@ -20,9 +20,11 @@ def generate_units_dictionary(length, mass, time):
     """
     units = {}
 
+    units['dimensionless'] = length / length
     units['length'] = length
     units['time'] = time
     units['mass'] = mass
+    units['frequency'] = 1 / time
     units['velocity'] = length / time
     units['momentum'] = mass * length / time
     units['angular_momentum'] = mass * length ** 2 / time
