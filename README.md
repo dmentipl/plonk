@@ -9,14 +9,20 @@ Smoothed particle hydrodynamics analysis and visualization with Python.
 [![Build Status](https://travis-ci.org/dmentipl/plonk.svg?branch=master)](https://travis-ci.org/dmentipl/plonk)
 [![Coverage Status](https://coveralls.io/repos/github/dmentipl/plonk/badge.svg?branch=master)](https://coveralls.io/github/dmentipl/plonk?branch=master)
 [![Documentation Status](https://readthedocs.org/projects/plonk/badge/?version=latest)](https://plonk.readthedocs.io/en/latest/?badge=latest)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/dmentipl/plonk/blob/master/LICENSE)
 
 [![PyPI](https://img.shields.io/pypi/v/plonk)](https://pypi.org/project/plonk/)
 [![Anaconda Version](https://img.shields.io/conda/v/conda-forge/plonk.svg)](https://anaconda.org/conda-forge/plonk)
-[![Anaconda Platform](https://img.shields.io/conda/pn/conda-forge/plonk.svg)](https://anaconda.org/conda-forge/plonk)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/dmentipl/plonk/blob/master/LICENSE)
 
 [![JOSS](https://joss.theoj.org/papers/10.21105/joss.01884/status.svg)](https://doi.org/10.21105/joss.01884)
 [![Zenodo](https://zenodo.org/badge/DOI/10.5281/zenodo.3554568.svg)](https://doi.org/10.5281/zenodo.3554568)
+
+Description
+-----------
+
+Plonk is a Python tool for analysis and visualization of smoothed particle hydrodynamics data with a focus on astrophysical fluid dynamics.
+
+With Plonk we aim to integrate the high quality SPH visualisation of Splash into the modern Python astronomer workflow, and provide a framework for analysis of smoothed particle hydrodynamics simulation data.
 
 Usage
 -----

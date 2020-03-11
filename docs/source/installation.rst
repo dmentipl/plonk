@@ -9,31 +9,31 @@ Installation
 Conda
 -----
 
-Plonk can be installed with Conda.
+You can install Plonk via the package manager Conda from conda-forge.
 
 .. code-block:: console
 
     $ conda install plonk
 
-The Conda package is available via conda-forge at
-`<https://anaconda.org/conda-forge/plonk/>`_.
+This will install the required dependencies. Note: you may need to first add the
+`conda-forge` channel with :code:`conda config --add channels conda-forge`. I
+also recommend strictly using conda-forge which you can do with :code:`conda
+config --set channel_priority true`. For details on Conda, see
+`<https://docs.conda.io/>`_.
 
-If you're unfamiliar with Conda, see `<https://docs.conda.io/>`_.
 
 ---
 pip
 ---
 
-Plonk can also be installed with pip.
+You can also install Plonk via pip.
 
 .. code-block:: console
 
     $ pip install plonk
 
-If you're unfamiliar with pip, see `<https://pip.pypa.io/>`_.
-
-Both of these installation methods should install all required Python runtime
-packages.
+This should install the required dependencies. For details on pip, see
+`<https://pip.pypa.io/>`_.
 
 ------
 Source

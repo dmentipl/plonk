@@ -28,7 +28,7 @@ __version__ = re.search(
 # -- Project information -----------------------------------------------------
 
 project = 'Plonk'
-copyright = '2019, Daniel Mentiplay'
+copyright = '2020, Daniel Mentiplay'
 author = 'Daniel Mentiplay'
 
 # The short X.Y version
