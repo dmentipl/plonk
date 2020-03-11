@@ -51,11 +51,11 @@ def interpolate(
         pass to Snap, or a 1d array (N,). This is only required for
         cross-section plots. Default is 'z'.
     interp
-        The interpolation type.
+        The interpolation type. Default is 'projection'.
+
         - 'projection' : 2d interpolation via projection to xy-plane
         - 'cross_section' : 3d interpolation via cross-section in
-            z-direction
-        Default is 'projection'.
+          z-direction
     z_slice
         The z-coordinate value of the cross-section slice. Default
         is 0.0.

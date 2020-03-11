@@ -136,6 +136,7 @@ class Visualization:
             cross-section plots. Default is 'z'.
         kind
             The type of plot.
+
             - 'particle' : particle plot (default if quantity is None)
             - 'render' : rendered image (default for scalar quantities)
             - 'contour' : contour plot (scalar quantity)
@@ -143,19 +144,19 @@ class Visualization:
               quantities)
             - 'stream' : stream plot (vector quantity)
         interp
-            The interpolation type.
+            The interpolation type. Default is 'projection'.
+
             - 'projection' : 2d interpolation via projection to xy-plane
             - 'cross_section' : 3d interpolation via cross-section in
               z-direction
-            Default is 'projection'.
         z_slice
             The z-coordinate value of the cross-section slice. Default
             is 0.0.
         extent
             The range in the x and y-coord as (xmin, xmax, ymin, ymax).
         units
-            The units of the plot: 'quantity', 'extent', 'projection'. The
-            values are pint Unit objects.
+            The units of the plot as a dictionary with keys 'quantity',
+            'extent', 'projection'. The values are Pint Unit objects.
         axis
             A matplotlib axis handle.
         **kwargs
@@ -169,46 +170,83 @@ class Visualization:
         matplotlib's imshow for a render plot, so additional arguments
         to imshow can be passed this way.
 
+        See below for additional parameters for interpolation,
+        colorbars, quiver plots, etc. All other keyword arguments are
+        passed to the appropriate matplotlib function.
+
         Other Parameters
         ----------------
-        This is a list of parameters that are passed in as key word
-        arguments to other functions inside this method.
+        number_of_pixels : tuple
+            The number of pixels to interpolate particle quantities
+            to as a tuple (nx, ny). Default is (512, 512).
+        density_weighted : bool
+            Whether to density weight the interpolation or not.
+            Default is False.
+        fmt : str
+            This is the matplotlib axis.plot method positional
+            argument format string. Default is 'k.'.
+        show_colorbar : bool
+            Whether or not to display a colorbar. Default is True.
+        number_of_arrows : tuple
+            The number of arrows to display by sub-sampling the
+            interpolated data. Default is (25, 25).
+        normalize_vectors : bool
+            Whether to normalize the arrows to all have the same
+            length. Default is False.
 
-        Parameters for interpolation:
+        Examples
+        --------
+        Plot the particles.
 
-            number_of_pixels : tuple
-                The number of pixels to interpolate particle quantities
-                to as a tuple (nx, ny). Default is (512, 512).
-            density_weighted : bool
-                Whether to density weight the interpolation or not.
-                Default is False.
+        >>> viz = plonk.visualize.plot(
+        ...     snap=snap,
+        ...     x='x',
+        ...     y='y',
+        ...     extent=(-100, 100, -100, 100),
+        ... )
 
-        Parameters for particle plots are passed to axis.plot except:
+        Render the surface density in xz-plane.
 
-            fmt : str
-                This is the matplotlib axis.plot method positional
-                argument format string. Default is 'k.'.
+        >>> viz = plonk.visualize.plot(
+        ...     snap=snap,
+        ...     quantity='density',
+        ...     x='x',
+        ...     y='z',
+        ...     extent=(-100, 100, -25, 25),
+        ... )
 
-        Parameters for kind='render' plots are passed to axis.imshow
-        except:
+        Get the interpolation to grid directly (without plotting).
 
-            show_colorbar : bool
-                Whether or not to display a colorbar. Default is True.
+        >>> grid_data = plonk.visualize.interpolate(
+        ...     snap=snap,
+        ...     quantity='density',
+        ...     interp='projection',
+        ...     extent=(-100, 100, -100, 100),
+        ... )
 
-        Parameters for kind='contour' plots are passed to axis.contour.
+        Make an animation of multiple snaps.
 
-        Parameters for kind='quiver' plots are passed to axis.quiver
-        except:
+        >>> plonk.visualize.animation(
+        ...     snaps=snaps,
+        ...     quantity='density',
+        ...     extent=(-100, 100, -100, 100),
+        ...     filename='animation.mp4',
+        ... )
 
-            number_of_arrows : tuple
-                The number of arrows to display by sub-sampling the
-                interpolated data. Default is (25, 25).
-            normalize_vectors : bool
-                Whether to normalize the arrows to all have the same
-                length. Default is False.
+        Set units for the plot.
 
-        Parameters for kind='stream' plots are passed to
-        axis.streamplot.
+        >>> units = {
+        ...     'quantity': plonk.units('g / cm ** 3'),
+        ...     'extent': plonk.units('au'),
+        ...     'projection': plonk.units('cm'),
+        ... }
+
+        >>> viz = plonk.visualize.plot(
+        ...     snap=snap,
+        ...     quantity='density',
+        ...     extent=(-100, 100, -100, 100),
+        ...     units=units,
+        ... )
         """
         if self.axis is None:
             if axis is None:
@@ -336,7 +374,9 @@ def _convert_units(
     units: Dict[str, Any],
     interp: str,
 ):
-
+    required_keys = {'extent', 'projection', 'quantity'}
+    if not set(units) == required_keys:
+        raise ValueError(f'units dictionary requires: {required_keys}')
     _quantity_unit = snap.get_array_unit(quantity_str)
     if interp == 'projection':
         data = (
