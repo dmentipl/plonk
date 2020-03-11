@@ -5,6 +5,6 @@ snapshot file.
 """
 
 from .readers import load_snap
-from .snap import Snap
+from .snap import Snap, SnapLike
 
-__all__ = ['Snap', 'load_snap']
+__all__ = ['Snap', 'SnapLike', 'load_snap']

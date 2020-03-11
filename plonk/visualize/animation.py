@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib import animation as _animation
 from numpy import ndarray
 
-from ..snap.snap import SnapLike
+from ..snap import SnapLike
 from .visualization import plot
 
 

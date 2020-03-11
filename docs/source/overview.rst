@@ -89,7 +89,7 @@ To see what arrays are loaded into memory you can use the
 .. code-block:: pycon
 
     >>> snap.loaded_arrays()
-    ('position', 'type')
+    ('position',)
 
 Use :py:meth:`available_arrays` to see what arrays are available.
 
@@ -97,16 +97,16 @@ Use :py:meth:`available_arrays` to see what arrays are available.
 
     >>> snap.available_arrays()
     ('density',
-    'divv',
-    'dt',
-    'dust_type',
-    'dustfrac',
-    'mass',
-    'position',
-    'smooth',
-    'tstop',
-    'type',
-    'velocity')
+     'divv',
+     'dt',
+     'dust_type',
+     'dustfrac',
+     'mass',
+     'position',
+     'smooth',
+     'tstop',
+     'type',
+     'velocity')
 
 You can also define your own alias to access arrays. For example, if you prefer
 to use the name `'coordinate'` rather than `'position',` use the
@@ -134,16 +134,21 @@ dictionary of metadata, i.e. non-array data, on the snapshot.
 
     >>> list(snap.properties)
     ['time',
-    'udist',
-    'utime',
-    'umass',
-    'hfact',
-    'ieos',
-    'gamma',
-    'polyk',
-    'qfacdisc',
-    'grain size',
-    'grain density']
+     'hfact',
+     'ieos',
+     'gamma',
+     'polyk',
+     'qfacdisc',
+     'grain size',
+     'grain density']
+
+Units are available vis the :py:attr:`units` attribute. We make use of the
+Python units library Pint.
+
+.. code-block:: pycon
+
+    >>> snap.units['length']
+    14960000000000.0 <Unit('centimeter')>
 
 Sink particles are handled separately from the fluid, e.g. gas or dust,
 particles. They are available as an attribute.
@@ -151,7 +156,7 @@ particles. They are available as an attribute.
 .. code-block:: pycon
 
     >>> snap.sinks
-    <plonk.snap.Sinks>
+    <plonk.snap sinks>
 
     >>> snap.sinks['spin']
     array([[ 4.02648711e-10, -1.33037173e-09,  2.75977043e-06],
@@ -267,7 +272,7 @@ plot of column density, i.e. a projection plot.
     >>> viz = plonk.visualize.plot(
     ...     snap=snap,
     ...     quantity='density',
-    ...     extent=(-150, 150, -150, 150)
+    ...     extent=(-150, 150, -150, 150),
     ... )
 
 .. figure:: _static/density.png
@@ -283,20 +288,20 @@ limits of the colorbar.
 
     >>> viz.objects['image'].set_clim(vmin=0.5e-8, vmax=1.5e-8)
 
-Extra options can be passed in as keywords. For example, we can change the
-colormap.
+Alternatively, you can pass keyword arguments to the matplotlib functions. For
+example, we set the colormap to 'gist_heat' and set the colorbar minimum and
+maxiumum.
 
 .. code-block:: pycon
 
     >>> viz = plonk.visualize.plot(
-    ...     sim.snaps[-5],
+    ...     snap=snap,
     ...     quantity='density',
-    ...     cmap='viridis',
+    ...     extent=(-150, 150, -150, 150),
+    ...     cmap='gist_heat',
+    ...     vmin=0.5e-8,
+    ...     vmax=1.5e-8,
     ... )
-
-.. figure:: _static/polar.png
-
-    The column density in polar coordinates.
 
 More fine-grained control can be achieved by using the full details of
 :py:func:`visualize.plot`. See the API for more details.
@@ -346,7 +351,11 @@ Let's plot the gas and dust side-by-side.
 
     >>> for subsnap, axis in zip(subsnaps, axes):
     ...     plonk.visualize.plot(
-    ...         subsnap, quantity='density', extent=extent, axis=axis
+    ...         snap=subsnap,
+    ...         quantity='density',
+    ...         extent=extent,
+    ...         cmap='gist_heat',
+    ...         axis=axis,
     ...     )
 
 .. figure:: _static/dust-gas.png
@@ -375,7 +384,7 @@ the decorator :py:meth:`add_array`.
 
 .. code-block:: pycon
 
-    >>> @plonk.Snap.add_array
+    >>> @plonk.Snap.add_array()
     ... def radius(snap):
     ...     radius = np.hypot(snap['x'], snap['y'])
     ...     return radius
@@ -406,19 +415,25 @@ To see what profiles are loaded and what are available use the
 .. code-block:: pycon
 
     >>> prof.loaded_keys()
-    ('number', 'radius')
+    ('number', 'radius', 'size')
 
     >>> prof.available_keys()
     ('angmom_mag',
-    'angmom_phi',
-    'angmom_theta',
-    'density',
-    'eccentricity',
-    'mass',
-    'number',
-    'radius',
-    'scale_height',
-    'smooth')
+     'angmom_phi',
+     'angmom_theta',
+     'angmom_x',
+     'angmom_y',
+     'angmom_z',
+     'aspect_ratio',
+     'density',
+     'eccentricity',
+     'mass',
+     'number',
+     'radius',
+     'scale_height',
+     'size',
+     'smooth')
+
 
 To load a profile, simply call it.
 

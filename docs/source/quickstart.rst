@@ -96,7 +96,8 @@ Produce a projection rendering of density.
     >>> viz = plonk.visualize.plot(
     ...    snap=snap,
     ...    quantity='density',
-    ...    extent=(-150, 150, -150, 150)
+    ...    extent=(-150, 150, -150, 150),
+    ...    cmap='gist_heat',
     ... )
 
 .. image:: _static/density.png

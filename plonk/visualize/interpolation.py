@@ -9,8 +9,11 @@ from typing import Optional, Tuple, Union
 import numpy as np
 from numpy import ndarray
 
-from ..snap.snap import SnapLike, get_array_from_input
+from ..snap import SnapLike
+from ..snap.snap import get_array_from_input, get_array_in_code_units
 from .splash import interpolate_cross_section, interpolate_projection
+
+Extent = Tuple[float, float, float, float]
 
 
 def interpolate(
@@ -22,7 +25,7 @@ def interpolate(
     z: Optional[Union[str, ndarray]] = None,
     interp: 'str',
     z_slice: Optional[float] = None,
-    extent: Tuple[float, float, float, float],
+    extent: Extent,
     **kwargs,
 ) -> ndarray:
     """Interpolate a quantity on the snapshot to a pixel grid.
@@ -71,6 +74,8 @@ def interpolate(
     x = get_array_from_input(snap, x, 'x')
     y = get_array_from_input(snap, y, 'y')
     z = get_array_from_input(snap, z, 'z')
+    h = get_array_in_code_units(snap, 'smooth')
+    m = get_array_in_code_units(snap, 'mass')
 
     if interp == 'projection':
         cross_section = None
@@ -86,8 +91,8 @@ def interpolate(
             y_coordinate=y,
             z_coordinate=z,
             extent=extent,
-            smoothing_length=snap['smooth'],
-            particle_mass=snap['mass'],
+            smoothing_length=h,
+            particle_mass=m,
             hfact=snap.properties['hfact'],
             cross_section=cross_section,
             **kwargs,
@@ -101,8 +106,8 @@ def interpolate(
             y_coordinate=y,
             z_coordinate=z,
             extent=extent,
-            smoothing_length=snap['smooth'],
-            particle_mass=snap['mass'],
+            smoothing_length=h,
+            particle_mass=m,
             hfact=snap.properties['hfact'],
             cross_section=cross_section,
             **kwargs,
@@ -120,7 +125,7 @@ def scalar_interpolation(
     x_coordinate: ndarray,
     y_coordinate: ndarray,
     z_coordinate: Optional[ndarray] = None,
-    extent: Tuple[float, float, float, float],
+    extent: Extent,
     smoothing_length: ndarray,
     particle_mass: ndarray,
     hfact: float,
@@ -186,7 +191,7 @@ def vector_interpolation(
     x_coordinate: ndarray,
     y_coordinate: ndarray,
     z_coordinate: Optional[ndarray] = None,
-    extent: Tuple[float, float, float, float],
+    extent: Extent,
     smoothing_length: ndarray,
     particle_mass: ndarray,
     hfact: float,
@@ -267,7 +272,7 @@ def _interpolate(
     x_coordinate: ndarray,
     y_coordinate: ndarray,
     z_coordinate: Optional[ndarray] = None,
-    extent: Tuple[float, float, float, float],
+    extent: Extent,
     smoothing_length: ndarray,
     particle_mass: ndarray,
     hfact: float,

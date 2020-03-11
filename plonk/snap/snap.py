@@ -7,13 +7,31 @@ accessing a subset of particles in a Snap.
 
 from __future__ import annotations
 
-from typing import Callable, Dict, List, Optional, Tuple, Union, cast
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union, cast
 
 import numpy as np
 import pandas as pd
 from numpy import ndarray
 from pandas import DataFrame
 from scipy.spatial.transform import Rotation
+
+from .. import Quantity
+
+
+class _SinkUtility:
+    def __init__(self, fn):
+        self.fn = fn
+
+    def __getitem__(self, inp):
+        return self.fn(inp, sinks=True)
+
+    def __repr__(self):
+        """Dunder repr method."""
+        return self.__str__()
+
+    def __str__(self):
+        """Dunder str method."""
+        return f'<plonk.snap sinks>'
 
 
 class Snap:
@@ -54,7 +72,14 @@ class Snap:
 
     Alternatively, define a function.
 
-    >>> @plonk.Snap.add_array
+    >>> @plonk.Snap.add_array()
+    ... def radius(snap) -> ndarray:
+    ...     radius = np.hypot(snap['x'], snap['y'])
+    ...     return radius
+
+    Possibly with units.
+
+    >>> @plonk.Snap.add_array(unit='length')
     ... def radius(snap) -> ndarray:
     ...     radius = np.hypot(snap['x'], snap['y'])
     ...     return radius
@@ -62,9 +87,14 @@ class Snap:
     Or, use an existing one.
 
     >>> snap['R'] = plonk.analysis.particles.radial_distance(snap)
+
+    Set physical units. Arrays are now Pint quantities.
+
+    >>> snap.physical_units()
     """
 
     _array_registry: Dict[str, Callable] = {}
+    _sink_registry: Dict[str, Callable] = {}
 
     _array_name_mapper = {
         'xyz': 'position',
@@ -96,6 +126,24 @@ class Snap:
         'sz': ('spin', 2),
     }
 
+    _array_units = {
+        'alpha': 'dimensionless',
+        'density': 'density',
+        'divv': 'frequency',
+        'dt': 'time',
+        'dustfrac': 'dimensionless',
+        'dust_type': 'dimensionless',
+        'magfield': 'magnetic_field',
+        'mass': 'mass',
+        'position': 'length',
+        'poten': 'energy',
+        'smooth': 'length',
+        'spin': 'angular_momentum',
+        'tstop': 'time',
+        'type': 'dimensionless',
+        'velocity': 'velocity',
+    }
+
     _particle_type = {
         'gas': 1,
         'dust': 2,
@@ -106,22 +154,31 @@ class Snap:
     }
 
     @staticmethod
-    def add_array(fn: Callable) -> Callable:
+    def add_array(unit: str = None) -> Callable:
         """Decorate function to add array to Snap.
+
+        This function decorates a function that returns an array. The
+        name of the function is the string with which to reference the
+        array.
 
         Parameters
         ----------
-        fn
-            A function that returns the array. The name of the function
-            is the string with which to reference the array.
+        unit
+            A string to represent the units of the array. E.g. 'length'
+            for a 'radius' array.
 
         Returns
         -------
         Callable
-            The function which returns the array.
+            The decorator which returns the array.
         """
-        Snap._array_registry[fn.__name__] = fn
-        return fn
+
+        def _add_array(fn):
+            Snap._array_units[fn.__name__] = unit
+            Snap._array_registry[fn.__name__] = fn
+            return fn
+
+        return _add_array
 
     @staticmethod
     def add_alias(name: str, alias: str) -> None:
@@ -139,33 +196,105 @@ class Snap:
     def __init__(self):
 
         self.properties = {}
-        self.sinks = Sinks()
+        self.units = {}
         self._arrays = {}
+        self._sinks = {}
         self._file_pointer = None
-        self._num_particles = 0
+        self._num_particles = -1
+        self._num_sinks = -1
         self._families = {key: None for key in Snap._particle_type.keys()}
         self._rotation = None
+        self._physical_units = False
 
     def close_file(self):
         """Close access to underlying file."""
         self._file_pointer.close()
 
-    def loaded_arrays(self):
+    def loaded_arrays(self, sinks: bool = False):
         """Return a list of loaded arrays."""
+        if sinks:
+            return tuple(sorted(self._sinks.keys()))
         return tuple(sorted(self._arrays.keys()))
 
-    def available_arrays(self):
+    def available_arrays(self, sinks: bool = False):
         """Return a list of available arrays."""
-        loaded = self.loaded_arrays()
-        array_reg = tuple(sorted(self._array_registry.keys()))
-        return tuple(sorted(set(loaded + array_reg)))
+        if sinks:
+            loaded = self.loaded_arrays(sinks)
+            registered = tuple(sorted(self._sink_registry.keys()))
+        else:
+            loaded = self.loaded_arrays()
+            registered = tuple(sorted(self._array_registry.keys()))
+        return tuple(sorted(set(loaded + registered)))
+
+    @property
+    def sinks(self):
+        """Sink particle arrays."""
+        return _SinkUtility(self._get_array)
 
     @property
     def num_particles(self):
         """Return number of particles."""
-        if self._num_particles == 0:
-            self._num_particles = self['type'].size
+        if self._num_particles == -1:
+            self._num_particles = len(self._array_registry['type'](self))
         return self._num_particles
+
+    @property
+    def num_sinks(self):
+        """Return number of sinks."""
+        if self._num_sinks == -1:
+            try:
+                self._num_sinks = len(self._sink_registry['mass'](self))
+            except KeyError:
+                self._num_sinks = 0
+        return self._num_sinks
+
+    def add_unit(self, name: str, unit: Any, unit_str: str):
+        """Define a unit on an array.
+
+        Parameters
+        ----------
+        name
+            The name of the array.
+        unit
+            The Pint units Quantity.
+        unit_str
+            The unit string. See units attribute for units.
+
+        Examples
+        --------
+        New array 'arr' with dimension 'length' and units 'cm'.
+
+        >>> snap.add_unit('arr', plonk.units('cm'), 'length')
+        """
+        if name in self._array_units:
+            raise ValueError('Array unit already defined on Snap')
+        if unit_str not in self.units:
+            self.units[unit_str] = unit
+        self._array_units[name] = unit_str
+
+    def physical_units(self, unset: bool = False) -> Snap:
+        """Set/unset physical units.
+
+        Uses Pint.
+
+        Returns
+        -------
+        Snap
+        """
+        if unset:
+            for arr in self.loaded_arrays():
+                del self._arrays[arr]
+            for arr in self.loaded_arrays(sinks=True):
+                del self._sinks[arr]
+            self._physical_units = False
+        else:
+            for arr in self.loaded_arrays():
+                self._arrays[arr] = self._arrays[arr] * self.get_array_unit(arr)
+            for arr in self.loaded_arrays(sinks=True):
+                self._sinks[arr] = self._sinks[arr] * self.get_array_unit(arr)
+            self._physical_units = True
+
+        return self
 
     def rotate(self, rotation: Rotation) -> Snap:
         """Rotate snapshot.
@@ -184,12 +313,10 @@ class Snap:
         for arr in self._rotation_required():
             if arr in self.loaded_arrays():
                 self._arrays[arr] = rotation.apply(self._arrays[arr])
-
-        for arr in self.sinks._rotation_required():
-            self.sinks._data[arr] = rotation.apply(self.sinks._data[arr])
+            if arr in self.loaded_arrays(sinks=True):
+                self._sinks[arr] = rotation.apply(self._sinks[arr])
 
         self._rotation = rotation
-        self.sinks._rotation = rotation
 
         return self
 
@@ -231,22 +358,70 @@ class Snap:
         else:
             raise ValueError('Family not available')
 
-    def _get_array(self, name: str, index: Optional[int] = None) -> ndarray:
+    def get_array_unit(self, arr: str) -> Any:
+        """Get array code units.
+
+        Parameters
+        ----------
+        arr
+            The string representing the quantity.
+
+        Returns
+        -------
+        unit
+            The Pint unit quantity, or the float 1.0 if no unit found.
+        """
+        if arr in self._array_split_mapper:
+            arr = self._array_split_mapper[arr][0]
+        elif arr in self._array_name_mapper:
+            arr = self._array_name_mapper[arr]
+        try:
+            unit = self.units[self._array_units[arr]]
+        except KeyError:
+            unit = 1.0
+        return unit
+
+    def _get_array_from_registry(self, name: str, sinks: bool = False):
+        if sinks:
+            array = Snap._sink_registry[name](self)
+            array_dict = self._sinks
+        else:
+            array = Snap._array_registry[name](self)
+            array_dict = self._arrays
+        if self._rotation is not None and name in self._rotation_required():
+            array = self._rotation.apply(array)
+        if self._physical_units and not isinstance(array, Quantity):
+            unit = self.get_array_unit(name)
+            array_dict[name] = unit * array
+        else:
+            array_dict[name] = array
+
+    def _get_array(
+        self, name: str, index: Optional[int] = None, sinks: bool = False
+    ) -> ndarray:
         """Get an array by name."""
-        if name in self._arrays:
+        if name in self.available_arrays(sinks):
+            name = name
+        elif name in self._array_name_mapper.keys():
+            name = self._array_name_mapper[name]
+        elif name in self._array_split_mapper.keys():
+            name, index = self._array_split_mapper[name]
+        else:
+            raise ValueError('Array not available')
+
+        if sinks:
+            array_dict = self._sinks
+        else:
+            array_dict = self._arrays
+        if name in array_dict:
             if index is None:
-                return self._arrays[name]
-            return self._arrays[name][:, index]
-        elif name in Snap._array_registry:
-            if self._rotation is not None and name in self._rotation_required():
-                self._arrays[name] = self._rotation.apply(
-                    Snap._array_registry[name](self)
-                )
-            else:
-                self._arrays[name] = Snap._array_registry[name](self)
+                return array_dict[name]
+            return array_dict[name][:, index]
+        elif name in Snap._array_registry or name in Snap._sink_registry:
+            self._get_array_from_registry(name, sinks)
             if index is None:
-                return self._arrays[name]
-            return self._arrays[name][:, index]
+                return array_dict[name]
+            return array_dict[name][:, index]
         else:
             raise ValueError('Array not available')
 
@@ -260,11 +435,9 @@ class Snap:
             elif inp in self.available_arrays():
                 return self._get_array(inp)
             elif inp in self._array_name_mapper.keys():
-                return self._get_array(self._array_name_mapper[inp])
+                return self._get_array(inp)
             elif inp in self._array_split_mapper.keys():
-                return self._get_array(*self._array_split_mapper[inp])
-            elif inp in self._arrays:
-                return self._arrays[inp]
+                return self._get_array(inp)
         elif isinstance(inp, ndarray):
             if np.issubdtype(np.bool, inp.dtype):
                 return SubSnap(self, np.flatnonzero(inp))
@@ -348,98 +521,13 @@ class SubSnap(Snap):
         """Dunder str method."""
         return f'<plonk.SubSnap>'
 
-    def _get_array(self, name: str, index: Optional[int] = None):
-        """Get an array by name."""
-        if name in self.base._arrays:
-            pass
-        elif name in Snap._array_registry:
-            self.base._arrays[name] = Snap._array_registry[name](self)
-        else:
-            raise ValueError('Array not available')
-        if index is None:
-            return self.base._arrays[name][self._indices]
-        return self.base._arrays[name][:, index][self._indices]
+    def _get_array(
+        self, name: str, index: Optional[int] = None, sinks: bool = False
+    ) -> ndarray:
+        return self.base._get_array(name, index, sinks)[self._indices]
 
 
-class Sinks:
-    """Sink particles in a Snap."""
-
-    _array_name_mapper = {
-        'xyz': 'position',
-        'pos': 'position',
-        'vxyz': 'velocity',
-        'vel': 'velocity',
-        'h': 'smooth',
-        'spinxyz': 'spin',
-    }
-
-    _array_split_mapper = {
-        'x': ('position', 0),
-        'y': ('position', 1),
-        'z': ('position', 2),
-        'vx': ('velocity', 0),
-        'vy': ('velocity', 1),
-        'vz': ('velocity', 2),
-        'velx': ('velocity', 0),
-        'vely': ('velocity', 1),
-        'velz': ('velocity', 2),
-        'sx': ('spin', 0),
-        'sy': ('spin', 1),
-        'sz': ('spin', 2),
-        'spinx': ('spin', 0),
-        'spiny': ('spin', 1),
-        'spinz': ('spin', 2),
-    }
-
-    def __init__(self):
-        self._data = None
-        self._rotation = None
-
-    def add_sinks(self, structured_array: ndarray) -> None:
-        """Add sinks via structured array.
-
-        Parameters
-        ----------
-        structured_array
-            A structured ndarray with labels such as 'position',
-            'velocity', and so on, representing quantities on the sink
-            particles.
-        """
-        self._data = structured_array
-
-    @property
-    def columns(self) -> Tuple[str, ...]:
-        """Available sink quantities."""
-        return self._data.dtype.names
-
-    def _rotation_required(self):
-        return set([val[0] for val in self._array_split_mapper.values()])
-
-    def __getitem__(self, inp: Union[str, int, slice, List[int]]) -> ndarray:
-        """Return an array."""
-        if isinstance(inp, (int, slice, list)):
-            return self._data[inp]
-        elif isinstance(inp, str):
-            if inp in self.columns:
-                return self._data[inp]
-            elif inp in self._array_name_mapper:
-                return self._data[self._array_name_mapper[inp]]
-            elif inp in self._array_split_mapper:
-                array, index = self._array_split_mapper[inp]
-                return self._data[array][:, index]
-        raise ValueError('Cannot determine quantity to return')
-
-    def __len__(self):
-        """Dunder len method."""
-        return len(self._data)
-
-    def __repr__(self):
-        """Dunder repr method."""
-        return self.__str__()
-
-    def __str__(self):
-        """Dunder str method."""
-        return f'<plonk.snap.Sinks>'
+SnapLike = Union[Snap, SubSnap]
 
 
 def get_array_from_input(
@@ -462,13 +550,31 @@ def get_array_from_input(
     ndarray
         The array on the particles.
     """
-    if isinstance(inp, str):
-        return snap[inp]
-    elif isinstance(inp, ndarray):
+    if isinstance(inp, ndarray):
         return inp
+    elif isinstance(inp, str):
+        return get_array_in_code_units(snap, inp)
     elif default is not None:
-        return snap[default]
+        return get_array_in_code_units(snap, default)
     raise ValueError('Cannot determine array to return')
 
 
-SnapLike = Union[Snap, SubSnap]
+def get_array_in_code_units(snap: SnapLike, name: str) -> ndarray:
+    """Get array in code units.
+
+    Parameters
+    ----------
+    snap
+        The Snap or SubSnap.
+    name
+        The array name.
+
+    Returns
+    -------
+    ndarray
+        The array on the particles in code units.
+    """
+    arr = snap[name]
+    if isinstance(arr, Quantity):
+        return (arr / snap.get_array_unit(name)).magnitude
+    return arr

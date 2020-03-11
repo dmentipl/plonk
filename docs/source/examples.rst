@@ -31,7 +31,8 @@ Rotate a snapshot and plot column density.
     >>> plonk.visualize.plot(
     ...     snap=snap,
     ...     quantity='density',
-    ...     extent=(-200, 200, -200, 200)
+    ...     extent=(-150, 150, -150, 150),
+    ...     cmap='gist_heat',
     ... )
     >>> plt.show()
 
@@ -58,6 +59,7 @@ Plot cross section at z=0.
     ...     interp='cross_section',
     ...     z_slice=0.0,
     ...     extent=(-150, 150, -150, 150),
+    ...     cmap='gist_heat',
     ... )
     >>> plt.show()
 
@@ -85,14 +87,14 @@ Plot dust and gas side-by-side.
     # Make plot
     >>> fig, axes = plt.subplots(ncols=2, sharey=True, figsize=(12, 5))
     >>> plonk.visualize.plot(
-    ...     gas,
+    ...     snap=gas,
     ...     quantity='density',
     ...     extent=extent,
     ...     cmap='Blues_r',
     ...     axis=axes[0],
     ... )
     >>> plonk.visualize.plot(
-    ...     dust,
+    ...     snap=dust,
     ...     quantity='density',
     ...     extent=extent,
     ...     cmap='Reds_r',
@@ -113,7 +115,6 @@ Plot mass accretion and accretion rate onto sink particles.
     >>> import matplotlib.pyplot as plt
     >>> import numpy as np
     >>> import plonk
-    >>> from astropy import constants
 
     # Set Seaborn plot style
     >>> plt.style.use('seaborn')
@@ -128,7 +129,8 @@ Plot mass accretion and accretion rate onto sink particles.
     # Loop over sinks and plot
     >>> for idx, sink in enumerate(sim.sink_quantities):
     ...     time = sink.data['time'] / (2 * np.pi)
-    ...     macc = (constants.M_sun / constants.M_earth) * sink.data['macc']
+    ...     macc = sink.data['macc'].to_numpy()
+    ...     macc = (plonk.units('solar_mass') * macc).to('earth_mass').magnitude
     ...     sink.data['mdot'] = np.gradient(macc, time)
     ...     mdot = sink.data['mdot'].rolling(window=100).mean()
     ...     ax[0].plot(time, macc, label=f'{sink_labels[idx]}')
@@ -166,12 +168,16 @@ Plot a density profile for multiple snapshots.
     >>> times = list()
     >>> profiles = list()
     >>> for snap in sim.snaps[::7]:
-    ...     time = (snap.properties['time'] * snap.properties['utime']).to('year').magnitude
+    ...     snap.physical_units()
+    ...     time = (snap.properties['time'] * snap.units['time']).to('year').magnitude
     ...     times.append(time)
-    ...     profile = plonk.Profile(snap, radius_min=10, radius_max=150, n_bins=200)
-    ...     profile['density'] = (
-    ...         profile['density'] * snap.properties['umass'] / snap.properties['udist'] ** 2
-    ...     ).magnitude
+    ...     profile = plonk.Profile(
+    ...         snap,
+    ...         radius_min=plonk.Quantity('10 au'),
+    ...         radius_max=plonk.units('150 au'),
+    ...         n_bins=200
+    ...     )
+    ...     _ = profile['density']
     ...     profiles.append(profile)
 
     # Plot profiles

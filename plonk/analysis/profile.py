@@ -4,7 +4,7 @@ Heavily inspired by pynbody (https://pynbody.github.io/).
 """
 
 from bisect import bisect
-from typing import Any, Callable, Collection, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,7 +12,9 @@ import pandas as pd
 from numpy import ndarray
 from pandas import DataFrame
 
+from .. import Quantity
 from ..snap import Snap
+from ..utils.math import norm
 from .particles import eccentricity as _eccentricity
 from .particles import specific_angular_momentum
 
@@ -117,11 +119,21 @@ class Profile:
 
         self.bin_edges, self['size'] = self._setup_bins()
         self.bin_centers = 0.5 * (self.bin_edges[:-1] + self.bin_edges[1:])
-        self._particle_bin = np.digitize(self._x, self.bin_edges)
+        if self.snap._physical_units:
+            self._particle_bin = np.digitize(
+                self._x.magnitude, self.bin_edges.magnitude
+            )
+        else:
+            self._particle_bin = np.digitize(self._x, self.bin_edges)
         self.bin_indicies = self._set_particle_bin_indicies()
 
         self._profiles['radius'] = self.bin_centers
-        self._profiles['number'] = np.histogram(self._x, self.bin_edges)[0]
+        if self.snap._physical_units:
+            self._profiles['number'] = np.histogram(
+                self._x.magnitude, self.bin_edges.magnitude
+            )[0]
+        else:
+            self._profiles['number'] = np.histogram(self._x, self.bin_edges)[0]
 
     def _check_spacing(self, spacing):
         if spacing.lower() in ('lin', 'linear'):
@@ -147,6 +159,14 @@ class Profile:
             return np.sqrt(pos[:, 0] ** 2 + pos[:, 1] ** 2 + pos[:, 2] ** 2)
 
     def _set_range(
+        self, radius_min: Optional[Any], radius_max: Optional[Any]
+    ) -> Tuple[float, float]:
+        if self.snap._physical_units:
+            return self._set_range_physical_units(radius_min, radius_max)
+        else:
+            return self._set_range_code_units(radius_min, radius_max)
+
+    def _set_range_code_units(
         self, radius_min: Optional[float], radius_max: Optional[float]
     ) -> Tuple[float, float]:
         if radius_min is None:
@@ -160,7 +180,53 @@ class Profile:
 
         return rmin, rmax
 
+    def _set_range_physical_units(
+        self, radius_min: Optional[Any], radius_max: Optional[Any]
+    ) -> Tuple[float, float]:
+        if radius_min is None:
+            rmin = self._x.min()
+        else:
+            rmin = radius_min
+        if radius_max is None:
+            rmax = np.percentile(self._x.magnitude, 99, axis=0) * self._x.units
+        else:
+            rmax = radius_max
+
+        return rmin, rmax
+
     def _setup_bins(self) -> ndarray:
+        if self.snap._physical_units:
+            bin_edges = self._bin_edges_physical_units()
+        else:
+            bin_edges = self._bin_edges_code_units()
+        if self.ndim == 2:
+            bin_sizes = np.pi * (bin_edges[1:] ** 2 - bin_edges[:-1] ** 2)
+        elif self.ndim == 3:
+            bin_sizes = 4 / 3 * np.pi * (bin_edges[1:] ** 3 - bin_edges[:-1] ** 3)
+        return bin_edges, bin_sizes
+
+    def _bin_edges_physical_units(self):
+        if self.spacing == 'linear':
+            bin_edges = (
+                np.linspace(
+                    self.range[0].magnitude, self.range[1].magnitude, self.n_bins + 1
+                )
+                * self.range[0].units
+            )
+        elif self.spacing == 'log':
+            bin_edges = (
+                np.logspace(
+                    np.log10(self.range[0].magnitude),
+                    np.log10(self.range[1].magnitude),
+                    self.n_bins + 1,
+                )
+                * self.range[0].units
+            )
+        else:
+            raise ValueError('Cannot determine spacing to setup bins')
+        return bin_edges
+
+    def _bin_edges_code_units(self):
         if self.spacing == 'linear':
             bin_edges = np.linspace(self.range[0], self.range[1], self.n_bins + 1)
         elif self.spacing == 'log':
@@ -169,11 +235,7 @@ class Profile:
             )
         else:
             raise ValueError('Cannot determine spacing to setup bins')
-        if self.ndim == 2:
-            bin_sizes = np.pi * (bin_edges[1:] ** 2 - bin_edges[:-1] ** 2)
-        elif self.ndim == 3:
-            bin_sizes = 4 / 3 * np.pi * (bin_edges[1:] ** 3 - bin_edges[:-1] ** 3)
-        return bin_edges, bin_sizes
+        return bin_edges
 
     def _set_particle_bin_indicies(self) -> List[ndarray]:
         sortind = self._particle_bin.argsort()
@@ -207,8 +269,8 @@ class Profile:
 
     def __setitem__(self, name: str, item: ndarray):
         """Set the profile directly."""
-        if not isinstance(item, ndarray):
-            raise ValueError('"item" must be ndarray')
+        if not isinstance(item, (ndarray, Quantity)):
+            raise ValueError('"item" must be ndarray or pint Quantity')
         if item.shape[0] != self.n_bins:
             raise ValueError('Length of array does not match number of bins')
         if name in self.loaded_keys():
@@ -245,7 +307,14 @@ class Profile:
         available = list(self._profile_functions.keys())
         return tuple(sorted(set(loaded + available)))
 
-    def plot(self, x: str, y: Union[str, Collection[str]]):
+    def plot(
+        self,
+        x: str,
+        y: Union[str, List[str]],
+        x_unit: Optional[str] = None,
+        y_unit: Optional[Union[str, List[str]]] = None,
+        ax: Any = None,
+    ):
         """Plot profile.
 
         Parameters
@@ -253,25 +322,51 @@ class Profile:
         x
             The x axis to plot as a string.
         y
-            The y axis to plot. Can be multiple as a list or tuple.
+            The y axis to plot. Can be string or multiple as a list of
+            strings.
+        x_unit : optional
+            The x axis quantity unit as a string. Only works if using
+            physical units.
+        y_unit : optional
+            The y axis quantity unit as a string or list of strings.
+            Only works if using physical units.
+        ax : optional
+            A matplotlib Axis object to plot to.
         """
-        if x.lower() not in self.available_keys():
+        if x not in self.available_keys():
             raise ValueError('Cannot determine x axis to plot')
-        _x = self._get_profile(x)
-        if isinstance(y, (list, tuple)):
-            for yi in y:
-                if yi.lower() not in self.available_keys():
-                    raise ValueError('Cannot determine y axis to plot')
-                _y = self._get_profile(yi)
-                plt.plot(_x, _y)
-        elif isinstance(y, str):
-            if y.lower() not in self.available_keys():
-                raise ValueError('Cannot determine y axis to plot')
-            _y = self._get_profile(y)
-            plt.plot(_x, _y)
+
+        if not self.snap._physical_units:
+            if x_unit is not None or y_unit is not None:
+                raise ValueError('Cannot set unit if snap is not in physical units')
         else:
-            raise ValueError('Cannot determine y axis to plot')
-        return plt.gcf(), plt.gca()
+            if isinstance(y_unit, str):
+                y_unit = [y_unit]
+
+        if ax is None:
+            fig, ax = plt.subplots()
+        else:
+            fig = ax.get_figure()
+
+        if isinstance(y, str):
+            y = [y]
+
+        _x = self._get_profile(x)
+        if x_unit is not None:
+            _x = _x.to(x_unit)
+
+        for idx, yi in enumerate(y):
+            if yi not in self.available_keys():
+                raise ValueError('Cannot determine y axis to plot')
+            _y = self._get_profile(yi)
+            if y_unit is not None:
+                _y = _y.to(y_unit[idx])
+            if self.snap._physical_units:
+                ax.plot(_x.magnitude, _y.magnitude)
+            else:
+                ax.plot(_x, _y)
+
+        return fig, ax
 
     def to_dataframe(self, all_available: bool = False) -> DataFrame:
         """Convert Profile to DataFrame.
@@ -310,9 +405,13 @@ class Profile:
         """
         binned_quantity = np.zeros(self.n_bins)
         for idx, bin_ind in enumerate(self.bin_indicies):
-            binned_quantity[idx] = function(
-                tuple([arg[self._mask][bin_ind] for arg in args])
-            )
+            val = function(*tuple([arg[self._mask][bin_ind] for arg in args]))
+            if self.snap._physical_units:
+                binned_quantity[idx] = val.magnitude
+            else:
+                binned_quantity[idx] = val
+        if self.snap._physical_units:
+            binned_quantity *= val.units
         return binned_quantity
 
 
@@ -358,7 +457,7 @@ def aspect_ratio(prof) -> ndarray:
 def angmom_mag(prof) -> ndarray:
     """Magnitude of specific angular momentum profile."""
     angmom = specific_angular_momentum(snap=prof.snap)
-    angmom_mag = np.linalg.norm(angmom, axis=1)
+    angmom_mag = norm(angmom, axis=1)
 
     return prof.particles_to_binned_quantity(np.mean, angmom_mag)
 
@@ -412,7 +511,7 @@ def eccentricity(prof) -> ndarray:
     """Orbital eccentricity profile.
 
     This profile assumes the central mass is at (0, 0, 0) and that the
-    gravitational parameter (G*M) is set.
+    gravitational parameter (mu = G M) is set.
     """
     try:
         gravitational_parameter = prof.properties['gravitational_parameter']

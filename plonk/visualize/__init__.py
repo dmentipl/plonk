@@ -9,8 +9,8 @@ Plot the particles.
 
 >>> viz = plonk.visualize.plot(
 ...     snap=snap,
-...     x=snap['x'],
-...     y=snap['y'],
+...     x='x',
+...     y='y',
 ...     extent=(-100, 100, -100, 100),
 ... )
 
@@ -18,7 +18,7 @@ Render the surface density in xz-plane.
 
 >>> viz = plonk.visualize.plot(
 ...     snap=snap,
-...     quantity=snap['density'],
+...     quantity='density',
 ...     x='x',
 ...     y='z',
 ...     extent=(-100, 100, -25, 25),
@@ -40,6 +40,21 @@ Make an animation of multiple snaps.
 ...     quantity='density',
 ...     extent=(-100, 100, -100, 100),
 ...     filename='animation.mp4',
+... )
+
+Set units for the plot.
+
+>>> units = {
+...     'quantity': plonk.units('g / cm ** 3'),
+...     'extent': plonk.units('au'),
+...     'projection': plonk.units('cm'),
+... }
+
+>>> viz = plonk.visualize.plot(
+...     snap=snap,
+...     quantity='density',
+...     extent=(-100, 100, -100, 100),
+...     units=units,
 ... )
 """
 

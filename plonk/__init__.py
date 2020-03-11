@@ -63,7 +63,8 @@ available at https://github.com/dmentipl/plonk.
 
 import pint
 
-units = pint.UnitRegistry()
+units = pint.UnitRegistry(system='cgs')
+Quantity = units.Quantity
 
 from . import analysis, simulation, snap, utils, visualize
 from .analysis import Profile
@@ -76,8 +77,15 @@ __all__ = (
     ['Evolution', 'Profile', 'Simulation', 'Snap', 'Visualization']  # Classes
     + ['analysis', 'simulation', 'snap', 'utils', 'visualize']  # Packages
     + ['load_snap', 'load_ev', 'load_sim']  # User functions
-    + ['units']
+    + ['units', 'Quantity']
 )
 
 # Canonical version number
 __version__ = '0.3.1'
+
+# Add units
+units.define('solar_mass = 1.9891e33 g')
+units.define('solar_radius = 6.959500e10 cm')
+units.define('earth_mass = 5.979e27 g')
+units.define('earth_radius = 6.371315e8 cm')
+units.define('jupiter_mass = 1.89813e30 g')

@@ -6,16 +6,17 @@ hydrodynamics simulation data.
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, Optional, Union
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ndarray
 
-from ..snap.snap import SnapLike, get_array_from_input
+from ..snap import SnapLike
+from ..snap.snap import get_array_from_input
 from ..utils import is_documented_by
 from . import plots
-from .interpolation import interpolate
+from .interpolation import Extent, interpolate
 
 _kind_to_object = {
     'render': 'image',
@@ -51,6 +52,9 @@ class Visualization:
         The matplotlib Figure object of the plot.
     axis
         The matplotlib Axis object of the plot.
+    units
+        The units of the plot: 'quantity', 'extent', 'projection'. The
+        values are pint Unit objects.
     extent
         A tuple (xmin, xmax, ymin, ymax) of the extent of the plot.
     objects
@@ -70,7 +74,12 @@ class Visualization:
         self.snap = snap
         self.fig: Any = None
         self.axis: Any = None
-        self.extent: Tuple[float, float, float, float] = (-1, -1, -1, -1)
+        self.units: Dict[str, Any] = {
+            'quantity': None,
+            'extent': None,
+            'projection': None,
+        }
+        self.extent: Extent = (-1, -1, -1, -1)
         self.objects: Dict[str, Any] = {
             'lines': None,
             'image': None,
@@ -96,7 +105,8 @@ class Visualization:
         kind: Optional[str] = None,
         interp: str = 'projection',
         z_slice: float = 0.0,
-        extent: Tuple[float, float, float, float],
+        extent: Extent,
+        units=None,
         axis: Optional[Any] = None,
         **kwargs,
     ) -> Visualization:
@@ -143,6 +153,9 @@ class Visualization:
             is 0.0.
         extent
             The range in the x and y-coord as (xmin, xmax, ymin, ymax).
+        units
+            The units of the plot: 'quantity', 'extent', 'projection'. The
+            values are pint Unit objects.
         axis
             A matplotlib axis handle.
         **kwargs
@@ -207,8 +220,7 @@ class Visualization:
             if axis is not None:
                 raise ValueError('Trying to change existing axis attribute')
 
-        self.extent = extent
-
+        quantity_str: Optional[str] = quantity if isinstance(quantity, str) else None
         quantity, x, y, z, kind = _check_input(
             snap=self.snap, quantity=quantity, x=x, y=y, z=z, kind=kind
         )
@@ -231,6 +243,24 @@ class Visualization:
                 extent=extent,
                 **_kwargs,
             )
+            if units is not None:
+                if quantity_str is None:
+                    raise ValueError(
+                        'Cannot set units when passing in arrays. '
+                        'Instead, use strings to access\n'
+                        'quantities on Snap. E.g. plot(..., quantity="density", ...).'
+                    )
+                interpolated_data, extent = _convert_units(
+                    snap=self.snap,
+                    quantity_str=quantity_str,
+                    interpolated_data=interpolated_data,
+                    extent=extent,
+                    units=units,
+                    interp=interp,
+                )
+                self.units.update(units)
+
+        self.extent = extent
 
         show_colorbar = kwargs.pop('show_colorbar', True if kind == 'render' else False)
 
@@ -269,10 +299,8 @@ class Visualization:
 
 def _check_input(*, snap, quantity, x, y, z, kind):
 
-    try:
+    if quantity is not None:
         quantity = get_array_from_input(snap, quantity)
-    except ValueError:
-        quantity = None
 
     x = get_array_from_input(snap, x, 'x')
     y = get_array_from_input(snap, y, 'y')
@@ -299,6 +327,31 @@ def _check_input(*, snap, quantity, x, y, z, kind):
     return quantity, x, y, z, kind
 
 
+def _convert_units(
+    *,
+    snap: SnapLike,
+    quantity_str: str,
+    interpolated_data: ndarray,
+    extent: Extent,
+    units: Dict[str, Any],
+    interp: str,
+):
+
+    _quantity_unit = snap.get_array_unit(quantity_str)
+    if interp == 'projection':
+        data = (
+            (interpolated_data * _quantity_unit * snap.units['length'])
+            .to(units['quantity'] * units['projection'])
+            .magnitude
+        )
+    elif interp == 'cross_section':
+        data = (interpolated_data * _quantity_unit).to(units['quantity']).magnitude
+
+    new_extent = tuple((extent * snap.units['length']).to(units['extent']).magnitude)
+
+    return data, new_extent
+
+
 @is_documented_by(Visualization.plot)
 def plot(
     *,
@@ -310,7 +363,7 @@ def plot(
     kind: Optional[str] = None,
     interp: str = 'projection',
     z_slice: float = 0.0,
-    extent: Tuple[float, float, float, float],
+    extent: Extent,
     axis: Optional[Any] = None,
     **kwargs,
 ) -> Visualization:
