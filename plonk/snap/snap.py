@@ -25,6 +25,14 @@ class _SinkUtility:
     def __getitem__(self, inp):
         return self.fn(inp, sinks=True)
 
+    def __repr__(self):
+        """Dunder repr method."""
+        return self.__str__()
+
+    def __str__(self):
+        """Dunder str method."""
+        return f'<plonk.snap sinks>'
+
 
 class Snap:
     """Smoothed particle hydrodynamics Snap object.
