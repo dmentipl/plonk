@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib import animation as _animation
 from numpy import ndarray
 
+from ..analysis import Profile
 from ..snap import SnapLike
 from .visualization import plot
 
@@ -18,7 +19,8 @@ def animation(
     snaps: List[SnapLike],
     quantity: Optional[Union[str, ndarray]] = None,
     extent: Tuple[float, float, float, float],
-    animation_kwargs: Dict[str, Any] = {},
+    func_animation_kwargs: Dict[str, Any] = {},
+    save_kwargs: Dict[str, Any] = {},
     **kwargs,
 ):
     """Generate an animation.
@@ -37,7 +39,9 @@ def animation(
         Default is None.
     extent
         The range in the x and y-coord as (xmin, xmax, ymin, ymax).
-    animation_kwargs : optional
+    func_animation_kwargs : optional
+        Key word arguments to pass to matplotlib FuncAnimation.
+    save_kwargs : optional
         Key word arguments to pass to matplotlib Animation.save.
     **kwargs
         Arguments to pass to visualize.plot.
@@ -72,10 +76,55 @@ def animation(
         im.set_data(interp_data)
         return [im]
 
-    anim = _animation.FuncAnimation(fig, animate, frames=len(snaps))
-    anim.save(
-        filepath, extra_args=['-vcodec', 'libx264'], **animation_kwargs,
+    anim = _animation.FuncAnimation(
+        fig, animate, frames=len(snaps), **func_animation_kwargs
     )
+    anim.save(filepath, extra_args=['-vcodec', 'libx264'], **save_kwargs)
+    plt.close()
+
+
+def animation_profiles(
+    *,
+    filename: Union[str, Path],
+    profiles: List[Profile],
+    quantity: str,
+    func_animation_kwargs: Dict[str, Any] = {},
+    save_kwargs: Dict[str, Any] = {},
+    **kwargs,
+):
+    """Generate an animation.
+
+    Parameters
+    ----------
+    filename
+        The file name to save the animation to.
+    snaps
+        A list of Snap objects to animate.
+    quantity
+        The quantity to profile. Can be a string to pass to Profile.
+    func_animation_kwargs : optional
+        Key word arguments to pass to matplotlib FuncAnimation.
+    save_kwargs : optional
+        Key word arguments to pass to matplotlib Animation.save.
+    **kwargs
+        Arguments to pass to plot function.
+    """
+    filepath = pathlib.Path(filename)
+    if filepath.suffix != '.mp4':
+        raise ValueError('filename should end in ".mp4"')
+
+    fig, axis = plt.subplots()
+    [line] = axis.plot(profiles[0]['radius'], profiles[0][quantity], **kwargs)
+
+    def animate(idx):
+        print(f'Plotting profile: {idx}')
+        line.set_data(profiles[idx]['radius'], profiles[idx][quantity])
+        return [line]
+
+    anim = _animation.FuncAnimation(
+        fig, animate, frames=len(profiles), **func_animation_kwargs
+    )
+    anim.save(filepath, extra_args=['-vcodec', 'libx264'], **save_kwargs)
     plt.close()
 
 
