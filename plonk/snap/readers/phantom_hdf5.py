@@ -97,25 +97,18 @@ class PhantomHDF5Snap:
     def _populate_sink_arrays(self):
 
         name_map = {
-            'xyz': ('position', 'f8', (3,)),
-            'vxyz': ('velocity', 'f8', (3,)),
-            'm': ('mass', 'f8'),
-            'h': ('smooth', 'f8'),
-            'hsoft': ('softening', 'f8'),
-            'maccreted': ('maccreted', 'f8'),
-            'spinxyz': ('spin', 'f8', (3,)),
-            'tlast': ('tlast', 'f8'),
+            'xyz': 'position',
+            'vxyz': 'velocity',
+            'm': 'mass',
+            'h': 'smooth',
+            'hsoft': 'softening',
+            'maccreted': 'maccreted',
+            'spinxyz': 'spin',
+            'tlast': 'tlast',
         }
-        dtype = np.dtype([dt for dt in name_map.values()])
-        sinks = np.zeros(self._header['nptmass'], dtype=dtype)
 
-        for name_on_file, array in name_map.items():
-            try:
-                sinks[array[0]] = self.hdf5_file.file_handle[f'sinks/{name_on_file}'][:]
-            except KeyError:
-                pass
-
-        self.snap.sinks.add_sinks(sinks)
+        for name_on_file, name in name_map.items():
+            self.snap._sink_registry[name] = _get_dataset(name_on_file, 'sinks')
 
 
 def _get_dataset(dataset: str, group: str) -> Callable:
