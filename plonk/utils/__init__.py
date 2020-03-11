@@ -1,8 +1,9 @@
 """The utils sub-package."""
 
-from .geometry import coordinate_transform
+from .geometry import cartesian_to_polar
+from .math import cross, norm
 
-__all__ = ['coordinate_transform']
+__all__ = ['cartesian_to_polar', 'cross', 'norm']
 
 
 def is_documented_by(original):
