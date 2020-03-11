@@ -9,10 +9,8 @@ import numpy as np
 from numpy import ndarray
 
 from .. import Quantity
-from ..snap.snap import Snap, SubSnap
+from ..snap import SnapLike
 from ..utils.math import cross, norm
-
-SnapLike = Union[Snap, SubSnap]
 
 
 def momentum(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:

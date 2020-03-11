@@ -9,11 +9,9 @@ import numpy as np
 from numpy import ndarray
 
 from .. import Quantity
-from ..snap.snap import Snap, SubSnap
+from ..snap import SnapLike
 from ..utils.math import norm
 from . import particles
-
-SnapLike = Union[Snap, SubSnap]
 
 
 def center_of_mass(snap: SnapLike, ignore_accreted: bool = True) -> ndarray:

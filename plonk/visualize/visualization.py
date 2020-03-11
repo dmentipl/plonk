@@ -12,7 +12,8 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ndarray
 
-from ..snap.snap import SnapLike, get_array_from_input
+from ..snap import SnapLike
+from ..snap.snap import get_array_from_input
 from ..utils import is_documented_by
 from . import plots
 from .interpolation import Extent, interpolate

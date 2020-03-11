@@ -9,7 +9,8 @@ from typing import Optional, Tuple, Union
 import numpy as np
 from numpy import ndarray
 
-from ..snap.snap import SnapLike, get_array_from_input, get_array_in_code_units
+from ..snap import SnapLike
+from ..snap.snap import get_array_from_input, get_array_in_code_units
 from .splash import interpolate_cross_section, interpolate_projection
 
 Extent = Tuple[float, float, float, float]

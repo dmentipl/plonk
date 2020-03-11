@@ -3,13 +3,7 @@
 Calculate various quantities relating to sink particles.
 """
 
-from typing import Union
-
 import numpy as np
-
-from ..snap.snap import Snap, SubSnap
-
-SnapLike = Union[Snap, SubSnap]
 
 
 def Roche_sphere(m1: float, m2: float, separation: float):

@@ -527,6 +527,9 @@ class SubSnap(Snap):
         return self.base._get_array(name, index, sinks)[self._indices]
 
 
+SnapLike = Union[Snap, SubSnap]
+
+
 def get_array_from_input(
     snap: SnapLike, inp: Union[str, ndarray], default: str = None
 ) -> ndarray:
@@ -575,6 +578,3 @@ def get_array_in_code_units(snap: SnapLike, name: str) -> ndarray:
     if isinstance(arr, Quantity):
         return (arr / snap.get_array_unit(name)).magnitude
     return arr
-
-
-SnapLike = Union[Snap, SubSnap]
