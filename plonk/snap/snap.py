@@ -203,7 +203,8 @@ class Snap:
         self._num_particles = -1
         self._num_sinks = -1
         self._families = {key: None for key in Snap._particle_type.keys()}
-        self._rotation = None
+        self.rotation = None
+        self.translation = None
         self._physical_units = False
 
     def close_file(self):
@@ -316,7 +317,34 @@ class Snap:
             if arr in self.loaded_arrays(sinks=True):
                 self._sinks[arr] = rotation.apply(self._sinks[arr])
 
-        self._rotation = rotation
+        self.rotation = rotation
+
+        return self
+
+    def translate(self, translation: ndarray) -> Snap:
+        """Translate snapshot.
+
+        I.e. shift the snapshot origin.
+
+        Parameters
+        ----------
+        translation
+            The translation as a (3,) ndarray like (x, y, z).
+
+        Returns
+        -------
+        Snap
+            The translated Snap. Note that the translation operation is
+            in-place.
+        """
+        if len(translation) != 3:
+            raise ValueError('translation must be like (x, y, z)')
+        if 'position' in self.loaded_arrays():
+            self._arrays['position'] += translation
+        if 'position' in self.loaded_arrays(sinks=True):
+            self._sinks['position'] += translation
+
+        self.translation = translation
 
         return self
 
@@ -388,8 +416,10 @@ class Snap:
         else:
             array = Snap._array_registry[name](self)
             array_dict = self._arrays
-        if self._rotation is not None and name in self._rotation_required():
-            array = self._rotation.apply(array)
+        if self.rotation is not None and name in self._rotation_required():
+            array = self.rotation.apply(array)
+        if self.translation is not None and name == 'position':
+            array += self.translation
         if self._physical_units and not isinstance(array, Quantity):
             unit = self.get_array_unit(name)
             array_dict[name] = unit * array
