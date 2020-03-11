@@ -72,7 +72,14 @@ class Snap:
 
     Alternatively, define a function.
 
-    >>> @plonk.Snap.add_array
+    >>> @plonk.Snap.add_array()
+    ... def radius(snap) -> ndarray:
+    ...     radius = np.hypot(snap['x'], snap['y'])
+    ...     return radius
+
+    Possibly with units.
+
+    >>> @plonk.Snap.add_array(unit='length')
     ... def radius(snap) -> ndarray:
     ...     radius = np.hypot(snap['x'], snap['y'])
     ...     return radius

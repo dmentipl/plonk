@@ -384,7 +384,7 @@ the decorator :py:meth:`add_array`.
 
 .. code-block:: pycon
 
-    >>> @plonk.Snap.add_array
+    >>> @plonk.Snap.add_array()
     ... def radius(snap):
     ...     radius = np.hypot(snap['x'], snap['y'])
     ...     return radius
