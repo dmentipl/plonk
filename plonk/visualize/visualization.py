@@ -373,7 +373,10 @@ class MultiVisualization:
         self._where = 0
 
     def _fn(self, idx):
-        self.visualization.objects['colorbar'].remove()
+        self.axis.clear()
+        cbar = self.visualization.objects['colorbar']
+        if cbar is not None:
+            cbar.remove()
         viz = Visualization(snap=self.snaps[idx]).plot(
             extent=self.extent, axis=self.axis, **self.options
         )
