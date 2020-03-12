@@ -82,6 +82,8 @@ def animation(
     anim.save(filepath, extra_args=['-vcodec', 'libx264'], **save_kwargs)
     plt.close()
 
+    return anim
+
 
 def animation_profiles(
     *,
@@ -98,8 +100,8 @@ def animation_profiles(
     ----------
     filename
         The file name to save the animation to.
-    snaps
-        A list of Snap objects to animate.
+    profiles
+        A list of Profile objects to animate.
     quantity
         The quantity to profile. Can be a string to pass to Profile.
     func_animation_kwargs : optional
@@ -126,6 +128,8 @@ def animation_profiles(
     )
     anim.save(filepath, extra_args=['-vcodec', 'libx264'], **save_kwargs)
     plt.close()
+
+    return anim
 
 
 def _get_data(data):

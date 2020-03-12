@@ -6,9 +6,10 @@ hydrodynamics simulation data.
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import matplotlib.pyplot as plt
+import numpy as np
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ndarray
 
@@ -335,6 +336,92 @@ class Visualization:
         return '<plonk.Visualization>'
 
 
+class MultiVisualization:
+    """Visualize multiple snaps.
+
+    Attributes
+    ----------
+    snaps
+        A list of snaps.
+    extent
+        A tuple (xmin, xmax, ymin, ymax) of the extent of the plot.
+    options
+        A dictionary of arguments passed to Visualization plot method.
+    visualization
+        The Visualization object.
+    axis
+        The matplotlib Axis object.
+
+    Parameters
+    ----------
+    snaps
+        A list of Snap objects.
+    extent
+        The range in the x and y-coord as (xmin, xmax, ymin, ymax).
+    **kwargs
+        Keyword arguments to pass to Visualization plot method.
+    """
+
+    def __init__(self, snaps, extent, **kwargs):
+        self.snaps = snaps
+        self.extent = extent
+        self.options = kwargs
+        self.visualization = Visualization(snap=snaps[0]).plot(extent=extent, **kwargs)
+        self.axis = self.visualization.axis
+
+        self._len = -1
+        self._where = 0
+
+    def _fn(self, idx):
+        self.visualization.objects['colorbar'].remove()
+        viz = Visualization(snap=self.snaps[idx]).plot(
+            extent=self.extent, axis=self.axis, **self.options
+        )
+        self.visualization = viz
+        return viz
+
+    def next(self, number: int = 1):
+        """Visualize next snap."""
+        idx = self._where + number
+        if idx < len(self):
+            self.visualization = self._fn(idx)
+            self._where += number
+        else:
+            print('Too far forward. Going to last snap.')
+            self.visualization = self._fn(len(self) - 1)
+            self._where = len(self) - 1
+
+    def prev(self, number: int = 1):
+        """Visualize previous snap."""
+        idx = self._where - number
+        if idx > 0:
+            self.visualization = self._fn(idx)
+            self._where -= number
+        else:
+            print('Too far back. Going to first snap.')
+            self.visualization = self._fn(0)
+            self._where = 0
+
+    def goto(self, idx):
+        """Visualize particular snap by index."""
+        if -len(self) < idx < len(self) - 1:
+            self.visualization = self._fn(idx)
+            self._where = np.mod(idx, len(self))
+        else:
+            raise ValueError('out of range')
+
+    @property
+    def index(self):
+        """Current snap index."""
+        return self._where
+
+    def __len__(self):
+        """Length as number of snaps."""
+        if self._len == -1:
+            self._len = len(self.snaps)
+        return self._len
+
+
 def _check_input(*, snap, quantity, x, y, z, kind):
 
     if quantity is not None:
@@ -421,3 +508,42 @@ def plot(
         **kwargs,
     )
     return viz
+
+
+def plot_snaps(snaps: List[SnapLike], extent: Extent, **kwargs) -> MultiVisualization:
+    """Visualize multiple snaps.
+
+    Parameters
+    ----------
+    snaps
+        A list of Snap objects.
+    extent
+        The range in the x and y-coord as (xmin, xmax, ymin, ymax).
+    **kwargs
+        Keyword arguments to pass to Visualization plot method.
+
+    Returns
+    -------
+    MultiVisualization
+
+    Examples
+    --------
+    Initialize object passing in plotting parameters.
+
+    >>> vi = plot_snaps(
+    ...     snaps=sim.snaps,
+    ...     quantity='density',
+    ...     extent=(-100, 100, -100, 100),
+    ... )
+
+    Go forwards and backwards through snaps.
+
+    >>> vi.next()
+    >>> vi.prev()
+
+    Go to a particular snap, or skip ahead.
+
+    >>> vi.goto(10)
+    >>> vi.next(5)
+    """
+    return MultiVisualization(snaps, extent, **kwargs)
