@@ -52,6 +52,8 @@ class Simulation:
         self._global_quantities: Evolution = None
         self._sink_quantities: List[Evolution] = None
 
+        self._len = -1
+
     def load_sim(
         self, prefix: str, directory: Optional[Union[str, Path]] = None
     ) -> Simulation:
@@ -220,6 +222,12 @@ class Simulation:
             file_type = 'HDF5'
 
         return file_type, file_ext
+
+    def __len__(self):
+        """Length as number of snaps."""
+        if self._len == -1:
+            self._len = len(self.snaps)
+        return self._len
 
     def __repr__(self):
         """Dunder repr method."""
