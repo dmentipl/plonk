@@ -11,7 +11,7 @@ from .interpolation import Extent
 
 
 def particle_plot(
-    *, snap: SnapLike, x: ndarray, y: ndarray, extent: Extent, axis: Any, **kwargs,
+    *, snap: SnapLike, x: ndarray, y: ndarray, extent: Extent, ax: Any, **kwargs,
 ):
     """Plot particles.
 
@@ -25,10 +25,10 @@ def particle_plot(
         The y-coordinates for the particle plot.
     extent
         The range in the x and y-coord as (xmin, xmax, ymin, ymax).
-    axis
-        A matplotlib axis handle.
+    ax
+        A matplotlib Axes handle.
     **kwargs
-        Key word arguments to pass to axis.plot method.
+        Keyword arguments to pass to ax.plot method.
 
     Returns
     -------
@@ -40,12 +40,12 @@ def particle_plot(
         (h > 0) & (x > extent[0]) & (x < extent[1]) & (y > extent[2]) & (y < extent[3])
     )
     fmt = kwargs.get('fmt', 'k.')
-    lines = axis.plot(x[mask], y[mask], fmt, **kwargs)
+    lines = ax.plot(x[mask], y[mask], fmt, **kwargs)
     return lines
 
 
 def render_plot(
-    *, interpolated_data: ndarray, extent: Extent, axis: Any, **kwargs,
+    *, interpolated_data: ndarray, extent: Extent, ax: Any, **kwargs,
 ):
     """Plot 1d interpolated data as a rendered image.
 
@@ -55,10 +55,10 @@ def render_plot(
         The data interpolated to a pixel grid.
     extent
         The range in the x and y-coord as (xmin, xmax, ymin, ymax).
-    axis
-        A matplotlib axis handle.
+    ax
+        A matplotlib Axes handle.
     **kwargs
-        Key word arguments to pass to axis.imshow method.
+        Keyword arguments to pass to ax.imshow method.
 
     Returns
     -------
@@ -76,7 +76,7 @@ def render_plot(
     else:
         raise ValueError('Cannot determine normalization for colorbar')
 
-    image = axis.imshow(
+    image = ax.imshow(
         interpolated_data, origin='lower', extent=extent, norm=norm, **kwargs
     )
 
@@ -84,7 +84,7 @@ def render_plot(
 
 
 def contour_plot(
-    *, interpolated_data: ndarray, extent: Extent, axis: Any, **kwargs,
+    *, interpolated_data: ndarray, extent: Extent, ax: Any, **kwargs,
 ):
     """Plot 1d interpolated data as a contour plot.
 
@@ -94,10 +94,10 @@ def contour_plot(
         The data interpolated to a pixel grid.
     extent
         The range in the x and y-coord as (xmin, xmax, ymin, ymax).
-    axis
-        A matplotlib axis handle.
+    ax
+        A matplotlib Axes handle.
     **kwargs
-        Key word arguments to pass to axis.imshow method.
+        Keyword arguments to pass to ax.imshow method.
 
     Returns
     -------
@@ -109,13 +109,13 @@ def contour_plot(
         np.linspace(*extent[:2], n_interp_x), np.linspace(*extent[2:], n_interp_y),
     )
 
-    contour = axis.contour(X, Y, interpolated_data, **kwargs)
+    contour = ax.contour(X, Y, interpolated_data, **kwargs)
 
     return contour
 
 
 def quiver_plot(
-    *, interpolated_data: ndarray, extent: Extent, axis: Any, **kwargs,
+    *, interpolated_data: ndarray, extent: Extent, ax: Any, **kwargs,
 ):
     """Plot 2d interpolated data as a quiver plot.
 
@@ -125,10 +125,10 @@ def quiver_plot(
         The data interpolated to a pixel grid.
     extent
         The range in the x and y-coord as (xmin, xmax, ymin, ymax).
-    axis
-        A matplotlib axis handle.
+    ax
+        A matplotlib Axes handle.
     **kwargs
-        Key word arguments to pass to axis.imshow method.
+        Keyword arguments to pass to ax.imshow method.
 
     Returns
     -------
@@ -156,13 +156,13 @@ def quiver_plot(
         U /= norm
         V /= norm
 
-    quiver = axis.quiver(X, Y, U, V, **kwargs)
+    quiver = ax.quiver(X, Y, U, V, **kwargs)
 
     return quiver
 
 
 def stream_plot(
-    *, interpolated_data: ndarray, extent: Extent, axis: Any, **kwargs,
+    *, interpolated_data: ndarray, extent: Extent, ax: Any, **kwargs,
 ):
     """Plot 2d interpolated data as a stream plot.
 
@@ -172,10 +172,10 @@ def stream_plot(
         The data interpolated to a pixel grid.
     extent
         The range in the x and y-coord as (xmin, xmax, ymin, ymax).
-    axis
-        A matplotlib axis handle.
+    ax
+        A matplotlib Axes handle.
     **kwargs
-        Key word arguments to pass to axis.imshow method.
+        Keyword arguments to pass to ax.imshow method.
 
     Returns
     -------
@@ -188,6 +188,6 @@ def stream_plot(
     )
     U, V = interpolated_data[0], interpolated_data[1]
 
-    streamplot = axis.streamplot(X, Y, U, V, **kwargs)
+    streamplot = ax.streamplot(X, Y, U, V, **kwargs)
 
     return streamplot

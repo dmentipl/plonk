@@ -46,11 +46,11 @@ def animation(
     text
         List of strings to display per snap.
     text_kwargs : optional
-        Key word arguments to pass to matplotlib text.
+        Keyword arguments to pass to matplotlib text.
     func_animation_kwargs : optional
-        Key word arguments to pass to matplotlib FuncAnimation.
+        Keyword arguments to pass to matplotlib FuncAnimation.
     save_kwargs : optional
-        Key word arguments to pass to matplotlib Animation.save.
+        Keyword arguments to pass to matplotlib Animation.save.
     **kwargs
         Arguments to pass to visualize.plot.
     """
@@ -60,8 +60,8 @@ def animation(
 
     interp = kwargs.get('interp', 'projection')
 
-    fig, axis = plt.subplots()
-    viz = plot(snap=snaps[0], quantity=quantity, extent=extent, axis=axis, **kwargs)
+    fig, ax = plt.subplots()
+    viz = plot(snap=snaps[0], quantity=quantity, extent=extent, ax=ax, **kwargs)
     im = viz.objects['image']
     if im is None:
         raise NotImplementedError(
@@ -69,8 +69,8 @@ def animation(
             '(with animation_profile).'
         )
     if text is not None:
-        _text = axis.text(
-            0.9, 0.9, text[0], ha='right', transform=axis.transAxes, **text_kwargs
+        _text = ax.text(
+            0.9, 0.9, text[0], ha='right', transform=ax.transAxes, **text_kwargs
         )
 
     def animate(idx):
@@ -120,11 +120,11 @@ def animation_profiles(
     text
         List of strings to display per profile plot.
     text_kwargs : optional
-        Key word arguments to pass to matplotlib text.
+        Keyword arguments to pass to matplotlib text.
     func_animation_kwargs : optional
-        Key word arguments to pass to matplotlib FuncAnimation.
+        Keyword arguments to pass to matplotlib FuncAnimation.
     save_kwargs : optional
-        Key word arguments to pass to matplotlib Animation.save.
+        Keyword arguments to pass to matplotlib Animation.save.
     **kwargs
         Arguments to pass to plot function.
     """
@@ -132,11 +132,11 @@ def animation_profiles(
     if filepath.suffix != '.mp4':
         raise ValueError('filename should end in ".mp4"')
 
-    fig, axis = plt.subplots()
-    [line] = axis.plot(profiles[0]['radius'], profiles[0][quantity], **kwargs)
+    fig, ax = plt.subplots()
+    [line] = ax.plot(profiles[0]['radius'], profiles[0][quantity], **kwargs)
     if text is not None:
-        _text = axis.text(
-            0.9, 0.9, text[0], ha='right', transform=axis.transAxes, **text_kwargs
+        _text = ax.text(
+            0.9, 0.9, text[0], ha='right', transform=ax.transAxes, **text_kwargs
         )
 
     def animate(idx):

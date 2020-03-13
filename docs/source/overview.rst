@@ -348,15 +348,15 @@ Let's plot the gas and dust side-by-side.
     >>> subsnaps = [gas, dust]
     >>> extent = (-200, 200, -200, 200)
 
-    >>> fig, axes = plt.subplots(ncols=2, figsize=(12, 5))
+    >>> fig, axs = plt.subplots(ncols=2, figsize=(12, 5))
 
-    >>> for subsnap, axis in zip(subsnaps, axes):
+    >>> for subsnap, ax in zip(subsnaps, axs):
     ...     plonk.visualize.plot(
     ...         snap=subsnap,
     ...         quantity='density',
     ...         extent=extent,
     ...         cmap='gist_heat',
-    ...         axis=axis,
+    ...         ax=ax,
     ...     )
 
 .. figure:: _static/dust-gas.png
@@ -499,9 +499,9 @@ Then we can use pandas plotting methods.
 .. code-block:: pycon
 
     >>> with plt.style.context('seaborn'):
-    ...     fig, axes = plt.subplots(ncols=2, figsize=(12, 5))
-    ...     df.plot('radius', 'density', ax=axes[0])
-    ...     df.plot('radius', 'scale_height', ax=axes[1])
+    ...     fig, axs = plt.subplots(ncols=2, figsize=(12, 5))
+    ...     df.plot('radius', 'density', ax=axs[0])
+    ...     df.plot('radius', 'scale_height', ax=axs[1])
 
 .. figure:: _static/profile.png
 

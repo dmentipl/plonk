@@ -85,20 +85,20 @@ Plot dust and gas side-by-side.
     >>> extent = (-150, 150, -150, 150)
 
     # Make plot
-    >>> fig, axes = plt.subplots(ncols=2, sharey=True, figsize=(12, 5))
+    >>> fig, axs = plt.subplots(ncols=2, sharey=True, figsize=(12, 5))
     >>> plonk.visualize.plot(
     ...     snap=gas,
     ...     quantity='density',
     ...     extent=extent,
     ...     cmap='Blues_r',
-    ...     axis=axes[0],
+    ...     ax=axs[0],
     ... )
     >>> plonk.visualize.plot(
     ...     snap=dust,
     ...     quantity='density',
     ...     extent=extent,
     ...     cmap='Reds_r',
-    ...     axis=axes[1],
+    ...     ax=axs[1],
     ... )
     >>> plt.show()
 

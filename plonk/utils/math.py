@@ -14,7 +14,7 @@ def cross(x, y, **kwargs):
         The two arrays (N, 3) to take the cross product of. Can be
         ndarray or pint Quantity.
     **kwargs
-        Key word arguments to pass to np.cross.
+        Keyword arguments to pass to np.cross.
 
     Returns
     -------
@@ -36,7 +36,7 @@ def norm(x, **kwargs):
         The arrays (N, 3) to take the norm of. Can be ndarray or pint
         Quantity.
     **kwargs
-        Key word arguments to pass to np.linalg.norm.
+        Keyword arguments to pass to np.linalg.norm.
 
     Returns
     -------

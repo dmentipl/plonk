@@ -360,7 +360,7 @@ class Profile:
             The y axis quantity unit as a string or list of strings.
             Only works if using physical units.
         ax : optional
-            A matplotlib Axis object to plot to.
+            A matplotlib Axes object to plot to.
         """
         if x not in self.available_keys():
             raise ValueError('Cannot determine x axis to plot')

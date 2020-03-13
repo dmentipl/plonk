@@ -53,8 +53,8 @@ class Visualization:
         The associated Snap (or SubSnap) object to visualize.
     fig
         The matplotlib Figure object of the plot.
-    axis
-        The matplotlib Axis object of the plot.
+    ax
+        The matplotlib Axes object of the plot.
     units
         The units of the plot: 'quantity', 'extent', 'projection'. The
         values are pint Unit objects.
@@ -62,6 +62,7 @@ class Visualization:
         A tuple (xmin, xmax, ymin, ymax) of the extent of the plot.
     objects
         A dictionary containing the matplotlib plot objects:
+
         - 'lines' : list of matplotlib Line2D objects for particle plots
         - 'image' : matplotlib AxesImage object for rendered plots
         - 'colorbar' : matplotlib Colorbar object for rendered plots
@@ -76,7 +77,7 @@ class Visualization:
     def __init__(self, snap: SnapLike):
         self.snap = snap
         self.fig: Any = None
-        self.axis: Any = None
+        self.ax: Any = None
         self.units: Dict[str, Any] = {
             'quantity': None,
             'extent': None,
@@ -110,7 +111,7 @@ class Visualization:
         z_slice: float = 0.0,
         extent: Extent,
         units=None,
-        axis: Optional[Any] = None,
+        ax: Optional[Any] = None,
         **kwargs,
     ) -> Visualization:
         """Visualize smoothed particle hydrodynamics data.
@@ -160,15 +161,15 @@ class Visualization:
         units
             The units of the plot as a dictionary with keys 'quantity',
             'extent', 'projection'. The values are Pint Unit objects.
-        axis
-            A matplotlib axis handle.
+        ax
+            A matplotlib Axes handle.
         **kwargs
-            Additional key word arguments to pass to interpolation and
+            Additional keyword arguments to pass to interpolation and
             matplotlib functions.
 
         Notes
         -----
-        Additional parameters passed as key word arguments will be
+        Additional parameters passed as keyword arguments will be
         passed to lower level functions as required. E.g. Plonk uses
         matplotlib's imshow for a render plot, so additional arguments
         to imshow can be passed this way.
@@ -186,7 +187,7 @@ class Visualization:
             Whether to density weight the interpolation or not.
             Default is False.
         fmt : str
-            This is the matplotlib axis.plot method positional
+            This is the matplotlib ax.plot method positional
             argument format string. Default is 'k.'.
         show_colorbar : bool
             Whether or not to display a colorbar. Default is True.
@@ -256,15 +257,15 @@ class Visualization:
 
         >>> units = plonk.visualize.str_to_units('g/cm^3', 'au', 'cm')
         """
-        if self.axis is None:
-            if axis is None:
-                self.fig, self.axis = plt.subplots()
+        if self.ax is None:
+            if ax is None:
+                self.fig, self.ax = plt.subplots()
             else:
-                self.fig = axis.get_figure()
-                self.axis = axis
+                self.fig = ax.get_figure()
+                self.ax = ax
         else:
-            if axis is not None:
-                raise ValueError('Trying to change existing axis attribute')
+            if ax is not None:
+                raise ValueError('Trying to change existing Axes attribute')
 
         quantity_str: Optional[str] = quantity if isinstance(quantity, str) else None
         quantity, x, y, z, kind = _check_input(
@@ -312,7 +313,7 @@ class Visualization:
 
         if kind == 'particle':
             self.objects['lines'] = plots.particle_plot(
-                snap=self.snap, x=x, y=y, extent=extent, axis=self.axis, **kwargs,
+                snap=self.snap, x=x, y=y, extent=extent, ax=self.ax, **kwargs,
             )
 
         elif kind in ('render', 'contour', 'quiver', 'stream'):
@@ -320,7 +321,7 @@ class Visualization:
             self.objects[_kind_to_object[kind]] = _kind_to_function[kind](
                 interpolated_data=interpolated_data,
                 extent=extent,
-                axis=self.axis,
+                ax=self.ax,
                 **kwargs,
             )
 
@@ -328,13 +329,13 @@ class Visualization:
             raise ValueError('Cannot determine plot type')
 
         if show_colorbar:
-            divider = make_axes_locatable(self.axis)
+            divider = make_axes_locatable(self.ax)
             cax = divider.append_axes("right", size="5%", pad=0.05)
             self.objects['colorbar'] = self.fig.colorbar(self.objects['image'], cax)
 
-        self.axis.set_xlim(*extent[:2])
-        self.axis.set_ylim(*extent[2:])
-        self.axis.set_aspect('equal')
+        self.ax.set_xlim(*extent[:2])
+        self.ax.set_ylim(*extent[2:])
+        self.ax.set_aspect('equal')
 
         return self
 
@@ -356,8 +357,8 @@ class MultiVisualization:
         A dictionary of arguments passed to Visualization plot method.
     visualization
         The Visualization object.
-    axis
-        The matplotlib Axis object.
+    ax
+        The matplotlib Axes object.
 
     Parameters
     ----------
@@ -374,18 +375,18 @@ class MultiVisualization:
         self.extent = extent
         self.options = kwargs
         self.visualization = Visualization(snap=snaps[0]).plot(extent=extent, **kwargs)
-        self.axis = self.visualization.axis
+        self.ax = self.visualization.ax
 
         self._len = -1
         self._where = 0
 
     def _fn(self, idx):
-        self.axis.clear()
+        self.ax.clear()
         cbar = self.visualization.objects['colorbar']
         if cbar is not None:
             cbar.remove()
         viz = Visualization(snap=self.snaps[idx]).plot(
-            extent=self.extent, axis=self.axis, **self.options
+            extent=self.extent, ax=self.ax, **self.options
         )
         self.visualization = viz
         return viz
@@ -501,7 +502,7 @@ def plot(
     interp: str = 'projection',
     z_slice: float = 0.0,
     extent: Extent,
-    axis: Optional[Any] = None,
+    ax: Optional[Any] = None,
     **kwargs,
 ) -> Visualization:
     viz = Visualization(snap)
@@ -514,7 +515,7 @@ def plot(
         interp=interp,
         z_slice=z_slice,
         extent=extent,
-        axis=axis,
+        ax=ax,
         **kwargs,
     )
     return viz
