@@ -282,6 +282,10 @@ class Snap:
         -------
         Snap
         """
+        if self._physical_units:
+            raise ValueError(
+                'Physical units already set: snap.physical_units(unset=True) to unset.'
+            )
         if unset:
             for arr in self.loaded_arrays():
                 del self._arrays[arr]
