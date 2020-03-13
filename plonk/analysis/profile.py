@@ -378,25 +378,34 @@ class Profile:
                 if len(y) != len(y_unit):
                     raise ValueError('Length of y does not match length of y_unit')
 
+        _x = self[x]
+        if x_unit is not None:
+            _x = _x.to(x_unit)
+
         if ax is None:
             fig, ax = plt.subplots()
         else:
             fig = ax.get_figure()
 
-        _x = self._get_profile(x)
-        if x_unit is not None:
-            _x = _x.to(x_unit)
+        xlabel = x.capitalize().replace('_', ' ')
+        if self.snap._physical_units:
+            xlabel = ' '.join([xlabel, f'[{_x.units:~P}]'])
+        ax.set_xlabel(xlabel)
 
         for idx, yi in enumerate(y):
             if yi not in self.available_keys():
-                raise ValueError('Cannot determine y axis to plot')
-            _y = self._get_profile(yi)
-            if y_unit is not None:
-                _y = _y.to(y_unit[idx])
+                raise ValueError(f'Cannot determine y axis to plot: {yi} not available')
+            _y = self[yi]
+            label = yi.capitalize().replace('_', ' ')
             if self.snap._physical_units:
-                ax.plot(_x.magnitude, _y.magnitude)
+                if y_unit is not None:
+                    _y = _y.to(y_unit[idx])
+                label = ' '.join([label, f'[{_y.units:~P}]'])
+                ax.plot(_x.magnitude, _y.magnitude, label=label)
             else:
-                ax.plot(_x, _y)
+                ax.plot(_x, _y, label=label)
+
+        ax.legend()
 
         return fig, ax
 
