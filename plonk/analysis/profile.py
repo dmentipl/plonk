@@ -56,6 +56,18 @@ class Profile:
     >>> prof = plonk.Profile(snap=snap)
     >>> prof = plonk.Profile(snap=snap, n_bins=300)
     >>> prof = plonk.Profile(snap=snap, radius_min=1, radius_max=300)
+    >>> prof = plonk.Profile(snap=snap, spacing='log')
+
+    If snap has physical units and setting 'radius_min' or 'radius_max'
+    must use physical quantities.
+
+    >>> radius_min = plonk.Quantity('1 au')
+    >>> radius_max = plonk.Quantity('300 au')
+    >>> prof = plonk.Profile(
+    ...     snap=snap,
+    ...     radius_min=radius_min,
+    ...     radius_max=radius_max
+    ... )
 
     To access a profile.
 
@@ -72,6 +84,15 @@ class Profile:
     ... def mass(prof):
     ...     M = prof.snap['mass']
     ...     return prof.particles_to_binned_quantity(np.sum, M)
+
+    Plot one or many quantities on the profile.
+
+    >>> prof.plot('radius', 'density')
+    >>> prof.plot('radius', ['angmom_x', angmom_y'])
+
+    Plot a quantity on the profile with units.
+
+    >>> prof.plot('radius', 'density', x_unit='au', y_unit='g/cm**2')
     """
 
     _profile_functions: Dict[str, Callable] = {}
@@ -98,8 +119,8 @@ class Profile:
         self,
         snap: Snap,
         ndim: Optional[int] = 2,
-        radius_min: Optional[float] = None,
-        radius_max: Optional[float] = None,
+        radius_min: Optional[Any] = None,
+        radius_max: Optional[Any] = None,
         n_bins: int = 100,
         spacing: str = 'linear',
         ignore_accreted: bool = True,
@@ -186,11 +207,19 @@ class Profile:
         if radius_min is None:
             rmin = self._x.min()
         else:
-            rmin = radius_min
+            if not isinstance(radius_min, Quantity):
+                raise ValueError(
+                    'Snap has physical units: must use dimensional radius_min'
+                )
+            rmin = radius_min.to_base_units()
         if radius_max is None:
             rmax = np.percentile(self._x.magnitude, 99, axis=0) * self._x.units
         else:
-            rmax = radius_max
+            if not isinstance(radius_max, Quantity):
+                raise ValueError(
+                    'Snap has physical units: must use dimensional radius_max'
+                )
+            rmax = radius_max.to_base_units()
 
         return rmin, rmax
 
@@ -336,20 +365,23 @@ class Profile:
         if x not in self.available_keys():
             raise ValueError('Cannot determine x axis to plot')
 
+        if isinstance(y, str):
+            y = [y]
+
         if not self.snap._physical_units:
             if x_unit is not None or y_unit is not None:
                 raise ValueError('Cannot set unit if snap is not in physical units')
         else:
-            if isinstance(y_unit, str):
-                y_unit = [y_unit]
+            if y_unit is not None:
+                if isinstance(y_unit, str):
+                    y_unit = [y_unit]
+                if len(y) != len(y_unit):
+                    raise ValueError('Length of y does not match length of y_unit')
 
         if ax is None:
             fig, ax = plt.subplots()
         else:
             fig = ax.get_figure()
-
-        if isinstance(y, str):
-            y = [y]
 
         _x = self._get_profile(x)
         if x_unit is not None:
