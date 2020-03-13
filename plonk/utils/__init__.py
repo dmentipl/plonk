@@ -2,15 +2,6 @@
 
 from .geometry import cartesian_to_polar
 from .math import cross, norm
+from .utils import is_documented_by, time_string
 
-__all__ = ['cartesian_to_polar', 'cross', 'norm']
-
-
-def is_documented_by(original):
-    """Wrap function to add docstring."""
-
-    def wrapper(target):
-        target.__doc__ = original.__doc__
-        return target
-
-    return wrapper
+__all__ = ['cartesian_to_polar', 'cross', 'is_documented_by', 'norm', 'time_string']

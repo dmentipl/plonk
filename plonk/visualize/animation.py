@@ -10,7 +10,9 @@ from numpy import ndarray
 
 from ..analysis import Profile
 from ..snap import SnapLike
-from .visualization import plot
+from .visualization import interpolate, plot
+
+_interp_kwargs = ('number_of_pixels', 'density_weighted')
 
 
 def animation(
@@ -19,6 +21,8 @@ def animation(
     snaps: List[SnapLike],
     quantity: Optional[Union[str, ndarray]] = None,
     extent: Tuple[float, float, float, float],
+    text: List[str] = None,
+    text_kwargs: Dict[str, Any] = {},
     func_animation_kwargs: Dict[str, Any] = {},
     save_kwargs: Dict[str, Any] = {},
     **kwargs,
@@ -39,6 +43,10 @@ def animation(
         Default is None.
     extent
         The range in the x and y-coord as (xmin, xmax, ymin, ymax).
+    text
+        List of strings to display per snap.
+    text_kwargs : optional
+        Key word arguments to pass to matplotlib text.
     func_animation_kwargs : optional
         Key word arguments to pass to matplotlib FuncAnimation.
     save_kwargs : optional
@@ -50,30 +58,33 @@ def animation(
     if filepath.suffix != '.mp4':
         raise ValueError('filename should end in ".mp4"')
 
+    interp = kwargs.get('interp', 'projection')
+
     fig, axis = plt.subplots()
     viz = plot(snap=snaps[0], quantity=quantity, extent=extent, axis=axis, **kwargs)
-    interp_data = _get_data(viz.data)
-    im = axis.imshow(interp_data)
-
-    # If plotting colorbar, must fix the render range
-    vmin, vmax = None, None
-    show_colorbar = kwargs.pop('show_colorbar', True)
-    if show_colorbar is None or show_colorbar is True:
-        vmin, vmax = (interp_data.min(), interp_data.max())
+    im = viz.objects['image']
+    if im is None:
+        raise NotImplementedError(
+            'Can only currently produce animations of rendered images or profiles\n'
+            '(with animation_profile).'
+        )
+    if text is not None:
+        _text = axis.text(
+            0.9, 0.9, text[0], ha='right', transform=axis.transAxes, **text_kwargs
+        )
 
     def animate(idx):
-        print(f'Rendering image: {idx}')
-        viz = plot(
-            snap=snaps[idx],
-            quantity=quantity,
-            extent=extent,
-            axis=axis,
-            vmin=vmin,
-            vmax=vmax,
-            **kwargs,
+        print(f'Visualizing snap: {idx}')
+        _kwargs = {k: v for k, v in kwargs.items() if k in _interp_kwargs}
+        interp_data = interpolate(
+            snap=snaps[idx], interp=interp, quantity=quantity, extent=extent, **_kwargs,
         )
-        interp_data = _get_data(viz.data)
         im.set_data(interp_data)
+        vmin = kwargs.get('vmin', interp_data.min())
+        vmax = kwargs.get('vmax', interp_data.max())
+        im.set_clim(vmin, vmax)
+        if text is not None:
+            _text.set_text(text[idx])
         return [im]
 
     anim = _animation.FuncAnimation(
@@ -90,6 +101,8 @@ def animation_profiles(
     filename: Union[str, Path],
     profiles: List[Profile],
     quantity: str,
+    text: List[str] = None,
+    text_kwargs: Dict[str, Any] = {},
     func_animation_kwargs: Dict[str, Any] = {},
     save_kwargs: Dict[str, Any] = {},
     **kwargs,
@@ -104,6 +117,10 @@ def animation_profiles(
         A list of Profile objects to animate.
     quantity
         The quantity to profile. Can be a string to pass to Profile.
+    text
+        List of strings to display per profile plot.
+    text_kwargs : optional
+        Key word arguments to pass to matplotlib text.
     func_animation_kwargs : optional
         Key word arguments to pass to matplotlib FuncAnimation.
     save_kwargs : optional
@@ -117,10 +134,16 @@ def animation_profiles(
 
     fig, axis = plt.subplots()
     [line] = axis.plot(profiles[0]['radius'], profiles[0][quantity], **kwargs)
+    if text is not None:
+        _text = axis.text(
+            0.9, 0.9, text[0], ha='right', transform=axis.transAxes, **text_kwargs
+        )
 
     def animate(idx):
         print(f'Plotting profile: {idx}')
         line.set_data(profiles[idx]['radius'], profiles[idx][quantity])
+        if text is not None:
+            _text.set_text(text[idx])
         return [line]
 
     anim = _animation.FuncAnimation(
@@ -130,9 +153,3 @@ def animation_profiles(
     plt.close()
 
     return anim
-
-
-def _get_data(data):
-    for v in data.values():
-        if v is not None:
-            return v
