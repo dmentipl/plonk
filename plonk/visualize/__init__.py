@@ -6,7 +6,7 @@ simulations using kernel density estimation based interpolation.
 
 from .animation import animation, animation_profiles
 from .interpolation import interpolate
-from .visualization import Visualization, plot, plot_snaps
+from .visualization import Visualization, plot, plot_snaps, str_to_units
 
 __all__ = [
     'Visualization',
@@ -15,4 +15,5 @@ __all__ = [
     'interpolate',
     'plot',
     'plot_snaps',
+    'str_to_units',
 ]

@@ -13,6 +13,8 @@ import numpy as np
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ndarray
 
+from .. import Quantity
+from .. import units as plonk_units
 from ..snap import SnapLike
 from ..snap.snap import get_array_from_input
 from ..utils import is_documented_by
@@ -248,6 +250,11 @@ class Visualization:
         ...     extent=(-100, 100, -100, 100),
         ...     units=units,
         ... )
+
+        You can also use the utility function to generate the units
+        dictionary.
+
+        >>> units = plonk.visualize.str_to_units('g/cm^3', 'au', 'cm')
         """
         if self.axis is None:
             if axis is None:
@@ -550,3 +557,42 @@ def plot_snaps(snaps: List[SnapLike], extent: Extent, **kwargs) -> MultiVisualiz
     >>> vi.next(5)
     """
     return MultiVisualization(snaps, extent, **kwargs)
+
+
+def str_to_units(quantity, extent, projection):
+    """Convert string to plonk units.
+
+    Parameters
+    ----------
+    quantity
+        The units string for the quantity.
+    extent
+        The units string for the plot extent.
+    projection
+        The units string for projection interpolation.
+    """
+    if isinstance(quantity, str):
+        quantity = plonk_units(quantity)
+    elif isinstance(quantity, Quantity):
+        pass
+    else:
+        raise ValueError(f'Cannot determine quantity unit')
+    if isinstance(extent, str):
+        extent = plonk_units(extent)
+    elif isinstance(extent, Quantity):
+        pass
+    else:
+        raise ValueError(f'Cannot determine extent unit')
+    if isinstance(projection, str):
+        projection = plonk_units(projection)
+    elif isinstance(projection, Quantity):
+        pass
+    else:
+        raise ValueError(f'Cannot determine projection unit')
+
+    if extent.dimensionality != plonk_units('cm').dimensionality:
+        raise ValueError('extent has incorrect dimensions')
+    if projection.dimensionality != plonk_units('cm').dimensionality:
+        raise ValueError('projection has incorrect dimensions')
+
+    return {'quantity': quantity, 'extent': extent, 'projection': projection}
