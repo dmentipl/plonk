@@ -56,9 +56,7 @@ To render the density on a snapshot:
 
 ```python
 >>> snap = plonk.load_snap('disc_00000.h5')
->>> plonk.visualize.plot(
-...     snap=snap, quantity='density', extent=(-100, 100, -100, 100),
-... )
+>>> plonk.visualize.plot(snap=snap, quantity='density')
 ```
 
 For a more complicated example, here is the deviation from Keplerian velocity around a planet embedded in a protoplanetary disc.
