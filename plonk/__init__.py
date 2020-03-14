@@ -61,10 +61,12 @@ See https://plonk.readthedocs.io/ for documentation. The source code is
 available at https://github.com/dmentipl/plonk.
 """
 
+from typing import Any
+
 import pint
 
-units = pint.UnitRegistry(system='cgs')
-Quantity = units.Quantity
+units: Any = pint.UnitRegistry(system='cgs')
+Quantity: Any = units.Quantity
 
 from . import analysis, simulation, snap, utils, visualize
 from .analysis import Profile
