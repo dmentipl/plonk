@@ -10,6 +10,7 @@ from numpy import ndarray
 
 from ..analysis import Profile
 from ..snap import SnapLike
+from ..utils import get_extent_from_percentile
 from .visualization import interpolate, plot
 
 _interp_kwargs = ('number_of_pixels', 'density_weighted')
@@ -20,7 +21,6 @@ def animation(
     filename: Union[str, Path],
     snaps: List[SnapLike],
     quantity: Optional[Union[str, ndarray]] = None,
-    extent: Tuple[float, float, float, float],
     text: List[str] = None,
     text_kwargs: Dict[str, Any] = {},
     func_animation_kwargs: Dict[str, Any] = {},
@@ -41,8 +41,6 @@ def animation(
         vector data. If quantity is 2d, only the first two components
         are interpolated, i.e. quantity[:, 0] and quantity[:, 1].
         Default is None.
-    extent
-        The range in the x and y-coord as (xmin, xmax, ymin, ymax).
     text
         List of strings to display per snap.
     text_kwargs : optional
@@ -61,12 +59,12 @@ def animation(
     interp = kwargs.get('interp', 'projection')
 
     fig, ax = plt.subplots()
-    viz = plot(snap=snaps[0], quantity=quantity, extent=extent, ax=ax, **kwargs)
+    viz = plot(snap=snaps[0], quantity=quantity, ax=ax, **kwargs)
     im = viz.objects['image']
     if im is None:
         raise NotImplementedError(
-            'Can only currently produce animations of rendered images or profiles\n'
-            '(with animation_profile).'
+            'Can only currently produce animations of rendered images. (Or profiles\n'
+            'with animation_profile.)'
         )
     if text is not None:
         _text = ax.text(
@@ -76,10 +74,14 @@ def animation(
     def animate(idx):
         print(f'Visualizing snap: {idx}')
         _kwargs = {k: v for k, v in kwargs.items() if k in _interp_kwargs}
+        extent = kwargs.get('extent', get_extent_from_percentile(snaps[idx]))
         interp_data = interpolate(
             snap=snaps[idx], interp=interp, quantity=quantity, extent=extent, **_kwargs,
         )
         im.set_data(interp_data)
+        im.set_extent(extent)
+        im.axes.set_xlim(extent[:2])
+        im.axes.set_ylim(extent[2:])
         vmin = kwargs.get('vmin', interp_data.min())
         vmax = kwargs.get('vmax', interp_data.max())
         im.set_clim(vmin, vmax)

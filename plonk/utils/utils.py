@@ -2,6 +2,8 @@
 
 from typing import Any, Union
 
+import numpy as np
+
 from .. import units
 
 
@@ -43,3 +45,26 @@ def time_string(
     """
     time = snap.properties['time'] * snap.units['time'].to(unit).magnitude
     return f't = {time:{float_format}} {unit_str}'
+
+
+def get_extent_from_percentile(snap, percentile=99):
+    """Get extent from percentile.
+
+    Calculate a xy-plane square box such that some percentile of
+    particles is contained within a sphere inscribed in the box.
+
+    Parameters
+    ----------
+    snap
+        The Snap object.
+    percentile : optional
+        The percentile used in the calculation. Default is 99.
+
+    Returns
+    -------
+    tuple
+        The extent of the box as (xmin, xmax, ymin, ymax).
+    """
+    r = np.sqrt(snap['x'] ** 2 + snap['y'] ** 2 + snap['z'] ** 2)
+    size = np.percentile(r, percentile)
+    return (-size, size, -size, size)

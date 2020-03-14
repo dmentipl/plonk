@@ -17,7 +17,7 @@ from .. import Quantity
 from .. import units as plonk_units
 from ..snap import SnapLike
 from ..snap.snap import get_array_from_input
-from ..utils import is_documented_by
+from ..utils import get_extent_from_percentile, is_documented_by
 from . import plots
 from .interpolation import Extent, interpolate
 
@@ -109,7 +109,7 @@ class Visualization:
         kind: Optional[str] = None,
         interp: str = 'projection',
         z_slice: float = 0.0,
-        extent: Extent,
+        extent: Extent = (-1, -1, -1, -1),
         units=None,
         ax: Optional[Any] = None,
         **kwargs,
@@ -158,6 +158,8 @@ class Visualization:
             is 0.0.
         extent
             The range in the x and y-coord as (xmin, xmax, ymin, ymax).
+            The default is to set the extent to a box of size set by an
+            inscribed sphere containing 99% of particles.
         units
             The units of the plot as a dictionary with keys 'quantity',
             'extent', 'projection'. The values are Pint Unit objects.
@@ -202,21 +204,13 @@ class Visualization:
         --------
         Plot the particles.
 
-        >>> viz = plonk.visualize.plot(
-        ...     snap=snap,
-        ...     x='x',
-        ...     y='y',
-        ...     extent=(-100, 100, -100, 100),
-        ... )
+        >>> viz = plonk.visualize.plot(snap=snap)
 
-        Render the surface density in xz-plane.
+        Render the surface density in xy-plane.
 
         >>> viz = plonk.visualize.plot(
         ...     snap=snap,
         ...     quantity='density',
-        ...     x='x',
-        ...     y='z',
-        ...     extent=(-100, 100, -25, 25),
         ... )
 
         Get the interpolation to grid directly (without plotting).
@@ -234,6 +228,8 @@ class Visualization:
         ...     snaps=snaps,
         ...     quantity='density',
         ...     extent=(-100, 100, -100, 100),
+        ...     vmin=0.0,
+        ...     vmax=1.0,
         ...     filename='animation.mp4',
         ... )
 
@@ -248,7 +244,6 @@ class Visualization:
         >>> viz = plonk.visualize.plot(
         ...     snap=snap,
         ...     quantity='density',
-        ...     extent=(-100, 100, -100, 100),
         ...     units=units,
         ... )
 
@@ -266,6 +261,9 @@ class Visualization:
         else:
             if ax is not None:
                 raise ValueError('Trying to change existing Axes attribute')
+
+        if extent == (-1, -1, -1, -1):
+            extent = get_extent_from_percentile(self.snap)
 
         quantity_str: Optional[str] = quantity if isinstance(quantity, str) else None
         quantity, x, y, z, kind = _check_input(
@@ -351,8 +349,6 @@ class MultiVisualization:
     ----------
     snaps
         A list of snaps.
-    extent
-        A tuple (xmin, xmax, ymin, ymax) of the extent of the plot.
     options
         A dictionary of arguments passed to Visualization plot method.
     visualization
@@ -364,17 +360,14 @@ class MultiVisualization:
     ----------
     snaps
         A list of Snap objects.
-    extent
-        The range in the x and y-coord as (xmin, xmax, ymin, ymax).
     **kwargs
         Keyword arguments to pass to Visualization plot method.
     """
 
-    def __init__(self, snaps, extent, **kwargs):
+    def __init__(self, snaps, **kwargs):
         self.snaps = snaps
-        self.extent = extent
         self.options = kwargs
-        self.visualization = Visualization(snap=snaps[0]).plot(extent=extent, **kwargs)
+        self.visualization = Visualization(snap=snaps[0]).plot(**kwargs)
         self.ax = self.visualization.ax
 
         self._len = -1
@@ -385,9 +378,7 @@ class MultiVisualization:
         cbar = self.visualization.objects['colorbar']
         if cbar is not None:
             cbar.remove()
-        viz = Visualization(snap=self.snaps[idx]).plot(
-            extent=self.extent, ax=self.ax, **self.options
-        )
+        viz = Visualization(snap=self.snaps[idx]).plot(ax=self.ax, **self.options)
         self.visualization = viz
         return viz
 
@@ -501,7 +492,7 @@ def plot(
     kind: Optional[str] = None,
     interp: str = 'projection',
     z_slice: float = 0.0,
-    extent: Extent,
+    extent: Extent = (-1, -1, -1, -1),
     ax: Optional[Any] = None,
     **kwargs,
 ) -> Visualization:
@@ -521,15 +512,13 @@ def plot(
     return viz
 
 
-def plot_snaps(snaps: List[SnapLike], extent: Extent, **kwargs) -> MultiVisualization:
+def plot_snaps(snaps: List[SnapLike], **kwargs) -> MultiVisualization:
     """Visualize multiple snaps.
 
     Parameters
     ----------
     snaps
         A list of Snap objects.
-    extent
-        The range in the x and y-coord as (xmin, xmax, ymin, ymax).
     **kwargs
         Keyword arguments to pass to Visualization plot method.
 
@@ -544,7 +533,6 @@ def plot_snaps(snaps: List[SnapLike], extent: Extent, **kwargs) -> MultiVisualiz
     >>> vi = plot_snaps(
     ...     snaps=sim.snaps,
     ...     quantity='density',
-    ...     extent=(-100, 100, -100, 100),
     ... )
 
     Go forwards and backwards through snaps.
@@ -557,7 +545,7 @@ def plot_snaps(snaps: List[SnapLike], extent: Extent, **kwargs) -> MultiVisualiz
     >>> vi.goto(10)
     >>> vi.next(5)
     """
-    return MultiVisualization(snaps, extent, **kwargs)
+    return MultiVisualization(snaps, **kwargs)
 
 
 def str_to_units(quantity, extent, projection):
