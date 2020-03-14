@@ -121,14 +121,14 @@ Coming up with ideas of what to test is useful.
 
 Suggestions for new features include:
 
-- better support for physical units (with Pint);
-- more analysis functions, e.g. for binary discs;
-- a framework for modifying snapshot files;
-- handling extra Phantom header quantities;
-- out-of-core processing, e.g. using Dask or Vaex;
-- extra visualization features, e.g. widgets in a Jupyter notebook with Bokeh;
-- tracking particles through multiple snapshots;
-- handling extra physics, such as magnetic fields.
+- [x] better support for physical units (with Pint);
+- [ ] more analysis functions, e.g. for binary discs;
+- [ ] a framework for modifying snapshot files;
+- [ ] handling extra Phantom header quantities;
+- [ ] out-of-core processing, e.g. using Dask or Vaex;
+- [ ] extra visualization features, e.g. widgets in a Jupyter notebook with Bokeh;
+- [ ] tracking particles through multiple snapshots;
+- [ ] handling extra physics, such as magnetic fields.
 
 New releases and PyPI and Conda packages
 ----------------------------------------
