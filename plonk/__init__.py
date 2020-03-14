@@ -83,7 +83,7 @@ __all__ = (
 )
 
 # Canonical version number
-__version__ = '0.3.1'
+__version__ = '0.4.0'
 
 # Add units
 units.define('solar_mass = 1.9891e33 g')
