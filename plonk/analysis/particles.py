@@ -12,6 +12,26 @@ from .. import Quantity
 from ..snap import SnapLike
 from ..utils.math import cross, norm
 
+_units = {
+    'momentum': 'momentum',
+    'angular_momentum': 'angular_momentum',
+    'specific_angular_momentum': 'specific_angular_momentum',
+    'kinetic_energy': 'energy',
+    'specific_kinetic_energy': 'specific_energy',
+    'semi_major_axis': 'length',
+    'eccentricity': 'dimensionless',
+    'inclination': 'radian',
+    'gas_mass': 'mass',
+    'dust_mass': 'mass',
+    'gas_density': 'density',
+    'dust_density': 'density',
+    'radial_distance': 'length',
+    'azimuthal_angle': 'radian',
+    'polar_angle': 'radian',
+    'radial_velocity': 'velocity',
+    'angular_velocity': 'velocity',
+}
+
 
 def momentum(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
     """Calculate the momentum.
@@ -220,9 +240,15 @@ def semi_major_axis(
 
     term = specific_energy * (specific_angular_momentum_magnitude / mu) ** 2
 
-    eccentricity = np.sqrt(1 + 2 * term.magnitude)
+    eccentricity = np.sqrt(1 + 2 * term)
 
-    return specific_angular_momentum_magnitude ** 2 / (mu * (1 - eccentricity ** 2))
+    semi_major_axis = specific_angular_momentum_magnitude ** 2 / (
+        mu * (1 - eccentricity ** 2)
+    )
+
+    if isinstance(pos, Quantity):
+        return semi_major_axis.magnitude
+    return semi_major_axis
 
 
 def eccentricity(

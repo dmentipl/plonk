@@ -28,9 +28,11 @@ def generate_units_dictionary(length, mass, time):
     units['velocity'] = length / time
     units['momentum'] = mass * length / time
     units['angular_momentum'] = mass * length ** 2 / time
+    units['specific_angular_momentum'] = length ** 2 / time
     units['density'] = mass / length ** 3
     units['acceleration'] = length / time ** 2
     units['force'] = mass * length / time ** 2
     units['energy'] = mass * length ** 2 / time ** 2
+    units['specific_energy'] = length ** 2 / time ** 2
 
     return units

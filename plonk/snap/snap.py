@@ -16,6 +16,7 @@ from pandas import DataFrame
 from scipy.spatial.transform import Rotation
 
 from .. import Quantity
+from ..analysis import particles
 
 
 class _SinkUtility:
@@ -612,3 +613,134 @@ def get_array_in_code_units(snap: SnapLike, name: str) -> ndarray:
     if isinstance(arr, Quantity):
         return (arr / snap.get_array_unit(name)).magnitude
     return arr
+
+
+@Snap.add_array(unit='momentum')
+def momentum(snap) -> ndarray:
+    """Momentum."""
+    return particles.momentum(snap=snap)
+
+
+@Snap.add_array(unit='angular_momentum')
+def angular_momentum(snap) -> ndarray:
+    """Angular momentum."""
+    origin = snap.translation if snap.translation is not None else (0.0, 0.0, 0.0)
+    return particles.angular_momentum(snap=snap, origin=origin)
+
+
+@Snap.add_array(unit='specific_angular_momentum')
+def specific_angular_momentum(snap) -> ndarray:
+    """Specific angular momentum."""
+    origin = snap.translation if snap.translation is not None else (0.0, 0.0, 0.0)
+    return particles.specific_angular_momentum(snap=snap, origin=origin)
+
+
+@Snap.add_array(unit='energy')
+def kinetic_energy(snap) -> ndarray:
+    """Kinetic energy."""
+    return particles.kinetic_energy(snap=snap)
+
+
+@Snap.add_array(unit='specific_energy')
+def specific_kinetic_energy(snap) -> ndarray:
+    """Specific kinetic energy."""
+    return particles.specific_kinetic_energy(snap=snap)
+
+
+@Snap.add_array(unit='length')
+def semi_major_axis(snap) -> ndarray:
+    """Semi-major axis."""
+    try:
+        gravitational_parameter = snap.properties['gravitational_parameter']
+    except KeyError:
+        raise ValueError(
+            'To get semi-major axis, first set the gravitational parameter\n'
+            'via snap.properties["gravitational_parameter"].'
+        )
+    origin = snap.translation if snap.translation is not None else (0.0, 0.0, 0.0)
+    return particles.semi_major_axis(
+        snap=snap, gravitational_parameter=gravitational_parameter, origin=origin
+    )
+
+
+@Snap.add_array(unit='dimensionless')
+def eccentricity(snap) -> ndarray:
+    """Eccentricity."""
+    try:
+        gravitational_parameter = snap.properties['gravitational_parameter']
+    except KeyError:
+        raise ValueError(
+            'To get eccentricity, first set the gravitational parameter\n'
+            'via snap.properties["gravitational_parameter"].'
+        )
+    origin = snap.translation if snap.translation is not None else (0.0, 0.0, 0.0)
+    return particles.eccentricity(
+        snap=snap, gravitational_parameter=gravitational_parameter, origin=origin
+    )
+
+
+@Snap.add_array(unit='radian')
+def inclination(snap) -> ndarray:
+    """Inclination."""
+    return particles.inclination(snap=snap)
+
+
+@Snap.add_array(unit='mass')
+def gas_mass(snap) -> ndarray:
+    """Gas mass."""
+    return particles.gas_mass(snap=snap)
+
+
+@Snap.add_array(unit='mass')
+def dust_mass(snap) -> ndarray:
+    """Dust mass."""
+    return particles.dust_mass(snap=snap)
+
+
+@Snap.add_array(unit='density')
+def gas_density(snap) -> ndarray:
+    """Gas density."""
+    return particles.gas_density(snap=snap)
+
+
+@Snap.add_array(unit='density')
+def dust_density(snap) -> ndarray:
+    """Dust density."""
+    return particles.dust_density(snap=snap)
+
+
+@Snap.add_array(unit='length')
+def radial_distance(snap) -> ndarray:
+    """Radial distance."""
+    return particles.radial_distance(snap=snap)
+
+
+@Snap.add_array(unit='radian')
+def azimuthal_angle(snap) -> ndarray:
+    """Azimuthal angle."""
+    return particles.azimuthal_angle(snap=snap)
+
+
+@Snap.add_array(unit='radian')
+def polar_angle(snap) -> ndarray:
+    """Polar angle."""
+    return particles.polar_angle(snap=snap)
+
+
+@Snap.add_array(unit='velocity')
+def radial_velocity(snap) -> ndarray:
+    """Radial velocity."""
+    try:
+        coordinates = snap.properties['coordinates']
+    except KeyError:
+        raise ValueError(
+            'To get radial velocity, first set the coordinates to "cylindrical"\n'
+            'or "spherical" via snap.properties["coordinates"].'
+        )
+    return particles.radial_velocity(snap=snap, coordinates=coordinates)
+
+
+@Snap.add_array(unit='velocity')
+def angular_velocity(snap) -> ndarray:
+    """Angular velocity."""
+    return particles.angular_velocity(snap=snap)
