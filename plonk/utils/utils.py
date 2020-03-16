@@ -1,8 +1,9 @@
 """Utility functions."""
 
-from typing import Any, Union
+from typing import Any, Optional, Tuple, Union
 
 import numpy as np
+from numpy import ndarray
 
 from .. import units
 
@@ -47,24 +48,39 @@ def time_string(
     return f't = {time:{float_format}} {unit_str}'
 
 
-def get_extent_from_percentile(snap, percentile=99):
+def get_extent_from_percentile(
+    x: ndarray,
+    y: ndarray,
+    percentile: float = 99,
+    x_center_on: Optional[float] = None,
+    y_center_on: Optional[float] = None,
+):
     """Get extent from percentile.
-
-    Calculate a xy-plane square box such that some percentile of
-    particles is contained within a sphere inscribed in the box.
 
     Parameters
     ----------
-    snap
-        The Snap object.
+    x
+        The "x" coordinate.
+    y
+        The "x" coordinate.
     percentile : optional
         The percentile used in the calculation. Default is 99.
+    x_center_on : optional
+        Center on some x-value. Default is None.
+    y_center_on : optional
+        Center on some y-value. Default is None.
 
     Returns
     -------
     tuple
         The extent of the box as (xmin, xmax, ymin, ymax).
     """
-    r = np.sqrt(snap['x'] ** 2 + snap['y'] ** 2 + snap['z'] ** 2)
-    size = np.percentile(r, percentile)
-    return (-size, size, -size, size)
+    pl, pr = (100 - percentile) / 2, percentile + (100 - percentile) / 2
+    xlim = np.percentile(x, [pl, pr])
+    ylim = np.percentile(y, [pl, pr])
+    if x_center_on is not None:
+        xlim += x_center_on - xlim.mean()
+    if y_center_on is not None:
+        ylim += y_center_on - ylim.mean()
+
+    return (xlim[0], xlim[1], ylim[0], ylim[1])

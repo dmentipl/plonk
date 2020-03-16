@@ -2,7 +2,7 @@
 
 import pathlib
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Union
 
 import matplotlib.pyplot as plt
 from matplotlib import animation as _animation
@@ -57,6 +57,8 @@ def animation(
         raise ValueError('filename should end in ".mp4"')
 
     interp = kwargs.get('interp', 'projection')
+    x = kwargs.get('x', 'x')
+    y = kwargs.get('x', 'y')
 
     fig, ax = plt.subplots()
     viz = plot(snap=snaps[0], quantity=quantity, ax=ax, **kwargs)
@@ -74,7 +76,9 @@ def animation(
     def animate(idx):
         print(f'Visualizing snap: {idx}')
         _kwargs = {k: v for k, v in kwargs.items() if k in _interp_kwargs}
-        extent = kwargs.get('extent', get_extent_from_percentile(snaps[idx]))
+        extent = kwargs.get(
+            'extent', get_extent_from_percentile(snaps[idx][x], snaps[idx][y])
+        )
         interp_data = interpolate(
             snap=snaps[idx], interp=interp, quantity=quantity, extent=extent, **_kwargs,
         )

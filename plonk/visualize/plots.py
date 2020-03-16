@@ -1,24 +1,22 @@
 """Plot functions for visualization."""
 
-from typing import Any
+from copy import copy
+from typing import Any, Optional
 
 import matplotlib as mpl
 import numpy as np
 from numpy import ndarray
 
-from ..snap import SnapLike
 from .interpolation import Extent
 
 
 def particle_plot(
-    *, snap: SnapLike, x: ndarray, y: ndarray, extent: Extent, ax: Any, **kwargs,
+    *, x: ndarray, y: ndarray, extent: Extent, ax: Any, **kwargs,
 ):
     """Plot particles.
 
     Parameters
     ----------
-    snap
-        The Snap object to visualize.
     x
         The x-coordinates for the particle plot.
     y
@@ -35,13 +33,73 @@ def particle_plot(
     lines
         A list of matplotlib Line2D objects.
     """
-    h: ndarray = snap['smooth']
-    mask = (
-        (h > 0) & (x > extent[0]) & (x < extent[1]) & (y > extent[2]) & (y < extent[3])
-    )
-    fmt = kwargs.get('fmt', 'k.')
-    lines = ax.plot(x[mask], y[mask], fmt, **kwargs)
+    _kwargs = copy(kwargs)
+    fmt = _kwargs.pop('fmt', 'k.')
+    lines = ax.plot(x, y, fmt, **_kwargs)
     return lines
+
+
+def scatter_plot(
+    *,
+    x: ndarray,
+    y: ndarray,
+    color: Optional[ndarray] = None,
+    size: Optional[ndarray] = None,
+    extent: Extent,
+    n_samples=10_000,
+    random_seed=None,
+    ax: Any,
+    **kwargs,
+):
+    """Plot particles as scatter plot.
+
+    Parameters
+    ----------
+    x
+        The x-coordinates for the scatter plot.
+    y
+        The y-coordinates for the scatter plot.
+    color
+        The quantity to color the particles.
+    size
+        The quantity to set the particle size.
+    extent
+        The range in the x and y-coord as (xmin, xmax, ymin, ymax).
+    n_samples
+        The number of samples to take. Default is 10,000.
+    random_seed
+        The random seed for sampling. Default is None.
+    ax
+        A matplotlib Axes handle.
+    **kwargs
+        Keyword arguments to pass to ax.scatter method.
+
+    Returns
+    -------
+    paths
+        A matplotlib PathCollection object.
+    """
+    if color is None and size is None:
+        raise ValueError('Should set size or color')
+    if n_samples > 100_000:
+        print('n_samples > 100,000: this may be slow')
+    if random_seed is not None:
+        np.random.seed(random_seed)
+
+    rand = np.random.choice(len(x), n_samples)
+
+    x = x[rand]
+    y = y[rand]
+    if color is not None:
+        color = color[rand]
+    if size is not None:
+        size = size[rand]
+
+    _kwargs = copy(kwargs)
+    alpha = _kwargs.pop('alpha', 0.5)
+
+    paths = ax.scatter(x, y, c=color, s=size, alpha=alpha, **_kwargs)
+    return paths
 
 
 def render_plot(
@@ -65,8 +123,9 @@ def render_plot(
     image
         A matplotlib AxesImage object.
     """
+    _kwargs = copy(kwargs)
     try:
-        norm = kwargs.pop('norm')
+        norm = _kwargs.pop('norm')
     except KeyError:
         norm = 'linear'
     if norm.lower() in ('linear', 'lin'):
@@ -77,7 +136,7 @@ def render_plot(
         raise ValueError('Cannot determine normalization for colorbar')
 
     image = ax.imshow(
-        interpolated_data, origin='lower', extent=extent, norm=norm, **kwargs
+        interpolated_data, origin='lower', extent=extent, norm=norm, **_kwargs
     )
 
     return image
@@ -141,8 +200,9 @@ def quiver_plot(
     )
     U, V = interpolated_data[0], interpolated_data[1]
 
-    number_of_arrows = kwargs.pop('number_of_arrows', (25, 25))
-    normalize_vectors = kwargs.pop('normalize_vectors', False)
+    _kwargs = copy(kwargs)
+    number_of_arrows = _kwargs.pop('number_of_arrows', (25, 25))
+    normalize_vectors = _kwargs.pop('normalize_vectors', False)
 
     n_x, n_y = number_of_arrows[0], number_of_arrows[1]
     stride_x = int(n_interp_x / n_x)
@@ -156,7 +216,7 @@ def quiver_plot(
         U /= norm
         V /= norm
 
-    quiver = ax.quiver(X, Y, U, V, **kwargs)
+    quiver = ax.quiver(X, Y, U, V, **_kwargs)
 
     return quiver
 
