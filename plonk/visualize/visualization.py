@@ -650,13 +650,17 @@ def particle_plot(
     return viz
 
 
-def plot_snaps(snaps: List[SnapLike], **kwargs) -> MultiVisualization:
+def plot_snaps(
+    snaps: List[SnapLike], quantity: Union[str, ndarray], **kwargs
+) -> MultiVisualization:
     """Visualize multiple snaps.
 
     Parameters
     ----------
     snaps
         A list of Snap objects.
+    quantity
+        The quantity to visualize.
     **kwargs
         Keyword arguments to pass to Visualization plot method.
 
