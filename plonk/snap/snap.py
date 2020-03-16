@@ -7,7 +7,7 @@ accessing a subset of particles in a Snap.
 
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union, cast
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union, cast
 
 import numpy as np
 import pandas as pd
@@ -102,10 +102,12 @@ class Snap:
         'pos': 'position',
         'vxyz': 'velocity',
         'vel': 'velocity',
+        'v': 'velocity',
         'h': 'smooth',
         'm': 'mass',
         'rho': 'density',
         'Bxyz': 'magfield',
+        'B': 'magfield',
         'spinxyz': 'spin',
     }
 
@@ -145,6 +147,15 @@ class Snap:
         'velocity': 'velocity',
     }
 
+    _array_rotatable = {
+        'magfield',
+        'position',
+        'spin',
+        'velocity',
+    }
+
+    _array_not_rotatable: Set[str] = set()
+
     _particle_type = {
         'gas': 1,
         'dust': 2,
@@ -155,7 +166,7 @@ class Snap:
     }
 
     @staticmethod
-    def add_array(unit: str = None) -> Callable:
+    def add_array(unit: str = None, rotatable: bool = None) -> Callable:
         """Decorate function to add array to Snap.
 
         This function decorates a function that returns an array. The
@@ -166,7 +177,12 @@ class Snap:
         ----------
         unit
             A string to represent the units of the array. E.g. 'length'
-            for a 'radius' array.
+            for a 'radius' array. Default is None.
+        rotatable
+            A bool to represent if the array should have rotations
+            applied to it. If True the rotation should be applied. If
+            False the rotation cannot be applied. If None no rotation
+            is required. Default is None.
 
         Returns
         -------
@@ -175,8 +191,12 @@ class Snap:
         """
 
         def _add_array(fn):
-            Snap._array_units[fn.__name__] = unit
             Snap._array_registry[fn.__name__] = fn
+            Snap._array_units[fn.__name__] = unit
+            if rotatable is True:
+                Snap._array_rotatable.add(fn.__name__)
+            elif rotatable is False:
+                Snap._array_not_rotatable.add(fn.__name__)
             return fn
 
         return _add_array
@@ -340,11 +360,16 @@ class Snap:
             The rotated Snap. Note that the rotation operation is
             in-place.
         """
-        for arr in self._rotation_required():
+        for arr in self._array_rotatable:
             if arr in self.loaded_arrays():
                 self._arrays[arr] = rotation.apply(self._arrays[arr])
             if arr in self.loaded_arrays(sinks=True):
                 self._sinks[arr] = rotation.apply(self._sinks[arr])
+        for arr in self._array_not_rotatable:
+            if arr in self.loaded_arrays():
+                del self._arrays[arr]
+            if arr in self.loaded_arrays(sinks=True):
+                del self._sinks[arr]
 
         if self.rotation is None:
             self.rotation = rotation
@@ -409,9 +434,6 @@ class Snap:
                 d[col] = arr
         return pd.DataFrame(d)
 
-    def _rotation_required(self):
-        return set([val[0] for val in self._array_split_mapper.values()])
-
     def _get_family_indices(self, name: str):
         """Get a family by name."""
         if name in self._families:
@@ -453,7 +475,7 @@ class Snap:
         else:
             array = Snap._array_registry[name](self)
             array_dict = self._arrays
-        if self.rotation is not None and name in self._rotation_required():
+        if self.rotation is not None and name in self._array_rotatable:
             array = self.rotation.apply(array)
         if self.translation is not None and name == 'position':
             array += self.translation
@@ -647,20 +669,20 @@ def get_array_in_code_units(snap: SnapLike, name: str) -> ndarray:
     return arr
 
 
-@Snap.add_array(unit='momentum')
+@Snap.add_array(unit='momentum', rotatable=True)
 def momentum(snap) -> ndarray:
     """Momentum."""
     return particles.momentum(snap=snap)
 
 
-@Snap.add_array(unit='angular_momentum')
+@Snap.add_array(unit='angular_momentum', rotatable=True)
 def angular_momentum(snap) -> ndarray:
     """Angular momentum."""
     origin = snap.translation if snap.translation is not None else (0.0, 0.0, 0.0)
     return particles.angular_momentum(snap=snap, origin=origin)
 
 
-@Snap.add_array(unit='specific_angular_momentum')
+@Snap.add_array(unit='specific_angular_momentum', rotatable=True)
 def specific_angular_momentum(snap) -> ndarray:
     """Specific angular momentum."""
     origin = snap.translation if snap.translation is not None else (0.0, 0.0, 0.0)
@@ -711,7 +733,7 @@ def eccentricity(snap) -> ndarray:
     )
 
 
-@Snap.add_array(unit='radian')
+@Snap.add_array(unit='radian', rotatable=False)
 def inclination(snap) -> ndarray:
     """Inclination."""
     return particles.inclination(snap=snap)
@@ -741,25 +763,32 @@ def dust_density(snap) -> ndarray:
     return particles.dust_density(snap=snap)
 
 
-@Snap.add_array(unit='length')
+@Snap.add_array(unit='length', rotatable=False)
 def radial_distance(snap) -> ndarray:
     """Radial distance."""
-    return particles.radial_distance(snap=snap)
+    try:
+        coordinates = snap.properties['coordinates']
+    except KeyError:
+        raise ValueError(
+            'To get radial velocity, first set the coordinates to "cylindrical"\n'
+            'or "spherical" via snap.properties["coordinates"].'
+        )
+    return particles.radial_distance(snap=snap, coordinates=coordinates)
 
 
-@Snap.add_array(unit='radian')
+@Snap.add_array(unit='radian', rotatable=False)
 def azimuthal_angle(snap) -> ndarray:
     """Azimuthal angle."""
     return particles.azimuthal_angle(snap=snap)
 
 
-@Snap.add_array(unit='radian')
+@Snap.add_array(unit='radian', rotatable=False)
 def polar_angle(snap) -> ndarray:
     """Polar angle."""
     return particles.polar_angle(snap=snap)
 
 
-@Snap.add_array(unit='velocity')
+@Snap.add_array(unit='velocity', rotatable=False)
 def radial_velocity(snap) -> ndarray:
     """Radial velocity."""
     try:
@@ -772,7 +801,7 @@ def radial_velocity(snap) -> ndarray:
     return particles.radial_velocity(snap=snap, coordinates=coordinates)
 
 
-@Snap.add_array(unit='velocity')
+@Snap.add_array(unit='velocity', rotatable=False)
 def angular_velocity(snap) -> ndarray:
     """Angular velocity."""
     return particles.angular_velocity(snap=snap)
