@@ -274,10 +274,41 @@ class Snap:
             self.units[unit_str] = unit
         self._array_units[name] = unit_str
 
-    def physical_units(self, unset: bool = False) -> Snap:
-        """Set/unset physical units.
+    def unset(
+        self, units: bool = False, rotation: bool = False, translation: bool = False,
+    ):
+        """Unset.
 
-        Uses Pint.
+        Unset some transformations on the Snap data.
+
+        Parameters
+        ----------
+        units
+            Set to True to unset physical units. Default is False.
+        rotation
+            Set to True to unset rotation. Default is False.
+        translation
+            Set to True to unset translation. Default is False.
+        """
+        if any((units, rotation, translation)):
+            for arr in self.loaded_arrays():
+                del self._arrays[arr]
+            for arr in self.loaded_arrays(sinks=True):
+                del self._sinks[arr]
+        else:
+            raise ValueError('Select something to unset')
+
+        if units:
+            self._physical_units = None
+        if rotation:
+            self.rotation = None
+        if translation:
+            self.translation = None
+
+        return self
+
+    def physical_units(self) -> Snap:
+        """Set physical units.
 
         Returns
         -------
@@ -285,20 +316,13 @@ class Snap:
         """
         if self._physical_units:
             raise ValueError(
-                'Physical units already set: snap.physical_units(unset=True) to unset.'
+                'Physical units already set: snap.unset(units=True) to unset.'
             )
-        if unset:
-            for arr in self.loaded_arrays():
-                del self._arrays[arr]
-            for arr in self.loaded_arrays(sinks=True):
-                del self._sinks[arr]
-            self._physical_units = False
-        else:
-            for arr in self.loaded_arrays():
-                self._arrays[arr] = self._arrays[arr] * self.get_array_unit(arr)
-            for arr in self.loaded_arrays(sinks=True):
-                self._sinks[arr] = self._sinks[arr] * self.get_array_unit(arr)
-            self._physical_units = True
+        for arr in self.loaded_arrays():
+            self._arrays[arr] = self._arrays[arr] * self.get_array_unit(arr)
+        for arr in self.loaded_arrays(sinks=True):
+            self._sinks[arr] = self._sinks[arr] * self.get_array_unit(arr)
+        self._physical_units = True
 
         return self
 
@@ -322,7 +346,11 @@ class Snap:
             if arr in self.loaded_arrays(sinks=True):
                 self._sinks[arr] = rotation.apply(self._sinks[arr])
 
-        self.rotation = rotation
+        if self.rotation is None:
+            self.rotation = rotation
+        else:
+            rot = rotation * self.rotation
+            self.rotation = rot
 
         return self
 
@@ -342,14 +370,18 @@ class Snap:
             The translated Snap. Note that the translation operation is
             in-place.
         """
-        if len(translation) != 3:
+        translation = np.array(translation)
+        if translation.shape != (3,):
             raise ValueError('translation must be like (x, y, z)')
         if 'position' in self.loaded_arrays():
             self._arrays['position'] += translation
         if 'position' in self.loaded_arrays(sinks=True):
             self._sinks['position'] += translation
 
-        self.translation = translation
+        if self.translation is None:
+            self.translation = translation
+        else:
+            self.translation += translation
 
         return self
 
