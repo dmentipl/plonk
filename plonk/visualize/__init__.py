@@ -5,8 +5,9 @@ simulations using kernel density estimation based interpolation.
 """
 
 from .animation import animation, animation_profiles
+from .api import particle_plot, plot, plot_snaps, str_to_units
 from .interpolation import interpolate
-from .visualization import Visualization, particle_plot, plot, plot_snaps, str_to_units
+from .visualization import Visualization
 
 __all__ = [
     'Visualization',

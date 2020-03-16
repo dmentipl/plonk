@@ -7,18 +7,15 @@ hydrodynamics simulation data.
 from __future__ import annotations
 
 from copy import copy
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 import matplotlib.pyplot as plt
-import numpy as np
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ndarray
 
-from .. import Quantity
-from .. import units as plonk_units
 from ..snap import SnapLike
 from ..snap.snap import get_array_from_input
-from ..utils import get_extent_from_percentile, is_documented_by
+from ..utils import get_extent_from_percentile
 from . import plots
 from .interpolation import Extent, interpolate
 
@@ -437,93 +434,6 @@ class Visualization:
         return '<plonk.Visualization>'
 
 
-class MultiVisualization:
-    """Visualize multiple snaps.
-
-    Attributes
-    ----------
-    snaps
-        A list of snaps.
-    options
-        A dictionary of arguments passed to Visualization plot method.
-    visualization
-        The Visualization object.
-    ax
-        The matplotlib Axes object.
-
-    Parameters
-    ----------
-    snaps
-        A list of Snap objects.
-    quantity
-        The quantity to visualize.
-    **kwargs
-        Keyword arguments to pass to Visualization plot method.
-    """
-
-    def __init__(self, snaps, quantity, **kwargs):
-        self.snaps = snaps
-        self.options = kwargs
-        self.quantity = quantity
-        viz = Visualization(snap=snaps[0])
-        self.visualization = viz.plot(quantity=quantity, **kwargs)
-        self.ax = self.visualization.ax
-
-        self._len = -1
-        self._where = 0
-
-    def _fn(self, idx):
-        self.ax.clear()
-        cbar = self.visualization.objects['colorbar']
-        if cbar is not None:
-            cbar.remove()
-        viz = Visualization(snap=self.snaps[idx])
-        viz.plot(quantity=self.quantity, ax=self.ax, **self.options)
-        self.visualization = viz
-        return viz
-
-    def next(self, number: int = 1):
-        """Visualize next snap."""
-        idx = self._where + number
-        if idx < len(self):
-            self.visualization = self._fn(idx)
-            self._where += number
-        else:
-            print('Too far forward. Going to last snap.')
-            self.visualization = self._fn(len(self) - 1)
-            self._where = len(self) - 1
-
-    def prev(self, number: int = 1):
-        """Visualize previous snap."""
-        idx = self._where - number
-        if idx > 0:
-            self.visualization = self._fn(idx)
-            self._where -= number
-        else:
-            print('Too far back. Going to first snap.')
-            self.visualization = self._fn(0)
-            self._where = 0
-
-    def goto(self, idx):
-        """Visualize particular snap by index."""
-        if -len(self) < idx < len(self) - 1:
-            self.visualization = self._fn(idx)
-            self._where = np.mod(idx, len(self))
-        else:
-            raise ValueError('out of range')
-
-    @property
-    def index(self):
-        """Current snap index."""
-        return self._where
-
-    def __len__(self):
-        """Length as number of snaps."""
-        if self._len == -1:
-            self._len = len(self.snaps)
-        return self._len
-
-
 def _check_input(*, snap, quantity, x, y, z, kind):
 
     if quantity is not None:
@@ -595,135 +505,3 @@ def _convert_units(
     new_extent = tuple((extent * snap.units['length']).to(units['extent']).magnitude)
 
     return data, new_extent
-
-
-@is_documented_by(Visualization.plot)
-def plot(
-    *,
-    snap: SnapLike,
-    quantity: Union[str, ndarray],
-    x: Union[str, ndarray] = 'x',
-    y: Union[str, ndarray] = 'y',
-    z: Union[str, ndarray] = 'z',
-    kind: Optional[str] = None,
-    interp: str = 'projection',
-    z_slice: float = 0.0,
-    extent: Extent = (-1, -1, -1, -1),
-    units: Dict[str, Any] = None,
-    ax: Optional[Any] = None,
-    **kwargs,
-) -> Visualization:
-    viz = Visualization(snap)
-    viz.plot(
-        quantity=quantity,
-        x=x,
-        y=y,
-        z=z,
-        kind=kind,
-        interp=interp,
-        z_slice=z_slice,
-        extent=extent,
-        units=units,
-        ax=ax,
-        **kwargs,
-    )
-    return viz
-
-
-@is_documented_by(Visualization.particle_plot)
-def particle_plot(
-    *,
-    snap: SnapLike,
-    x: Union[str, ndarray] = 'x',
-    y: Union[str, ndarray] = 'y',
-    color: Optional[Union[str, ndarray]] = None,
-    size: Optional[Union[str, ndarray]] = None,
-    extent: Extent = (-1, -1, -1, -1),
-    units: Dict[str, Any] = None,
-    ax: Optional[Any] = None,
-    **kwargs,
-) -> Visualization:
-    viz = Visualization(snap)
-    viz.particle_plot(
-        x=x, y=y, color=color, size=size, extent=extent, units=units, ax=ax, **kwargs,
-    )
-    return viz
-
-
-def plot_snaps(
-    snaps: List[SnapLike], quantity: Union[str, ndarray], **kwargs
-) -> MultiVisualization:
-    """Visualize multiple snaps.
-
-    Parameters
-    ----------
-    snaps
-        A list of Snap objects.
-    quantity
-        The quantity to visualize.
-    **kwargs
-        Keyword arguments to pass to Visualization plot method.
-
-    Returns
-    -------
-    MultiVisualization
-
-    Examples
-    --------
-    Initialize object passing in plotting parameters.
-
-    >>> vi = plot_snaps(
-    ...     snaps=sim.snaps,
-    ...     quantity='density',
-    ... )
-
-    Go forwards and backwards through snaps.
-
-    >>> vi.next()
-    >>> vi.prev()
-
-    Go to a particular snap, or skip ahead.
-
-    >>> vi.goto(10)
-    >>> vi.next(5)
-    """
-    return MultiVisualization(snaps, **kwargs)
-
-
-def str_to_units(quantity, extent, projection):
-    """Convert string to plonk units.
-
-    Parameters
-    ----------
-    quantity
-        The units string for the quantity.
-    extent
-        The units string for the plot extent.
-    projection
-        The units string for projection interpolation.
-    """
-    if isinstance(quantity, str):
-        quantity = plonk_units(quantity)
-    elif isinstance(quantity, Quantity):
-        pass
-    else:
-        raise ValueError(f'Cannot determine quantity unit')
-    if isinstance(extent, str):
-        extent = plonk_units(extent)
-    elif isinstance(extent, Quantity):
-        pass
-    else:
-        raise ValueError(f'Cannot determine extent unit')
-    if isinstance(projection, str):
-        projection = plonk_units(projection)
-    elif isinstance(projection, Quantity):
-        pass
-    else:
-        raise ValueError(f'Cannot determine projection unit')
-
-    if extent.dimensionality != plonk_units('cm').dimensionality:
-        raise ValueError('extent has incorrect dimensions')
-    if projection.dimensionality != plonk_units('cm').dimensionality:
-        raise ValueError('projection has incorrect dimensions')
-
-    return {'quantity': quantity, 'extent': extent, 'projection': projection}
