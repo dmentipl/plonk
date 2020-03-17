@@ -391,7 +391,9 @@ class Visualization:
         h: ndarray = self.snap['smooth']
         if extent == (-1, -1, -1, -1):
             mask = h > 0
-            extent = (x[mask].min(), x[mask].max(), y[mask].min(), y[mask].max())
+            extent = get_extent_from_percentile(
+                x[mask], y[mask], percentile=100, edge_factor=0.05,
+            )
         else:
             mask = (
                 (h > 0)
@@ -412,12 +414,12 @@ class Visualization:
 
         if size is None and color is None:
             self.objects['lines'] = plots.particle_plot(
-                x=x, y=y, extent=extent, ax=self.ax, **_kwargs,
+                x=x, y=y, ax=self.ax, **_kwargs,
             )
 
         else:
             self.objects['paths'] = plots.scatter_plot(
-                x=x, y=y, color=color, size=size, extent=extent, ax=self.ax, **_kwargs,
+                x=x, y=y, color=color, size=size, ax=self.ax, **_kwargs,
             )
 
         self.ax.set_xlim(*extent[:2])

@@ -11,7 +11,7 @@ from .interpolation import Extent
 
 
 def particle_plot(
-    *, x: ndarray, y: ndarray, extent: Extent, ax: Any, **kwargs,
+    *, x: ndarray, y: ndarray, ax: Any, **kwargs,
 ):
     """Plot particles.
 
@@ -21,8 +21,6 @@ def particle_plot(
         The x-coordinates for the particle plot.
     y
         The y-coordinates for the particle plot.
-    extent
-        The range in the x and y-coord as (xmin, xmax, ymin, ymax).
     ax
         A matplotlib Axes handle.
     **kwargs
@@ -45,7 +43,6 @@ def scatter_plot(
     y: ndarray,
     color: Optional[ndarray] = None,
     size: Optional[ndarray] = None,
-    extent: Extent,
     n_samples=10_000,
     random_seed=None,
     ax: Any,
@@ -63,8 +60,6 @@ def scatter_plot(
         The quantity to color the particles.
     size
         The quantity to set the particle size.
-    extent
-        The range in the x and y-coord as (xmin, xmax, ymin, ymax).
     n_samples
         The number of samples to take. Default is 10,000.
     random_seed
