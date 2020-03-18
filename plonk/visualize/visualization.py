@@ -338,8 +338,9 @@ class Visualization:
         y: Union[str, ndarray] = 'y',
         color: Optional[Union[str, ndarray]] = None,
         size: Optional[Union[str, ndarray]] = None,
-        extent: Extent = (-1, -1, -1, -1),
         units: Dict[str, Any] = None,
+        xscale: str = None,
+        yscale: str = None,
         ax: Optional[Any] = None,
         **kwargs,
     ) -> Visualization:
@@ -359,13 +360,13 @@ class Visualization:
             The quantity to color the particles.
         size
             The quantity to set the particle size.
-        extent
-            The range in the x and y-coord as (xmin, xmax, ymin, ymax).
-            The default is to set the extent to a box of size set by an
-            inscribed sphere containing 99% of particles.
         units
             The units of the plot as a dictionary with keys 'quantity',
             'extent', 'projection'. The values are Pint Unit objects.
+        xscale
+            The xscale to pass to the matplotlib Axes method set_xscale.
+        yscale
+            The yscale to pass to the matplotlib Axes method set_yscale.
         ax
             A matplotlib Axes handle.
         **kwargs
@@ -389,19 +390,7 @@ class Visualization:
         )
 
         h: ndarray = self.snap['smooth']
-        if extent == (-1, -1, -1, -1):
-            mask = h > 0
-            extent = get_extent_from_percentile(
-                x[mask], y[mask], percentile=100, edge_factor=0.05,
-            )
-        else:
-            mask = (
-                (h > 0)
-                & (x > extent[0])
-                & (x < extent[1])
-                & (y > extent[2])
-                & (y < extent[3])
-            )
+        mask = h > 0
 
         x = x[mask]
         y = y[mask]
@@ -409,8 +398,6 @@ class Visualization:
             color = color[mask]
         if size is not None:
             size = size[mask]
-
-        self.extent = extent
 
         if size is None and color is None:
             self.objects['lines'] = plots.particle_plot(
@@ -422,10 +409,12 @@ class Visualization:
                 x=x, y=y, color=color, size=size, ax=self.ax, **_kwargs,
             )
 
-        self.ax.set_xlim(*extent[:2])
-        self.ax.set_ylim(*extent[2:])
+        if xscale is not None:
+            self.ax.set_xscale(xscale)
+        if yscale is not None:
+            self.ax.set_yscale(yscale)
 
-        ratio = (extent[1] - extent[0]) / (extent[3] - extent[2])
+        ratio = (x.max() - x.min()) / (y.max() - y.min())
         if not max(ratio, 1 / ratio) > 10.0:
             self.ax.set_aspect('equal')
 

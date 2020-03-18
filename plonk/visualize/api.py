@@ -54,14 +54,13 @@ def particle_plot(
     y: Union[str, ndarray] = 'y',
     color: Optional[Union[str, ndarray]] = None,
     size: Optional[Union[str, ndarray]] = None,
-    extent: Extent = (-1, -1, -1, -1),
     units: Dict[str, Any] = None,
     ax: Optional[Any] = None,
     **kwargs,
 ) -> Visualization:
     viz = Visualization(snap)
     viz.particle_plot(
-        x=x, y=y, color=color, size=size, extent=extent, units=units, ax=ax, **kwargs,
+        x=x, y=y, color=color, size=size, units=units, ax=ax, **kwargs,
     )
     return viz
 
