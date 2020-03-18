@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import pathlib
 from pathlib import Path
 from typing import Callable, Union
 
@@ -35,6 +36,7 @@ class PhantomHDF5Snap:
             A Snap object.
         """
         self.hdf5_file = HDF5File(filename)
+        self.snap.filepath = pathlib.Path(filename)
         self.snap._file_pointer = self.hdf5_file.file_handle
 
         self._header = {
