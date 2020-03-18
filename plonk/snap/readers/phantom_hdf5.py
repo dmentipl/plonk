@@ -36,7 +36,7 @@ class PhantomHDF5Snap:
             A Snap object.
         """
         self.hdf5_file = HDF5File(filename)
-        self.snap.filepath = pathlib.Path(filename)
+        self.snap.filepath = pathlib.Path(filename).expanduser()
         self.snap._file_pointer = self.hdf5_file.file_handle
 
         self._header = {
