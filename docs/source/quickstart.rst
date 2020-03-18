@@ -128,7 +128,7 @@ Create a radial profile.
      'number',
      'radius',
      'scale_height',
-     'smooth')
+     'smoothing_length')
     >>> with plt.style.context('seaborn'):
     ...     fig, ax = prof.plot('radius', 'scale_height')
     ...     ax.set_xlabel('Radius [au]')

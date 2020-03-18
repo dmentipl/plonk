@@ -74,7 +74,7 @@ def interpolate(
     x = get_array_from_input(snap, x, 'x')
     y = get_array_from_input(snap, y, 'y')
     z = get_array_from_input(snap, z, 'z')
-    h = get_array_in_code_units(snap, 'smooth')
+    h = get_array_in_code_units(snap, 'smoothing_length')
     m = get_array_in_code_units(snap, 'mass')
 
     if interp == 'projection':

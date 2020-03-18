@@ -91,22 +91,41 @@ To see what arrays are loaded into memory you can use the
     >>> snap.loaded_arrays()
     ('position',)
 
-Use :py:meth:`available_arrays` to see what arrays are available.
+Use :py:meth:`available_arrays` to see what arrays are available. Some of these
+arrays are stored on file, while others are computed as required from functions
+defined in the analysis module.
 
 .. code-block:: pycon
 
     >>> snap.available_arrays()
-    ('density',
-     'divv',
-     'dt',
+    ('angular_momentum',
+     'angular_velocity',
+     'azimuthal_angle',
+     'density',
+     'dust_density',
+     'dust_fraction',
+     'dust_mass',
      'dust_type',
-     'dustfrac',
+     'eccentricity',
+     'gas_density',
+     'gas_mass',
+     'inclination',
+     'kinetic_energy',
      'mass',
+     'momentum',
+     'polar_angle',
      'position',
-     'smooth',
-     'tstop',
+     'radial_distance',
+     'radial_velocity',
+     'semi_major_axis',
+     'smoothing_length',
+     'specific_angular_momentum',
+     'specific_kinetic_energy',
+     'stopping_time',
+     'timestep',
      'type',
-     'velocity')
+     'velocity',
+     'velocity_divergence')
 
 You can also define your own alias to access arrays. For example, if you prefer
 to use the name `'coordinate'` rather than `'position',` use the
@@ -154,6 +173,16 @@ Sink particles are handled separately from the fluid, e.g. gas or dust,
 particles. They are available as an attribute.
 
 .. code-block:: pycon
+
+    >>> snap.available_arrays(sinks=True)
+    ('accretion_radius',
+     'last_injection_time',
+     'mass',
+     'mass_accreted',
+     'position',
+     'softening_radius',
+     'spin',
+     'velocity')
 
     >>> snap.sinks
     <plonk.snap sinks>
@@ -433,7 +462,7 @@ To see what profiles are loaded and what are available use the
      'radius',
      'scale_height',
      'size',
-     'smooth')
+     'smoothing_length')
 
 
 To load a profile, simply call it.

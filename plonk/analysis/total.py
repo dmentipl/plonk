@@ -30,7 +30,7 @@ def center_of_mass(snap: SnapLike, ignore_accreted: bool = True) -> ndarray:
         The center of mass as a vector (cx, cy, cz).
     """
     if ignore_accreted:
-        h: ndarray = snap['smooth']
+        h: ndarray = snap['smoothing_length']
         mass: ndarray = snap['mass'][h > 0]
         pos: ndarray = snap['position'][h > 0]
     else:
@@ -56,7 +56,7 @@ def mass(snap: SnapLike, ignore_accreted: bool = True) -> float:
         The total mass.
     """
     if ignore_accreted:
-        h: ndarray = snap['smooth']
+        h: ndarray = snap['smoothing_length']
         mass: ndarray = snap['mass'][h > 0]
     else:
         mass = snap['mass']
@@ -80,7 +80,7 @@ def gas_mass(snap: SnapLike, ignore_accreted: bool = True) -> float:
         The total gas mass.
     """
     if ignore_accreted:
-        h: ndarray = snap['smooth']
+        h: ndarray = snap['smoothing_length']
         mass: ndarray = snap['mass'][h > 0]
         dustfrac: ndarray = snap['dustfrac'][h > 0]
     else:
@@ -107,7 +107,7 @@ def dust_mass(snap: SnapLike, ignore_accreted: bool = True) -> float:
         The total dust mass per species.
     """
     if ignore_accreted:
-        h: ndarray = snap['smooth']
+        h: ndarray = snap['smoothing_length']
         mass: ndarray = snap['mass'][h > 0]
         dustfrac: ndarray = snap['dustfrac'][h > 0]
     else:
@@ -130,7 +130,7 @@ def accreted_mass(snap: SnapLike) -> float:
     float
         The accreted mass.
     """
-    h: ndarray = snap['smooth']
+    h: ndarray = snap['smoothing_length']
     mass: ndarray = snap['mass'][~(h > 0)]
 
     return mass.sum()

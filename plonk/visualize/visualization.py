@@ -389,7 +389,7 @@ class Visualization:
             snap=self.snap, x=x, y=y, color=color, size=size,
         )
 
-        h: ndarray = self.snap['smooth']
+        h: ndarray = self.snap['smoothing_length']
         mask = h > 0
 
         x = x[mask]

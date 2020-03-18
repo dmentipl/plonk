@@ -473,9 +473,9 @@ def density(prof) -> ndarray:
 
 
 @Profile.profile_property
-def smooth(prof) -> ndarray:
+def smoothing_length(prof) -> ndarray:
     """Smoothing length profile."""
-    h = prof.snap['smooth']
+    h = prof.snap['smoothing_length']
     return prof.particles_to_binned_quantity(np.mean, h)
 
 

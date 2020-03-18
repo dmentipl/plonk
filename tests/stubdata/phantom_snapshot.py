@@ -3,11 +3,11 @@
 import numpy as np
 
 array_name_map = {
-    'divv': 'divv',
-    'dt': 'dt',
-    'dustfrac': 'dustfrac',
-    'h': 'smooth',
-    'tstop': 'tstop',
+    'divv': 'velocity_divergence',
+    'dt': 'timestep',
+    'dustfrac': 'dust_fraction',
+    'h': 'smoothing_length',
+    'tstop': 'stopping_time',
     'vxyz': 'velocity',
     'xyz': 'position',
 }

@@ -74,23 +74,49 @@ class PhantomHDF5Snap:
 
         arrays = list(self.hdf5_file.file_handle['particles'])
 
-        self.snap._array_registry['position'] = _get_dataset('xyz', 'particles')
-        self.snap._array_registry['smooth'] = _get_dataset('h', 'particles')
-
-        if 'vxyz' in self.snap._file_pointer['particles']:
-            self.snap._array_registry['velocity'] = _get_dataset('vxyz', 'particles')
-            arrays.remove('vxyz')
-
+        # Always read itype, xyz, h
         self.snap._array_registry['type'] = _particle_type
+        self.snap._array_registry['position'] = _get_dataset('xyz', 'particles')
+        self.snap._array_registry['smoothing_length'] = _get_dataset('h', 'particles')
+        arrays.remove('itype')
+        arrays.remove('xyz')
+        arrays.remove('h')
+
+        # Read arrays if available
+        name_map = {
+            'vxyz': 'velocity',
+            'u': 'internal_energy',
+            'dt': 'timestep',
+            'divv': 'velocity_divergence',
+            'poten': 'gravitational_potential',
+            'tstop': 'stopping_time',
+            'dustfrac': 'dust_fraction',
+            'deltavxyz': 'differential_velocity',
+            'Bxyz': 'magnetic_field',
+            'divB': 'magnetic_field_divergence',
+            'curlBxyz': 'magnetic_field_curl',
+            'psi': 'magnetic_field_psi',
+            'eta_OR': 'ohmic_resistivity',
+            'eta_HE': 'hall_effect',
+            'eta_AD': 'ambipolar_diffusion',
+            'ne_on_n': 'electron_density',
+        }
+        for name_on_file, name in name_map.items():
+            if name_on_file in self.snap._file_pointer['particles']:
+                self.snap._array_registry[name] = _get_dataset(
+                    name_on_file, 'particles'
+                )
+                arrays.remove(name_on_file)
+
+        # Read dust type if there are dust particles
         if self._header['ndustlarge'] > 0:
             self.snap._array_registry['dust_type'] = _dust_particle_type
 
+        # Derived arrays not stored on file
         self.snap._array_registry['mass'] = _mass
         self.snap._array_registry['density'] = _density
 
-        for array in ('xyz', 'itype', 'h'):
-            arrays.remove(array)
-
+        # Read *any* extra arrays
         for array in arrays:
             self.snap._array_registry[array] = _get_dataset(array, 'particles')
 
@@ -100,11 +126,11 @@ class PhantomHDF5Snap:
             'xyz': 'position',
             'vxyz': 'velocity',
             'm': 'mass',
-            'h': 'smooth',
-            'hsoft': 'softening',
-            'maccreted': 'maccreted',
+            'h': 'accretion_radius',
+            'hsoft': 'softening_radius',
+            'maccreted': 'mass_accreted',
             'spinxyz': 'spin',
-            'tlast': 'tlast',
+            'tlast': 'last_injection_time',
         }
 
         for name_on_file, name in name_map.items():

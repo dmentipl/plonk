@@ -27,7 +27,7 @@ def test_profile():
         'radius',
         'scale_height',
         'size',
-        'smooth',
+        'smoothing_length',
     ):
         p[key]
     df = p.to_dataframe()

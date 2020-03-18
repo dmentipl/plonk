@@ -49,7 +49,7 @@ def momentum(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
         The linear momentum on the particles.
     """
     if ignore_accreted:
-        h: ndarray = snap['smooth']
+        h: ndarray = snap['smoothing_length']
         mass: ndarray = snap['mass'][h > 0]
         vel: ndarray = snap['velocity'][h > 0]
     else:
@@ -82,7 +82,7 @@ def angular_momentum(
         The angular momentum on the particles.
     """
     if ignore_accreted:
-        h: ndarray = snap['smooth']
+        h: ndarray = snap['smoothing_length']
         mass: ndarray = snap['mass'][h > 0]
         pos: ndarray = snap['position'][h > 0]
         vel: ndarray = snap['velocity'][h > 0]
@@ -120,7 +120,7 @@ def specific_angular_momentum(
         The specific angular momentum on the particles.
     """
     if ignore_accreted:
-        h: ndarray = snap['smooth']
+        h: ndarray = snap['smoothing_length']
         pos: ndarray = snap['position'][h > 0]
         vel: ndarray = snap['velocity'][h > 0]
     else:
@@ -149,7 +149,7 @@ def kinetic_energy(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
         The kinetic energy on the particles.
     """
     if ignore_accreted:
-        h: ndarray = snap['smooth']
+        h: ndarray = snap['smoothing_length']
         mass: ndarray = snap['mass'][h > 0]
         vel: ndarray = snap['velocity'][h > 0]
     else:
@@ -175,7 +175,7 @@ def specific_kinetic_energy(snap: SnapLike, ignore_accreted: bool = False) -> nd
         The specific kinetic energy on the particles.
     """
     if ignore_accreted:
-        h: ndarray = snap['smooth']
+        h: ndarray = snap['smoothing_length']
         vel: ndarray = snap['velocity'][h > 0]
     else:
         vel = snap['velocity']
@@ -214,7 +214,7 @@ def semi_major_axis(
         The semi-major axis on the particles.
     """
     if ignore_accreted:
-        h: ndarray = snap['smooth']
+        h: ndarray = snap['smoothing_length']
         pos: ndarray = snap['position'][h > 0]
         vel: ndarray = snap['velocity'][h > 0]
     else:
@@ -282,7 +282,7 @@ def eccentricity(
         The eccentricity on the particles.
     """
     if ignore_accreted:
-        h: ndarray = snap['smooth']
+        h: ndarray = snap['smoothing_length']
         pos: ndarray = snap['position'][h > 0]
         vel: ndarray = snap['velocity'][h > 0]
     else:
@@ -334,7 +334,7 @@ def inclination(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
         The inclination on the particles.
     """
     if ignore_accreted:
-        h: ndarray = snap['smooth']
+        h: ndarray = snap['smoothing_length']
         mass: ndarray = snap['mass'][h > 0]
         pos: ndarray = snap['position'][h > 0]
         vel: ndarray = snap['velocity'][h > 0]
@@ -371,7 +371,7 @@ def gas_mass(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
         The gas mass on the particles.
     """
     if ignore_accreted:
-        h: ndarray = snap['smooth']
+        h: ndarray = snap['smoothing_length']
         dustfrac: ndarray = snap['dustfrac'][h > 0]
         mass: ndarray = snap['mass'][h > 0]
     else:
@@ -398,7 +398,7 @@ def dust_mass(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
         The dust mass per species on the particles.
     """
     if ignore_accreted:
-        h: ndarray = snap['smooth']
+        h: ndarray = snap['smoothing_length']
         dustfrac: ndarray = snap['dustfrac'][h > 0]
         mass: ndarray = snap['mass'][h > 0]
     else:
@@ -424,7 +424,7 @@ def gas_density(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
         The gas density on the particles.
     """
     if ignore_accreted:
-        h: ndarray = snap['smooth']
+        h: ndarray = snap['smoothing_length']
         dustfrac: ndarray = snap['dustfrac'][h > 0]
         density: ndarray = snap['density'][h > 0]
     else:
@@ -451,7 +451,7 @@ def dust_density(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
         The dust density per species on the particles.
     """
     if ignore_accreted:
-        h: ndarray = snap['smooth']
+        h: ndarray = snap['smoothing_length']
         dustfrac: ndarray = snap['dustfrac'][h > 0]
         density: ndarray = snap['density'][h > 0]
     else:
@@ -484,7 +484,7 @@ def radial_distance(
         The radial distance on the particles.
     """
     if ignore_accreted:
-        h: ndarray = snap['smooth']
+        h: ndarray = snap['smoothing_length']
         pos: ndarray = snap['position'][h > 0]
     else:
         pos = snap['position']
@@ -515,7 +515,7 @@ def azimuthal_angle(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
         The azimuthal angle on the particles.
     """
     if ignore_accreted:
-        h: ndarray = snap['smooth']
+        h: ndarray = snap['smoothing_length']
         pos: ndarray = snap['position'][h > 0]
     else:
         pos = snap['position']
@@ -540,7 +540,7 @@ def polar_angle(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
         The azimuthal angle on the particles.
     """
     if ignore_accreted:
-        h: ndarray = snap['smooth']
+        h: ndarray = snap['smoothing_length']
         pos: ndarray = snap['position'][h > 0]
     else:
         pos = snap['position']
@@ -573,7 +573,7 @@ def radial_velocity(
         The radial velocity on the particles.
     """
     if ignore_accreted:
-        h: ndarray = snap['smooth']
+        h: ndarray = snap['smoothing_length']
         pos: ndarray = snap['position'][h > 0]
         vel: ndarray = snap['velocity'][h > 0]
     else:
@@ -609,7 +609,7 @@ def angular_velocity(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
         The angular velocity on the particles.
     """
     if ignore_accreted:
-        h: ndarray = snap['smooth']
+        h: ndarray = snap['smoothing_length']
         pos: ndarray = snap['position'][h > 0]
         vel: ndarray = snap['velocity'][h > 0]
     else:
