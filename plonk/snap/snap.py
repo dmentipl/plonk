@@ -231,19 +231,57 @@ class Snap:
         self._file_pointer.close()
 
     def loaded_arrays(self, sinks: bool = False):
-        """Return a list of loaded arrays."""
+        """Return a tuple of loaded arrays.
+
+        Parameters
+        ----------
+        sinks
+            If True, return loaded sink arrays.
+
+        Returns
+        -------
+        A tuple of names of loaded arrays.
+        """
         if sinks:
             return tuple(sorted(self._sinks.keys()))
         return tuple(sorted(self._arrays.keys()))
 
-    def available_arrays(self, sinks: bool = False):
-        """Return a list of available arrays."""
+    def available_arrays(self, sinks: bool = False, aliases: bool = False):
+        """Return a tuple of available arrays.
+
+        Parameters
+        ----------
+        sinks
+            If True, return available sink arrays. Default is
+            False.
+        aliases
+            If True, include aliases in returned tuple. Default is
+            False.
+
+        Returns
+        -------
+        A tuple of names of available arrays.
+        """
         if sinks:
             loaded = self.loaded_arrays(sinks)
-            registered = tuple(sorted(self._sink_registry.keys()))
+            registered = tuple(self._sink_registry.keys())
         else:
             loaded = self.loaded_arrays()
             registered = tuple(sorted(self._array_registry.keys()))
+
+        if aliases:
+            extra = tuple(
+                key
+                for key, val in self._array_split_mapper.items()
+                if val[0] in self.loaded_arrays() or val[0] in self._array_registry
+            )
+            extra += tuple(
+                key
+                for key, val in self._array_name_mapper.items()
+                if val[0] in self.loaded_arrays() or val in self._array_registry
+            )
+            return tuple(sorted(set(loaded + registered + extra)))
+
         return tuple(sorted(set(loaded + registered)))
 
     @property
