@@ -1,6 +1,4 @@
-"""
-Stub data for reading Phantom evolution files.
-"""
+"""Stub data for reading Phantom evolution files."""
 
 
 columns = {

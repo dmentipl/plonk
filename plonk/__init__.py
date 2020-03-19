@@ -9,7 +9,7 @@ Features
 --------
 
 - Read in Phantom HDF snapshot files.
-- Read in global quantity evolution files.
+- Read in global quantity and sink evolution files.
 - Encapsulate entire simulation data as Simulation object.
 - Access particle and sink arrays.
 - Access simulation parameters and units.
@@ -23,12 +23,10 @@ Classes
     Represents a smoothed particle hydrodynamics snapshot file,
     containing particles, sinks, and file header information.
 
-- Evolution
-    Represents globally averaged quantities as time series data.
-
 - Simulation
     Represents an entire smoothed particle hydrodynamics simulation.
-    It contains instances of Snap and Evolution objects.
+    It contains a list of Snap objects, and time series data as pandas
+    dataframes.
 
 - Visualization
     Represents a visualization of a Snap object.
@@ -70,13 +68,13 @@ Quantity: Any = units.Quantity
 
 from . import analysis, simulation, snap, utils, visualize
 from .analysis import Profile
-from .simulation import Evolution, Simulation, load_ev, load_sim
+from .simulation import Simulation, load_ev, load_sim
 from .snap import Snap, load_snap
 from .visualize import Visualization
 
 
 __all__ = (
-    ['Evolution', 'Profile', 'Simulation', 'Snap', 'Visualization']  # Classes
+    ['Profile', 'Simulation', 'Snap', 'Visualization']  # Classes
     + ['analysis', 'simulation', 'snap', 'utils', 'visualize']  # Packages
     + ['load_snap', 'load_ev', 'load_sim']  # User functions
     + ['units', 'Quantity']

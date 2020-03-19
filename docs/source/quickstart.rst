@@ -40,27 +40,11 @@ Load a Phantom `.ev` file, and see what columns are available.
     >>> import plonk
     >>> ev = plonk.load_ev('disc01.ev')
     >>> ev.columns
-    ('time',
-     'ekin',
-     'etherm',
-     'emag',
-     'epot',
-     'etot',
-     'totmom',
-     'angtot',
-     'rho max',
-     'rho ave',
-     'dt',
-     'totentrop',
-     'rmsmach',
-     'vrms',
-     'xcom',
-     'ycom',
-     'zcom',
-     'rho gas max',
-     'rho gas ave',
-     'rho dust X',
-     'rho dust A')
+    Index(['time', 'ekin', 'etherm', 'emag', 'epot', 'etot', 'totmom', 'angtot',
+        'rho max', 'rho ave', 'dt', 'totentrop', 'rmsmach', 'vrms', 'xcom',
+        'ycom', 'zcom', 'rho gas max', 'rho gas ave', 'rho dust X',
+        'rho dust A'],
+        dtype='object')
 
 ~~~~~~~~~~~~~~~
 Load simulation
@@ -74,10 +58,9 @@ Load a simulation, and access snapshots and other data.
     >>> sim = plonk.load_sim(prefix='disc')
     >>> snaps = sim.snaps
     >>> sim.global_quantities
-    <plonk.Evolution: "('disc01.ev',)">
+    # Output is a pandas DataFrame
     >>> sim.sink_quantities
-    [<plonk.Evolution: "('discSink0001N01.ev',)">,
-     <plonk.Evolution: "('discSink0002N01.ev',)">]
+    # Output is a list of pandas DataFrames
 
 -------------
 Visualization

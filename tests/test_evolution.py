@@ -1,4 +1,4 @@
-"""Testing Evolution."""
+"""Testing evolution files."""
 
 import pathlib
 
@@ -32,4 +32,4 @@ def test_read_evolution_data():
     assert set(ev.columns) == columns
 
     for key in ev.columns:
-        np.testing.assert_allclose(ev.data[key].mean(), mean_values[key])
+        np.testing.assert_allclose(ev[key].mean(), mean_values[key])

@@ -14,5 +14,4 @@ def test_init_simulation():
     assert len(snaps) == 1
     assert len(snaps[0]) == 2000
 
-    ev = sim.global_quantities
-    assert ev.file_names[0] == 'phantom01.ev'
+    assert sim.paths['global_quantities'][0].name == 'phantom01.ev'

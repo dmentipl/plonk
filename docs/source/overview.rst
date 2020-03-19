@@ -203,8 +203,8 @@ SPH simulation data is usually spread over multiple files of, possibly,
 different types, even though, logically, a simulation is a singular "object".
 Plonk has the :py:class:`Simulation` class to represent the complete data set.
 :py:class:`Simulation` is an aggregation of the :py:class:`Snap` and
-:py:class:`Evolution` (see below) objects, plus metadata, such as the directory
-on the file system.
+pandas DataFrames to represent time evolution data (see below) objects, plus
+metadata, such as the directory on the file system.
 
 Use the :py:func:`load_sim` function to instantiate a :py:class:`Simulation`
 object.
@@ -223,8 +223,8 @@ the first five snapshots with the following.
     [<plonk.Snap>, <plonk.Snap>, <plonk.Snap>, <plonk.Snap>, <plonk.Snap>]
 
 The :py:class:`Simulation` class has attributes :py:attr:`global_quantities` and
-:py:attr:`sink_quantities` which are instances of the :py:class:`Evolution`
-class, discussed in the next section.
+:py:attr:`sink_quantities` which are pandas DataFrames discussed in the next
+section.
 
 ~~~~~~~~~
 Evolution
@@ -235,8 +235,7 @@ quantities output more frequently than snapshot files. For example, Phantom
 writes text files with the suffix :code:`.ev`. These files are output every time
 step rather than at the frequency of the snapshot files.
 
-The Plonk :py:class:`Evolution` class encapsulates this data. Use
-:py:meth:`load_ev` to instantiate.
+We store this data in pandas DataFrames. Use :py:meth:`load_ev` to instantiate.
 
 .. code-block:: pycon
 
@@ -249,12 +248,11 @@ concatenate the data removing any duplicated time steps.
 
 The underlying data is stored as a pandas [#f1]_ DataFrame. This allows for
 the use of typical pandas operations with which users in the scientific Python
-community may be familiar with. Access the DataFrame with the
-:py:attr:`data` attribute.
+community may be familiar with.
 
 .. code-block:: pycon
 
-    >>> ev.data
+    >>> ev
                 time      ekin    etherm  emag  ...   rho gas max   rho gas ave    rho dust X    rho dust A
     0        0.000000  0.000013  0.001186   0.0  ...  1.613665e-08  8.231917e-10  1.720023e-10  8.015937e-12
     1        1.593943  0.000013  0.001186   0.0  ...  1.599245e-08  8.229311e-10  1.714059e-10  8.015771e-12
