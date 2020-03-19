@@ -17,6 +17,7 @@ from ..snap import Snap, load_snap
 from .evolution import load_ev
 
 _properties_vary_per_snap = ('time',)
+_data_sources = ('Phantom',)
 
 
 class Simulation:
@@ -38,6 +39,11 @@ class Simulation:
 
     >>> sim.snaps
 
+    Accessing the units and properties.
+
+    >>> sim.units
+    >>> sim.properties
+
     Accessing the global quantity and sink time series data.
 
     >>> sim.global_quantities
@@ -46,6 +52,7 @@ class Simulation:
 
     def __init__(self):
 
+        self.data_source: str
         self.prefix: str
         self.paths: Dict[str, Any]
 
@@ -58,7 +65,10 @@ class Simulation:
         self._len = -1
 
     def load_sim(
-        self, prefix: str, directory: Optional[Union[str, Path]] = None
+        self,
+        prefix: str,
+        directory: Optional[Union[str, Path]] = None,
+        data_source: str = 'Phantom',
     ) -> Simulation:
         """Load Simulation.
 
@@ -67,12 +77,20 @@ class Simulation:
         prefix
             Simulation prefix, e.g. 'disc', if files are named like
             disc_00000.h5, disc01.ev, discSink0001N01.ev, etc.
-        directory
+        directory : optional
             Directory containing simulation snapshot files and auxiliary
-            files.
+            files. Default is None.
+        data_source : optional
+            The SPH code used to produce the simulation data. Default
+            is 'Phantom'.
         """
         if not isinstance(prefix, str):
             raise TypeError('prefix must be str')
+
+        if data_source not in _data_sources:
+            raise ValueError(f'Data source not available: try {_data_sources}')
+        else:
+            self.data_source = data_source
 
         if directory is None:
             directory = '.'
@@ -203,10 +221,8 @@ class Simulation:
         for idx in range(1, n_sinks + 1):
             sinks.append(
                 sorted(
-                    list(
-                        self.paths['directory'].glob(
-                            self.prefix + f'Sink{idx:04}N[0-9][0-9].ev'
-                        )
+                    self.paths['directory'].glob(
+                        self.prefix + f'Sink{idx:04}N[0-9][0-9].ev'
                     )
                 )
             )
@@ -271,7 +287,11 @@ class Simulation:
         )
 
 
-def load_sim(prefix: str, directory: Optional[Union[str, Path]] = None) -> Simulation:
+def load_sim(
+    prefix: str,
+    directory: Optional[Union[str, Path]] = None,
+    data_source: str = 'Phantom',
+) -> Simulation:
     """Load Simulation.
 
     Parameters
@@ -279,8 +299,13 @@ def load_sim(prefix: str, directory: Optional[Union[str, Path]] = None) -> Simul
     prefix
         Simulation prefix, e.g. 'disc', if files are named like
         disc_00000.h5, disc01.ev, discSink0001N01.ev, etc.
-    directory
+    directory : optional
         Directory containing simulation snapshot files and auxiliary
-        files.
+        files. Default is None.
+    data_source : optional
+        The SPH code used to produce the simulation data. Default
+        is 'Phantom'.
     """
-    return Simulation().load_sim(prefix=prefix, directory=directory)
+    return Simulation().load_sim(
+        prefix=prefix, directory=directory, data_source=data_source
+    )
