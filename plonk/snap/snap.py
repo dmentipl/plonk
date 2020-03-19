@@ -110,6 +110,13 @@ class Snap:
         'Bxyz': 'magnetic_field',
         'B': 'magnetic_field',
         'spinxyz': 'spin',
+        'R': 'radius_cylindrical',
+        'r': 'radius_spherical',
+        'phi': 'azimuthal_angle',
+        'theta': 'polar_angle',
+        'vR': 'radial_velocity_cylindrical',
+        'vr': 'radial_velocity_spherical',
+        'vphi': 'angular_velocity',
     }
 
     _array_split_mapper = {
@@ -802,16 +809,15 @@ def dust_density(snap) -> ndarray:
 
 
 @Snap.add_array(unit='length', rotatable=False)
-def radial_distance(snap) -> ndarray:
-    """Radial distance."""
-    try:
-        coordinates = snap.properties['coordinates']
-    except KeyError:
-        raise ValueError(
-            'To get radial velocity, first set the coordinates to "cylindrical"\n'
-            'or "spherical" via snap.properties["coordinates"].'
-        )
-    return particles.radial_distance(snap=snap, coordinates=coordinates)
+def radius_cylindrical(snap) -> ndarray:
+    """Cylindrical radius."""
+    return particles.radial_distance(snap=snap, coordinates='cylindrical')
+
+
+@Snap.add_array(unit='length', rotatable=False)
+def radius_spherical(snap) -> ndarray:
+    """Spherical radius."""
+    return particles.radial_distance(snap=snap, coordinates='spherical')
 
 
 @Snap.add_array(unit='radian', rotatable=False)
@@ -827,19 +833,18 @@ def polar_angle(snap) -> ndarray:
 
 
 @Snap.add_array(unit='velocity', rotatable=False)
-def radial_velocity(snap) -> ndarray:
-    """Radial velocity."""
-    try:
-        coordinates = snap.properties['coordinates']
-    except KeyError:
-        raise ValueError(
-            'To get radial velocity, first set the coordinates to "cylindrical"\n'
-            'or "spherical" via snap.properties["coordinates"].'
-        )
-    return particles.radial_velocity(snap=snap, coordinates=coordinates)
+def radial_velocity_cylindrical(snap) -> ndarray:
+    """Cylindrical radial velocity."""
+    return particles.radial_velocity(snap=snap, coordinates='cylindrical')
 
 
 @Snap.add_array(unit='velocity', rotatable=False)
+def radial_velocity_spherical(snap) -> ndarray:
+    """Spherical radial velocity."""
+    return particles.radial_velocity(snap=snap, coordinates='spherical')
+
+
+@Snap.add_array(unit='frequency', rotatable=False)
 def angular_velocity(snap) -> ndarray:
     """Angular velocity."""
     return particles.angular_velocity(snap=snap)
