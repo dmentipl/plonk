@@ -1,4 +1,4 @@
-"""Testing Evolution."""
+"""Testing evolution files."""
 
 import pathlib
 
@@ -7,7 +7,7 @@ import pytest
 
 import plonk
 
-from .stubdata.phantom_evolution import columns, mean_values
+from .stubdata.phantom_evolution import mean_values
 
 TEST_FILE = pathlib.Path(__file__).parent / 'stubdata/phantom01.ev'
 
@@ -29,7 +29,7 @@ def test_read_evolution_data():
     """Test reading data from Phantom evolution files."""
     ev = plonk.load_ev(TEST_FILE)
 
-    assert set(ev.columns) == columns
+    assert set(ev.columns) == mean_values.keys()
 
     for key in ev.columns:
-        np.testing.assert_allclose(ev.data[key].mean(), mean_values[key])
+        np.testing.assert_allclose(ev[key].mean(), mean_values[key])

@@ -203,8 +203,8 @@ SPH simulation data is usually spread over multiple files of, possibly,
 different types, even though, logically, a simulation is a singular "object".
 Plonk has the :py:class:`Simulation` class to represent the complete data set.
 :py:class:`Simulation` is an aggregation of the :py:class:`Snap` and
-:py:class:`Evolution` (see below) objects, plus metadata, such as the directory
-on the file system.
+pandas DataFrames to represent time evolution data (see below) objects, plus
+metadata, such as the directory on the file system.
 
 Use the :py:func:`load_sim` function to instantiate a :py:class:`Simulation`
 object.
@@ -223,8 +223,8 @@ the first five snapshots with the following.
     [<plonk.Snap>, <plonk.Snap>, <plonk.Snap>, <plonk.Snap>, <plonk.Snap>]
 
 The :py:class:`Simulation` class has attributes :py:attr:`global_quantities` and
-:py:attr:`sink_quantities` which are instances of the :py:class:`Evolution`
-class, discussed in the next section.
+:py:attr:`sink_quantities` which are pandas DataFrames discussed in the next
+section.
 
 ~~~~~~~~~
 Evolution
@@ -235,8 +235,7 @@ quantities output more frequently than snapshot files. For example, Phantom
 writes text files with the suffix :code:`.ev`. These files are output every time
 step rather than at the frequency of the snapshot files.
 
-The Plonk :py:class:`Evolution` class encapsulates this data. Use
-:py:meth:`load_ev` to instantiate.
+We store this data in pandas DataFrames. Use :py:meth:`load_ev` to instantiate.
 
 .. code-block:: pycon
 
@@ -249,24 +248,23 @@ concatenate the data removing any duplicated time steps.
 
 The underlying data is stored as a pandas [#f1]_ DataFrame. This allows for
 the use of typical pandas operations with which users in the scientific Python
-community may be familiar with. Access the DataFrame with the
-:py:attr:`data` attribute.
+community may be familiar with.
 
 .. code-block:: pycon
 
-    >>> ev.data
-                time      ekin    etherm  emag  ...   rho gas max   rho gas ave    rho dust X    rho dust A
-    0        0.000000  0.000013  0.001186   0.0  ...  1.613665e-08  8.231917e-10  1.720023e-10  8.015937e-12
-    1        1.593943  0.000013  0.001186   0.0  ...  1.599245e-08  8.229311e-10  1.714059e-10  8.015771e-12
-    2        6.375774  0.000013  0.001186   0.0  ...  1.431020e-08  8.193811e-10  1.696885e-10  8.018406e-12
-    3       25.503096  0.000013  0.001186   0.0  ...  7.422843e-09  7.799164e-10  1.636469e-10  8.061417e-12
-    4       51.006191  0.000013  0.001186   0.0  ...  5.898794e-09  7.249247e-10  1.580470e-10  8.210622e-12
-    ..            ...       ...       ...   ...  ...           ...           ...           ...           ...
-    548  12394.504462  0.000013  0.001186   0.0  ...  4.768277e-09  6.191121e-10  1.481833e-09  2.482929e-11
-    549  12420.007557  0.000013  0.001186   0.0  ...  4.711278e-09  6.189791e-10  1.020596e-09  2.483358e-11
-    550  12445.510653  0.000013  0.001186   0.0  ...  4.663153e-09  6.188052e-10  8.494835e-10  2.488946e-11
-    551  12471.013748  0.000013  0.001186   0.0  ...  4.535160e-09  6.186160e-10  6.517475e-10  2.497029e-11
-    552  12496.516844  0.000013  0.001186   0.0  ...  4.574045e-09  6.184558e-10  5.205011e-10  2.506445e-11
+    >>> ev
+                 time  energy_kinetic  energy_thermal  ...  gas_density_average  dust_density_max  dust_density_average
+    0        0.000000        0.000013        0.001186  ...         8.231917e-10      1.720023e-10          8.015937e-12
+    1        1.593943        0.000013        0.001186  ...         8.229311e-10      1.714059e-10          8.015771e-12
+    2        6.375774        0.000013        0.001186  ...         8.193811e-10      1.696885e-10          8.018406e-12
+    3       25.503096        0.000013        0.001186  ...         7.799164e-10      1.636469e-10          8.061417e-12
+    4       51.006191        0.000013        0.001186  ...         7.249247e-10      1.580470e-10          8.210622e-12
+    ..            ...             ...             ...  ...                  ...               ...                   ...
+    548  12394.504462        0.000013        0.001186  ...         6.191121e-10      1.481833e-09          2.482929e-11
+    549  12420.007557        0.000013        0.001186  ...         6.189791e-10      1.020596e-09          2.483358e-11
+    550  12445.510653        0.000013        0.001186  ...         6.188052e-10      8.494835e-10          2.488946e-11
+    551  12471.013748        0.000013        0.001186  ...         6.186160e-10      6.517475e-10          2.497029e-11
+    552  12496.516844        0.000013        0.001186  ...         6.184558e-10      5.205011e-10          2.506445e-11
 
     [553 rows x 21 columns]
 

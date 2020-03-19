@@ -20,7 +20,6 @@ class PhantomHDF5Snap:
 
     def __init__(self):
         self.snap = Snap()
-        self.snap._file_pointer = None
 
     def generate_snap_from_file(self, filename: Union[str, Path]) -> Snap:
         """Generate a Snap object from a Phantom HDF5 file.
@@ -36,7 +35,8 @@ class PhantomHDF5Snap:
             A Snap object.
         """
         self.hdf5_file = HDF5File(filename)
-        self.snap.filepath = pathlib.Path(filename).expanduser()
+        self.snap.data_source = 'Phantom'
+        self.snap.file_path = pathlib.Path(filename).expanduser()
         self.snap._file_pointer = self.hdf5_file.file_handle
 
         self._header = {

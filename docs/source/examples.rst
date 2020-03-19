@@ -128,13 +128,20 @@ Plot mass accretion and accretion rate onto sink particles.
 
     # Loop over sinks and plot
     >>> for idx, sink in enumerate(sim.sink_quantities):
-    ...     time = sink.data['time'] / (2 * np.pi)
-    ...     macc = sink.data['macc'].to_numpy()
-    ...     macc = (plonk.units('solar_mass') * macc).to('earth_mass').magnitude
-    ...     sink.data['mdot'] = np.gradient(macc, time)
-    ...     mdot = sink.data['mdot'].rolling(window=100).mean()
-    ...     ax[0].plot(time, macc, label=f'{sink_labels[idx]}')
-    ...     ax[1].plot(time, mdot)
+    ...     sink['accretion_rate'] = np.gradient(sink['mass_accreted'], sink['time'])
+    ...     time = (sink['time'].to_numpy() * sim.units['time']).to('year').m
+    ...     mass_accreted = (
+    ...         (sink['mass_accreted'].to_numpy() * sim.units['mass'])
+    ...         .to('earth_mass')
+    ...         .magnitude
+    ...     )
+    ...     accretion_rate = (
+    ...         sink['accretion_rate'].rolling(window=100).mean().to_numpy()
+    ...         * sim.units['mass']
+    ...         / sim.units['time']
+    ...     ).to('earth_mass / year').magnitude
+    ...     ax[0].plot(time, mass_accreted, label=f'{sink_labels[idx]}')
+    ...     ax[1].plot(time, accretion_rate)
 
     # Set plot labels
     >>> ax[0].set_xlabel('Time [yr]')
@@ -144,6 +151,7 @@ Plot mass accretion and accretion rate onto sink particles.
     >>> ax[1].set_ylabel('Accretion rate [$M_{\oplus}$/yr]')
 
     >>> plt.show()
+
 
 .. figure:: _static/accretion.png
 
@@ -164,17 +172,16 @@ Plot a density profile for multiple snapshots.
     # Load simulation
     >>> sim = plonk.load_sim(prefix='disc')
 
-    # Generate density profiles
-    >>> times = list()
+    # Generate density profiles for every 7th snap
+    >>> stride = 7
     >>> profiles = list()
-    >>> for snap in sim.snaps[::7]:
+    >>> times = sim.properties['time'].to('year').magnitude[::stride]
+    >>> for snap in sim.snaps[::stride]:
     ...     snap.physical_units()
-    ...     time = (snap.properties['time'] * snap.units['time']).to('year').magnitude
-    ...     times.append(time)
     ...     profile = plonk.Profile(
     ...         snap,
-    ...         radius_min=plonk.Quantity('10 au'),
-    ...         radius_max=plonk.units('150 au'),
+    ...         radius_min=10 * plonk.units('au'),
+    ...         radius_max=150 * plonk.units('au'),
     ...         n_bins=200
     ...     )
     ...     _ = profile['density']
@@ -183,7 +190,11 @@ Plot a density profile for multiple snapshots.
     # Plot profiles
     >>> fig, ax = plt.subplots()
     >>> for time, profile in zip(times, profiles):
-    ...     ax.plot(profile['radius'], profile['density'], label=f'{int(time)}')
+    ...     ax.plot(
+    ...         profile['radius'].to('au').m,
+    ...         profile['density'].to('g/cm^2').m,
+    ...         label=f'{int(time)}'
+    ...     )
     >>> ax.set_xlabel('Radius [au]')
     >>> ax.set_ylabel('Density [g/cm${}^2$]')
     >>> ax.legend(title='Time [yr]', loc='best')

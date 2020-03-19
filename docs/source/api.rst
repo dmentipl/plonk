@@ -20,10 +20,8 @@ Evolution
 ---------
 
 Auxilliary SPH simulation data, such as globally-averaged quantities output more
-frequently than snapshot files are represented by the Plonk
-:py:class:`Evolution` class.
+frequently than snapshot files are represented by pandas DataFrames.
 
-.. autoclass:: plonk.Evolution
 .. autofunction:: plonk.load_ev
 
 ----------
@@ -31,8 +29,7 @@ Simulation
 ----------
 
 :py:class:`Simulation` is an aggregation of the :py:class:`Snap` and
-:py:class:`Evolution` objects to encapsulate all data within a single SPH
-simulation.
+pandas DataFrames to encapsulate all data within a single SPH simulation.
 
 .. autoclass:: plonk.Simulation
 .. autofunction:: plonk.load_sim

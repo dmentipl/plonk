@@ -214,7 +214,8 @@ class Snap:
 
     def __init__(self):
 
-        self.filepath = None
+        self.data_source = None
+        self.file_path = None
         self.properties = {}
         self.units = {}
         self._arrays = {}

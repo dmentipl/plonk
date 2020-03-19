@@ -2,7 +2,7 @@
 
 This class contains all information associated with a simulation. It
 contains the snapshot as a list of Snap objects, and the global quantity
-and sink quantity time series files an Evolution objects.
+and sink quantity time series files as pandas DataFrames.
 """
 
 from __future__ import annotations
@@ -11,10 +11,15 @@ from copy import copy
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+import numpy as np
+from pandas import DataFrame
+
+from .. import Quantity
 from ..snap import Snap, load_snap
-from .evolution import Evolution, load_ev
+from .evolution import load_ev
 
 _properties_vary_per_snap = ('time',)
+_data_sources = ('Phantom',)
 
 
 class Simulation:
@@ -36,6 +41,11 @@ class Simulation:
 
     >>> sim.snaps
 
+    Accessing the units and properties.
+
+    >>> sim.units
+    >>> sim.properties
+
     Accessing the global quantity and sink time series data.
 
     >>> sim.global_quantities
@@ -44,19 +54,23 @@ class Simulation:
 
     def __init__(self):
 
+        self.data_source: str
         self.prefix: str
-        self.path: Path
+        self.paths: Dict[str, Any]
 
         self._snaps: List[Snap] = None
         self._properties: Dict[str, Any] = None
         self._units: Dict[str, Any] = None
-        self._global_quantities: Evolution = None
-        self._sink_quantities: List[Evolution] = None
+        self._global_quantities: DataFrame = None
+        self._sink_quantities: List[DataFrame] = None
 
         self._len = -1
 
     def load_sim(
-        self, prefix: str, directory: Optional[Union[str, Path]] = None
+        self,
+        prefix: str,
+        directory: Optional[Union[str, Path]] = None,
+        data_source: str = 'Phantom',
     ) -> Simulation:
         """Load Simulation.
 
@@ -65,12 +79,20 @@ class Simulation:
         prefix
             Simulation prefix, e.g. 'disc', if files are named like
             disc_00000.h5, disc01.ev, discSink0001N01.ev, etc.
-        directory
+        directory : optional
             Directory containing simulation snapshot files and auxiliary
-            files.
+            files. Default is None.
+        data_source : optional
+            The SPH code used to produce the simulation data. Default
+            is 'Phantom'.
         """
         if not isinstance(prefix, str):
             raise TypeError('prefix must be str')
+
+        if data_source not in _data_sources:
+            raise ValueError(f'Data source not available: try {_data_sources}')
+        else:
+            self.data_source = data_source
 
         if directory is None:
             directory = '.'
@@ -79,16 +101,18 @@ class Simulation:
                 raise TypeError('directory must be str or pathlib.Path')
 
         self.prefix = prefix
-        self.path = Path(directory).expanduser().resolve()
+        self.paths = {
+            'directory': Path(directory).expanduser().resolve(),
+        }
 
-        if not list(self.path.glob(self.prefix + '*')):
+        if not list(self.paths['directory'].glob(self.prefix + '*')):
             raise FileNotFoundError(f'No files with prefix: {prefix}')
 
         self._snap_file_type, self._snap_file_extension = self._get_snap_file_type()
 
-        self._snap_files = self._get_snap_files()
-        self._global_ev_files = self._get_global_ev_files()
-        self._sink_ev_files = self._get_sink_ev_files()
+        self.paths['snaps'] = self._get_snap_files()
+        self.paths['global_quantities'] = self._get_global_ev_files()
+        self.paths['sink_quantities'] = self._get_sink_ev_files()
 
         return self
 
@@ -117,7 +141,7 @@ class Simulation:
         return self._units
 
     @property
-    def global_quantities(self) -> Evolution:
+    def global_quantities(self) -> DataFrame:
         """Global quantity time series data."""
         if self._global_quantities is None:
             self._generate_global_quantities()
@@ -125,7 +149,7 @@ class Simulation:
         return self._global_quantities
 
     @property
-    def sink_quantities(self) -> List[Evolution]:
+    def sink_quantities(self) -> List[DataFrame]:
         """Sink time series data."""
         if self._sink_quantities is None:
             self._generate_sink_quantities()
@@ -135,7 +159,7 @@ class Simulation:
     def _generate_snap_objects(self):
         """Generate Snap objects."""
         snaps = list()
-        for snap in self._snap_files:
+        for snap in self.paths['snaps']:
             snaps.append(load_snap(snap))
         self._snaps = snaps
 
@@ -151,6 +175,12 @@ class Simulation:
                 else:
                     if prop[key] != val:
                         prop[key] = '__inconsistent__'
+        for key, val in prop.items():
+            if isinstance(val, list):
+                if isinstance(val[0], Quantity):
+                    prop[key] = np.array([v.m for v in val]) * val[0].u
+                else:
+                    prop[key] = np.array([v for v in val])
         self._properties = prop
 
     def _generate_units(self):
@@ -165,13 +195,16 @@ class Simulation:
     def _generate_global_quantities(self):
         """Generate global quantity time series objects."""
         self._global_quantities = None
-        if self._global_ev_files:
-            self._global_quantities = load_ev(self._global_ev_files)
+        if self.paths['global_quantities']:
+            self._global_quantities = load_ev(self.paths['global_quantities'])
 
     def _generate_sink_quantities(self):
         """Generate sink quantity time series objects."""
         self._sink_quantities = list()
-        [self._sink_quantities.append(load_ev(files)) for files in self._sink_ev_files]
+        [
+            self._sink_quantities.append(load_ev(files))
+            for files in self.paths['sink_quantities']
+        ]
 
     def _get_global_ev_files(self, glob: str = None) -> List[Path]:
         """Get global ev files."""
@@ -179,7 +212,7 @@ class Simulation:
             # Phantom ev file name format
             glob = self.prefix + '[0-9][0-9].ev'
 
-        return sorted(list(self.path.glob(glob)))
+        return sorted(list(self.paths['directory'].glob(glob)))
 
     def _get_sink_ev_files(self, glob: str = None) -> List[List[Path]]:
         """Get sink ev files."""
@@ -188,13 +221,17 @@ class Simulation:
             glob = self.prefix + 'Sink[0-9][0-9][0-9][0-9]N[0-9][0-9].ev'
 
         n = len(self.prefix) + len('Sink')
-        n_sinks = len(set([p.name[n : n + 4] for p in list(self.path.glob(glob))]))
+        n_sinks = len(
+            set([p.name[n : n + 4] for p in list(self.paths['directory'].glob(glob))])
+        )
 
         sinks = list()
         for idx in range(1, n_sinks + 1):
             sinks.append(
                 sorted(
-                    list(self.path.glob(self.prefix + f'Sink{idx:04}N[0-9][0-9].ev'))
+                    self.paths['directory'].glob(
+                        self.prefix + f'Sink{idx:04}N[0-9][0-9].ev'
+                    )
                 )
             )
 
@@ -208,7 +245,7 @@ class Simulation:
                 self.prefix + '_[0-9][0-9][0-9][0-9][0-9].' + self._snap_file_extension
             )
 
-        return sorted(list(self.path.glob(glob)))
+        return sorted(list(self.paths['directory'].glob(glob)))
 
     def _get_snap_file_type(self, glob: str = None) -> Tuple[str, str]:
         """Snapshot file type.
@@ -220,7 +257,7 @@ class Simulation:
             # Phantom HDF5 snapshot file name format
             glob = self.prefix + '_[0-9][0-9][0-9][0-9][0-9].h5'
 
-        file_types = set([f.suffix for f in self.path.glob(glob)])
+        file_types = set([f.suffix for f in self.paths['directory'].glob(glob)])
 
         if len(file_types) > 1:
             raise ValueError(
@@ -252,10 +289,17 @@ class Simulation:
 
     def __str__(self):
         """Dunder str method."""
-        return f'<plonk.Simulation: "{self.prefix}", ' f'directory="{self.path.name}">'
+        return (
+            f'<plonk.Simulation: "{self.prefix}", '
+            f'directory="{self.paths["directory"].name}">'
+        )
 
 
-def load_sim(prefix: str, directory: Optional[Union[str, Path]] = None) -> Simulation:
+def load_sim(
+    prefix: str,
+    directory: Optional[Union[str, Path]] = None,
+    data_source: str = 'Phantom',
+) -> Simulation:
     """Load Simulation.
 
     Parameters
@@ -263,8 +307,13 @@ def load_sim(prefix: str, directory: Optional[Union[str, Path]] = None) -> Simul
     prefix
         Simulation prefix, e.g. 'disc', if files are named like
         disc_00000.h5, disc01.ev, discSink0001N01.ev, etc.
-    directory
+    directory : optional
         Directory containing simulation snapshot files and auxiliary
-        files.
+        files. Default is None.
+    data_source : optional
+        The SPH code used to produce the simulation data. Default
+        is 'Phantom'.
     """
-    return Simulation().load_sim(prefix=prefix, directory=directory)
+    return Simulation().load_sim(
+        prefix=prefix, directory=directory, data_source=data_source
+    )
