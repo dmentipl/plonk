@@ -42,6 +42,10 @@ def test_read_properties_from_phantom():
     snap = plonk.load_snap(TEST_FILE)
 
     for key, value in properties.items():
-        np.testing.assert_allclose(snap.properties[key], value)
+        if isinstance(snap.properties[key], plonk.Quantity):
+            snap_value = snap.properties[key].magnitude
+        else:
+            snap_value = snap.properties[key]
+        np.testing.assert_allclose(snap_value, value)
 
     snap.close_file()

@@ -23,12 +23,11 @@ mean_array_values = {
 }
 
 properties = {
-    'gamma': 1.0,
-    'grain density': np.array([5049628.37866372]),
-    'grain size': np.array([6.68449198e-14]),
-    'hfact': 1.0,
-    'ieos': 3,
-    'polyk': 0.0025,
-    'qfacdisc': 0.25,
+    'adiabatic_index': 1.0,
+    'grain_density': np.array([3.0]),
+    'grain_size': np.array([1.0]),
+    'smoothing_length_factor': 1.0,
+    'polytropic_constant': 0.0025,
+    'sound_speed_index': 0.25,
     'time': 0.0,
 }

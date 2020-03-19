@@ -1,7 +1,7 @@
 """Physical units on snapshots."""
 
 
-def generate_units_dictionary(length, mass, time):
+def generate_units_dictionary(length, mass, time, magnetic_field):
     """Generate units dictionary.
 
     Parameters
@@ -12,6 +12,8 @@ def generate_units_dictionary(length, mass, time):
         Mass unit as a Pint quantity.
     time
         Time unit as a Pint quantity.
+    magnetic_field
+        Magnetic field unit as a Pint quantity.
 
     Returns
     -------
@@ -24,6 +26,7 @@ def generate_units_dictionary(length, mass, time):
     units['length'] = length
     units['time'] = time
     units['mass'] = mass
+    units['magnetic_field'] = magnetic_field
     units['frequency'] = 1 / time
     units['velocity'] = length / time
     units['momentum'] = mass * length / time

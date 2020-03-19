@@ -93,7 +93,7 @@ def interpolate(
             extent=extent,
             smoothing_length=h,
             particle_mass=m,
-            hfact=snap.properties['hfact'],
+            hfact=snap.properties['smoothing_length_factor'],
             cross_section=cross_section,
             **kwargs,
         )
@@ -108,7 +108,7 @@ def interpolate(
             extent=extent,
             smoothing_length=h,
             particle_mass=m,
-            hfact=snap.properties['hfact'],
+            hfact=snap.properties['smoothing_length_factor'],
             cross_section=cross_section,
             **kwargs,
         )

@@ -115,10 +115,12 @@ defined in the analysis module.
      'momentum',
      'polar_angle',
      'position',
+     'pressure',
      'radial_distance',
      'radial_velocity',
      'semi_major_axis',
      'smoothing_length',
+     'sound_speed',
      'specific_angular_momentum',
      'specific_kinetic_energy',
      'stopping_time',
@@ -149,17 +151,19 @@ dictionary of metadata, i.e. non-array data, on the snapshot.
 .. code-block:: pycon
 
     >>> snap.properties['time']
-    12241.485887903227
+    61485663602.558136 <Unit('second')>
+
 
     >>> list(snap.properties)
     ['time',
-     'hfact',
-     'ieos',
-     'gamma',
-     'polyk',
-     'qfacdisc',
-     'grain size',
-     'grain density']
+     'smoothing_length_factor',
+     'adiabatic_index',
+     'polytropic_constant',
+     'equation_of_state',
+     'sound_speed_index',
+     'dust_method',
+     'grain_size',
+     'grain_density']
 
 Units are available vis the :py:attr:`units` attribute. We make use of the
 Python units library Pint.
