@@ -11,8 +11,10 @@ from copy import copy
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+import numpy as np
 from pandas import DataFrame
 
+from .. import Quantity
 from ..snap import Snap, load_snap
 from .evolution import load_ev
 
@@ -173,6 +175,12 @@ class Simulation:
                 else:
                     if prop[key] != val:
                         prop[key] = '__inconsistent__'
+        for key, val in prop.items():
+            if isinstance(val, list):
+                if isinstance(val[0], Quantity):
+                    prop[key] = np.array([v.m for v in val]) * val[0].u
+                else:
+                    prop[key] = np.array([v for v in val])
         self._properties = prop
 
     def _generate_units(self):
