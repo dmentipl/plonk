@@ -120,6 +120,8 @@ class Snap:
         'vR': 'radial_velocity_cylindrical',
         'vr': 'radial_velocity_spherical',
         'vphi': 'angular_velocity',
+        'cs': 'sound_speed',
+        'P': 'pressure',
     }
 
     _array_split_mapper = {
@@ -149,13 +151,17 @@ class Snap:
     _array_units = {
         'alpha': 'dimensionless',
         'density': 'density',
+        'differential_velocity': 'velocity',
         'dust_fraction': 'dimensionless',
         'dust_type': 'dimensionless',
         'gravitational_potential': 'energy',
+        'internal_energy': 'energy',
         'magnetic_field': 'magnetic_field',
         'mass': 'mass',
         'position': 'length',
+        'pressure': 'pressure',
         'smoothing_length': 'length',
+        'sound_speed': 'velocity',
         'spin': 'angular_momentum',
         'stopping_time': 'time',
         'timestep': 'time',

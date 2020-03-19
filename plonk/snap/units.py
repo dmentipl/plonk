@@ -37,5 +37,6 @@ def generate_units_dictionary(length, mass, time, magnetic_field):
     units['force'] = mass * length / time ** 2
     units['energy'] = mass * length ** 2 / time ** 2
     units['specific_energy'] = length ** 2 / time ** 2
+    units['pressure'] = mass / time ** 2 / length
 
     return units
