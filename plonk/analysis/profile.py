@@ -292,21 +292,28 @@ class Profile:
                     del self.snap[name]
                 return self._profiles[name]
             else:
-                raise ValueError(
-                    'Cannot take profile of vector quantity. Try, for example,\n'
-                    'prof["velocity_x"] or prof["velocity_magnitude"], etc.'
-                )
+                if name.split('_')[0] == 'dust':
+                    raise ValueError(
+                        'To access dust profiles try, for example, '
+                        'prof["dust_density_001"] or\nprof["dust_mass_total"]'
+                    )
 
         elif '_'.join(name.split('_')[:-1]) in self.snap.available_arrays():
             name_root = '_'.join(name.split('_')[:-1])
-            if name.split('_')[-1] == 'x':
+            name_suffix = name.split('_')[-1]
+            if name_suffix == 'x':
                 array = self.snap[name_root][:, 0]
-            elif name.split('_')[-1] == 'y':
+            elif name_suffix == 'y':
                 array = self.snap[name_root][:, 1]
-            elif name.split('_')[-1] == 'z':
+            elif name_suffix == 'z':
                 array = self.snap[name_root][:, 2]
-            elif name.split('_')[-1] == 'magnitude':
+            elif name_suffix == 'magnitude':
                 array = norm(self.snap[name_root], axis=1)
+            elif name_suffix == 'total':
+                array = np.sum(self.snap[name_root], axis=1)
+            elif str_is_int(name_suffix):
+                array = self.snap[name_root][:, int(name_suffix) - 1]
+                name = name_root + f'_{int(name_suffix):03}'
             else:
                 raise ValueError('Cannot determine profile')
             if array.ndim == 1:
@@ -389,9 +396,6 @@ class Profile:
         ax : optional
             A matplotlib Axes object to plot to.
         """
-        if x not in self.available_keys():
-            raise ValueError('Cannot determine x axis to plot')
-
         if isinstance(y, str):
             y = [y]
 
@@ -420,8 +424,6 @@ class Profile:
         ax.set_xlabel(xlabel)
 
         for idx, yi in enumerate(y):
-            if yi not in self.available_keys():
-                raise ValueError(f'Cannot determine y axis to plot: {yi} not available')
             _y = self[yi]
             label = yi.capitalize().replace('_', ' ')
             if self.snap._physical_units:
@@ -436,20 +438,24 @@ class Profile:
 
         return fig, ax
 
-    def to_dataframe(self, all_available: bool = False) -> DataFrame:
+    def to_dataframe(
+        self, columns: Union[Tuple[str, ...], List[str]] = None
+    ) -> DataFrame:
         """Convert Profile to DataFrame.
 
         Parameters
         ----------
-        all_available
-            If True, this will calculate all available profiles before
-            converting to a DataFrame.
+        columns : optional
+            A list of columns to add to the data frame. Default is
+            None.
+
+        Returns
+        -------
+        DataFrame
         """
-        if all_available:
-            columns = self.available_keys()
-        else:
-            columns = self.loaded_keys()
         data = dict()
+        if columns is None:
+            columns = self.loaded_keys()
         for column in columns:
             data[column] = self[column]
         return pd.DataFrame(data)
@@ -529,3 +535,11 @@ def angular_momentum_phi(prof) -> ndarray:
     angular_momentum_x = prof['angular_momentum_x']
     angular_momentum_y = prof['angular_momentum_y']
     return np.arctan2(angular_momentum_y, angular_momentum_x)
+
+
+def str_is_int(string):
+    try:
+        int(string)
+        return True
+    except ValueError:
+        return False
