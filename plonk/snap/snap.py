@@ -16,6 +16,7 @@ from pandas import DataFrame
 from scipy.spatial.transform import Rotation
 
 from .. import Quantity
+from .. import units as plonk_units
 from ..analysis import particles
 
 
@@ -485,6 +486,28 @@ class Snap:
 
         return self
 
+    def set_gravitational_parameter(self, sink_idx: Union[int, List[int]]):
+        """Set standard gravitational parameter.
+
+        Calculate the standard gravitational parameter (G M) given a
+        sink index, or list of sink indices for multiple systems, etc.
+
+        Parameters
+        ----------
+        sink_idx
+            The sink index or list of indices.
+        """
+        G = plonk_units.newtonian_constant_of_gravitation
+        if isinstance(sink_idx, (int, list)):
+            M = self.sinks['mass'][sink_idx]
+        else:
+            raise ValueError('Cannot determine gravitational parameter')
+        if self._physical_units:
+            G = (G * M).to_base_units()
+        else:
+            G = (G * self.units['mass'] * M).to_base_units()
+        self.properties['gravitational_parameter'] = G
+
     def to_dataframe(
         self, columns: Union[Tuple[str, ...], List[str]] = None
     ) -> DataFrame:
@@ -785,6 +808,21 @@ def extra_quantities(dust: bool = False):
         """Specific kinetic energy."""
         return particles.specific_kinetic_energy(snap=snap)
 
+    @Snap.add_array(unit='frequency')
+    def keplerian_frequency(snap) -> ndarray:
+        """Keplerian orbital frequency."""
+        try:
+            gravitational_parameter = snap.properties['gravitational_parameter']
+        except KeyError:
+            raise ValueError(
+                'To get Keplerian frequency, first set the gravitational parameter\n'
+                'via snap.set_gravitational_parameter.'
+            )
+        origin = snap.translation if snap.translation is not None else (0.0, 0.0, 0.0)
+        return particles.keplerian_frequency(
+            snap=snap, gravitational_parameter=gravitational_parameter, origin=origin
+        )
+
     @Snap.add_array(unit='length')
     def semi_major_axis(snap) -> ndarray:
         """Semi-major axis."""
@@ -793,7 +831,7 @@ def extra_quantities(dust: bool = False):
         except KeyError:
             raise ValueError(
                 'To get semi-major axis, first set the gravitational parameter\n'
-                'via snap.properties["gravitational_parameter"].'
+                'via snap.set_gravitational_parameter.'
             )
         origin = snap.translation if snap.translation is not None else (0.0, 0.0, 0.0)
         return particles.semi_major_axis(
@@ -808,7 +846,7 @@ def extra_quantities(dust: bool = False):
         except KeyError:
             raise ValueError(
                 'To get eccentricity, first set the gravitational parameter\n'
-                'via snap.properties["gravitational_parameter"].'
+                'via snap.set_gravitational_parameter.'
             )
         origin = snap.translation if snap.translation is not None else (0.0, 0.0, 0.0)
         return particles.eccentricity(

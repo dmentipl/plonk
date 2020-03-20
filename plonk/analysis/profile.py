@@ -13,7 +13,8 @@ from numpy import ndarray
 from pandas import DataFrame
 
 from .. import Quantity
-from ..snap import Snap
+from .. import units as plonk_units
+from ..snap import Snap, gravitational_constant_in_code_units
 from ..utils.math import norm
 
 
@@ -311,7 +312,7 @@ class Profile:
                 array = norm(self.snap[name_root], axis=1)
             elif name_suffix == 'total':
                 array = np.sum(self.snap[name_root], axis=1)
-            elif str_is_int(name_suffix):
+            elif _str_is_int(name_suffix):
                 array = self.snap[name_root][:, int(name_suffix) - 1]
                 name = name_root + f'_{int(name_suffix):03}'
             else:
@@ -540,7 +541,21 @@ def angular_momentum_phi(prof) -> ndarray:
     return np.arctan2(angular_momentum_y, angular_momentum_x)
 
 
-def str_is_int(string):
+@Profile.profile_property
+def toomre_Q(prof) -> ndarray:
+    """Toomre Q parameter."""
+    if not prof.snap._physical_units:
+        G = gravitational_constant_in_code_units(prof.snap)
+    else:
+        G = (1 * plonk_units.newtonian_constant_of_gravitation).to_base_units()
+    return (
+        prof['sound_speed']
+        * prof['keplerian_frequency']
+        / (np.pi * G * prof['density'])
+    )
+
+
+def _str_is_int(string):
     try:
         int(string)
         return True

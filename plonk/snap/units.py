@@ -1,5 +1,15 @@
 """Physical units on snapshots."""
 
+from .. import units as plonk_units
+from .snap import SnapLike
+
+# Add units
+plonk_units.define('solar_mass = 1.9891e33 g')
+plonk_units.define('solar_radius = 6.959500e10 cm')
+plonk_units.define('earth_mass = 5.979e27 g')
+plonk_units.define('earth_radius = 6.371315e8 cm')
+plonk_units.define('jupiter_mass = 1.89813e30 g')
+
 
 def generate_units_dictionary(length, mass, time, magnetic_field):
     """Generate units dictionary.
@@ -40,3 +50,22 @@ def generate_units_dictionary(length, mass, time, magnetic_field):
     units['pressure'] = mass / time ** 2 / length
 
     return units
+
+
+def gravitational_constant_in_code_units(snap: SnapLike) -> float:
+    """Gravitational constant in code units.
+
+    Parameters
+    ----------
+    snap
+        The Snap object.
+
+    Returns
+    -------
+    float
+        The gravitational constant in code units.
+    """
+    G = plonk_units.newtonian_constant_of_gravitation
+    G_units = snap.units['length'] ** 3 / snap.units['mass'] / snap.units['time'] ** 2
+    G = (G / G_units).to_base_units().magnitude
+    return G

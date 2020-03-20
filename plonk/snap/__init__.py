@@ -6,5 +6,6 @@ snapshot file.
 
 from .readers import load_snap
 from .snap import Snap, SnapLike
+from .units import gravitational_constant_in_code_units
 
-__all__ = ['Snap', 'SnapLike', 'load_snap']
+__all__ = ['Snap', 'SnapLike', 'gravitational_constant_in_code_units', 'load_snap']

@@ -183,6 +183,53 @@ def specific_kinetic_energy(snap: SnapLike, ignore_accreted: bool = False) -> nd
     return 1 / 2 * norm(vel, axis=1) ** 2
 
 
+def keplerian_frequency(
+    snap: SnapLike,
+    gravitational_parameter: Any,
+    origin: Union[ndarray, Tuple[float, float, float]] = (0.0, 0.0, 0.0),
+    ignore_accreted: bool = False,
+) -> ndarray:
+    """Calculate the Keplerian orbital frequency.
+
+    The Keplerian orbital frequency of particles around a mass specified
+    by gravitational parameter with an optional to specify the position
+    of the mass.
+
+    Parameters
+    ----------
+    snap
+        The Snap object.
+    gravitational_parameter
+        The gravitational parameter (mu = G M). Can be a float or a Pint
+        quantity.
+    origin : optional
+        The origin around which to compute the angular momentum as a
+        ndarray or tuple (x, y, z). Default is (0, 0, 0).
+    ignore_accreted : optional
+        Ignore accreted particles. Default is False.
+
+    Returns
+    -------
+    ndarray
+        The eccentricity on the particles.
+    """
+    if ignore_accreted:
+        h: ndarray = snap['smoothing_length']
+        pos: ndarray = snap['position'][h > 0]
+    else:
+        pos = snap['position']
+
+    origin = np.array(origin)
+    pos = pos - origin
+
+    mu = gravitational_parameter
+    if not isinstance(pos, Quantity):
+        mu = (mu * snap.units['time'] ** 2 / snap.units['length'] ** 3).magnitude
+
+    radius = norm(pos, axis=1)
+    return np.sqrt(mu / radius ** 3)
+
+
 def semi_major_axis(
     snap: SnapLike,
     gravitational_parameter: Any,
@@ -224,10 +271,9 @@ def semi_major_axis(
     origin = np.array(origin)
     pos = pos - origin
 
-    if isinstance(pos, Quantity):
-        mu = gravitational_parameter.to_reduced_units()
-    else:
-        mu = gravitational_parameter
+    mu = gravitational_parameter
+    if not isinstance(pos, Quantity):
+        mu = (mu * snap.units['time'] ** 2 / snap.units['length'] ** 3).magnitude
 
     radius = norm(pos, axis=1)
 
@@ -246,8 +292,6 @@ def semi_major_axis(
         mu * (1 - eccentricity ** 2)
     )
 
-    if isinstance(pos, Quantity):
-        return semi_major_axis.magnitude
     return semi_major_axis
 
 
@@ -292,10 +336,9 @@ def eccentricity(
     origin = np.array(origin)
     pos = pos - origin
 
-    if isinstance(pos, Quantity):
-        mu = gravitational_parameter.to_reduced_units()
-    else:
-        mu = gravitational_parameter
+    mu = gravitational_parameter
+    if not isinstance(pos, Quantity):
+        mu = (mu * snap.units['time'] ** 2 / snap.units['length'] ** 3).magnitude
 
     radius = norm(pos, axis=1)
 
@@ -309,8 +352,6 @@ def eccentricity(
     term = specific_energy * (specific_angular_momentum_magnitude / mu) ** 2
     eccentricity = np.sqrt(1 + 2 * term)
 
-    if isinstance(pos, Quantity):
-        return eccentricity.magnitude
     return eccentricity
 
 

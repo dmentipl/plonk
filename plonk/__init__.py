@@ -82,10 +82,3 @@ __all__ = (
 
 # Canonical version number
 __version__ = '0.4.0'
-
-# Add units
-units.define('solar_mass = 1.9891e33 g')
-units.define('solar_radius = 6.959500e10 cm')
-units.define('earth_mass = 5.979e27 g')
-units.define('earth_radius = 6.371315e8 cm')
-units.define('jupiter_mass = 1.89813e30 g')
