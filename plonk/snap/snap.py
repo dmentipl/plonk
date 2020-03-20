@@ -485,19 +485,24 @@ class Snap:
 
         return self
 
-    def to_dataframe(self, columns: Union[Tuple[str, ...], List[str]]) -> DataFrame:
+    def to_dataframe(
+        self, columns: Union[Tuple[str, ...], List[str]] = None
+    ) -> DataFrame:
         """Convert Snap to DataFrame.
 
         Parameters
         ----------
-        columns
-            A list of columns to add to the data frame.
+        columns : optional
+            A list of columns to add to the data frame. Default is
+            None.
 
         Returns
         -------
         DataFrame
         """
         d = dict()
+        if columns is None:
+            columns = self.loaded_arrays()
         cols = list(columns)
         for col in cols:
             arr = self[col]
