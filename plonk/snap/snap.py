@@ -508,6 +508,17 @@ class Snap:
             G = (G * self.units['mass'] * M).to_base_units()
         self.properties['gravitational_parameter'] = G
 
+    def set_molecular_weight(self, molecular_weight: float):
+        """Set molecular weight.
+
+        Parameters
+        ----------
+        molecular_weight
+            The molecular weight in units of gram / mole. E.g. 2.381
+            for molecular hydrogen.
+        """
+        self.properties['molecular_weight'] = molecular_weight
+
     def to_dataframe(
         self, columns: Union[Tuple[str, ...], List[str]] = None
     ) -> DataFrame:
@@ -892,6 +903,18 @@ def extra_quantities(dust: bool = False):
     def angular_velocity(snap) -> ndarray:
         """Angular velocity."""
         return particles.angular_velocity(snap=snap)
+
+    @Snap.add_array(unit='temperature')
+    def temperature(snap) -> ndarray:
+        """Temperature."""
+        try:
+            molecular_weight = snap.properties['molecular_weight']
+        except KeyError:
+            raise ValueError(
+                'To get temperature, first set the molecular weight parameter\n'
+                'via snap.set_molecular_weight.'
+            )
+        return particles.temperature(snap=snap, molecular_weight=molecular_weight)
 
     if dust:
 

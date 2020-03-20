@@ -103,7 +103,7 @@ Create a radial profile.
     >>> import plonk
     >>> snap = plonk.load_snap('disc_00030.h5')
     >>> prof = plonk.Profile(snap)
-    >>> prof.available_keys()
+    >>> prof.available_profiles()
     ('angmom_mag',
      'angmom_phi',
      'angmom_theta',

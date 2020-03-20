@@ -8,6 +8,7 @@ from typing import Any, Tuple, Union
 import numpy as np
 from numpy import ndarray
 
+from .. import units as plonk_units
 from .. import Quantity
 from ..snap import SnapLike
 from ..utils.math import cross, norm
@@ -30,6 +31,7 @@ _units = {
     'polar_angle': 'radian',
     'radial_velocity': 'velocity',
     'angular_velocity': 'velocity',
+    'temperature': 'temperature',
 }
 
 
@@ -687,3 +689,44 @@ def angular_velocity(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
     vphi = (x * vy - y * vx) / (x ** 2 + y ** 2)
 
     return vphi
+
+
+def temperature(
+    snap: SnapLike, molecular_weight: float = 2.381, ignore_accreted: bool = False
+) -> ndarray:
+    """Calculate the gas temperature.
+
+    Parameters
+    ----------
+    snap
+        The Snap object.
+    molecular_weight
+        The gas molecular weight in gram / mole. E.g. 2.381 for
+        molecular hydrogen.
+    ignore_accreted : optional
+        Ignore accreted particles. Default is False.
+
+    Returns
+    -------
+    ndarray
+        The gas temperature on the particles.
+    """
+    if ignore_accreted:
+        h: ndarray = snap['smoothing_length']
+        cs: ndarray = snap['sound_speed'][h > 0]
+    else:
+        cs = snap['sound_speed']
+
+    gamma = snap.properties['adiabatic_index']
+
+    molecular_weight = molecular_weight * plonk_units('gram / mole')
+    specific_gas_constant = (plonk_units.R / molecular_weight).to_base_units()
+
+    if isinstance(cs, Quantity):
+        T = cs ** 2 / (gamma * specific_gas_constant)
+    else:
+        T = (cs * snap.units['velocity']) ** 2 / (gamma * specific_gas_constant)
+
+    if isinstance(cs, Quantity):
+        return T
+    return T.magnitude
