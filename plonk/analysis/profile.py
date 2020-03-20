@@ -377,6 +377,7 @@ class Profile:
         x_unit: Optional[str] = None,
         y_unit: Optional[Union[str, List[str]]] = None,
         ax: Any = None,
+        **kwargs,
     ):
         """Plot profile.
 
@@ -395,6 +396,8 @@ class Profile:
             Only works if using physical units.
         ax : optional
             A matplotlib Axes object to plot to.
+        **kwargs
+            Keyword arguments to pass to Axes plot method.
         """
         if isinstance(y, str):
             y = [y]
@@ -427,12 +430,12 @@ class Profile:
             _y = self[yi]
             label = yi.capitalize().replace('_', ' ')
             if self.snap._physical_units:
+                _x = _x.magnitude
+                _y = _y.magnitude
                 if y_unit is not None:
                     _y = _y.to(y_unit[idx])
                 label = ' '.join([label, f'[{_y.units:~P}]'])
-                ax.plot(_x.magnitude, _y.magnitude, label=label)
-            else:
-                ax.plot(_x, _y, label=label)
+            ax.plot(_x, _y, label=label, **kwargs)
 
         ax.legend()
 
