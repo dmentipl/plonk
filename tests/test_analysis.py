@@ -13,6 +13,7 @@ CSV_FILE = pathlib.Path(__file__).parent / 'stubdata/phantom_00000_profile.csv'
 def test_profile():
     """Test Profile."""
     snap = plonk.load_snap(TEST_FILE)
+    snap.extra_quantities()
     p = plonk.analysis.Profile(snap)
     for key in (
         'angular_momentum_magnitude',
