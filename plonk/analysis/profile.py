@@ -337,15 +337,15 @@ class Profile:
             raise ValueError('"item" must be ndarray or pint Quantity')
         if item.shape[0] != self.n_bins:
             raise ValueError('Length of array does not match number of bins')
-        if name in self.loaded_keys():
+        if name in self.loaded_profiles():
             raise ValueError(
                 'Attempting to overwrite existing profile. To do so, first delete the '
                 'profile\nwith del prof["profile"], then try again.'
             )
-        elif name in self.available_keys():
+        elif name in self.available_profiles():
             raise ValueError(
                 'Attempting to set profile already available. '
-                'See prof.available_keys().'
+                'See prof.available_profiles().'
             )
         self._profiles[name] = item
 
@@ -361,15 +361,16 @@ class Profile:
         """Object repr method."""
         return f'<plonk.Profile: {self.n_bins} bins>'
 
-    def loaded_keys(self):
+    def loaded_profiles(self):
         """Return a listing of loaded profiles."""
         return tuple(sorted(self._profiles.keys()))
 
-    def available_keys(self):
+    def available_profiles(self):
         """Return a listing of available profiles."""
-        loaded = list(self.loaded_keys())
+        loaded = list(self.loaded_profiles())
         available = list(self._profile_functions.keys())
-        return tuple(sorted(set(loaded + available)))
+        snap_arrays = list(self.snap.available_arrays())
+        return tuple(sorted(set(loaded + available + snap_arrays)))
 
     def plot(
         self,
@@ -459,7 +460,7 @@ class Profile:
         """
         data = dict()
         if columns is None:
-            columns = self.loaded_keys()
+            columns = self.loaded_profiles()
         for column in columns:
             data[column] = self[column]
         return pd.DataFrame(data)

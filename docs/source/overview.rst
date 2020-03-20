@@ -442,29 +442,35 @@ module.
     <plonk.Profile: 100 bins>
 
 To see what profiles are loaded and what are available use the
-:py:meth:`loaded_keys` and :py:meth:`available_keys` methods.
+:py:meth:`loaded_profiles` and :py:meth:`available_profiles` methods.
 
 .. code-block:: pycon
 
-    >>> prof.loaded_keys()
+    >>> prof.loaded_profiles()
     ('number', 'radius', 'size')
 
-    >>> prof.available_keys()
-    ('angmom_mag',
-     'angmom_phi',
-     'angmom_theta',
-     'angmom_x',
-     'angmom_y',
-     'angmom_z',
+    >>> prof.available_profiles()
+    ('angular_momentum_phi',
+     'angular_momentum_theta',
      'aspect_ratio',
      'density',
-     'eccentricity',
+     'dust_fraction',
+     'dust_type',
      'mass',
      'number',
+     'position',
+     'pressure',
      'radius',
      'scale_height',
      'size',
-     'smoothing_length')
+     'smoothing_length',
+     'sound_speed',
+     'stopping_time',
+     'timestep',
+     'toomre_Q',
+     'type',
+     'velocity',
+     'velocity_divergence')
 
 
 To load a profile, simply call it.
