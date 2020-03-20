@@ -293,11 +293,13 @@ class Profile:
                     del self.snap[name]
                 return self._profiles[name]
             else:
-                if name.split('_')[0] == 'dust':
+                if name.split('_')[0] == 'dust' or name in ('stopping_time',):
                     raise ValueError(
                         'To access dust profiles try, for example, '
-                        'prof["dust_density_001"] or\nprof["dust_mass_total"]'
+                        'prof["stopping_time_001"] or\nprof["dust_mass_total"]'
                     )
+                else:
+                    raise ValueError('Cannot determine profile to return')
 
         elif '_'.join(name.split('_')[:-1]) in self.snap.available_arrays():
             name_root = '_'.join(name.split('_')[:-1])

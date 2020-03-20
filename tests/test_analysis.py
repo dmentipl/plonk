@@ -23,9 +23,9 @@ def test_profile():
         'number',
         'radius',
         'scale_height',
-        'sound_speed',
         'size',
         'smoothing_length',
+        'sound_speed',
     ):
         p[key]
     df = p.to_dataframe()

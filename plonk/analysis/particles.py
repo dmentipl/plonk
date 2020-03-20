@@ -8,8 +8,8 @@ from typing import Any, Tuple, Union
 import numpy as np
 from numpy import ndarray
 
-from .. import units as plonk_units
 from .. import Quantity
+from .. import units as plonk_units
 from ..snap import SnapLike
 from ..utils.math import cross, norm
 
