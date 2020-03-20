@@ -380,7 +380,7 @@ def gas_mass(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
     else:
         mass = snap['mass']
         try:
-            dust_fraction = snap['dust_fraction'][h > 0]
+            dust_fraction = snap['dust_fraction']
         except ValueError:
             dust_fraction = np.zeros((mass.size, 1))
 
@@ -413,7 +413,7 @@ def dust_mass(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
     else:
         mass = snap['mass']
         try:
-            dust_fraction = snap['dust_fraction'][h > 0]
+            dust_fraction = snap['dust_fraction']
         except ValueError:
             raise ValueError('No dust available')
 
@@ -445,7 +445,7 @@ def gas_density(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
     else:
         density = snap['density']
         try:
-            dust_fraction = snap['dust_fraction'][h > 0]
+            dust_fraction = snap['dust_fraction']
         except ValueError:
             dust_fraction = np.zeros((density.size, 1))
 
@@ -478,7 +478,7 @@ def dust_density(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
     else:
         density = snap['density']
         try:
-            dust_fraction = snap['dust_fraction'][h > 0]
+            dust_fraction = snap['dust_fraction']
         except ValueError:
             raise ValueError('No dust available')
 
