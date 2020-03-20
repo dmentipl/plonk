@@ -653,7 +653,10 @@ class Snap:
             if step is not None:
                 return SubSnap(self, np.arange(i1, i2, step))
             return SubSnap(self, np.arange(i1, i2))
-        raise ValueError('Cannot determine item to return')
+        raise ValueError(
+            'Cannot determine item to return. Extra quantities are available via\n'
+            'snap.extra_quantities().'
+        )
 
     def __setitem__(self, name: str, item: ndarray):
         """Set an array."""
