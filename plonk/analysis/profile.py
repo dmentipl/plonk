@@ -431,11 +431,11 @@ class Profile:
             _y = self[yi]
             label = yi.capitalize().replace('_', ' ')
             if self.snap._physical_units:
-                _x = _x.magnitude
-                _y = _y.magnitude
                 if y_unit is not None:
                     _y = _y.to(y_unit[idx])
                 label = ' '.join([label, f'[{_y.units:~P}]'])
+                _x = _x.magnitude
+                _y = _y.magnitude
             ax.plot(_x, _y, label=label, **kwargs)
 
         ax.legend()
