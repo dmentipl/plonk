@@ -15,8 +15,6 @@ from pandas import DataFrame
 from .. import Quantity
 from ..snap import Snap
 from ..utils.math import norm
-from .particles import eccentricity as _eccentricity
-from .particles import specific_angular_momentum
 
 
 class Profile:
@@ -88,7 +86,7 @@ class Profile:
     Plot one or many quantities on the profile.
 
     >>> prof.plot('radius', 'density')
-    >>> prof.plot('radius', ['angmom_x', angmom_y'])
+    >>> prof.plot('radius', ['angular_momentum_x', 'angular_momentum_y'])
 
     Plot a quantity on the profile with units.
 
@@ -277,24 +275,53 @@ class Profile:
             prev_index = new_index
         return binind
 
-    def _get_profile(self, name: str, args: Optional[Tuple[Any, ...]] = None):
-        """Get a profile by name."""
+    def __getitem__(self, name: str) -> ndarray:
+        """Return the profile of a given kind."""
         if name in self._profiles:
             return self._profiles[name]
 
         elif name in Profile._profile_functions:
-            if args is not None:
-                self._profiles[name] = Profile._profile_functions[name](self, *args)
-            else:
-                self._profiles[name] = Profile._profile_functions[name](self)
+            self._profiles[name] = Profile._profile_functions[name](self)
             return self._profiles[name]
+
+        elif name in self.snap.available_arrays():
+            array: ndarray = self.snap[name]
+            if array.ndim == 1:
+                self._profiles[name] = self.particles_to_binned_quantity(np.mean, array)
+                if name not in self.snap.loaded_arrays():
+                    del self.snap[name]
+                return self._profiles[name]
+            else:
+                raise ValueError(
+                    'Cannot take profile of vector quantity. Try, for example,\n'
+                    'prof["velocity_x"] or prof["velocity_magnitude"], etc.'
+                )
+
+        elif '_'.join(name.split('_')[:-1]) in self.snap.available_arrays():
+            name_root = '_'.join(name.split('_')[:-1])
+            if name.split('_')[-1] == 'x':
+                array = self.snap[name_root][:, 0]
+            elif name.split('_')[-1] == 'y':
+                array = self.snap[name_root][:, 1]
+            elif name.split('_')[-1] == 'z':
+                array = self.snap[name_root][:, 2]
+            elif name.split('_')[-1] == 'magnitude':
+                array = norm(self.snap[name_root], axis=1)
+            else:
+                raise ValueError('Cannot determine profile')
+            if array.ndim == 1:
+                self._profiles[name] = self.particles_to_binned_quantity(np.mean, array)
+                if name_root not in self.snap.loaded_arrays():
+                    del self.snap[name_root]
+                return self._profiles[name]
+            else:
+                raise ValueError(
+                    'Cannot take profile of vector quantity. Try, for example,\n'
+                    'prof["velocity_x"] or prof["velocity_magnitude"], etc.'
+                )
 
         else:
             raise ValueError('Profile not available')
-
-    def __getitem__(self, name: str) -> ndarray:
-        """Return the profile of a given kind."""
-        return self._get_profile(name)
 
     def __setitem__(self, name: str, item: ndarray):
         """Set the profile directly."""
@@ -473,13 +500,6 @@ def density(prof) -> ndarray:
 
 
 @Profile.profile_property
-def smoothing_length(prof) -> ndarray:
-    """Smoothing length profile."""
-    h = prof.snap['smoothing_length']
-    return prof.particles_to_binned_quantity(np.mean, h)
-
-
-@Profile.profile_property
 def scale_height(prof) -> ndarray:
     """Scale height profile."""
     z = prof.snap['z']
@@ -495,73 +515,17 @@ def aspect_ratio(prof) -> ndarray:
 
 
 @Profile.profile_property
-def angmom_mag(prof) -> ndarray:
-    """Magnitude of specific angular momentum profile."""
-    angmom = specific_angular_momentum(snap=prof.snap)
-    angmom_mag = norm(angmom, axis=1)
-
-    return prof.particles_to_binned_quantity(np.mean, angmom_mag)
-
-
-@Profile.profile_property
-def angmom_x(prof) -> ndarray:
-    """x-component of specific angular momentum profile."""
-    angmom = specific_angular_momentum(snap=prof.snap)
-    angmom_x = angmom[:, 0]
-
-    return prof.particles_to_binned_quantity(np.mean, angmom_x)
-
-
-@Profile.profile_property
-def angmom_y(prof) -> ndarray:
-    """y-component of specific angular momentum profile."""
-    angmom = specific_angular_momentum(snap=prof.snap)
-    angmom_y = angmom[:, 1]
-
-    return prof.particles_to_binned_quantity(np.mean, angmom_y)
-
-
-@Profile.profile_property
-def angmom_z(prof) -> ndarray:
-    """z-component of specific angular momentum profile."""
-    angmom = specific_angular_momentum(snap=prof.snap)
-    angmom_z = angmom[:, 2]
-
-    return prof.particles_to_binned_quantity(np.mean, angmom_z)
-
-
-@Profile.profile_property
-def angmom_theta(prof) -> ndarray:
+def angular_momentum_theta(prof) -> ndarray:
     """Angle between specific angular momentum and xy-plane."""
-    angmom_z = prof['angmom_z']
-    angmom_mag = prof['angmom_mag']
+    angular_momentum_z = prof['angular_momentum_z']
+    angular_momentum_magnitude = prof['angular_momentum_magnitude']
 
-    return np.arccos(angmom_z / angmom_mag)
+    return np.arccos(angular_momentum_z / angular_momentum_magnitude)
 
 
 @Profile.profile_property
-def angmom_phi(prof) -> ndarray:
+def angular_momentum_phi(prof) -> ndarray:
     """Angle between specific angular momentum and x-axis in xy-plane."""
-    angmom_x = prof['angmom_x']
-    angmom_y = prof['angmom_y']
-    return np.arctan2(angmom_y, angmom_x)
-
-
-@Profile.profile_property
-def eccentricity(prof) -> ndarray:
-    """Orbital eccentricity profile.
-
-    This profile assumes the central mass is at (0, 0, 0) and that the
-    gravitational parameter (mu = G M) is set.
-    """
-    try:
-        gravitational_parameter = prof.properties['gravitational_parameter']
-    except KeyError:
-        raise ValueError(
-            'To generate eccentricity profile, first set the gravitational parameter\n'
-            'via prof.properties["gravitational_parameter"].'
-        )
-    ecc = _eccentricity(
-        snap=prof.snap, gravitational_parameter=gravitational_parameter,
-    )
-    return prof.particles_to_binned_quantity(np.mean, ecc)
+    angular_momentum_x = prof['angular_momentum_x']
+    angular_momentum_y = prof['angular_momentum_y']
+    return np.arctan2(angular_momentum_y, angular_momentum_x)

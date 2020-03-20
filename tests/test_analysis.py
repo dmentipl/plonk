@@ -15,17 +15,14 @@ def test_profile():
     snap = plonk.load_snap(TEST_FILE)
     p = plonk.analysis.Profile(snap)
     for key in (
-        'angmom_mag',
-        'angmom_phi',
-        'angmom_theta',
-        'angmom_x',
-        'angmom_y',
-        'angmom_z',
+        'angular_momentum_magnitude',
+        'angular_momentum_x',
         'density',
         'mass',
         'number',
         'radius',
         'scale_height',
+        'sound_speed',
         'size',
         'smoothing_length',
     ):

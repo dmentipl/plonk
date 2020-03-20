@@ -372,13 +372,19 @@ def gas_mass(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
     """
     if ignore_accreted:
         h: ndarray = snap['smoothing_length']
-        dustfrac: ndarray = snap['dustfrac'][h > 0]
         mass: ndarray = snap['mass'][h > 0]
+        try:
+            dust_fraction: ndarray = snap['dust_fraction'][h > 0]
+        except ValueError:
+            dust_fraction = np.zeros((mass.size, 1))
     else:
-        dustfrac = snap['dustfrac']
         mass = snap['mass']
+        try:
+            dust_fraction = snap['dust_fraction'][h > 0]
+        except ValueError:
+            dust_fraction = np.zeros((mass.size, 1))
 
-    gasfrac = 1 - dustfrac.sum(axis=1)
+    gasfrac = 1 - dust_fraction.sum(axis=1)
     return gasfrac * mass
 
 
@@ -399,13 +405,19 @@ def dust_mass(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
     """
     if ignore_accreted:
         h: ndarray = snap['smoothing_length']
-        dustfrac: ndarray = snap['dustfrac'][h > 0]
         mass: ndarray = snap['mass'][h > 0]
+        try:
+            dust_fraction: ndarray = snap['dust_fraction'][h > 0]
+        except ValueError:
+            raise ValueError('No dust available')
     else:
-        dustfrac = snap['dustfrac']
         mass = snap['mass']
+        try:
+            dust_fraction = snap['dust_fraction'][h > 0]
+        except ValueError:
+            raise ValueError('No dust available')
 
-    return dustfrac * mass[:, np.newaxis]
+    return dust_fraction * mass[:, np.newaxis]
 
 
 def gas_density(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
@@ -425,13 +437,19 @@ def gas_density(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
     """
     if ignore_accreted:
         h: ndarray = snap['smoothing_length']
-        dustfrac: ndarray = snap['dustfrac'][h > 0]
         density: ndarray = snap['density'][h > 0]
+        try:
+            dust_fraction: ndarray = snap['dust_fraction'][h > 0]
+        except ValueError:
+            dust_fraction = np.zeros((density.size, 1))
     else:
-        dustfrac = snap['dustfrac']
         density = snap['density']
+        try:
+            dust_fraction = snap['dust_fraction'][h > 0]
+        except ValueError:
+            dust_fraction = np.zeros((density.size, 1))
 
-    gasfrac = 1 - dustfrac.sum(axis=1)
+    gasfrac = 1 - dust_fraction.sum(axis=1)
     return gasfrac * density
 
 
@@ -452,13 +470,19 @@ def dust_density(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
     """
     if ignore_accreted:
         h: ndarray = snap['smoothing_length']
-        dustfrac: ndarray = snap['dustfrac'][h > 0]
         density: ndarray = snap['density'][h > 0]
+        try:
+            dust_fraction: ndarray = snap['dust_fraction'][h > 0]
+        except ValueError:
+            raise ValueError('No dust available')
     else:
-        dustfrac = snap['dustfrac']
         density = snap['density']
+        try:
+            dust_fraction = snap['dust_fraction'][h > 0]
+        except ValueError:
+            raise ValueError('No dust available')
 
-    return dustfrac * density[:, np.newaxis]
+    return dust_fraction * density[:, np.newaxis]
 
 
 def radial_distance(
