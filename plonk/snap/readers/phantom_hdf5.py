@@ -221,7 +221,7 @@ def _pressure(snap: Snap) -> ndarray:
         q = snap.properties['sound_speed_index']
         pos: ndarray = _get_dataset('xyz', 'particles')(snap)
         r_squared = pos[:, 0] ** 2 + pos[:, 1] ** 2 + pos[:, 2] ** 2
-        return K * rho * r_squared ** q
+        return K * rho * r_squared ** (-q)
     else:
         raise ValueError('Cannot determine equation of state')
 
