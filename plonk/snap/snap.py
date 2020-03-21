@@ -99,30 +99,34 @@ class Snap:
     _sink_registry: Dict[str, Callable] = {}
 
     _array_name_mapper = {
-        'xyz': 'position',
-        'pos': 'position',
-        'vxyz': 'velocity',
-        'vel': 'velocity',
-        'v': 'velocity',
-        'p': 'momentum',
-        'L': 'angular_momentum',
-        'j': 'specific_angular_momentum',
-        'smooth': 'smoothing_length',
-        'h': 'smoothing_length',
-        'm': 'mass',
-        'rho': 'density',
-        'Bxyz': 'magnetic_field',
         'B': 'magnetic_field',
-        'spinxyz': 'spin',
+        'c_s': 'sound_speed',
+        'dt': 'timestep',
+        'e': 'eccentricity',
+        'eps': 'dust_fraction',
+        'h': 'smoothing_length',
+        'j': 'specific_angular_momentum',
+        'L': 'angular_momentum',
+        'm': 'mass',
+        'p': 'momentum',
+        'P': 'pressure',
+        'pos': 'position',
+        'phi': 'azimuthal_angle',
         'R': 'radius_cylindrical',
         'r': 'radius_spherical',
-        'phi': 'azimuthal_angle',
+        'rho': 'density',
+        'rho_d': 'dust_density',
+        'rho_g': 'gas_density',
+        'T': 'temperature',
         'theta': 'polar_angle',
-        'vR': 'radial_velocity_cylindrical',
-        'vr': 'radial_velocity_spherical',
-        'vphi': 'angular_velocity',
-        'cs': 'sound_speed',
-        'P': 'pressure',
+        't_s': 'stopping_time',
+        'u': 'internal_energy',
+        'v': 'velocity',
+        'vel': 'velocity',
+        'v_R': 'radial_velocity_cylindrical',
+        'v_r': 'radial_velocity_spherical',
+        'v_phi': 'angular_velocity',
+        'xyz': 'position',
     }
 
     _array_split_mapper = {
@@ -253,6 +257,7 @@ class Snap:
         self.rotation = None
         self.translation = None
         self._physical_units = False
+        self._extra_quantities = False
 
     def close_file(self):
         """Close access to underlying file."""
@@ -283,8 +288,7 @@ class Snap:
             If True, return available sink arrays. Default is
             False.
         aliases
-            If True, include aliases in returned tuple. Default is
-            False.
+            If True, return array aliases. Default is False.
 
         Returns
         -------
@@ -313,7 +317,7 @@ class Snap:
                 for key, val in self._array_name_mapper.items()
                 if val[0] in self.loaded_arrays() or val in self._array_registry
             )
-            return tuple(sorted(set(loaded + registered + extra)))
+            return tuple(sorted(set(extra), key=lambda x: x.lower()))
 
         return tuple(sorted(set(loaded + registered)))
 
@@ -341,9 +345,12 @@ class Snap:
 
     def extra_quantities(self):
         """Make extra quantities available."""
+        if self._extra_quantities:
+            raise ValueError('Extra quantities already available')
         n_dust = len(self.properties.get('grain_size', []))
         dust = n_dust > 0
         extra_quantities(dust=dust)
+        self._extra_quantities = True
         return self
 
     def add_unit(self, name: str, unit: Any, unit_str: str):
