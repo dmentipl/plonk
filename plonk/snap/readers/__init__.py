@@ -4,26 +4,32 @@ from pathlib import Path
 from typing import Union
 
 from ..snap import Snap
-from .phantom_hdf5 import PhantomHDF5Snap
+from .phantom_hdf5 import generate_snap_from_file as read_phantom
 
-_available_formats = ('phantom',)
+_data_sources = ('Phantom',)
 
 
-def load_snap(filename: Union[str, Path], filetype: str = 'phantom') -> Snap:
+def load_snap(filename: Union[str, Path], data_source: str = 'Phantom') -> Snap:
     """Load a snapshot from file.
 
     Parameters
     ----------
     filename
         Path to snapshot file.
-    filetype
-        The SPH file type.
+    data_source : optional
+        The SPH software that produced the data. Default is 'Phantom'.
+
+    Returns
+    -------
+    Snap
+        The Snap object.
     """
-    if filetype.lower() in ('phantom', 'phantom_h5', 'phantom_hdf', 'phantom_hdf5'):
-        filetype = 'phantom'
-    if filetype not in _available_formats:
-        raise ValueError('Unknown file type')
-    if filetype == 'phantom':
-        return PhantomHDF5Snap().generate_snap_from_file(filename)
+    if data_source not in _data_sources:
+        raise ValueError(
+            f'Unknown data source. Available data sources:\n{_data_sources}'
+        )
+
+    if data_source == 'Phantom':
+        return read_phantom(filename)
     else:
         raise ValueError('Cannot load snapshot')

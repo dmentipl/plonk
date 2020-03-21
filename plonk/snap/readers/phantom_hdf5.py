@@ -4,168 +4,183 @@ from __future__ import annotations
 
 import pathlib
 from pathlib import Path
-from typing import Callable, Union
+from typing import Callable, Dict, List, Union
 
+import h5py
 import numpy as np
 from numpy import ndarray
 
 from ... import units as plonk_units
 from ..snap import Snap
 from ..units import generate_units_dictionary
-from .hdf5 import HDF5File
+
+_particle_array_name_map = {
+    'itype': 'type',
+    'xyz': 'position',
+    'h': 'smoothing_length',
+    'vxyz': 'velocity',
+    'u': 'internal_energy',
+    'dt': 'timestep',
+    'divv': 'velocity_divergence',
+    'poten': 'gravitational_potential',
+    'tstop': 'stopping_time',
+    'dustfrac': 'dust_fraction',
+    'deltavxyz': 'differential_velocity',
+    'Bxyz': 'magnetic_field',
+    'divB': 'magnetic_field_divergence',
+    'curlBxyz': 'magnetic_field_curl',
+    'psi': 'magnetic_field_psi',
+    'eta_OR': 'ohmic_resistivity',
+    'eta_HE': 'hall_effect',
+    'eta_AD': 'ambipolar_diffusion',
+    'ne_on_n': 'electron_density',
+}
+
+_sink_array_name_map = {
+    'xyz': 'position',
+    'vxyz': 'velocity',
+    'm': 'mass',
+    'h': 'accretion_radius',
+    'hsoft': 'softening_radius',
+    'maccreted': 'mass_accreted',
+    'spinxyz': 'spin',
+    'tlast': 'last_injection_time',
+}
 
 
-class PhantomHDF5Snap:
-    """Phantom HDF5 reader."""
+def generate_snap_from_file(filename: Union[str, Path]) -> Snap:
+    """Generate a Snap object from a Phantom HDF5 file.
 
-    def __init__(self):
-        self.snap = Snap()
+    Parameters
+    ----------
+    filename
+        The path to the file.
 
-    def generate_snap_from_file(self, filename: Union[str, Path]) -> Snap:
-        """Generate a Snap object from a Phantom HDF5 file.
+    Returns
+    -------
+    Snap
+        A Snap object.
+    """
+    file_path = pathlib.Path(filename).expanduser()
+    if not file_path.is_file():
+        raise FileNotFoundError('Cannot find snapshot file')
+    file_handle = h5py.File(file_path, mode='r')
 
-        Parameters
-        ----------
-        filename
-            The path to the file.
+    snap = Snap()
+    snap.data_source = 'Phantom'
+    snap.file_path = file_path
+    snap._file_pointer = file_handle
 
-        Returns
-        -------
-        Snap
-            A Snap object.
-        """
-        self.hdf5_file = HDF5File(filename)
-        self.snap.data_source = 'Phantom'
-        self.snap.file_path = pathlib.Path(filename).expanduser()
-        self.snap._file_pointer = self.hdf5_file.file_handle
+    header = {key: val[()] for key, val in file_handle['header'].items()}
+    snap.properties, snap.units = _header_to_properties(header)
 
-        self._header = {
-            key: val[()] for key, val in self.hdf5_file.file_handle['header'].items()
-        }
-        self._header_to_properties(self._header)
+    arrays = list(file_handle['particles'])
+    ndustlarge = header['ndustlarge']
+    array_registry = _populate_particle_array_registry(
+        arrays=arrays, name_map=_particle_array_name_map, ndustlarge=ndustlarge
+    )
+    snap._array_registry.update(array_registry)
 
-        self._populate_array_registry()
+    if header['nptmass'] > 0:
+        sink_registry = _populate_sink_array_registry(name_map=_sink_array_name_map)
+        snap._sink_registry.update(sink_registry)
 
-        if self._header['nptmass'] > 0:
-            self._populate_sink_arrays()
+    return snap
 
-        return self.snap
 
-    def _header_to_properties(self, header: dict):
+def _header_to_properties(header: dict):
 
-        length = header['udist'] * plonk_units('cm')
-        time = header['utime'] * plonk_units('s')
-        mass = header['umass'] * plonk_units('g')
-        magnetic_field = (
-            header['umagfd']
-            * plonk_units('g ** (1/2) / cm ** (1/2) / s')
-            * np.sqrt(plonk_units.magnetic_constant / (4 * np.pi))
-        ).to_base_units()
-        units = generate_units_dictionary(length, mass, time, magnetic_field)
+    length = header['udist'] * plonk_units('cm')
+    time = header['utime'] * plonk_units('s')
+    mass = header['umass'] * plonk_units('g')
+    magnetic_field = (
+        header['umagfd']
+        * plonk_units('g ** (1/2) / cm ** (1/2) / s')
+        * np.sqrt(plonk_units.magnetic_constant / (4 * np.pi))
+    ).to_base_units()
+    units = generate_units_dictionary(length, mass, time, magnetic_field)
 
-        prop = dict()
-        prop['time'] = header['time'] * units['time']
-        prop['smoothing_length_factor'] = header['hfact']
+    prop = dict()
+    prop['time'] = header['time'] * units['time']
+    prop['smoothing_length_factor'] = header['hfact']
 
-        prop['adiabatic_index'] = header['gamma']
-        prop['polytropic_constant'] = 2 / 3 * header['RK2']
+    prop['adiabatic_index'] = header['gamma']
+    prop['polytropic_constant'] = 2 / 3 * header['RK2']
 
-        ieos = header['ieos']
-        if ieos == 1:
-            prop['equation_of_state'] = 'isothermal'
-        elif ieos == 2:
-            prop['equation_of_state'] = 'adiabatic'
-        elif ieos == 3:
-            prop['equation_of_state'] = 'locally isothermal disc'
-            prop['sound_speed_index'] = header['qfacdisc']
+    ieos = header['ieos']
+    if ieos == 1:
+        prop['equation_of_state'] = 'isothermal'
+    elif ieos == 2:
+        prop['equation_of_state'] = 'adiabatic'
+    elif ieos == 3:
+        prop['equation_of_state'] = 'locally isothermal disc'
+        prop['sound_speed_index'] = header['qfacdisc']
 
-        ndustsmall = header['ndustsmall']
-        ndustlarge = header['ndustlarge']
-        if ndustsmall > 0 and ndustlarge > 0:
-            raise ValueError(
-                'Phantom only supports either dust/gas mixtures (aka 1-fluid dust)\n'
-                'or dust as separate sets of particles (aka multi-fluid dust).'
-            )
-        if ndustsmall > 0:
-            prop['dust_method'] = 'dust/gas mixture'
-        elif ndustlarge > 0:
-            prop['dust_method'] = 'dust as separate sets of particles'
+    ndustsmall = header['ndustsmall']
+    ndustlarge = header['ndustlarge']
+    if ndustsmall > 0 and ndustlarge > 0:
+        raise ValueError(
+            'Phantom only supports either dust/gas mixtures (aka 1-fluid dust)\n'
+            'or dust as separate sets of particles (aka multi-fluid dust).'
+        )
+    if ndustsmall > 0:
+        prop['dust_method'] = 'dust/gas mixture'
+    elif ndustlarge > 0:
+        prop['dust_method'] = 'dust as separate sets of particles'
 
-        n_dust = ndustsmall + ndustlarge
-        if n_dust > 0:
-            prop['grain_size'] = header['grainsize'][:n_dust] * units['length']
-            prop['grain_density'] = header['graindens'][:n_dust] * units['density']
+    n_dust = ndustsmall + ndustlarge
+    if n_dust > 0:
+        prop['grain_size'] = header['grainsize'][:n_dust] * units['length']
+        prop['grain_density'] = header['graindens'][:n_dust] * units['density']
 
-        self.snap.properties = prop
-        self.snap.units = units
+    return prop, units
 
-    def _populate_array_registry(self):
 
-        arrays = list(self.hdf5_file.file_handle['particles'])
+def _populate_particle_array_registry(
+    arrays: List[str], name_map: Dict[str, str], ndustlarge: int = 0
+):
 
-        # Always read itype, xyz, h
-        self.snap._array_registry['type'] = _particle_type
-        self.snap._array_registry['position'] = _get_dataset('xyz', 'particles')
-        self.snap._array_registry['smoothing_length'] = _get_dataset('h', 'particles')
-        arrays.remove('itype')
-        arrays.remove('xyz')
-        arrays.remove('h')
+    array_registry = dict()
 
-        # Read arrays if available
-        name_map = {
-            'vxyz': 'velocity',
-            'u': 'internal_energy',
-            'dt': 'timestep',
-            'divv': 'velocity_divergence',
-            'poten': 'gravitational_potential',
-            'tstop': 'stopping_time',
-            'dustfrac': 'dust_fraction',
-            'deltavxyz': 'differential_velocity',
-            'Bxyz': 'magnetic_field',
-            'divB': 'magnetic_field_divergence',
-            'curlBxyz': 'magnetic_field_curl',
-            'psi': 'magnetic_field_psi',
-            'eta_OR': 'ohmic_resistivity',
-            'eta_HE': 'hall_effect',
-            'eta_AD': 'ambipolar_diffusion',
-            'ne_on_n': 'electron_density',
-        }
-        for name_on_file, name in name_map.items():
-            if name_on_file in self.snap._file_pointer['particles']:
-                self.snap._array_registry[name] = _get_dataset(
-                    name_on_file, 'particles'
-                )
-                arrays.remove(name_on_file)
+    # Always read itype, xyz, h
+    array_registry['type'] = _particle_type
+    array_registry['position'] = _get_dataset('xyz', 'particles')
+    array_registry['smoothing_length'] = _get_dataset('h', 'particles')
+    arrays.remove('itype')
+    arrays.remove('xyz')
+    arrays.remove('h')
 
-        # Read dust type if there are dust particles
-        if self._header['ndustlarge'] > 0:
-            self.snap._array_registry['dust_type'] = _dust_particle_type
+    # Read arrays if available
+    for name_on_file, name in name_map.items():
+        if name_on_file in arrays:
+            array_registry[name] = _get_dataset(name_on_file, 'particles')
+            arrays.remove(name_on_file)
 
-        # Derived arrays not stored on file
-        self.snap._array_registry['mass'] = _mass
-        self.snap._array_registry['density'] = _density
-        self.snap._array_registry['pressure'] = _pressure
-        self.snap._array_registry['sound_speed'] = _sound_speed
+    # Read dust type if there are dust particles
+    if ndustlarge > 0:
+        array_registry['dust_type'] = _dust_particle_type
 
-        # Read *any* extra arrays
-        for array in arrays:
-            self.snap._array_registry[array] = _get_dataset(array, 'particles')
+    # Derived arrays not stored on file
+    array_registry['mass'] = _mass
+    array_registry['density'] = _density
+    array_registry['pressure'] = _pressure
+    array_registry['sound_speed'] = _sound_speed
 
-    def _populate_sink_arrays(self):
+    # Read *any* extra arrays
+    for array in arrays:
+        array_registry[array] = _get_dataset(array, 'particles')
 
-        name_map = {
-            'xyz': 'position',
-            'vxyz': 'velocity',
-            'm': 'mass',
-            'h': 'accretion_radius',
-            'hsoft': 'softening_radius',
-            'maccreted': 'mass_accreted',
-            'spinxyz': 'spin',
-            'tlast': 'last_injection_time',
-        }
+    return array_registry
 
-        for name_on_file, name in name_map.items():
-            self.snap._sink_registry[name] = _get_dataset(name_on_file, 'sinks')
+
+def _populate_sink_array_registry(name_map: Dict[str, str]):
+
+    sink_registry = dict()
+
+    for name_on_file, name in name_map.items():
+        sink_registry[name] = _get_dataset(name_on_file, 'sinks')
+
+    return sink_registry
 
 
 def _get_dataset(dataset: str, group: str) -> Callable:
