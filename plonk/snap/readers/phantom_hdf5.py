@@ -14,7 +14,7 @@ from ... import units as plonk_units
 from ..snap import Snap
 from ..units import generate_units_dictionary
 
-_bignumber = 1e+29
+_bignumber = 1e29
 
 _particle_array_name_map = {
     'abundance': 'abundance',
