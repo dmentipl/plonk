@@ -442,6 +442,34 @@ def inclination(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
     return inclination
 
 
+def gas_fraction(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
+    """Calculate the gas fraction from the dust fraction.
+
+    Parameters
+    ----------
+    snap
+        The Snap object.
+    ignore_accreted : optional
+        Ignore accreted particles. Default is False.
+
+    Returns
+    -------
+    ndarray
+        The gas fraction on the particles.
+    """
+    try:
+        dust_fraction: ndarray = snap['dust_fraction']
+        gas_fraction = 1 - dust_fraction.sum(axis=1)
+    except ValueError:
+        gas_fraction = np.ones((len(snap), 1))
+
+    if ignore_accreted:
+        h: ndarray = snap['smoothing_length']
+        return gas_fraction[h > 0]
+
+    return gas_fraction
+
+
 def gas_mass(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
     """Calculate the gas mass from the dust fraction.
 
@@ -471,8 +499,8 @@ def gas_mass(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
         except ValueError:
             dust_fraction = np.zeros((mass.size, 1))
 
-    gasfrac = 1 - dust_fraction.sum(axis=1)
-    return gasfrac * mass
+    gas_fraction = 1 - dust_fraction.sum(axis=1)
+    return gas_fraction * mass
 
 
 def dust_mass(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:

@@ -928,6 +928,11 @@ def extra_quantities(dust: bool = False):
 
     if dust:
 
+        @Snap.add_array(unit='dimensionless')
+        def gas_fraction(snap) -> ndarray:
+            """Gas fraction."""
+            return particles.gas_fraction(snap=snap)
+
         @Snap.add_array(unit='mass')
         def gas_mass(snap) -> ndarray:
             """Gas mass."""
