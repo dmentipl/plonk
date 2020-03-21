@@ -331,7 +331,9 @@ class Profile:
                 )
 
         else:
-            raise ValueError('Profile not available')
+            raise ValueError(
+                'Profile not available. Try calling extra_quantities method on Snap.'
+            )
 
     def __setitem__(self, name: str, item: ndarray):
         """Set the profile directly."""
