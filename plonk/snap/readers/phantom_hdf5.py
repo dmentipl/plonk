@@ -14,6 +14,8 @@ from ... import units as plonk_units
 from ..snap import Snap
 from ..units import generate_units_dictionary
 
+_bignumber = 1e+29
+
 _particle_array_name_map = {
     'abundance': 'abundance',
     'alpha': 'alpha_viscosity_numerical',
@@ -167,6 +169,7 @@ def _populate_particle_array_registry(
     # Read dust type if there are dust particles
     if ndustlarge > 0:
         array_registry['dust_type'] = _dust_particle_type
+        array_registry['stopping_time'] = _stopping_time
 
     # Derived arrays not stored on file
     array_registry['mass'] = _mass
@@ -216,7 +219,7 @@ def _dust_particle_type(snap: Snap) -> ndarray:
 
 
 def _mass(snap: Snap) -> ndarray:
-    massoftype = snap._file_pointer['header/massoftype'][:]
+    massoftype = snap._file_pointer['header/massoftype'][()]
     particle_type = _get_dataset('itype', 'particles')(snap)
     return massoftype[particle_type - 1]
 
@@ -262,3 +265,9 @@ def _sound_speed(snap: Snap) -> ndarray:
     else:
         raise ValueError('Cannot determine equation of state')
     return cs
+
+
+def _stopping_time(snap: Snap) -> ndarray:
+    stopping_time = snap._file_pointer['particles/tstop'][()]
+    stopping_time[stopping_time == _bignumber] = np.inf
+    return stopping_time
