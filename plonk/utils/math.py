@@ -28,7 +28,7 @@ def cross(x, y, **kwargs):
 
 
 def norm(x, **kwargs):
-    """Cross product.
+    """Norm of a vector.
 
     Parameters
     ----------
