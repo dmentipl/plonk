@@ -423,7 +423,10 @@ class Profile:
 
         _x = self[x]
         if x_unit is not None:
-            _x = _x.to(x_unit)
+            if not self.snap._physical_units:
+                raise ValueError('Cannot set unit if snap is not in physical units')
+            else:
+                _x = _x.to(x_unit)
 
         if ax is None:
             fig, ax = plt.subplots()
@@ -433,6 +436,7 @@ class Profile:
         xlabel = x.capitalize().replace('_', ' ')
         if self.snap._physical_units:
             xlabel = ' '.join([xlabel, f'[{_x.units:~P}]'])
+            _x = _x.magnitude
         ax.set_xlabel(xlabel)
 
         for idx, yi in enumerate(y):
@@ -442,7 +446,6 @@ class Profile:
                 if y_unit is not None:
                     _y = _y.to(y_unit[idx])
                 label = ' '.join([label, f'[{_y.units:~P}]'])
-                _x = _x.magnitude
                 _y = _y.magnitude
             ax.plot(_x, _y, label=label, **kwargs)
 
