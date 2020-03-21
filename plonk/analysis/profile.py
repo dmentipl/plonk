@@ -293,7 +293,10 @@ class Profile:
                     del self.snap[name]
                 return self._profiles[name]
             else:
-                if name.split('_')[0] == 'dust' or name in ('stopping_time',):
+                if name.split('_')[0] == 'dust' or name in (
+                    'stopping_time',
+                    'stokes_number',
+                ):
                     raise ValueError(
                         'To access dust profiles try, for example, '
                         'prof["stopping_time_001"] or\nprof["dust_mass_total"]'

@@ -202,8 +202,7 @@ def keplerian_frequency(
     snap
         The Snap object.
     gravitational_parameter
-        The gravitational parameter (mu = G M). Can be a float or a Pint
-        quantity.
+        The gravitational parameter (mu = G M) as a Pint quantity.
     origin : optional
         The origin around which to compute the angular momentum as a
         ndarray or tuple (x, y, z). Default is (0, 0, 0).
@@ -213,7 +212,7 @@ def keplerian_frequency(
     Returns
     -------
     ndarray
-        The eccentricity on the particles.
+        The Keplerian frequency on the particles.
     """
     if ignore_accreted:
         h: ndarray = snap['smoothing_length']
@@ -230,6 +229,53 @@ def keplerian_frequency(
 
     radius = norm(pos, axis=1)
     return np.sqrt(mu / radius ** 3)
+
+
+def stokes_number(
+    snap: SnapLike,
+    gravitational_parameter: Any,
+    origin: Union[ndarray, Tuple[float, float, float]] = (0.0, 0.0, 0.0),
+    ignore_accreted: bool = False,
+) -> ndarray:
+    """Calculate the Stokes number.
+
+    Parameters
+    ----------
+    snap
+        The Snap object.
+    gravitational_parameter
+        The gravitational parameter (mu = G M) as a Pint quantity.
+    origin : optional
+        The origin around which to compute the angular momentum as a
+        ndarray or tuple (x, y, z). Default is (0, 0, 0).
+    ignore_accreted : optional
+        Ignore accreted particles. Default is False.
+
+    Returns
+    -------
+    ndarray
+        The Stokes number on the particles.
+    """
+    if ignore_accreted:
+        h: ndarray = snap['smoothing_length']
+        pos: ndarray = snap['position'][h > 0]
+        t_s: ndarray = snap['stopping_time'][h > 0]
+    else:
+        pos = snap['position']
+        t_s = snap['stopping_time']
+
+    origin = np.array(origin)
+    pos = pos - origin
+
+    mu = gravitational_parameter
+    if not isinstance(pos, Quantity):
+        mu = (mu * snap.units['time'] ** 2 / snap.units['length'] ** 3).magnitude
+
+    radius = norm(pos, axis=1)
+    Omega_k = np.sqrt(mu / radius ** 3)
+
+    Stokes = t_s * Omega_k[:, np.newaxis]
+    return Stokes
 
 
 def semi_major_axis(
@@ -249,8 +295,7 @@ def semi_major_axis(
     snap
         The Snap object.
     gravitational_parameter
-        The gravitational parameter (mu = G M). Can be a float or a Pint
-        quantity.
+        The gravitational parameter (mu = G M) as a Pint quantity.
     origin : optional
         The origin around which to compute the angular momentum as a
         ndarray or tuple (x, y, z). Default is (0, 0, 0).
@@ -314,8 +359,7 @@ def eccentricity(
     snap
         The Snap object.
     gravitational_parameter
-        The gravitational parameter (mu = G M). Can be a float or a Pint
-        quantity.
+        The gravitational parameter (mu = G M) as a Pint quantity.
     origin : optional
         The origin around which to compute the angular momentum as a
         ndarray or tuple (x, y, z). Default is (0, 0, 0).

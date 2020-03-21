@@ -947,3 +947,22 @@ def extra_quantities(dust: bool = False):
         def dust_density(snap) -> ndarray:
             """Dust density."""
             return particles.dust_density(snap=snap)
+
+        @Snap.add_array(unit='dimensionless')
+        def stokes_number(snap) -> ndarray:
+            """Stokes number."""
+            try:
+                gravitational_parameter = snap.properties['gravitational_parameter']
+            except KeyError:
+                raise ValueError(
+                    'To get eccentricity, first set the gravitational parameter\n'
+                    'via snap.set_gravitational_parameter.'
+                )
+            origin = (
+                snap.translation if snap.translation is not None else (0.0, 0.0, 0.0)
+            )
+            return particles.stokes_number(
+                snap=snap,
+                gravitational_parameter=gravitational_parameter,
+                origin=origin,
+            )
