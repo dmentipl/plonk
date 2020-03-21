@@ -150,7 +150,7 @@ class Snap:
     }
 
     _array_units = {
-        'alpha': 'dimensionless',
+        'alpha_viscosity_numerical': 'dimensionless',
         'density': 'density',
         'differential_velocity': 'velocity',
         'dust_fraction': 'dimensionless',

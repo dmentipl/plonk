@@ -38,7 +38,7 @@ name_map = {
     'rho dm ave': 'dark_matter_density_average',
     'rho blg max': 'bulge_density_max',
     'rho blg ave': 'bulge_density_average',
-    'alpha': 'alpha',
+    'alpha': 'alpha_viscosity_numerical',
     'B max': 'magnetic_field_max',
     'B min': 'magnetic_field_min',
     'B ave': 'magnetic_field_average',
