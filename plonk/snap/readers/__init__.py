@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Union
 
 from ..snap import Snap
-from .phantom_hdf5 import generate_snap_from_file as read_phantom
+from .phantom import generate_snap_from_file as read_phantom
 
 _data_sources = ('Phantom',)
 
