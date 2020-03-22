@@ -47,3 +47,27 @@ def norm(x, **kwargs):
         return np.linalg.norm(x.magnitude, **kwargs) * x.units
     else:
         return np.linalg.norm(x, **kwargs)
+
+
+def average(x, weights, **kwargs):
+    """Average.
+
+    Parameters
+    ----------
+    x
+        The array (N,) to take the norm of. Can be ndarray or pint
+        Quantity.
+    weights
+        The weights for averaging.
+    **kwargs
+        Keyword arguments to pass to np.average.
+
+    Returns
+    -------
+    ndarray
+        The average of x.
+    """
+    if isinstance(x, Quantity):
+        return np.average(x.magnitude, weights=weights.magnitude, **kwargs) * x.units
+    else:
+        return np.average(x, weights=weights, **kwargs)

@@ -15,6 +15,7 @@ from pandas import DataFrame
 from .. import Quantity
 from .. import units as plonk_units
 from ..snap import Snap, gravitational_constant_in_code_units
+from ..utils import average
 
 
 class Profile:
@@ -41,9 +42,10 @@ class Profile:
         distance.
     n_bins : optional
         The number of radial bins. Default is 100.
-    averaging_method : optional
-        The method to average particle quantities in bins by. Options
-        are 'mean' or 'median'. Default is 'mean'.
+    aggregation : optional
+        The method to aggregate particle quantities in bins by. Options
+        are 'average', 'mean', or 'median', where 'average' is a
+        mass-weighted average. Default is 'average'.
     spacing : optional
         The spacing of radial bins. Can be 'linear' or 'log'. Default is
         'linear'.
@@ -84,7 +86,7 @@ class Profile:
     >>> @Profile.profile_property
     ... def mass(prof):
     ...     M = prof.snap['mass']
-    ...     return prof.particles_to_binned_quantity(np.sum, M)
+    ...     return prof.particles_to_binned_quantity('sum', M)
 
     Plot one or many quantities on the profile.
 
@@ -123,19 +125,20 @@ class Profile:
         radius_min: Optional[Any] = None,
         radius_max: Optional[Any] = None,
         n_bins: int = 100,
-        averaging_method: str = 'mean',
+        aggregation: str = 'average',
         spacing: str = 'linear',
         ignore_accreted: bool = True,
     ):
 
         self.snap = snap
         self.ndim = ndim
-        self.averaging_function = self._check_average_method(averaging_method)
+        self.aggregation = self._check_aggregation(aggregation)
         self.spacing = self._check_spacing(spacing)
         self.properties: Dict[str, Any] = {}
 
         self._profiles: Dict[str, ndarray] = {}
 
+        self._weights = self.snap['mass']
         self._mask = self._setup_particle_mask(ignore_accreted)
         self._x = self._calculate_x()
         self.range = self._set_range(radius_min, radius_max)
@@ -159,12 +162,12 @@ class Profile:
         else:
             self._profiles['number'] = np.histogram(self._x, self.bin_edges)[0]
 
-    def _check_average_method(self, method: str) -> Callable:
-        if method == 'mean':
-            return np.mean
-        elif method == 'median':
-            return np.median
-        raise ValueError('Cannot determine averaging method: choose "mean" or "median"')
+    def _check_aggregation(self, method: str) -> str:
+        if method in ('average', 'mean', 'median'):
+            return method
+        raise ValueError(
+            'Cannot determine aggregation method: choose "average", "mean" or "median"'
+        )
 
     def _check_spacing(self, spacing: str) -> str:
         if spacing.lower() in ('lin', 'linear'):
@@ -289,17 +292,11 @@ class Profile:
         """Return the profile of a given kind."""
         name_root = '_'.join(name.split('_')[:-1])
         name_suffix = name.split('_')[-1]
-        if name_suffix == 'mean':
-            fn = np.mean
-            array_name = name_root
-        elif name_suffix == 'median':
-            fn = np.median
-            array_name = name_root
-        elif name_suffix == 'std':
-            fn = np.std
+        if name_suffix in ('average', 'mean', 'median', 'std', 'sum'):
+            aggregation = name_suffix
             array_name = name_root
         else:
-            fn = self.averaging_function
+            aggregation = self.aggregation
             array_name = name
 
         if name in self._profiles:
@@ -315,7 +312,9 @@ class Profile:
                     'Profile unavailable. Try calling extra_quantities method on Snap.'
                 )
             if array.ndim == 1:
-                self._profiles[name] = self.particles_to_binned_quantity(fn, array)
+                self._profiles[name] = self.particles_to_binned_quantity(
+                    aggregation, array
+                )
                 return self._profiles[name]
             else:
                 raise ValueError(
@@ -442,7 +441,7 @@ class Profile:
                 else:
                     _yi = yi
                 _y_std = self[_yi + '_std']
-                if self.averaging_function == np.median:
+                if self.aggregation == 'median':
                     _y_mean = self[_yi + '_mean']
                 else:
                     _y_mean = _y
@@ -491,7 +490,7 @@ class Profile:
             data[column] = self[column]
         return pd.DataFrame(data)
 
-    def particles_to_binned_quantity(self, function, *args) -> ndarray:
+    def particles_to_binned_quantity(self, aggregation: str, array: ndarray) -> ndarray:
         """Calculate binned quantities from particles.
 
         This takes care of the bin indices and ignoring accreted
@@ -499,24 +498,39 @@ class Profile:
 
         Parameters
         ----------
-        function
-            The function that acts on particles in the radial bin. The
-            function should produce a single number, i.e. it is a
-            reduction. E.g. to calculate the mean of a particle quantity
-            in a radial bin use np.mean.
-        *args
-            The arguments to the function. Typically this is one or more
-            particle arrays or other quantities on a snapshot.
+        aggregation
+            The aggregation function that acts on particles in the
+            radial bin.
+        array
+            The particle array.
         """
+        if aggregation not in ('average', 'mean', 'median', 'std', 'sum'):
+            raise ValueError('Cannot determine aggregation method')
+
         binned_quantity = np.zeros(self.n_bins)
         for idx, bin_ind in enumerate(self.bin_indicies):
-            val = function(*tuple([arg[self._mask][bin_ind] for arg in args]))
+            if aggregation == 'average':
+                val = average(
+                    array[self._mask][bin_ind],
+                    weights=self._weights[self._mask][bin_ind],
+                )
+            elif aggregation == 'mean':
+                val = np.mean(array[self._mask][bin_ind])
+            elif aggregation == 'median':
+                val = np.median(array[self._mask][bin_ind])
+            elif aggregation == 'std':
+                val = np.std(array[self._mask][bin_ind])
+            elif aggregation == 'sum':
+                val = np.sum(array[self._mask][bin_ind])
+
             if self.snap._physical_units:
                 binned_quantity[idx] = val.magnitude
             else:
                 binned_quantity[idx] = val
+
         if self.snap._physical_units:
             binned_quantity *= val.units
+
         return binned_quantity
 
 
@@ -524,7 +538,7 @@ class Profile:
 def mass(prof) -> ndarray:
     """Mass profile."""
     M = prof.snap['mass']
-    return prof.particles_to_binned_quantity(np.sum, M)
+    return prof.particles_to_binned_quantity('sum', M)
 
 
 @Profile.profile_property
@@ -540,7 +554,7 @@ def density(prof) -> ndarray:
 def scale_height(prof) -> ndarray:
     """Scale height profile."""
     z = prof.snap['z']
-    return prof.particles_to_binned_quantity(np.std, z)
+    return prof.particles_to_binned_quantity('std', z)
 
 
 @Profile.profile_property
