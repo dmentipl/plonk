@@ -337,7 +337,7 @@ class Snap:
     @property
     def sinks(self):
         """Sink particle arrays."""
-        return _SinkUtility(self._get_array)
+        return _SinkUtility(self._getitem)
 
     @property
     def num_particles(self):
@@ -619,10 +619,10 @@ class Snap:
         else:
             array_dict[name] = array
 
-    def _get_array(
-        self, name: str, index: Optional[int] = None, sinks: bool = False
-    ) -> ndarray:
+    def _get_array(self, name: str, sinks: bool = False) -> ndarray:
         """Get an array by name."""
+        index = None
+
         if name in self.available_arrays(sinks):
             name = name
         elif name in self._array_name_mapper.keys():
@@ -648,55 +648,64 @@ class Snap:
         else:
             raise ValueError('Array not available')
 
-    def __getitem__(
-        self, inp: Union[str, ndarray, int, slice]
+    def _getitem_from_str(self, inp: str, sinks: bool = False) -> ndarray:
+        """Return item from string."""
+        inp_root = '_'.join(inp.split('_')[:-1])
+        inp_suffix = inp.split('_')[-1]
+
+        if inp in self._families:
+            return SubSnap(self, self._get_family_indices(inp))
+        elif inp in self.available_arrays(sinks):
+            return self._get_array(inp, sinks)
+        elif inp in self._array_name_mapper.keys():
+            return self._get_array(inp, sinks)
+        elif inp in self._array_split_mapper.keys():
+            return self._get_array(inp, sinks)
+        elif inp_root in self._vector_arrays:
+            if inp_suffix == 'x':
+                return self._get_array(inp_root, sinks)[:, 0]
+            elif inp_suffix == 'y':
+                return self._get_array(inp_root, sinks)[:, 1]
+            elif inp_suffix == 'z':
+                return self._get_array(inp_root, sinks)[:, 2]
+            elif inp_suffix == 'magnitude':
+                return norm(self._get_array(inp_root, sinks), axis=1)
+        elif inp_root in self._dust_arrays:
+            if _str_is_int(inp_suffix):
+                return self._get_array(inp_root)[:, int(inp_suffix) - 1]
+            elif inp_suffix == 'sum':
+                return self._get_array(inp_root).sum(axis=1)
+
+        raise ValueError('Cannot determine item to return')
+
+    def _getitem(
+        self, inp: Union[str, ndarray, int, slice], sinks: bool = False,
     ) -> Union[ndarray, SubSnap]:
         """Return an array, or family, or subset."""
         if isinstance(inp, str):
-            inp_root = '_'.join(inp.split('_')[:-1])
-            inp_suffix = inp.split('_')[-1]
-            if inp in self._families:
-                return SubSnap(self, self._get_family_indices(inp))
-            elif inp in self.available_arrays():
-                return self._get_array(inp)
-            elif inp in self._array_name_mapper.keys():
-                return self._get_array(inp)
-            elif inp in self._array_split_mapper.keys():
-                return self._get_array(inp)
-            elif inp_root in self._vector_arrays:
-                if inp_suffix == 'x':
-                    return self._get_array(inp_root)[:, 0]
-                elif inp_suffix == 'y':
-                    return self._get_array(inp_root)[:, 1]
-                elif inp_suffix == 'z':
-                    return self._get_array(inp_root)[:, 2]
-                elif inp_suffix == 'magnitude':
-                    return norm(self._get_array(inp_root), axis=1)
-            elif inp_root in self._dust_arrays:
-                if _str_is_int(inp_suffix):
-                    return self._get_array(inp_root)[:, int(inp_suffix) - 1]
-                elif inp_suffix == 'sum':
-                    return self._get_array(inp_root).sum(axis=1)
-
+            return self._getitem_from_str(inp, sinks)
         elif isinstance(inp, ndarray):
             if np.issubdtype(np.bool, inp.dtype):
                 return SubSnap(self, np.flatnonzero(inp))
             elif np.issubdtype(np.int, inp.dtype):
                 return SubSnap(self, inp)
-
         elif isinstance(inp, int):
             raise NotImplementedError
-
         elif isinstance(inp, slice):
             i1, i2, step = inp.start, inp.stop, inp.step
             if step is not None:
                 return SubSnap(self, np.arange(i1, i2, step))
             return SubSnap(self, np.arange(i1, i2))
-
         raise ValueError(
             'Cannot determine item to return. Extra quantities are available via\n'
             'snap.extra_quantities().'
         )
+
+    def __getitem__(
+        self, inp: Union[str, ndarray, int, slice]
+    ) -> Union[ndarray, SubSnap]:
+        """Return an array, or family, or subset."""
+        return self._getitem(inp, sinks=False)
 
     def __setitem__(self, name: str, item: ndarray):
         """Set an array."""
@@ -767,10 +776,8 @@ class SubSnap(Snap):
         """Dunder str method."""
         return f'<plonk.SubSnap>'
 
-    def _get_array(
-        self, name: str, index: Optional[int] = None, sinks: bool = False
-    ) -> ndarray:
-        return self.base._get_array(name, index, sinks)[self._indices]
+    def _get_array(self, name: str, sinks: bool = False) -> ndarray:
+        return self.base._get_array(name, sinks)[self._indices]
 
 
 SnapLike = Union[Snap, SubSnap]
