@@ -28,7 +28,7 @@ dependencies:
   - numba
   - numpy
   - pandas
-  - pint
+  - pint>=0.10.1
   - pip
   - pydocstyle
   - pylint
