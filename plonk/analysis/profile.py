@@ -17,7 +17,6 @@ from .. import units as plonk_units
 from ..snap import Snap, gravitational_constant_in_code_units
 from ..utils import average
 
-_default_aggregations = ('average', 'mean', 'median')
 _aggregations = ('average', 'mean', 'median', 'std', 'sum')
 
 
@@ -47,7 +46,7 @@ class Profile:
         The number of radial bins. Default is 100.
     aggregation : optional
         The method to aggregate particle quantities in bins by. Options
-        are 'average', 'mean', or 'median', where 'average' is a
+        are 'average', 'mean', or 'median'. Here 'average' is a
         mass-weighted average. Default is 'average'.
     spacing : optional
         The spacing of radial bins. Can be 'linear' or 'log'. Default is
@@ -166,10 +165,10 @@ class Profile:
             self._profiles['number'] = np.histogram(self._x, self.bin_edges)[0]
 
     def _check_aggregation(self, method: str) -> str:
-        if method in _default_aggregations:
+        if method in _aggregations:
             return method
         raise ValueError(
-            'Cannot determine aggregation method: choose "average", "mean" or "median"'
+            f'Cannot determine aggregation method: choose from {_aggregations}'
         )
 
     def _check_spacing(self, spacing: str) -> str:
@@ -295,38 +294,36 @@ class Profile:
         """Return the profile of a given kind."""
         name_root = '_'.join(name.split('_')[:-1])
         name_suffix = name.split('_')[-1]
-        if name_suffix in _aggregations:
-            aggregation = name_suffix
-            array_name = name_root
-        else:
-            aggregation = self.aggregation
-            array_name = name
 
         if name in self._profiles:
             return self._profiles[name]
         elif name in Profile._profile_functions:
             self._profiles[name] = Profile._profile_functions[name](self)
             return self._profiles[name]
+
+        if name_suffix in _aggregations:
+            aggregation = name_suffix
+            array_name = name_root
         else:
-            try:
-                array: ndarray = self.snap[array_name]
-            except ValueError:
-                raise ValueError(
-                    'Profile unavailable. Try calling extra_quantities method on Snap.'
-                )
-            if array.ndim == 1:
-                self._profiles[name] = self.particles_to_binned_quantity(
-                    aggregation, array
-                )
-                return self._profiles[name]
-            else:
-                raise ValueError(
-                    'Requested profile has array dimension > 1.\nTo access x-, y-, or '
-                    'z-components, or magnitude of vector quantities,\ntry, for '
-                    'example, prof["velocity_x"] or prof["momentum_magnitude"].\nTo '
-                    'access dust profiles, try, for example, prof["stopping_time_001"] '
-                    'or\nprof["dust_mass_sum"].'
-                )
+            aggregation = self.aggregation
+            array_name = name
+        try:
+            array: ndarray = self.snap[array_name]
+        except ValueError:
+            raise ValueError(
+                'Profile unavailable. Try calling extra_quantities method on Snap.'
+            )
+        if array.ndim == 1:
+            self._profiles[name] = self.particles_to_binned_quantity(aggregation, array)
+            return self._profiles[name]
+        else:
+            raise ValueError(
+                'Requested profile has array dimension > 1.\nTo access x-, y-, or '
+                'z-components, or magnitude of vector quantities,\ntry, for '
+                'example, prof["velocity_x"] or prof["momentum_magnitude"].\nTo '
+                'access dust profiles, try, for example, prof["stopping_time_001"] '
+                'or\nprof["dust_mass_sum"].'
+            )
 
     def __getitem__(self, name: str) -> ndarray:
         """Return the profile of a given kind."""
