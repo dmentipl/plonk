@@ -41,6 +41,9 @@ class Profile:
         distance.
     n_bins : optional
         The number of radial bins. Default is 100.
+    averaging_method : optional
+        The method to average particle quantities in bins by. Options
+        are 'mean' or 'median'. Default is 'mean'.
     spacing : optional
         The spacing of radial bins. Can be 'linear' or 'log'. Default is
         'linear'.
@@ -120,12 +123,14 @@ class Profile:
         radius_min: Optional[Any] = None,
         radius_max: Optional[Any] = None,
         n_bins: int = 100,
+        averaging_method: str = 'mean',
         spacing: str = 'linear',
         ignore_accreted: bool = True,
     ):
 
         self.snap = snap
         self.ndim = ndim
+        self.averaging_function = self._check_average_method(averaging_method)
         self.spacing = self._check_spacing(spacing)
         self.properties: Dict[str, Any] = {}
 
@@ -154,14 +159,19 @@ class Profile:
         else:
             self._profiles['number'] = np.histogram(self._x, self.bin_edges)[0]
 
-    def _check_spacing(self, spacing):
+    def _check_average_method(self, method: str) -> Callable:
+        if method == 'mean':
+            return np.mean
+        elif method == 'median':
+            return np.median
+        raise ValueError('Cannot determine averaging method: choose "mean" or "median"')
+
+    def _check_spacing(self, spacing: str) -> str:
         if spacing.lower() in ('lin', 'linear'):
-            spacing = 'linear'
+            return 'linear'
         elif spacing.lower() in ('log', 'logarithm', 'logarithmic'):
-            spacing = 'log'
-        else:
-            raise ValueError('Cannot determine spacing')
-        return spacing
+            return 'log'
+        raise ValueError('Cannot determine spacing')
 
     def _setup_particle_mask(self, ignore_accreted: bool) -> ndarray:
         if ignore_accreted is False:
@@ -289,7 +299,7 @@ class Profile:
             fn = np.std
             array_name = name_root
         else:
-            fn = np.mean
+            fn = self.averaging_function
             array_name = name
 
         if name in self._profiles:
@@ -427,20 +437,32 @@ class Profile:
         for idx, yi in enumerate(y):
             _y = self[yi]
             if error_shading:
-                _y_std = self[yi + '_std']
+                if yi.split('_')[-1] in ('mean', 'median'):
+                    _yi = '_'.join(yi.split('_')[:-1])
+                else:
+                    _yi = yi
+                _y_std = self[_yi + '_std']
+                if self.averaging_function == np.median:
+                    _y_mean = self[_yi + '_mean']
+                else:
+                    _y_mean = _y
             label = yi.capitalize().replace('_', ' ')
             if self.snap._physical_units:
                 if y_unit is not None:
                     _y = _y.to(y_unit[idx])
-                    _y_std = _y_std.to(y_unit[idx])
+                    if error_shading:
+                        _y_std = _y_std.to(y_unit[idx])
+                        _y_mean = _y_mean.to(y_unit[idx])
                 label = ' '.join([label, f'[{_y.units:~P}]'])
                 _y = _y.magnitude
-                _y_std = _y_std.magnitude
+                if error_shading:
+                    _y_std = _y_std.magnitude
+                    _y_mean = _y_mean.magnitude
             ax.plot(_x, _y, label=label, **kwargs)
             if error_shading:
                 color = ax.lines[idx].get_color()
                 ax.fill_between(
-                    _x, _y - _y_std, _y + _y_std, color=color, alpha=0.2,
+                    _x, _y_mean - _y_std, _y_mean + _y_std, color=color, alpha=0.2,
                 )
 
         ax.legend()
