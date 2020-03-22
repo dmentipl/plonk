@@ -15,7 +15,6 @@ from pandas import DataFrame
 from .. import Quantity
 from .. import units as plonk_units
 from ..snap import Snap, gravitational_constant_in_code_units
-from ..utils.math import norm
 
 
 class Profile:
@@ -276,24 +275,37 @@ class Profile:
             prev_index = new_index
         return binind
 
-    def __getitem__(self, name: str) -> ndarray:
+    def _getitem(self, name: str) -> ndarray:
         """Return the profile of a given kind."""
+        name_root = '_'.join(name.split('_')[:-1])
+        name_suffix = name.split('_')[-1]
+        if name_suffix == 'mean':
+            fn = np.mean
+            array_name = name_root
+        elif name_suffix == 'median':
+            fn = np.median
+            array_name = name_root
+        elif name_suffix == 'std':
+            fn = np.std
+            array_name = name_root
+        else:
+            fn = np.mean
+            array_name = name
+
         if name in self._profiles:
             return self._profiles[name]
-
         elif name in Profile._profile_functions:
             self._profiles[name] = Profile._profile_functions[name](self)
             return self._profiles[name]
-
         else:
             try:
-                array: ndarray = self.snap[name]
+                array: ndarray = self.snap[array_name]
             except ValueError:
                 raise ValueError(
                     'Profile unavailable. Try calling extra_quantities method on Snap.'
                 )
             if array.ndim == 1:
-                self._profiles[name] = self.particles_to_binned_quantity(np.mean, array)
+                self._profiles[name] = self.particles_to_binned_quantity(fn, array)
                 return self._profiles[name]
             else:
                 raise ValueError(
@@ -303,6 +315,10 @@ class Profile:
                     'access dust profiles, try, for example, prof["stopping_time_001"] '
                     'or\nprof["dust_mass_sum"].'
                 )
+
+    def __getitem__(self, name: str) -> ndarray:
+        """Return the profile of a given kind."""
+        return self._getitem(name)
 
     def __setitem__(self, name: str, item: ndarray):
         """Set the profile directly."""
