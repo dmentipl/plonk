@@ -524,13 +524,13 @@ def dust_mass(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
         try:
             dust_fraction: ndarray = snap['dust_fraction'][h > 0]
         except ValueError:
-            raise ValueError('No dust available')
+            print('No dust available')
     else:
         mass = snap['mass']
         try:
             dust_fraction = snap['dust_fraction']
         except ValueError:
-            raise ValueError('No dust available')
+            print('No dust available')
 
     return dust_fraction * mass[:, np.newaxis]
 
@@ -589,13 +589,13 @@ def dust_density(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
         try:
             dust_fraction: ndarray = snap['dust_fraction'][h > 0]
         except ValueError:
-            raise ValueError('No dust available')
+            print('No dust available')
     else:
         density = snap['density']
         try:
             dust_fraction = snap['dust_fraction']
         except ValueError:
-            raise ValueError('No dust available')
+            print('No dust available')
 
     return dust_fraction * density[:, np.newaxis]
 

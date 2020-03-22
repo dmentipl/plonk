@@ -310,9 +310,13 @@ class Profile:
         try:
             array: ndarray = self.snap[array_name]
         except ValueError:
-            raise ValueError(
-                'Profile unavailable. Try calling extra_quantities method on Snap.'
-            )
+            if self.snap._extra_quantities:
+                print('Profile unavailable.')
+            else:
+                print(
+                    'Profile unavailable. Try calling extra_quantities method on Snap.'
+                )
+            return
         if array.ndim == 1:
             self._profiles[name] = self.particles_to_binned_quantity(aggregation, array)
             return self._profiles[name]

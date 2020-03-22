@@ -109,6 +109,7 @@ class Snap:
         'j': 'specific_angular_momentum',
         'L': 'angular_momentum',
         'm': 'mass',
+        'omega_k': 'keplerian_frequency',
         'p': 'momentum',
         'P': 'pressure',
         'pos': 'position',
@@ -118,6 +119,7 @@ class Snap:
         'rho': 'density',
         'rho_d': 'dust_density',
         'rho_g': 'gas_density',
+        'St': 'stokes_number',
         'T': 'temperature',
         'theta': 'polar_angle',
         't_s': 'stopping_time',
@@ -510,7 +512,10 @@ class Snap:
         """Set standard gravitational parameter.
 
         Calculate the standard gravitational parameter (G M) given a
-        sink index, or list of sink indices for multiple systems, etc.
+        sink index, or list of sink indices for multiple systems, etc,
+        and set snap.properties['gravitational_parameter']. This is
+        required to calculate orbital quantities such as eccentricity
+        or Stokes number.
 
         Parameters
         ----------
@@ -531,11 +536,15 @@ class Snap:
     def set_molecular_weight(self, molecular_weight: float):
         """Set molecular weight.
 
+        Set the molecular weight of the gas in gram / mole in
+        snap.properties['molecular_weight']. This is required to
+        calculate temperature.
+
         Parameters
         ----------
         molecular_weight
-            The molecular weight in units of gram / mole. E.g. 2.381
-            for molecular hydrogen.
+            The molecular weight in units of gram / mole. E.g. Phantom
+            uses 2.381 for molecular hydrogen with solar metallicity.
         """
         self.properties['molecular_weight'] = molecular_weight
 
@@ -882,9 +891,8 @@ def extra_quantities(dust: bool = False):
     @Snap.add_array(unit='frequency')
     def keplerian_frequency(snap) -> ndarray:
         """Keplerian orbital frequency."""
-        try:
-            gravitational_parameter = snap.properties['gravitational_parameter']
-        except KeyError:
+        gravitational_parameter = snap.properties.get('gravitational_parameter')
+        if gravitational_parameter is None:
             raise ValueError(
                 'To get Keplerian frequency, first set the gravitational parameter\n'
                 'via snap.set_gravitational_parameter.'
@@ -897,9 +905,8 @@ def extra_quantities(dust: bool = False):
     @Snap.add_array(unit='length')
     def semi_major_axis(snap) -> ndarray:
         """Semi-major axis."""
-        try:
-            gravitational_parameter = snap.properties['gravitational_parameter']
-        except KeyError:
+        gravitational_parameter = snap.properties.get('gravitational_parameter')
+        if gravitational_parameter is None:
             raise ValueError(
                 'To get semi-major axis, first set the gravitational parameter\n'
                 'via snap.set_gravitational_parameter.'
@@ -912,9 +919,8 @@ def extra_quantities(dust: bool = False):
     @Snap.add_array(unit='dimensionless')
     def eccentricity(snap) -> ndarray:
         """Eccentricity."""
-        try:
-            gravitational_parameter = snap.properties['gravitational_parameter']
-        except KeyError:
+        gravitational_parameter = snap.properties.get('gravitational_parameter')
+        if gravitational_parameter is None:
             raise ValueError(
                 'To get eccentricity, first set the gravitational parameter\n'
                 'via snap.set_gravitational_parameter.'
@@ -967,12 +973,11 @@ def extra_quantities(dust: bool = False):
     @Snap.add_array(unit='temperature')
     def temperature(snap) -> ndarray:
         """Temperature."""
-        try:
-            molecular_weight = snap.properties['molecular_weight']
-        except KeyError:
+        molecular_weight = snap.properties.get('molecular_weight')
+        if molecular_weight is None:
             raise ValueError(
                 'To get temperature, first set the molecular weight parameter\n'
-                'via snap.set_molecular_weight.'
+                'via snap.set_molecular_weight method.'
             )
         return particles.temperature(snap=snap, molecular_weight=molecular_weight)
 
@@ -1006,9 +1011,8 @@ def extra_quantities(dust: bool = False):
         @Snap.add_array(unit='dimensionless', dust=True)
         def stokes_number(snap) -> ndarray:
             """Stokes number."""
-            try:
-                gravitational_parameter = snap.properties['gravitational_parameter']
-            except KeyError:
+            gravitational_parameter = snap.properties.get('gravitational_parameter')
+            if gravitational_parameter is None:
                 raise ValueError(
                     'To get eccentricity, first set the gravitational parameter\n'
                     'via snap.set_gravitational_parameter.'
