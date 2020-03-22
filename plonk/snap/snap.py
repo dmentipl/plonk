@@ -18,6 +18,7 @@ from scipy.spatial.transform import Rotation
 from .. import Quantity
 from .. import units as plonk_units
 from ..analysis import particles
+from ..utils import norm
 
 
 class _SinkUtility:
@@ -175,14 +176,19 @@ class Snap:
         'velocity_divergence': 'frequency',
     }
 
-    _array_rotatable = {
+    _vector_arrays = {
         'magnetic_field',
         'position',
         'spin',
         'velocity',
     }
 
-    _array_not_rotatable: Set[str] = set()
+    _vector_component_arrays: Set[str] = set()
+
+    _dust_arrays = {
+        'stopping_time',
+        'dust_fraction',
+    }
 
     _particle_type = {
         'gas': 1,
@@ -194,7 +200,9 @@ class Snap:
     }
 
     @staticmethod
-    def add_array(unit: str = None, rotatable: bool = None) -> Callable:
+    def add_array(
+        unit: str = None, rotatable: bool = None, dust: bool = False
+    ) -> Callable:
         """Decorate function to add array to Snap.
 
         This function decorates a function that returns an array. The
@@ -208,9 +216,12 @@ class Snap:
             for a 'radius' array. Default is None.
         rotatable
             A bool to represent if the array should have rotations
-            applied to it. If True the rotation should be applied. If
-            False the rotation cannot be applied. If None no rotation
-            is required. Default is None.
+            applied to it, i.e. it is a vector arrray. If True the
+            rotation should be applied. If False the rotation cannot be
+            applied. If None no rotation is required. Default is None.
+        dust
+            A bool to represent if the array is a dust array, in that
+            it has one column per dust species. Default is False.
 
         Returns
         -------
@@ -222,9 +233,11 @@ class Snap:
             Snap._array_registry[fn.__name__] = fn
             Snap._array_units[fn.__name__] = unit
             if rotatable is True:
-                Snap._array_rotatable.add(fn.__name__)
+                Snap._vector_arrays.add(fn.__name__)
             elif rotatable is False:
-                Snap._array_not_rotatable.add(fn.__name__)
+                Snap._vector_component_arrays.add(fn.__name__)
+            if dust is True:
+                Snap._dust_arrays.add(fn.__name__)
             return fn
 
         return _add_array
@@ -443,12 +456,12 @@ class Snap:
             The rotated Snap. Note that the rotation operation is
             in-place.
         """
-        for arr in self._array_rotatable:
+        for arr in self._vector_arrays:
             if arr in self.loaded_arrays():
                 self._arrays[arr] = rotation.apply(self._arrays[arr])
             if arr in self.loaded_arrays(sinks=True):
                 self._sinks[arr] = rotation.apply(self._sinks[arr])
-        for arr in self._array_not_rotatable:
+        for arr in self._vector_component_arrays:
             if arr in self.loaded_arrays():
                 del self._arrays[arr]
             if arr in self.loaded_arrays(sinks=True):
@@ -596,7 +609,7 @@ class Snap:
         else:
             array = Snap._array_registry[name](self)
             array_dict = self._arrays
-        if self.rotation is not None and name in self._array_rotatable:
+        if self.rotation is not None and name in self._vector_arrays:
             array = self.rotation.apply(array)
         if self.translation is not None and name == 'position':
             array += self.translation
@@ -640,6 +653,8 @@ class Snap:
     ) -> Union[ndarray, SubSnap]:
         """Return an array, or family, or subset."""
         if isinstance(inp, str):
+            inp_root = '_'.join(inp.split('_')[:-1])
+            inp_suffix = inp.split('_')[-1]
             if inp in self._families:
                 return SubSnap(self, self._get_family_indices(inp))
             elif inp in self.available_arrays():
@@ -648,18 +663,36 @@ class Snap:
                 return self._get_array(inp)
             elif inp in self._array_split_mapper.keys():
                 return self._get_array(inp)
+            elif inp_root in self._vector_arrays:
+                if inp_suffix == 'x':
+                    return self._get_array(inp_root)[:, 0]
+                elif inp_suffix == 'y':
+                    return self._get_array(inp_root)[:, 1]
+                elif inp_suffix == 'z':
+                    return self._get_array(inp_root)[:, 2]
+                elif inp_suffix == 'magnitude':
+                    return norm(self._get_array(inp_root), axis=1)
+            elif inp_root in self._dust_arrays:
+                if _str_is_int(inp_suffix):
+                    return self._get_array(inp_root)[:, int(inp_suffix) - 1]
+                elif inp_suffix == 'sum':
+                    return self._get_array(inp_root).sum(axis=1)
+
         elif isinstance(inp, ndarray):
             if np.issubdtype(np.bool, inp.dtype):
                 return SubSnap(self, np.flatnonzero(inp))
             elif np.issubdtype(np.int, inp.dtype):
                 return SubSnap(self, inp)
+
         elif isinstance(inp, int):
             raise NotImplementedError
+
         elif isinstance(inp, slice):
             i1, i2, step = inp.start, inp.stop, inp.step
             if step is not None:
                 return SubSnap(self, np.arange(i1, i2, step))
             return SubSnap(self, np.arange(i1, i2))
+
         raise ValueError(
             'Cannot determine item to return. Extra quantities are available via\n'
             'snap.extra_quantities().'
@@ -938,7 +971,7 @@ def extra_quantities(dust: bool = False):
             """Gas mass."""
             return particles.gas_mass(snap=snap)
 
-        @Snap.add_array(unit='mass')
+        @Snap.add_array(unit='mass', dust=True)
         def dust_mass(snap) -> ndarray:
             """Dust mass."""
             return particles.dust_mass(snap=snap)
@@ -948,12 +981,12 @@ def extra_quantities(dust: bool = False):
             """Gas density."""
             return particles.gas_density(snap=snap)
 
-        @Snap.add_array(unit='density')
+        @Snap.add_array(unit='density', dust=True)
         def dust_density(snap) -> ndarray:
             """Dust density."""
             return particles.dust_density(snap=snap)
 
-        @Snap.add_array(unit='dimensionless')
+        @Snap.add_array(unit='dimensionless', dust=True)
         def stokes_number(snap) -> ndarray:
             """Stokes number."""
             try:
@@ -971,3 +1004,11 @@ def extra_quantities(dust: bool = False):
                 gravitational_parameter=gravitational_parameter,
                 origin=origin,
             )
+
+
+def _str_is_int(string):
+    try:
+        int(string)
+        return True
+    except ValueError:
+        return False

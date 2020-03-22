@@ -285,58 +285,24 @@ class Profile:
             self._profiles[name] = Profile._profile_functions[name](self)
             return self._profiles[name]
 
-        elif name in self.snap.available_arrays():
-            array: ndarray = self.snap[name]
+        else:
+            try:
+                array: ndarray = self.snap[name]
+            except ValueError:
+                raise ValueError(
+                    'Profile unavailable. Try calling extra_quantities method on Snap.'
+                )
             if array.ndim == 1:
                 self._profiles[name] = self.particles_to_binned_quantity(np.mean, array)
-                if name not in self.snap.loaded_arrays():
-                    del self.snap[name]
-                return self._profiles[name]
-            else:
-                if name.split('_')[0] == 'dust' or name in (
-                    'stopping_time',
-                    'stokes_number',
-                ):
-                    raise ValueError(
-                        'To access dust profiles try, for example, '
-                        'prof["stopping_time_001"] or\nprof["dust_mass_total"]'
-                    )
-                else:
-                    raise ValueError('Cannot determine profile to return')
-
-        elif '_'.join(name.split('_')[:-1]) in self.snap.available_arrays():
-            name_root = '_'.join(name.split('_')[:-1])
-            name_suffix = name.split('_')[-1]
-            if name_suffix == 'x':
-                array = self.snap[name_root][:, 0]
-            elif name_suffix == 'y':
-                array = self.snap[name_root][:, 1]
-            elif name_suffix == 'z':
-                array = self.snap[name_root][:, 2]
-            elif name_suffix == 'magnitude':
-                array = norm(self.snap[name_root], axis=1)
-            elif name_suffix == 'total':
-                array = np.sum(self.snap[name_root], axis=1)
-            elif _str_is_int(name_suffix):
-                array = self.snap[name_root][:, int(name_suffix) - 1]
-                name = name_root + f'_{int(name_suffix):03}'
-            else:
-                raise ValueError('Cannot determine profile')
-            if array.ndim == 1:
-                self._profiles[name] = self.particles_to_binned_quantity(np.mean, array)
-                if name_root not in self.snap.loaded_arrays():
-                    del self.snap[name_root]
                 return self._profiles[name]
             else:
                 raise ValueError(
-                    'Cannot take profile of vector quantity. Try, for example,\n'
-                    'prof["velocity_x"] or prof["velocity_magnitude"], etc.'
+                    'Requested profile has array dimension > 1.\nTo access x-, y-, or '
+                    'z-components, or magnitude of vector quantities,\ntry, for '
+                    'example, prof["velocity_x"] or prof["momentum_magnitude"].\nTo '
+                    'access dust profiles, try, for example, prof["stopping_time_001"] '
+                    'or\nprof["dust_mass_sum"].'
                 )
-
-        else:
-            raise ValueError(
-                'Profile not available. Try calling extra_quantities method on Snap.'
-            )
 
     def __setitem__(self, name: str, item: ndarray):
         """Set the profile directly."""
@@ -564,11 +530,3 @@ def toomre_Q(prof) -> ndarray:
         * prof['keplerian_frequency']
         / (np.pi * G * prof['density'])
     )
-
-
-def _str_is_int(string):
-    try:
-        int(string)
-        return True
-    except ValueError:
-        return False
