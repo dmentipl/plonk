@@ -7,7 +7,7 @@ accessing a subset of particles in a Snap.
 
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union, cast
+from typing import Any, Callable, Dict, List, Set, Tuple, Union, cast
 
 import numpy as np
 import pandas as pd
@@ -761,12 +761,22 @@ class SubSnap(Snap):
 
     def __init__(self, base: Snap, indices: ndarray):
         super().__init__()
+
         self.base = base
-        self.properties = self.base.properties
-        self._file_pointer = self.base._file_pointer
         self._indices = indices
         self._num_particles = len(indices)
+
+        self.data_source = self.base.data_source
+        self.file_path = self.base.file_path
+        self.properties = self.base.properties
+        self.units = self.base.units
+        self._file_pointer = self.base._file_pointer
         self._arrays = self.base._arrays
+        self._sinks = self.base._sinks
+        self.rotation = self.base.rotation
+        self.translation = self.base.translation
+        self._physical_units = self.base._physical_units
+        self._extra_quantities = self.base._extra_quantities
 
     def __repr__(self):
         """Dunder repr method."""
