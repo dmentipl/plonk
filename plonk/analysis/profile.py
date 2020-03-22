@@ -17,6 +17,9 @@ from .. import units as plonk_units
 from ..snap import Snap, gravitational_constant_in_code_units
 from ..utils import average
 
+_default_aggregations = ('average', 'mean', 'median')
+_aggregations = ('average', 'mean', 'median', 'std', 'sum')
+
 
 class Profile:
     """Radial profiles.
@@ -163,7 +166,7 @@ class Profile:
             self._profiles['number'] = np.histogram(self._x, self.bin_edges)[0]
 
     def _check_aggregation(self, method: str) -> str:
-        if method in ('average', 'mean', 'median'):
+        if method in _default_aggregations:
             return method
         raise ValueError(
             'Cannot determine aggregation method: choose "average", "mean" or "median"'
@@ -292,7 +295,7 @@ class Profile:
         """Return the profile of a given kind."""
         name_root = '_'.join(name.split('_')[:-1])
         name_suffix = name.split('_')[-1]
-        if name_suffix in ('average', 'mean', 'median', 'std', 'sum'):
+        if name_suffix in _aggregations:
             aggregation = name_suffix
             array_name = name_root
         else:
@@ -436,12 +439,12 @@ class Profile:
         for idx, yi in enumerate(y):
             _y = self[yi]
             if error_shading:
-                if yi.split('_')[-1] in ('mean', 'median'):
+                if yi.split('_')[-1] in _aggregations:
                     _yi = '_'.join(yi.split('_')[:-1])
                 else:
                     _yi = yi
                 _y_std = self[_yi + '_std']
-                if self.aggregation == 'median':
+                if self.aggregation != 'mean':
                     _y_mean = self[_yi + '_mean']
                 else:
                     _y_mean = _y
