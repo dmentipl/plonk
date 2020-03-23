@@ -102,7 +102,7 @@ def plot_snaps(
     >>> vi.goto(10)
     >>> vi.next(5)
     """
-    return MultiVisualization(snaps, **kwargs)
+    return MultiVisualization(snaps=snaps, quantity=quantity, **kwargs)
 
 
 def str_to_units(quantity, extent, projection):
