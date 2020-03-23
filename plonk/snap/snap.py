@@ -7,7 +7,7 @@ accessing a subset of particles in a Snap.
 
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, List, Set, Tuple, Union, cast
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union, cast
 
 import numpy as np
 import pandas as pd
@@ -364,7 +364,8 @@ class Snap:
             raise ValueError('Extra quantities already available')
         n_dust = len(self.properties.get('grain_size', []))
         dust = n_dust > 0
-        extra_quantities(dust=dust)
+        dust_method = self.properties.get('dust_method')
+        extra_quantities(dust=dust, dust_method=dust_method)
         self._extra_quantities = True
         return self
 
@@ -855,13 +856,17 @@ def get_array_in_code_units(snap: SnapLike, name: str) -> ndarray:
     return arr
 
 
-def extra_quantities(dust: bool = False):
+def extra_quantities(
+    dust: bool = False, dust_method: Optional[str] = None,
+):
     """Make extra quantities available.
 
     Parameters
     ----------
     dust
         Whether to add dust quantities.
+    dust_method
+        The dust method.
     """
 
     @Snap.add_array(unit='momentum', rotatable=True)
@@ -996,15 +1001,22 @@ def extra_quantities(dust: bool = False):
             """Gas mass."""
             return particles.gas_mass(snap=snap)
 
-        @Snap.add_array(unit='mass', dust=True)
-        def dust_mass(snap) -> ndarray:
-            """Dust mass."""
-            return particles.dust_mass(snap=snap)
-
         @Snap.add_array(unit='density')
         def gas_density(snap) -> ndarray:
             """Gas density."""
             return particles.gas_density(snap=snap)
+
+        if dust_method == 'dust as separate sets of particles':
+
+            @Snap.add_array(unit='dimensionless', dust=True)
+            def dust_fraction(snap) -> ndarray:
+                """Dust fraction."""
+                return particles.dust_fraction(snap=snap)
+
+        @Snap.add_array(unit='mass', dust=True)
+        def dust_mass(snap) -> ndarray:
+            """Dust mass."""
+            return particles.dust_mass(snap=snap)
 
         @Snap.add_array(unit='density', dust=True)
         def dust_density(snap) -> ndarray:
