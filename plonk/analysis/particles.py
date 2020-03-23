@@ -564,7 +564,11 @@ def dust_mass(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
         dust_fraction: ndarray = snap['dust_fraction']
 
     elif snap.properties['dust_method'] == 'dust as separate sets of particles':
-        dust_fraction = snap['dust_fraction']
+        n_dust = len(snap.properties.get('grain_size', []))
+        dust_type = snap['dust_type']
+        dust_fraction = np.zeros((len(snap), n_dust))
+        for idx in range(1, n_dust + 1):
+            dust_fraction[dust_type == idx, idx - 1] = 1
 
     else:
         raise ValueError('No dust available')
@@ -598,7 +602,11 @@ def dust_density(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
         dust_fraction: ndarray = snap['dust_fraction']
 
     elif snap.properties['dust_method'] == 'dust as separate sets of particles':
-        dust_fraction = snap['dust_fraction']
+        n_dust = len(snap.properties.get('grain_size', []))
+        dust_type = snap['dust_type']
+        dust_fraction = np.zeros((len(snap), n_dust))
+        for idx in range(1, n_dust + 1):
+            dust_fraction[dust_type == idx, idx - 1] = 1
 
     else:
         raise ValueError('No dust available')

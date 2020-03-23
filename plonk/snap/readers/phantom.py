@@ -85,9 +85,13 @@ def generate_snap_from_file(filename: Union[str, Path]) -> Snap:
     snap.properties, snap.units = _header_to_properties(header)
 
     arrays = list(file_handle['particles'])
+    ndustsmall = header['ndustsmall']
     ndustlarge = header['ndustlarge']
     array_registry = _populate_particle_array_registry(
-        arrays=arrays, name_map=_particle_array_name_map, ndustlarge=ndustlarge
+        arrays=arrays,
+        name_map=_particle_array_name_map,
+        ndustsmall=ndustsmall,
+        ndustlarge=ndustlarge,
     )
     snap._array_registry.update(array_registry)
 
@@ -147,7 +151,10 @@ def _header_to_properties(header: dict):
 
 
 def _populate_particle_array_registry(
-    arrays: List[str], name_map: Dict[str, str], ndustlarge: int = 0
+    arrays: List[str],
+    name_map: Dict[str, str],
+    ndustsmall: int = 0,
+    ndustlarge: int = 0,
 ):
 
     array_registry = dict()
@@ -160,20 +167,23 @@ def _populate_particle_array_registry(
     arrays.remove('xyz')
     arrays.remove('h')
 
-    # Handle dustfrac
-    array_registry['dust_fraction'] = _dust_fraction
-    arrays.remove('dustfrac')
+    # Handle dust
+    if ndustsmall > 0:
+        array_registry['dust_fraction'] = _dust_fraction
+        arrays.remove('dustfrac')
+
+    elif ndustlarge > 0:
+        # Read dust type if there are dust particles
+        array_registry['dust_type'] = _dust_particle_type
+        array_registry['stopping_time'] = _stopping_time
+        array_registry['dust_to_gas_ratio'] = _dust_to_gas_ratio
+        arrays.remove('dustfrac')
 
     # Read arrays if available
     for name_on_file, name in name_map.items():
         if name_on_file in arrays:
             array_registry[name] = _get_dataset(name_on_file, 'particles')
             arrays.remove(name_on_file)
-
-    # Read dust type if there are dust particles
-    if ndustlarge > 0:
-        array_registry['dust_type'] = _dust_particle_type
-        array_registry['stopping_time'] = _stopping_time
 
     # Derived arrays not stored on file
     array_registry['mass'] = _mass
@@ -278,12 +288,16 @@ def _stopping_time(snap: Snap) -> ndarray:
 
 
 def _dust_fraction(snap: Snap) -> ndarray:
-    if snap.properties['dust_method'] == 'dust as separate sets of particles':
-        n_dust = len(snap.properties.get('grain_size', []))
-        dust_type = snap['dust_type']
-        dust_fraction = np.zeros((len(snap), n_dust))
-        for idx in range(1, n_dust + 1):
-            dust_fraction[dust_type == idx, idx - 1] = 1
-    else:
-        dust_fraction = snap._file_pointer['particles/dustfrac'][()]
+    if snap.properties['dust_method'] != 'dust/gas mixture':
+        raise ValueError('Dust fraction only available for "dust/gas mixture"')
+    dust_fraction = snap._file_pointer['particles/dustfrac'][()]
     return dust_fraction
+
+
+def _dust_to_gas_ratio(snap: Snap) -> ndarray:
+    if snap.properties['dust_method'] != 'dust as separate sets of particles':
+        raise ValueError(
+            'Dust fraction only available for "dust as separate sets of particles"'
+        )
+    dust_to_gas_ratio = snap._file_pointer['particles/dustfrac'][()]
+    return dust_to_gas_ratio

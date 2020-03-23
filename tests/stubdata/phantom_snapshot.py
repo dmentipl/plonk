@@ -5,7 +5,7 @@ import numpy as np
 array_name_map = {
     'divv': 'velocity_divergence',
     'dt': 'timestep',
-    'dustfrac': 'dust_fraction',
+    'dustfrac': 'dust_to_gas_ratio',
     'h': 'smoothing_length',
     'tstop': 'stopping_time',
     'vxyz': 'velocity',
@@ -15,7 +15,7 @@ array_name_map = {
 mean_array_values = {
     'divv': -0.00014556303,
     'dt': 27.693,
-    'dustfrac': 0.5,
+    'dustfrac': 0.004310665694734535,
     'h': 14.473696,
     'tstop': 426.2011872672413,
     'vxyz': -1.5469107476443848e-17,
