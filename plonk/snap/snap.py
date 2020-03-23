@@ -192,7 +192,7 @@ class Snap:
         'dust_fraction',
     }
 
-    _particle_type = {
+    particle_type = {
         'gas': 1,
         'dust': 2,
         'boundary': 3,
@@ -268,7 +268,7 @@ class Snap:
         self._file_pointer = None
         self._num_particles = -1
         self._num_sinks = -1
-        self._families = {key: None for key in Snap._particle_type.keys()}
+        self._families = {key: None for key in Snap.particle_type.keys()}
         self.rotation = None
         self.translation = None
         self._physical_units = False
@@ -582,7 +582,7 @@ class Snap:
         if name in self._families:
             if self._families[name] is None:
                 self._families[name] = np.flatnonzero(
-                    self['type'] == Snap._particle_type[name]
+                    self['type'] == Snap.particle_type[name]
                 )
             return self._families[name]
         else:
@@ -685,7 +685,10 @@ class Snap:
             elif inp_suffix == 'sum':
                 return self._get_array(inp_root).sum(axis=1)
 
-        raise ValueError('Cannot determine item to return')
+        raise ValueError(
+            'Cannot determine item to return. Extra quantities are available via\n'
+            'snap.extra_quantities().'
+        )
 
     def _getitem(
         self, inp: Union[str, ndarray, int, slice], sinks: bool = False,

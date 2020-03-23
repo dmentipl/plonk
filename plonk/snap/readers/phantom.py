@@ -160,6 +160,10 @@ def _populate_particle_array_registry(
     arrays.remove('xyz')
     arrays.remove('h')
 
+    # Handle dustfrac
+    array_registry['dust_fraction'] = _dust_fraction
+    arrays.remove('dustfrac')
+
     # Read arrays if available
     for name_on_file, name in name_map.items():
         if name_on_file in arrays:
@@ -271,3 +275,15 @@ def _stopping_time(snap: Snap) -> ndarray:
     stopping_time = snap._file_pointer['particles/tstop'][()]
     stopping_time[stopping_time == _bignumber] = np.inf
     return stopping_time
+
+
+def _dust_fraction(snap: Snap) -> ndarray:
+    if snap.properties['dust_method'] == 'dust as separate sets of particles':
+        n_dust = len(snap.properties.get('grain_size', []))
+        dust_type = snap['dust_type']
+        dust_fraction = np.zeros((len(snap), n_dust))
+        for idx in range(1, n_dust + 1):
+            dust_fraction[dust_type == idx, idx - 1] = 1
+    else:
+        dust_fraction = snap._file_pointer['particles/dustfrac'][()]
+    return dust_fraction

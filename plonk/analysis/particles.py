@@ -443,7 +443,9 @@ def inclination(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
 
 
 def gas_fraction(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
-    """Calculate the gas fraction from the dust fraction.
+    """Calculate the gas fraction.
+
+    For dust/gas mixtures this is from the dust fraction.
 
     Parameters
     ----------
@@ -457,21 +459,28 @@ def gas_fraction(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
     ndarray
         The gas fraction on the particles.
     """
-    try:
+    if snap.properties['dust_method'] == 'dust/gas mixture':
         dust_fraction: ndarray = snap['dust_fraction']
         gas_fraction = 1 - dust_fraction.sum(axis=1)
-    except ValueError:
-        gas_fraction = np.ones((len(snap), 1))
+
+    elif snap.properties['dust_method'] == 'dust as separate sets of particles':
+        particle_type = snap['type']
+        gas_fraction = np.ones(len(snap))
+        gas_fraction[particle_type != snap.particle_type['gas']] = 0
+
+    else:
+        gas_fraction = np.ones(len(snap))
 
     if ignore_accreted:
         h: ndarray = snap['smoothing_length']
         return gas_fraction[h > 0]
-
     return gas_fraction
 
 
 def gas_mass(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
-    """Calculate the gas mass from the dust fraction.
+    """Calculate the gas mass.
+
+    For dust/gas mixtures this is from the dust fraction.
 
     Parameters
     ----------
@@ -485,26 +494,26 @@ def gas_mass(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
     ndarray
         The gas mass on the particles.
     """
+    if snap.properties['dust_method'] == 'dust/gas mixture':
+        dust_fraction: ndarray = snap['dust_fraction']
+        gas_fraction = 1 - dust_fraction.sum(axis=1)
+
+    elif snap.properties['dust_method'] == 'dust as separate sets of particles':
+        particle_type = snap['type']
+        gas_fraction = np.zeros(len(snap))
+        gas_fraction[particle_type == snap.particle_type['gas']] = 1
+
+    mass: ndarray = snap['mass']
     if ignore_accreted:
         h: ndarray = snap['smoothing_length']
-        mass: ndarray = snap['mass'][h > 0]
-        try:
-            dust_fraction: ndarray = snap['dust_fraction'][h > 0]
-        except ValueError:
-            dust_fraction = np.zeros((mass.size, 1))
-    else:
-        mass = snap['mass']
-        try:
-            dust_fraction = snap['dust_fraction']
-        except ValueError:
-            dust_fraction = np.zeros((mass.size, 1))
-
-    gas_fraction = 1 - dust_fraction.sum(axis=1)
-    return gas_fraction * mass
+        return (mass * gas_fraction)[h > 0]
+    return mass * gas_fraction
 
 
 def dust_mass(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
-    """Calculate the dust mass per species from the dust fraction.
+    """Calculate the dust mass per species.
+
+    For dust/gas mixtures this is from the dust fraction.
 
     Parameters
     ----------
@@ -518,25 +527,31 @@ def dust_mass(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
     ndarray
         The dust mass per species on the particles.
     """
+    if snap.properties['dust_method'] == 'dust/gas mixture':
+        dust_fraction: ndarray = snap['dust_fraction']
+
+    elif snap.properties['dust_method'] == 'dust as separate sets of particles':
+        n_dust = len(snap.properties.get('grain_size', []))
+        dust_type = snap['dust_type']
+        dust_fraction = np.zeros((len(snap), n_dust))
+        for idx in range(1, n_dust + 1):
+            dust_fraction[dust_type == idx, idx - 1] = 1
+
+    else:
+        raise ValueError('No dust available')
+
+    mass: ndarray = snap['mass']
     if ignore_accreted:
         h: ndarray = snap['smoothing_length']
-        mass: ndarray = snap['mass'][h > 0]
-        try:
-            dust_fraction: ndarray = snap['dust_fraction'][h > 0]
-        except ValueError:
-            print('No dust available')
-    else:
-        mass = snap['mass']
-        try:
-            dust_fraction = snap['dust_fraction']
-        except ValueError:
-            print('No dust available')
-
-    return dust_fraction * mass[:, np.newaxis]
+        dust_mass = mass[:, np.newaxis] * dust_fraction
+        return dust_mass[h > 0]
+    return mass[:, np.newaxis] * dust_fraction
 
 
 def gas_density(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
-    """Calculate the gas density from the dust fraction.
+    """Calculate the gas density.
+
+    For dust/gas mixtures this is from the dust fraction.
 
     Parameters
     ----------
@@ -550,26 +565,26 @@ def gas_density(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
     ndarray
         The gas density on the particles.
     """
+    if snap.properties['dust_method'] == 'dust/gas mixture':
+        dust_fraction: ndarray = snap['dust_fraction']
+        gas_fraction = 1 - dust_fraction.sum(axis=1)
+
+    elif snap.properties['dust_method'] == 'dust as separate sets of particles':
+        particle_type = snap['type']
+        gas_fraction = np.zeros(len(snap))
+        gas_fraction[particle_type == snap.particle_type['gas']] = 1
+
+    density: ndarray = snap['density']
     if ignore_accreted:
         h: ndarray = snap['smoothing_length']
-        density: ndarray = snap['density'][h > 0]
-        try:
-            dust_fraction: ndarray = snap['dust_fraction'][h > 0]
-        except ValueError:
-            dust_fraction = np.zeros((density.size, 1))
-    else:
-        density = snap['density']
-        try:
-            dust_fraction = snap['dust_fraction']
-        except ValueError:
-            dust_fraction = np.zeros((density.size, 1))
-
-    gasfrac = 1 - dust_fraction.sum(axis=1)
-    return gasfrac * density
+        return (density * gas_fraction)[h > 0]
+    return density * gas_fraction
 
 
 def dust_density(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
-    """Calculate the dust density per species from the dust fraction.
+    """Calculate the dust density per species.
+
+    For dust/gas mixtures this is from the dust fraction.
 
     Parameters
     ----------
@@ -583,21 +598,25 @@ def dust_density(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
     ndarray
         The dust density per species on the particles.
     """
+    if snap.properties['dust_method'] == 'dust/gas mixture':
+        dust_fraction: ndarray = snap['dust_fraction']
+
+    elif snap.properties['dust_method'] == 'dust as separate sets of particles':
+        n_dust = len(snap.properties.get('grain_size', []))
+        dust_type = snap['dust_type']
+        dust_fraction = np.zeros((len(snap), n_dust))
+        for idx in range(1, n_dust + 1):
+            dust_fraction[dust_type == idx, idx - 1] = 1
+
+    else:
+        raise ValueError('No dust available')
+
+    density: ndarray = snap['density']
     if ignore_accreted:
         h: ndarray = snap['smoothing_length']
-        density: ndarray = snap['density'][h > 0]
-        try:
-            dust_fraction: ndarray = snap['dust_fraction'][h > 0]
-        except ValueError:
-            print('No dust available')
-    else:
-        density = snap['density']
-        try:
-            dust_fraction = snap['dust_fraction']
-        except ValueError:
-            print('No dust available')
-
-    return dust_fraction * density[:, np.newaxis]
+        dust_mass = density[:, np.newaxis] * dust_fraction
+        return dust_mass[h > 0]
+    return density[:, np.newaxis] * dust_fraction
 
 
 def radial_distance(
