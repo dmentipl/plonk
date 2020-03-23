@@ -384,7 +384,7 @@ class Profile:
         y: Union[str, List[str]],
         x_unit: Optional[str] = None,
         y_unit: Optional[Union[str, List[str]]] = None,
-        error_shading: bool = False,
+        std_dev_shading: bool = False,
         ax: Any = None,
         **kwargs,
     ):
@@ -403,8 +403,8 @@ class Profile:
         y_unit : optional
             The y axis quantity unit as a string or list of strings.
             Only works if using physical units.
-        error_shading : optional
-            Add shading for standard deviation (error) of profile.
+        std_dev_shading : optional
+            Add shading for standard deviation of profile.
         ax : optional
             A matplotlib Axes object to plot to.
         **kwargs
@@ -443,7 +443,7 @@ class Profile:
 
         for idx, yi in enumerate(y):
             _y = self[yi]
-            if error_shading:
+            if std_dev_shading:
                 if yi.split('_')[-1] in _aggregations:
                     _yi = '_'.join(yi.split('_')[:-1])
                 else:
@@ -457,16 +457,16 @@ class Profile:
             if self.snap._physical_units:
                 if y_unit is not None:
                     _y = _y.to(y_unit[idx])
-                    if error_shading:
+                    if std_dev_shading:
                         _y_std = _y_std.to(y_unit[idx])
                         _y_mean = _y_mean.to(y_unit[idx])
                 label = ' '.join([label, f'[{_y.units:~P}]'])
                 _y = _y.magnitude
-                if error_shading:
+                if std_dev_shading:
                     _y_std = _y_std.magnitude
                     _y_mean = _y_mean.magnitude
             ax.plot(_x, _y, label=label, **kwargs)
-            if error_shading:
+            if std_dev_shading:
                 color = ax.lines[idx].get_color()
                 ax.fill_between(
                     _x, _y_mean - _y_std, _y_mean + _y_std, color=color, alpha=0.2,
