@@ -700,15 +700,21 @@ class Snap:
         """Return an array, or family, or subset."""
         if isinstance(inp, str):
             return self._getitem_from_str(inp, sinks)
+        elif sinks:
+            raise ValueError('Cannot return sinks as SubSnap')
         elif isinstance(inp, ndarray):
             if np.issubdtype(np.bool, inp.dtype):
                 return SubSnap(self, np.flatnonzero(inp))
             elif np.issubdtype(np.int, inp.dtype):
                 return SubSnap(self, inp)
         elif isinstance(inp, int):
-            raise NotImplementedError
+            return SubSnap(self, np.array([inp]))
         elif isinstance(inp, slice):
             i1, i2, step = inp.start, inp.stop, inp.step
+            if i1 is None:
+                i1 = 0
+            if i2 is None:
+                i2 = len(self)
             if step is not None:
                 return SubSnap(self, np.arange(i1, i2, step))
             return SubSnap(self, np.arange(i1, i2))
