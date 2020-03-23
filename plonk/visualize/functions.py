@@ -1,4 +1,4 @@
-"""API for visualization."""
+"""Functions for visualization."""
 
 from typing import Any, Dict, List, Optional, Union
 

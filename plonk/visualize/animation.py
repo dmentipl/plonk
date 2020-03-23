@@ -11,7 +11,7 @@ from numpy import ndarray
 from ..analysis import Profile
 from ..snap import SnapLike
 from ..utils import get_extent_from_percentile
-from .api import plot
+from .functions import plot
 from .interpolation import interpolate
 
 _interp_kwargs = ('number_of_pixels', 'density_weighted')
