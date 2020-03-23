@@ -4,6 +4,7 @@ Heavily inspired by pynbody (https://pynbody.github.io/).
 """
 
 from bisect import bisect
+from functools import partial
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
@@ -163,6 +164,9 @@ class Profile:
             )[0]
         else:
             self._profiles['number'] = np.histogram(self._x, self.bin_edges)[0]
+
+        n_dust = len(self.snap.properties.get('grain_size', []))
+        _generate_profiles(n_dust)
 
     def _check_aggregation(self, method: str) -> str:
         if method in _aggregations:
@@ -538,63 +542,96 @@ class Profile:
         return binned_quantity
 
 
-@Profile.profile_property
-def mass(prof) -> ndarray:
-    """Mass profile."""
-    M = prof.snap['mass']
-    return prof.particles_to_binned_quantity('sum', M)
+def _generate_profiles(n_dust: int = 0):
+    @Profile.profile_property
+    def mass(prof) -> ndarray:
+        """Mass profile."""
+        M = prof.snap['mass']
+        return prof.particles_to_binned_quantity('sum', M)
 
+    @Profile.profile_property
+    def surface_density(prof) -> ndarray:
+        """Surface density profile.
 
-@Profile.profile_property
-def density(prof) -> ndarray:
-    """Density profile.
+        Units are [mass / length ** ndim], which depends on ndim of profile.
+        """
+        return prof['mass'] / prof['size']
 
-    Units are [mass / length ** ndim], which depends on ndim of profile.
-    """
-    return prof['mass'] / prof['size']
+    @Profile.profile_property
+    def scale_height(prof) -> ndarray:
+        """Scale height profile."""
+        z = prof.snap['z']
+        return prof.particles_to_binned_quantity('std', z)
 
+    @Profile.profile_property
+    def aspect_ratio(prof) -> ndarray:
+        """Aspect ratio profile."""
+        H = prof['scale_height']
+        R = prof['radius']
+        return H / R
 
-@Profile.profile_property
-def scale_height(prof) -> ndarray:
-    """Scale height profile."""
-    z = prof.snap['z']
-    return prof.particles_to_binned_quantity('std', z)
+    @Profile.profile_property
+    def angular_momentum_theta(prof) -> ndarray:
+        """Angle between specific angular momentum and xy-plane."""
+        angular_momentum_z = prof['angular_momentum_z']
+        angular_momentum_magnitude = prof['angular_momentum_magnitude']
 
+        return np.arccos(angular_momentum_z / angular_momentum_magnitude)
 
-@Profile.profile_property
-def aspect_ratio(prof) -> ndarray:
-    """Aspect ratio profile."""
-    H = prof['scale_height']
-    R = prof['radius']
-    return H / R
+    @Profile.profile_property
+    def angular_momentum_phi(prof) -> ndarray:
+        """Angle between specific angular momentum and x-axis in xy-plane."""
+        angular_momentum_x = prof['angular_momentum_x']
+        angular_momentum_y = prof['angular_momentum_y']
+        return np.arctan2(angular_momentum_y, angular_momentum_x)
 
+    @Profile.profile_property
+    def toomre_Q(prof) -> ndarray:
+        """Toomre Q parameter."""
+        if not prof.snap._physical_units:
+            G = gravitational_constant_in_code_units(prof.snap)
+        else:
+            G = (1 * plonk_units.newtonian_constant_of_gravitation).to_base_units()
+        return (
+            prof['sound_speed']
+            * prof['keplerian_frequency']
+            / (np.pi * G * prof['density'])
+        )
 
-@Profile.profile_property
-def angular_momentum_theta(prof) -> ndarray:
-    """Angle between specific angular momentum and xy-plane."""
-    angular_momentum_z = prof['angular_momentum_z']
-    angular_momentum_magnitude = prof['angular_momentum_magnitude']
+    if n_dust > 0:
 
-    return np.arccos(angular_momentum_z / angular_momentum_magnitude)
+        @Profile.profile_property
+        def gas_mass(prof) -> ndarray:
+            """Gas mass profile."""
+            M = prof.snap['gas_mass']
+            return prof.particles_to_binned_quantity('sum', M)
 
+        @Profile.profile_property
+        def gas_surface_density(prof) -> ndarray:
+            """Gas surface density profile.
 
-@Profile.profile_property
-def angular_momentum_phi(prof) -> ndarray:
-    """Angle between specific angular momentum and x-axis in xy-plane."""
-    angular_momentum_x = prof['angular_momentum_x']
-    angular_momentum_y = prof['angular_momentum_y']
-    return np.arctan2(angular_momentum_y, angular_momentum_x)
+            Units are [mass / length ** ndim], which depends on ndim of profile.
+            """
+            return prof['gas_mass'] / prof['size']
 
+        for idx in range(n_dust):
 
-@Profile.profile_property
-def toomre_Q(prof) -> ndarray:
-    """Toomre Q parameter."""
-    if not prof.snap._physical_units:
-        G = gravitational_constant_in_code_units(prof.snap)
-    else:
-        G = (1 * plonk_units.newtonian_constant_of_gravitation).to_base_units()
-    return (
-        prof['sound_speed']
-        * prof['keplerian_frequency']
-        / (np.pi * G * prof['density'])
-    )
+            def dust_mass(idx, prof) -> ndarray:
+                """Dust mass profile."""
+                M = prof.snap[f'dust_mass_{idx+1:03}']
+                return prof.particles_to_binned_quantity('sum', M)
+
+            def dust_surface_density(idx, prof) -> ndarray:
+                """Dust surface density profile.
+
+                Units are [mass / length ** ndim], which depends on ndim of profile.
+                """
+                return prof[f'dust_mass_{idx+1:03}'] / prof['size']
+
+            Profile._profile_functions[f'dust_mass_{idx+1:03}'] = partial(
+                dust_mass, idx
+            )
+
+            Profile._profile_functions[f'dust_surface_density_{idx+1:03}'] = partial(
+                dust_surface_density, idx
+            )
