@@ -686,10 +686,13 @@ class Snap:
             elif inp_suffix == 'sum':
                 return self._get_array(inp_root).sum(axis=1)
 
-        raise ValueError(
-            'Cannot determine item to return. Extra quantities are available via\n'
-            'snap.extra_quantities().'
-        )
+        if self._extra_quantities:
+            raise ValueError('Cannot determine item to return.')
+        else:
+            raise ValueError(
+                'Cannot determine item to return. Extra quantities are available via\n'
+                'snap.extra_quantities().'
+            )
 
     def _getitem(
         self, inp: Union[str, ndarray, int, slice], sinks: bool = False,
@@ -709,10 +712,13 @@ class Snap:
             if step is not None:
                 return SubSnap(self, np.arange(i1, i2, step))
             return SubSnap(self, np.arange(i1, i2))
-        raise ValueError(
-            'Cannot determine item to return. Extra quantities are available via\n'
-            'snap.extra_quantities().'
-        )
+        if self._extra_quantities:
+            raise ValueError('Cannot determine item to return.')
+        else:
+            raise ValueError(
+                'Cannot determine item to return. Extra quantities are available via\n'
+                'snap.extra_quantities().'
+            )
 
     def __getitem__(
         self, inp: Union[str, ndarray, int, slice]
