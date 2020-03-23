@@ -683,7 +683,7 @@ class Snap:
         elif inp_root in self._dust_arrays:
             if _str_is_int(inp_suffix):
                 return self._get_array(inp_root)[:, int(inp_suffix) - 1]
-            elif inp_suffix == 'sum':
+            elif inp_suffix == 'total':
                 return self._get_array(inp_root).sum(axis=1)
 
         if self._extra_quantities:

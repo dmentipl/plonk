@@ -512,7 +512,7 @@ class Profile:
         array
             The particle array.
         """
-        if aggregation not in ('average', 'mean', 'median', 'std', 'sum'):
+        if aggregation not in _aggregations:
             raise ValueError('Cannot determine aggregation method')
 
         binned_quantity = np.zeros(self.n_bins)
