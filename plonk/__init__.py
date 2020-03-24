@@ -15,9 +15,14 @@ Features
 - Access simulation parameters and units.
 - Compute extra quantities on particles.
 - Visualize data using kernel interpolation.
+- Generate radial profiles.
 
 Classes
 -------
+
+- Profile
+    Represents a radial profile through the snapshot in either
+    cylindrical or spherical coordinates.
 
 - Snap
     Represents a smoothed particle hydrodynamics snapshot file,
@@ -67,7 +72,7 @@ units: Any = pint.UnitRegistry(system='cgs')
 Quantity: Any = units.Quantity
 
 from . import analysis, simulation, snap, utils, visualize
-from .analysis import Profile
+from .analysis import Profile, load_profile
 from .simulation import Simulation, load_ev, load_sim
 from .snap import Snap, load_snap
 from .visualize import Visualization
@@ -76,7 +81,7 @@ from .visualize import Visualization
 __all__ = (
     ['Profile', 'Simulation', 'Snap', 'Visualization']  # Classes
     + ['analysis', 'simulation', 'snap', 'utils', 'visualize']  # Packages
-    + ['load_snap', 'load_ev', 'load_sim']  # User functions
+    + ['load_ev', 'load_profile', 'load_snap', 'load_sim']  # User functions
     + ['units', 'Quantity']
 )
 

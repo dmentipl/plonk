@@ -437,7 +437,7 @@ module.
 
 .. code-block:: pycon
 
-    >>> prof = plonk.analysis.Profile(snap, radius_min=10, radius_max=200)
+    >>> prof = plonk.load_profile(snap, radius_min=10, radius_max=200)
     >>> prof
     <plonk.Profile: 100 bins>
 

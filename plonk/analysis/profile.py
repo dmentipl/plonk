@@ -15,8 +15,8 @@ from pandas import DataFrame
 
 from .. import Quantity
 from .. import units as plonk_units
-from ..snap import Snap, gravitational_constant_in_code_units
-from ..utils import average
+from ..snap import SnapLike, gravitational_constant_in_code_units
+from ..utils import average, is_documented_by
 
 _aggregations = ('average', 'mean', 'median', 'std', 'sum')
 
@@ -59,25 +59,23 @@ class Profile:
     --------
     Generate profile from snapshot.
 
-    >>> prof = plonk.Profile(snap=snap)
-    >>> prof = plonk.Profile(snap=snap, n_bins=300)
-    >>> prof = plonk.Profile(snap=snap, radius_min=1, radius_max=300)
-    >>> prof = plonk.Profile(snap=snap, spacing='log')
+    >>> prof = plonk.load_profile(snap=snap)
+    >>> prof = plonk.load_profile(snap=snap, n_bins=300)
+    >>> prof = plonk.load_profile(snap=snap, radius_min=1, radius_max=300)
+    >>> prof = plonk.load_profile(snap=snap, spacing='log')
 
     If snap has physical units and setting 'radius_min' or 'radius_max'
     must use physical quantities.
 
     >>> radius_min = plonk.Quantity('1 au')
     >>> radius_max = plonk.Quantity('300 au')
-    >>> prof = plonk.Profile(
-    ...     snap=snap,
-    ...     radius_min=radius_min,
-    ...     radius_max=radius_max
+    >>> prof = plonk.load_profile(
+    ...     snap=snap, radius_min=radius_min, radius_max=radius_max,
     ... )
 
     To access a profile.
 
-    >>> prof['density']
+    >>> prof['surface_density']
     >>> prof['scale_height']
 
     To set a new profile.
@@ -94,11 +92,15 @@ class Profile:
     Plot one or many quantities on the profile.
 
     >>> prof.plot('radius', 'density')
-    >>> prof.plot('radius', ['angular_momentum_x', 'angular_momentum_y'])
+    >>> prof.plot(
+    ...     'radius', ['angular_momentum_x', 'angular_momentum_y'],
+    ... )
 
     Plot a quantity on the profile with units.
 
-    >>> prof.plot('radius', 'density', x_unit='au', y_unit='g/cm**2')
+    >>> prof.plot(
+    ...     'radius', 'surface_density', x_unit='au', y_unit='g/cm^2'
+    ... )
     """
 
     _profile_functions: Dict[str, Callable] = {}
@@ -123,7 +125,7 @@ class Profile:
 
     def __init__(
         self,
-        snap: Snap,
+        snap: SnapLike,
         ndim: Optional[int] = 2,
         radius_min: Optional[Any] = None,
         radius_max: Optional[Any] = None,
@@ -639,3 +641,26 @@ def _generate_profiles(n_dust: int = 0):
             Profile._profile_functions[f'dust_surface_density_{idx+1:03}'] = partial(
                 dust_surface_density, idx
             )
+
+
+@is_documented_by(Profile)
+def load_profile(
+    snap: SnapLike,
+    ndim: Optional[int] = 2,
+    radius_min: Optional[Any] = None,
+    radius_max: Optional[Any] = None,
+    n_bins: int = 100,
+    aggregation: str = 'average',
+    spacing: str = 'linear',
+    ignore_accreted: bool = True,
+) -> Profile:
+    return Profile(
+        snap=snap,
+        ndim=ndim,
+        radius_min=radius_min,
+        radius_max=radius_max,
+        n_bins=n_bins,
+        aggregation=aggregation,
+        spacing=spacing,
+        ignore_accreted=ignore_accreted,
+    )

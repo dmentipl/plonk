@@ -178,7 +178,7 @@ Plot a density profile for multiple snapshots.
     >>> times = sim.properties['time'].to('year').magnitude[::stride]
     >>> for snap in sim.snaps[::stride]:
     ...     snap.physical_units()
-    ...     profile = plonk.Profile(
+    ...     profile = plonk.load_profile(
     ...         snap,
     ...         radius_min=10 * plonk.units('au'),
     ...         radius_max=150 * plonk.units('au'),
