@@ -768,7 +768,7 @@ class Snap:
 
     def __str__(self):
         """Dunder str method."""
-        return f'<plonk.Snap>'
+        return f'<plonk.Snap "{self.file_path.name}">'
 
 
 class SubSnap(Snap):

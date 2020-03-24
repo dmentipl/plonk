@@ -368,8 +368,12 @@ class Profile:
         return self.n_bins
 
     def __repr__(self):
-        """Object repr method."""
-        return f'<plonk.Profile: {self.n_bins} bins>'
+        """Dunder repr method."""
+        return self.__str__()
+
+    def __str__(self):
+        """Dunder str method."""
+        return f'<plonk.Profile "{self.snap.file_path.name}">'
 
     def loaded_profiles(self):
         """Return a listing of loaded profiles."""

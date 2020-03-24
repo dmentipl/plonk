@@ -422,7 +422,11 @@ class Visualization:
 
     def __repr__(self):
         """Dunder repr method."""
-        return '<plonk.Visualization>'
+        return self.__str__()
+
+    def __str__(self):
+        """Dunder str method."""
+        return f'<plonk.Visualization "{self.snap.file_path.name}">'
 
 
 def _check_input(*, snap, quantity, x, y, z, kind):
