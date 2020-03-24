@@ -173,7 +173,7 @@ class Simulation:
                 if isinstance(prop[key], list):
                     prop[key].append(val)
                 else:
-                    if prop[key] != val:
+                    if np.any(prop[key] != val):
                         prop[key] = '__inconsistent__'
         for key, val in prop.items():
             if isinstance(val, list):
