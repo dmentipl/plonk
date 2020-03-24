@@ -519,6 +519,8 @@ class Profile:
 
         binned_quantity = np.zeros(self.n_bins)
         for idx, bin_ind in enumerate(self.bin_indicies):
+            if bin_ind.size == 0:
+                continue
             if aggregation == 'average':
                 val = average(
                     array[self._mask][bin_ind],
