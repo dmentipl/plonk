@@ -224,19 +224,21 @@ class Profile:
         if radius_min is None:
             rmin = self._x.min()
         else:
-            if not isinstance(radius_min, Quantity):
+            rmin = Quantity(radius_min)
+            if not rmin.dimensionality == Quantity('cm').dimensionality:
                 raise ValueError(
                     'Snap has physical units: must use dimensional radius_min'
                 )
-            rmin = radius_min.to_base_units()
+            rmin = rmin.to_base_units()
         if radius_max is None:
             rmax = np.percentile(self._x.magnitude, 99, axis=0) * self._x.units
         else:
-            if not isinstance(radius_max, Quantity):
+            rmax = Quantity(radius_max)
+            if not rmax.dimensionality == Quantity('cm').dimensionality:
                 raise ValueError(
                     'Snap has physical units: must use dimensional radius_max'
                 )
-            rmax = radius_max.to_base_units()
+            rmax = rmax.to_base_units()
 
         return rmin, rmax
 
