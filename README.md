@@ -43,9 +43,23 @@ To read in a simulation with snapshot files like `disc_00000.h5`, and global qua
 
 >>> simulation = plonk.load_sim(prefix='disc')
 >>> simulation.snaps
-[<plonk.Snap: "disc_00000.h5">,
+[<plonk.Snap "disc_00000.h5">,
  ...
- <plonk.Snap: "disc_01000.h5">]
+ <plonk.Snap "disc_00030.h5">]
+```
+
+You can load individual snapshots and access the particle arrays:
+
+```python
+>>> snap = plonk.load_snap('disc_00030.h5')
+>>> snap['position']
+array([[ -24.69953214,   49.60113417,   -4.98059478],
+       [-108.99243136,   77.74663833,   12.89299546],
+       [ -51.22218782,  108.64454019,    1.56619644],
+       ...,
+       [  93.296599  ,  -77.66042087,    5.40835798],
+       [  63.75108128,   66.7446782 ,    3.30169363],
+       [   8.11639008,  139.45117413,    7.55340187]])
 ```
 
 The Snap objects contain the particle arrays, lazily loaded from the HDF5 file, as well as simulation metadata properties stored as a dictionary.
@@ -55,7 +69,6 @@ The Snap objects contain the particle arrays, lazily loaded from the HDF5 file, 
 To render the density on a snapshot:
 
 ```python
->>> snap = plonk.load_snap('disc_00000.h5')
 >>> plonk.visualize.plot(snap=snap, quantity='density')
 ```
 
@@ -64,6 +77,43 @@ For a more complicated example, here is the deviation from Keplerian velocity ar
 ![Planet embedded in protoplanetary disc](https://raw.githubusercontent.com/dmentipl/plonk/master/image.png)
 
 *Deviation from Keplerian velocity around a planet: at the disc midplane (left), and 10 (middle) and 20 au (right) above the disc midplane. Data from a Phantom simulation.*
+
+### Analysis
+
+Extra quantities not written to the snapshot file are available:
+
+```python
+>>> snap.extra_quantities()
+<plonk.Snap "disc_00030.h5">
+
+>>> snap['angular_momentum']
+array([ ... ])
+```
+
+You can generate radial profiles on the snapshot. For example, to calculate the scale height in a disc:
+
+```python
+>>> prof = plonk.load_profile(snap)
+
+>>> prof['scale_height']
+array([ ... ])
+```
+
+Physical units for array quantities and other properties are available.
+
+```python
+>>> snap['position'][0]
+array([-24.69953214,  49.60113417,  -4.98059478])
+
+>>> snap.physical_units()
+<plonk.Snap "disc_00030.h5">
+
+>>> snap['position'][0]
+array([-3.69505001e+14,  7.42032967e+14, -7.45096980e+13]) <Unit('centimeter')>
+
+>>> snap['position'][0].to('au')
+array([-24.6998837 ,  49.60184016,  -4.98066567]) <Unit('astronomical_unit')>
+```
 
 ### More
 
