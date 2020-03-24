@@ -417,6 +417,11 @@ class Profile:
             A matplotlib Axes object to plot to.
         **kwargs
             Keyword arguments to pass to Axes plot method.
+
+        Returns
+        -------
+        ax
+            The matplotlib Axes object.
         """
         if isinstance(y, str):
             y = [y]
@@ -439,9 +444,7 @@ class Profile:
                 _x = _x.to(x_unit)
 
         if ax is None:
-            fig, ax = plt.subplots()
-        else:
-            fig = ax.get_figure()
+            _, ax = plt.subplots()
 
         xlabel = x.capitalize().replace('_', ' ')
         if self.snap._physical_units:
@@ -482,7 +485,7 @@ class Profile:
 
         ax.legend()
 
-        return fig, ax
+        return ax
 
     def to_dataframe(
         self, columns: Union[Tuple[str, ...], List[str]] = None
