@@ -399,7 +399,73 @@ Derived arrays
 ~~~~~~~~~~~~~~
 
 Sometimes you need new arrays on the particles that are not available in the
-snapshot files. You can create a new, derived array on the particles as follows.
+snapshot files. Many are available in Plonk already. To access these arrays use
+the :py:meth:`extra_quantities` method. Before calling the method:
+
+.. code-block:: pycon
+
+    >>> snap.available_arrays()
+    ('density',
+     'dust_to_gas_ratio',
+     'dust_type',
+     'mass',
+     'position',
+     'pressure',
+     'smoothing_length',
+     'sound_speed',
+     'stopping_time',
+     'timestep',
+     'type',
+     'velocity',
+     'velocity_divergence')
+
+    >>> snap.extra_quantities()
+    <plonk.Snap "disc_00030.h5">
+
+After calling :py:meth:`extra_quantities`:
+
+.. code-block:: pycon
+
+    >>> snap.available_arrays()
+    ('angular_momentum',
+     'angular_velocity',
+     'azimuthal_angle',
+     'density',
+     'dust_density',
+     'dust_fraction',
+     'dust_mass',
+     'dust_to_gas_ratio',
+     'dust_type',
+     'eccentricity',
+     'gas_density',
+     'gas_fraction',
+     'gas_mass',
+     'inclination',
+     'keplerian_frequency',
+     'kinetic_energy',
+     'mass',
+     'momentum',
+     'polar_angle',
+     'position',
+     'pressure',
+     'radial_velocity_cylindrical',
+     'radial_velocity_spherical',
+     'radius_cylindrical',
+     'radius_spherical',
+     'semi_major_axis',
+     'smoothing_length',
+     'sound_speed',
+     'specific_angular_momentum',
+     'specific_kinetic_energy',
+     'stokes_number',
+     'stopping_time',
+     'temperature',
+     'timestep',
+     'type',
+     'velocity',
+     'velocity_divergence')
+
+You can create a new, derived array on the particles as follows.
 
 .. code-block:: pycon
 
@@ -423,6 +489,41 @@ the decorator :py:meth:`add_array`.
     >>> snap['radius']
     array([ 55.41064337, 133.88013245, 120.11389861, ..., 121.38944087,
             92.29871306, 139.68717104])
+
+~~~~~
+Units
+~~~~~
+
+Plonk uses Pint to set arrays to physical units if requested. To set physical
+units on a Snap use the :py:meth:`physical_units` method. Before calling this
+method accessing an array returns dimensionless quantities as pure NumPy arrays.
+
+.. code-block:: pycon
+
+    >>> snap['x']
+    array([ -24.69953214, -108.99243136,  -51.22218782, ...,   93.296599  ,
+             63.75108128,    8.11639008])
+
+After calling the method, the Snap object returns a dimensional Pint NumPy
+array.
+
+.. code-block:: pycon
+
+    >>> snap.physical_units()
+    <plonk.Snap "disc_00030.h5">
+
+    >>> snap['x']
+    array([-3.69505001e+14, -1.63052677e+15, -7.66283930e+14, ...,
+            1.39571712e+15,  9.53716176e+14,  1.21421196e+14])
+            <Unit('centimeter')>
+
+It is easy to convert quantities to different units as required.
+
+.. code-block:: pycon
+
+    >>> snap['x'].to('au')
+    array([ -24.6998837 , -108.99398271,  -51.22291689, ...,   93.29792694,
+             63.75198868,    8.11650561]) <Unit('astronomical_unit')>
 
 ~~~~~~~~
 Profiles
@@ -454,8 +555,12 @@ To see what profiles are loaded and what are available use the
      'angular_momentum_theta',
      'aspect_ratio',
      'density',
-     'dust_fraction',
+     'dust_mass_001',
+     'dust_surface_density_001',
+     'dust_to_gas_ratio',
      'dust_type',
+     'gas_mass',
+     'gas_surface_density',
      'mass',
      'number',
      'position',
@@ -466,6 +571,7 @@ To see what profiles are loaded and what are available use the
      'smoothing_length',
      'sound_speed',
      'stopping_time',
+     'surface_density',
      'timestep',
      'toomre_Q',
      'type',
@@ -506,30 +612,29 @@ them into the DataFrame.
 .. code-block:: pycon
 
     >>> profiles = (
-    ...    'angmom_mag',
-    ...    'angmom_phi',
-    ...    'angmom_theta',
-    ...    'density',
+    ...    'angular_momentum_phi',
+    ...    'angular_momentum_theta',
+    ...    'surface_density',
     ...    'scale_height',
     ... )
     >>> for p in profiles:
     ...     prof[p]
-    >>> df = prof.to_dataframe()
+    >>> df = prof.to_dataframe(columns=profiles)
     >>> df
-        angmom_mag  angmom_phi  angmom_theta       density          mass  number  radius  scale_height
-    0     0.012922   -0.589951      0.085860  5.468106e-09  7.148000e-07     749   10.95      0.532838
-    1     0.008191    1.135075      0.093032  7.105422e-09  1.090000e-06    1189   12.85      0.657642
-    2     0.005604   -0.182397      0.090941  9.089863e-09  1.600600e-06    1741   14.75      0.794080
-    3     0.004180    2.056016      0.089071  1.075723e-08  2.138200e-06    2347   16.65      0.919486
-    4     0.003258    1.053405      0.090182  1.233050e-08  2.730600e-06    3006   18.55      1.052757
-    ..         ...         ...           ...           ...           ...     ...     ...           ...
-    95    0.026811   -2.888461      0.096616  1.566369e-10  3.580000e-07     358  191.45     32.270189
-    96    0.028784    2.510064      0.084876  1.485992e-10  3.430000e-07     343  193.35     31.039857
-    97    0.033007    1.883518      0.103087  1.244152e-10  2.900000e-07     290  195.25     33.096242
-    98    0.032026   -0.212691      0.093936  1.278899e-10  3.010000e-07     301  197.15     34.623090
-    99    0.033485    1.817221      0.091162  1.199359e-10  2.850000e-07     285  199.05     35.381584
+        angular_momentum_phi  angular_momentum_theta  surface_density  scale_height
+    0              -2.816044                0.021775     1.430097e-09      0.114181
+    1              -2.779819                0.041433     3.224447e-09      0.320315
+    2               0.328625                0.047102     4.576087e-09      0.442617
+    3               2.992063                0.050624     5.793719e-09      0.560383
+    4               1.888552                0.053376     7.333067e-09      0.670619
+    ..                   ...                     ...              ...           ...
+    95             -1.601260                0.143154     3.513620e-10     24.574487
+    96              1.172109                0.150343     3.155834e-10     26.160013
+    97              1.802767                0.145982     2.782487e-10     25.658521
+    98             -2.236464                0.145009     2.574287e-10     25.811094
+    99              0.513205                0.163601     2.316950e-10     29.672963
 
-    [100 rows x 8 columns]
+    [100 rows x 4 columns]
 
 Then we can use pandas plotting methods.
 
@@ -537,7 +642,7 @@ Then we can use pandas plotting methods.
 
     >>> with plt.style.context('seaborn'):
     ...     fig, axs = plt.subplots(ncols=2, figsize=(12, 5))
-    ...     df.plot('radius', 'density', ax=axs[0])
+    ...     df.plot('radius', 'surface_density', ax=axs[0])
     ...     df.plot('radius', 'scale_height', ax=axs[1])
 
 .. figure:: _static/profile.png
