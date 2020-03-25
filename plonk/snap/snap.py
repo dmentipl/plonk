@@ -445,20 +445,32 @@ class Snap:
 
         return self
 
-    def rotate(self, rotation: Rotation) -> Snap:
+    def rotate(self, rotation: Union[ndarray, Rotation]) -> Snap:
         """Rotate snapshot.
 
         Parameters
         ----------
         rotation
-            The rotation as a scipy.spatial.transform.Rotation object.
+            The rotation as a scipy.spatial.transform.Rotation object
+            or ndarray that can be converted to a Rotation object via
+            Rotation.from_rotvec.
 
         Returns
         -------
         Snap
             The rotated Snap. Note that the rotation operation is
             in-place.
+
+        Examples
+        --------
+        Rotate a Snap by π/3 around [1, 1, 0].
+
+        >>> rot = np.array([1, 1, 0])
+        >>> rot = rot * np.pi / 3 * np.linalg.norm(rot)
+        >>> snap.rotate(rot)
         """
+        if isinstance(rotation, ndarray):
+            rotation = Rotation.from_rotvec(rotation)
         for arr in self._vector_arrays:
             if arr in self.loaded_arrays():
                 self._arrays[arr] = rotation.apply(self._arrays[arr])
@@ -816,35 +828,6 @@ class SubSnap(Snap):
 
 
 SnapLike = Union[Snap, SubSnap]
-
-
-def get_array_from_input(
-    snap: SnapLike, inp: Union[str, ndarray], default: str = None
-) -> ndarray:
-    """Get array on Snap.
-
-    Parameters
-    ----------
-    snap
-        The Snap or SubSnap.
-    inp
-        The input as a string or ndarray. If a string return
-        snap[inp], otherwise return inp as a ndarray.
-    default
-        The default array as a string resolved as snap[default].
-
-    Returns
-    -------
-    ndarray
-        The array on the particles.
-    """
-    if isinstance(inp, ndarray):
-        return inp
-    elif isinstance(inp, str):
-        return get_array_in_code_units(snap, inp)
-    elif default is not None:
-        return get_array_in_code_units(snap, default)
-    raise ValueError('Cannot determine array to return')
 
 
 def get_array_in_code_units(snap: SnapLike, name: str) -> ndarray:

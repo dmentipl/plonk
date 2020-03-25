@@ -7,14 +7,13 @@ hydrodynamics simulation data.
 from __future__ import annotations
 
 from copy import copy
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ndarray
 
 from ..snap import SnapLike
-from ..snap.snap import get_array_from_input
 from ..utils import get_extent_from_percentile
 from . import plots
 from .interpolation import Extent, interpolate
@@ -102,10 +101,9 @@ class Visualization:
     def plot(
         self,
         *,
-        quantity: Union[str, ndarray],
-        x: Union[str, ndarray] = 'x',
-        y: Union[str, ndarray] = 'y',
-        z: Union[str, ndarray] = 'z',
+        quantity: str,
+        x: str = 'x',
+        y: str = 'y',
         kind: Optional[str] = None,
         interp: str = 'projection',
         z_slice: float = 0.0,
@@ -123,21 +121,13 @@ class Visualization:
         Parameters
         ----------
         quantity
-            The quantity to visualize. Can be a string to pass to Snap,
-            or a 1d array (N,) of scalar data, or a 2d array (N, 3) of
-            vector data. If quantity is 2d, only the first two
-            components are visualized, i.e. quantity[:, 0] and
-            quantity[:, 1].
+            The quantity to visualize. Must be a string to pass to Snap,
         x
-            The x-coordinate for the visualization. Can be a string to
-            pass to Snap, or a 1d array (N,). Default is 'x'.
+            The x-coordinate for the visualization. Must be a string to
+            pass to Snap. Default is 'x'.
         y
-            The y-coordinate for the visualization. Can be a string to
-            pass to Snap, or a 1d array (N,). Default is 'y'.
-        z
-            The z-coordinate for the visualization. Can be a string to
-            pass to Snap, or a 1d array (N,). This is only required for
-            cross-section plots. Default is 'z'.
+            The y-coordinate for the visualization. Must be a string to
+            pass to Snap. Default is 'y'.
         kind
             The type of plot.
 
@@ -156,8 +146,8 @@ class Visualization:
             is 0.0.
         extent
             The range in the x and y-coord as (xmin, xmax, ymin, ymax).
-            The default is to set the extent to a box of size set by an
-            inscribed sphere containing 99% of particles.
+            The default is to set the extent to a box of size such that
+            99% of particles are contained within.
         units
             The units of the plot as a dictionary with keys 'quantity',
             'extent', 'projection'. The values are Pint Unit objects.
@@ -166,6 +156,10 @@ class Visualization:
         **kwargs
             Additional keyword arguments to pass to interpolation and
             matplotlib functions.
+
+        Returns
+        -------
+        Visualization
 
         Notes
         -----
@@ -186,9 +180,6 @@ class Visualization:
         density_weighted : bool
             Whether to density weight the interpolation or not.
             Default is False.
-        fmt : str
-            This is the matplotlib ax.plot method positional
-            argument format string. Default is 'k.'.
         show_colorbar : bool
             Whether or not to display a colorbar. Default is True.
         number_of_arrows : tuple
@@ -207,30 +198,17 @@ class Visualization:
         ...     quantity='density',
         ... )
 
-        Get the interpolation to grid directly (without plotting).
+        Quiver plot of velocity in xy-plane.
 
-        >>> grid_data = plonk.visualize.interpolate(
+        >>> viz = plonk.visualize.plot(
         ...     snap=snap,
-        ...     quantity='density',
-        ...     interp='projection',
-        ...     extent=(-100, 100, -100, 100),
-        ... )
-
-        Make an animation of multiple snaps.
-
-        >>> plonk.visualize.animation(
-        ...     snaps=snaps,
-        ...     quantity='density',
-        ...     extent=(-100, 100, -100, 100),
-        ...     vmin=0.0,
-        ...     vmax=1.0,
-        ...     filename='animation.mp4',
+        ...     quantity='velocity',
         ... )
 
         Set units for the plot.
 
         >>> units = {
-        ...     'quantity': plonk.units('g / cm ** 3'),
+        ...     'quantity': plonk.units('g/cm^3'),
         ...     'extent': plonk.units('au'),
         ...     'projection': plonk.units('cm'),
         ... }
@@ -258,13 +236,8 @@ class Visualization:
             if ax is not None:
                 raise ValueError('Trying to change existing Axes attribute')
 
-        quantity_str: Optional[str] = quantity if isinstance(quantity, str) else None
-        quantity, x, y, z, kind = _check_input(
-            snap=self.snap, quantity=quantity, x=x, y=y, z=z, kind=kind
-        )
-
         if extent == (-1, -1, -1, -1):
-            extent = get_extent_from_percentile(x, y)
+            extent = get_extent_from_percentile(snap=self.snap, x=x, y=y)
         interpolation_kwargs = ('number_of_pixels', 'density_weighted')
         __kwargs = {
             key: val for key, val in _kwargs.items() if key in interpolation_kwargs
@@ -276,22 +249,15 @@ class Visualization:
             quantity=quantity,
             x=x,
             y=y,
-            z=z,
             interp=interp,
             z_slice=z_slice,
             extent=extent,
             **__kwargs,
         )
         if units is not None:
-            if quantity_str is None:
-                raise ValueError(
-                    'Cannot set units when passing in arrays. '
-                    'Instead, use strings to access\n'
-                    'quantities on Snap. E.g. plot(..., quantity="density", ...).'
-                )
             interpolated_data, extent = _convert_units(
                 snap=self.snap,
-                quantity_str=quantity_str,
+                quantity=quantity,
                 interpolated_data=interpolated_data,
                 extent=extent,
                 units=units,
@@ -300,6 +266,12 @@ class Visualization:
             self.units.update(units)
 
         self.extent = extent
+
+        if kind is None:
+            if interpolated_data.ndim == 2:
+                kind = 'render'
+            elif interpolated_data.ndim == 3:
+                kind = 'quiver'
 
         show_colorbar = _kwargs.pop(
             'show_colorbar', True if kind == 'render' else False
@@ -334,11 +306,13 @@ class Visualization:
     def particle_plot(
         self,
         *,
-        x: Union[str, ndarray] = 'x',
-        y: Union[str, ndarray] = 'y',
-        color: Optional[Union[str, ndarray]] = None,
-        size: Optional[Union[str, ndarray]] = None,
-        units: Dict[str, Any] = None,
+        x: str = 'x',
+        y: str = 'y',
+        color: Optional[str] = None,
+        size: Optional[str] = None,
+        xunit: Any = None,
+        yunit: Any = None,
+        cunit: Any = None,
         xscale: str = None,
         yscale: str = None,
         ax: Optional[Any] = None,
@@ -346,23 +320,29 @@ class Visualization:
     ) -> Visualization:
         """Visualize smoothed particle hydrodynamics data.
 
-        Visualize SPH data by plotting the particles.
+        Visualize SPH data by plotting the particles, or a subset of
+        the particles.
 
         Parameters
         ----------
         x
-            The x-coordinate for the visualization. Can be a string to
-            pass to Snap, or a 1d array (N,). Default is 'x'.
+            The x-coordinate for the visualization. Must be a string to
+            pass to Snap. Default is 'x'.
         y
-            The y-coordinate for the visualization. Can be a string to
-            pass to Snap, or a 1d array (N,). Default is 'y'.
+            The y-coordinate for the visualization. Must be a string to
+            pass to Snap. Default is 'y'.
         color
-            The quantity to color the particles.
+            The quantity to color the particles. Must be a string to
+            pass to Snap.
         size
-            The quantity to set the particle size.
-        units
-            The units of the plot as a dictionary with keys 'quantity',
-            'extent', 'projection'. The values are Pint Unit objects.
+            The quantity to set the particle size. Must be a string to
+            pass to Snap.
+        xunit
+            The units of the x-coordinate.
+        yunit
+            The units of the y-coordinate.
+        cunit
+            The units of the color.
         xscale
             The xscale to pass to the matplotlib Axes method set_xscale.
         yscale
@@ -385,36 +365,62 @@ class Visualization:
             if ax is not None:
                 raise ValueError('Trying to change existing Axes attribute')
 
-        x, y, color, size = _check_input_particles(
-            snap=self.snap, x=x, y=y, color=color, size=size,
-        )
+        _x: ndarray = self.snap[x]
+        _y: ndarray = self.snap[y]
+        _color: ndarray = self.snap[color] if color is not None else None
+        _size: ndarray = self.snap[size] if size is not None else None
+
+        if self.snap._physical_units:
+            if xunit is not None:
+                _x = _x.to(xunit).magnitude
+            else:
+                _x = _x.magnitude
+            if yunit is not None:
+                _y = _y.to(yunit).magnitude
+            else:
+                _y = _y.magnitude
+            if cunit is not None:
+                _color = _color.to(cunit).magnitude
+            else:
+                _color = _color.magnitude
 
         h: ndarray = self.snap['smoothing_length']
         mask = h > 0
 
-        x = x[mask]
-        y = y[mask]
-        if color is not None:
-            color = color[mask]
-        if size is not None:
-            size = size[mask]
+        _x = _x[mask]
+        _y = _y[mask]
+        if _color is not None:
+            _color = _color[mask]
+        if _size is not None:
+            _size = _size[mask]
+            _size = 100 * _size / _size.max()
+            if self.snap._physical_units:
+                _size = _size.magnitude
 
-        if size is None and color is None:
+        show_colorbar = _kwargs.pop(
+            'show_colorbar', True if _color is not None else False
+        )
+
+        if _size is None and _color is None:
             self.objects['lines'] = plots.particle_plot(
-                x=x, y=y, ax=self.ax, **_kwargs,
+                x=_x, y=_y, ax=self.ax, **_kwargs,
             )
 
         else:
             self.objects['paths'] = plots.scatter_plot(
-                x=x, y=y, color=color, size=size, ax=self.ax, **_kwargs,
+                x=_x, y=_y, color=_color, size=_size, ax=self.ax, **_kwargs,
             )
+            if show_colorbar:
+                divider = make_axes_locatable(self.ax)
+                cax = divider.append_axes("right", size="5%", pad=0.05)
+                self.objects['colorbar'] = self.fig.colorbar(self.objects['paths'], cax)
 
         if xscale is not None:
             self.ax.set_xscale(xscale)
         if yscale is not None:
             self.ax.set_yscale(yscale)
 
-        ratio = (x.max() - x.min()) / (y.max() - y.min())
+        ratio = (_x.max() - _x.min()) / (_y.max() - _y.min())
         if not max(ratio, 1 / ratio) > 10.0:
             self.ax.set_aspect('equal')
 
@@ -429,56 +435,10 @@ class Visualization:
         return f'<plonk.Visualization "{self.snap.file_path.name}">'
 
 
-def _check_input(*, snap, quantity, x, y, z, kind):
-
-    if quantity is not None:
-        quantity = get_array_from_input(snap, quantity)
-
-    x = get_array_from_input(snap, x, 'x')
-    y = get_array_from_input(snap, y, 'y')
-    z = get_array_from_input(snap, z, 'z')
-
-    if quantity is not None:
-        if quantity.ndim > 2:
-            raise ValueError('Cannot interpret quantity')
-        if kind in ('render', 'contour') and quantity.ndim != 1:
-            raise ValueError('quantity is wrong shape for render or contour')
-        if kind in ('quiver', 'stream') and quantity.ndim != 2:
-            raise ValueError('quantity is wrong shape for quiver or streamplot')
-        if kind is None:
-            if quantity.ndim == 1:
-                kind = 'render'
-            elif quantity.ndim == 2:
-                kind = 'quiver'
-    else:
-        if kind is None:
-            kind = 'particle'
-        else:
-            raise ValueError(f'No quantity: can only do particle plot')
-
-    if kind not in ('render', 'contour', 'quiver', 'stream'):
-        raise ValueError('Cannot determine plot kind')
-
-    return quantity, x, y, z, kind
-
-
-def _check_input_particles(*, snap, x, y, color, size):
-
-    if color is not None:
-        color = get_array_from_input(snap, color)
-    if size is not None:
-        size = get_array_from_input(snap, size)
-
-    x = get_array_from_input(snap, x, 'x')
-    y = get_array_from_input(snap, y, 'y')
-
-    return x, y, color, size
-
-
 def _convert_units(
     *,
     snap: SnapLike,
-    quantity_str: str,
+    quantity: str,
     interpolated_data: ndarray,
     extent: Extent,
     units: Dict[str, Any],
@@ -487,7 +447,7 @@ def _convert_units(
     required_keys = {'extent', 'projection', 'quantity'}
     if not set(units) == required_keys:
         raise ValueError(f'units dictionary requires: {required_keys}')
-    _quantity_unit = snap.get_array_unit(quantity_str)
+    _quantity_unit = snap.get_array_unit(quantity)
     if interp == 'projection':
         data = (
             (interpolated_data * _quantity_unit * snap.units['length'])

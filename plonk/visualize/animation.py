@@ -52,6 +52,24 @@ def animation(
         Keyword arguments to pass to matplotlib Animation.save.
     **kwargs
         Arguments to pass to visualize.plot.
+
+    Returns
+    -------
+    anim
+        The matplotlib FuncAnimation object.
+
+    Examples
+    --------
+    Make an animation of multiple snaps.
+
+    >>> plonk.visualize.animation(
+    ...     snaps=snaps,
+    ...     quantity='density',
+    ...     extent=(-100, 100, -100, 100),
+    ...     vmin=0.0,
+    ...     vmax=1.0,
+    ...     filename='animation.mp4',
+    ... )
     """
     filepath = pathlib.Path(filename)
     if filepath.suffix != '.mp4':
@@ -134,6 +152,11 @@ def animation_profiles(
         Keyword arguments to pass to matplotlib Animation.save.
     **kwargs
         Arguments to pass to plot function.
+
+    Returns
+    -------
+    anim
+        The matplotlib FuncAnimation object.
     """
     filepath = pathlib.Path(filename)
     if filepath.suffix != '.mp4':

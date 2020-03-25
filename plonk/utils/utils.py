@@ -3,7 +3,6 @@
 from typing import Any, Optional, Union
 
 import numpy as np
-from numpy import ndarray
 
 from .. import units
 
@@ -49,8 +48,9 @@ def time_string(
 
 
 def get_extent_from_percentile(
-    x: ndarray,
-    y: ndarray,
+    snap,
+    x: str,
+    y: str,
     percentile: float = 99,
     x_center_on: Optional[float] = None,
     y_center_on: Optional[float] = None,
@@ -80,8 +80,8 @@ def get_extent_from_percentile(
         The extent of the box as (xmin, xmax, ymin, ymax).
     """
     pl, pr = (100 - percentile) / 2, percentile + (100 - percentile) / 2
-    xlim = np.percentile(x, [pl, pr])
-    ylim = np.percentile(y, [pl, pr])
+    xlim = np.percentile(snap[x], [pl, pr])
+    ylim = np.percentile(snap[y], [pl, pr])
 
     if x_center_on is not None:
         xlim += x_center_on - xlim.mean()

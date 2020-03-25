@@ -4,13 +4,13 @@ There are two functions: one for interpolation of scalar fields, and one
 for interpolation of vector fields.
 """
 
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple
 
 import numpy as np
 from numpy import ndarray
 
 from ..snap import SnapLike
-from ..snap.snap import get_array_from_input, get_array_in_code_units
+from ..snap.snap import get_array_in_code_units
 from .splash import interpolate_cross_section, interpolate_projection
 
 Extent = Tuple[float, float, float, float]
@@ -19,10 +19,9 @@ Extent = Tuple[float, float, float, float]
 def interpolate(
     *,
     snap: SnapLike,
-    quantity: Union[str, ndarray],
-    x: Union[str, ndarray] = 'x',
-    y: Union[str, ndarray] = 'y',
-    z: Optional[Union[str, ndarray]] = None,
+    quantity: str,
+    x: str = 'x',
+    y: str = 'y',
     interp: 'str',
     z_slice: Optional[float] = None,
     extent: Extent,
@@ -35,21 +34,13 @@ def interpolate(
     snap
         The Snap (or SubSnap) object.
     quantity
-        The quantity to visualize. Can be a string to pass to Snap, or
-        a 1d array (N,) of scalar data, or a 2d array (N, 3) of
-        vector data. If quantity is 2d, only the first two components
-        are interpolated, i.e. quantity[:, 0] and quantity[:, 1].
-        Default is None.
+        The quantity to visualize. Must be a string to pass to Snap,
     x
-        The x-coordinate for the visualization. Can be a string to
-        pass to Snap, or a 1d array (N,). Default is 'x'.
+        The x-coordinate for the visualization. Must be a string to
+        pass to Snap. Default is 'x'.
     y
-        The y-coordinate for the visualization. Can be a string to
-        pass to Snap, or a 1d array (N,). Default is 'y'.
-    z
-        The z-coordinate for the visualization. Can be a string to
-        pass to Snap, or a 1d array (N,). This is only required for
-        cross-section plots. Default is 'z'.
+        The y-coordinate for the visualization. Must be a string to
+        pass to Snap. Default is 'y'.
     interp
         The interpolation type. Default is 'projection'.
 
@@ -68,12 +59,22 @@ def interpolate(
     Returns
     -------
     ndarray
-        The interpolated quantity on a pixel grid as an ndarray.
+        The interpolated quantity on a pixel grid as an ndarray. The
+        shape for scalar data is (npixx, npixy), and for vector is
+        (2, npixx, npixy).
+
+    Examples
+    --------
+    Interpolate density to grid.
+
+    >>> grid_data = plonk.visualize.interpolate(
+    ...     snap=snap,
+    ...     quantity='density',
+    ...     interp='projection',
+    ...     extent=(-100, 100, -100, 100),
+    ... )
     """
-    quantity = get_array_from_input(snap, quantity)
-    x = get_array_from_input(snap, x, 'x')
-    y = get_array_from_input(snap, y, 'y')
-    z = get_array_from_input(snap, z, 'z')
+    _quantity, x, y, z = _get_arrays_from_str(snap=snap, quantity=quantity, x=x, y=y)
     h = get_array_in_code_units(snap, 'smoothing_length')
     m = get_array_in_code_units(snap, 'mass')
 
@@ -84,9 +85,9 @@ def interpolate(
             z_slice = 0.0
         cross_section = z_slice
 
-    if quantity.ndim == 1:
+    if _quantity.ndim == 1:
         interpolated_data = scalar_interpolation(
-            quantity=quantity,
+            quantity=_quantity,
             x_coordinate=x,
             y_coordinate=y,
             z_coordinate=z,
@@ -98,10 +99,10 @@ def interpolate(
             **kwargs,
         )
 
-    elif quantity.ndim == 2:
+    elif _quantity.ndim == 2:
         interpolated_data = vector_interpolation(
-            quantity_x=quantity[:, 0],
-            quantity_y=quantity[:, 1],
+            quantity_x=_quantity[:, 0],
+            quantity_y=_quantity[:, 1],
             x_coordinate=x,
             y_coordinate=y,
             z_coordinate=z,
@@ -343,3 +344,36 @@ def _interpolate(
         )
 
     return interpolated_data
+
+
+def _get_arrays_from_str(*, snap, quantity, x, y):
+
+    coords = {'x', 'y', 'z'}
+    if x not in coords:
+        raise ValueError('x-coordinate must be one of "x", "y", "z"')
+    if y not in coords:
+        raise ValueError('y-coordinate must be one of "x", "y", "z"')
+
+    quantity_str, x_str, y_str = quantity, x, y
+    z_str = coords.difference((x_str, y_str)).pop()
+
+    quantity = get_array_in_code_units(snap, quantity)
+    x = get_array_in_code_units(snap, x_str)
+    y = get_array_in_code_units(snap, y_str)
+    z = get_array_in_code_units(snap, z_str)
+
+    if quantity.ndim > 2:
+        raise ValueError('Cannot interpret quantity with ndim > 2')
+    elif quantity.ndim == 2:
+        try:
+            quantity_x = snap[quantity_str + '_' + x_str]
+            quantity_y = snap[quantity_str + '_' + y_str]
+            quantity = np.stack([quantity_x, quantity_y]).T
+        except ValueError:
+            raise ValueError(
+                '2d quantity must be a vector quantity, e.g. "velocity".\n'
+                'For dust quantities, try appending the dust species number,\n'
+                'e.g. "dust_density_001".'
+            )
+
+    return quantity, x, y, z
