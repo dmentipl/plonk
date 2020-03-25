@@ -746,8 +746,8 @@ class Snap:
 
     def __setitem__(self, name: str, item: ndarray):
         """Set an array."""
-        if not isinstance(item, ndarray):
-            raise ValueError('"item" must be ndarray')
+        if not isinstance(item, (ndarray, Quantity)):
+            raise ValueError('"item" must be ndarray or Pint Quantity')
         if item.shape[0] != len(self):
             raise ValueError('Length of array does not match particle number')
         if name in self.loaded_arrays():
