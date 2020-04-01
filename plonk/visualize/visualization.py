@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ndarray
 
+from .. import Quantity
 from ..snap import SnapLike
 from ..utils import get_extent_from_percentile
 from . import plots
@@ -238,6 +239,16 @@ class Visualization:
 
         if extent == (-1, -1, -1, -1):
             extent = get_extent_from_percentile(snap=self.snap, x=x, y=y)
+        if isinstance(extent[0], Quantity):
+            extent = (
+                (extent[0] / self.snap.units['length']).to_base_units().magnitude,
+                (extent[1] / self.snap.units['length']).to_base_units().magnitude,
+                (extent[2] / self.snap.units['length']).to_base_units().magnitude,
+                (extent[3] / self.snap.units['length']).to_base_units().magnitude,
+            )
+        if isinstance(z_slice, Quantity):
+            z_slice = (z_slice / self.snap.units['length']).to_base_units().magnitude
+
         interpolation_kwargs = ('number_of_pixels', 'density_weighted')
         __kwargs = {
             key: val for key, val in _kwargs.items() if key in interpolation_kwargs
