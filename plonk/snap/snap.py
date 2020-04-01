@@ -614,14 +614,14 @@ class Snap:
         unit
             The Pint unit quantity, or the float 1.0 if no unit found.
         """
+        arr_root = '_'.join(arr.split('_')[:-1])
         if arr in self._array_split_mapper:
             arr = self._array_split_mapper[arr][0]
         elif arr in self._array_name_mapper:
             arr = self._array_name_mapper[arr]
-        try:
-            unit = self.units[self._array_units[arr]]
-        except KeyError:
-            unit = 1.0
+        elif arr_root in self._vector_arrays | self._dust_arrays:
+            arr = arr_root
+        unit = self.units[self._array_units[arr]]
         return unit
 
     def _get_array_from_registry(self, name: str, sinks: bool = False):
