@@ -36,7 +36,8 @@ class Profile:
     ndim : optional
         The dimension of the profile. For ndim == 2, the radial binning
         is cylindrical in the xy-plane. For ndim == 3, the radial
-        binning is spherical. Default is 2.
+        binning is spherical. For ndim == 1, the radial binning is
+        Cartesian along the x-axis. Default is 2.
     radius_min : optional
         The minimum radius for binning. Defaults to minimum on the
         particles.
@@ -193,7 +194,9 @@ class Profile:
     def _calculate_x(self) -> ndarray:
         pos: ndarray = self.snap['xyz']
         pos = pos[self._mask]
-        if self.ndim == 2:
+        if self.ndim == 1:
+            return pos[:, 0]
+        elif self.ndim == 2:
             return np.sqrt(pos[:, 0] ** 2 + pos[:, 1] ** 2)
         elif self.ndim == 3:
             return np.sqrt(pos[:, 0] ** 2 + pos[:, 1] ** 2 + pos[:, 2] ** 2)
@@ -249,7 +252,9 @@ class Profile:
             bin_edges = self._bin_edges_physical_units()
         else:
             bin_edges = self._bin_edges_code_units()
-        if self.ndim == 2:
+        if self.ndim == 1:
+            bin_sizes = bin_edges[1:] - bin_edges[:-1]
+        elif self.ndim == 2:
             bin_sizes = np.pi * (bin_edges[1:] ** 2 - bin_edges[:-1] ** 2)
         elif self.ndim == 3:
             bin_sizes = 4 / 3 * np.pi * (bin_edges[1:] ** 3 - bin_edges[:-1] ** 3)
