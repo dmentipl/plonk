@@ -270,7 +270,9 @@ class Snap:
         self._sinks = {}
         self._file_pointer = None
         self._num_particles = -1
+        self._num_particles_of_type = -1
         self._num_sinks = -1
+        self._num_dust_species = -1
         self._families = {key: None for key in Snap.particle_type.keys()}
         self.rotation = None
         self.translation = None
@@ -352,6 +354,21 @@ class Snap:
         return self._num_particles
 
     @property
+    def num_particles_of_type(self):
+        """Return number of particles per type."""
+        if self._num_particles_of_type == -1:
+            int_to_name = {idx: name for name, idx in self.particle_type.items()}
+            d = {}
+            for idx, num in enumerate(np.bincount(self['type'])):
+                if num > 0:
+                    if idx == self.particle_type['dust']:
+                        d['dust'] = list(np.bincount(self['dust_type'])[1:])
+                    else:
+                        d[int_to_name[idx]] = num
+            self._num_particles_of_type = d
+        return self._num_particles_of_type
+
+    @property
     def num_sinks(self):
         """Return number of sinks."""
         if self._num_sinks == -1:
@@ -360,6 +377,13 @@ class Snap:
             except KeyError:
                 self._num_sinks = 0
         return self._num_sinks
+
+    @property
+    def num_dust_species(self):
+        """Return number of dust species."""
+        if self._num_dust_species == -1:
+            self._num_dust_species = len(self.properties.get('grain_size', []))
+        return self._num_dust_species
 
     def extra_quantities(self):
         """Make extra quantities available."""
@@ -593,14 +617,27 @@ class Snap:
                 d[col] = arr
         return pd.DataFrame(d)
 
-    def _get_family_indices(self, name: str):
+    def _get_family_subsnap(self, name: str):
         """Get a family by name."""
         if name in self._families:
             if self._families[name] is None:
-                self._families[name] = np.flatnonzero(
-                    self['type'] == Snap.particle_type[name]
-                )
-            return self._families[name]
+                if name == 'dust':
+                    self._families[name] = {
+                        idx: np.flatnonzero(self['dust_type'] == idx + 1)
+                        for idx in range(self.num_dust_species)
+                    }
+                else:
+                    ind = np.flatnonzero(self['type'] == Snap.particle_type[name])
+                    if len(ind) == 0:
+                        raise ValueError(f'No {name} particles available')
+                    self._families[name] = ind
+            if name == 'dust':
+                return [
+                    SubSnap(self, self._families['dust'][idx])
+                    for idx in self._families['dust']
+                ]
+            else:
+                return SubSnap(self, self._families[name])
         else:
             raise ValueError('Family not available')
 
@@ -679,7 +716,7 @@ class Snap:
         inp_suffix = inp.split('_')[-1]
 
         if inp in self._families:
-            return SubSnap(self, self._get_family_indices(inp))
+            return self._get_family_subsnap(inp)
         elif inp in self.available_arrays(sinks):
             return self._get_array(inp, sinks)
         elif inp in self._array_name_mapper.keys():
