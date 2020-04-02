@@ -1,10 +1,8 @@
 """Utility functions."""
 
-from typing import Any, Optional, Union
+from typing import Optional
 
 import numpy as np
-
-from .. import units
 
 
 def is_documented_by(original):
@@ -18,10 +16,7 @@ def is_documented_by(original):
 
 
 def time_string(
-    snap,
-    unit: Union[str, Any] = units('year'),
-    unit_str: str = 'yr',
-    float_format: str = '.0f',
+    snap, unit: str, unit_str: Optional[str] = None, float_format: str = '.0f',
 ):
     """Generate time stamp string.
 
@@ -30,20 +25,28 @@ def time_string(
     snap
         The Snap object.
     unit
-        The time unit. Can be a string to pass to Pint or a Pint unit.
-        Default is plonk.units('year').
+        The time unit as a string to pass to Pint. E.g. 'year'.
     unit_str
-        The unit string to print. Default is 'yr'.
+        The unit string to print. If None, use the value from 'unit'.
+        Default is None.
     float_format
         The format for the time float value. Default is '.0f'.
 
     Examples
     --------
-    Generate a list of strings of snapshot time.
+    Generate a list of strings of snapshot time, like
+    ['0 yr', '10 yr', ...].
 
-    >>> text = [time_string(snap) for snap in snaps]
+    >>> text = [time_string(snap, 'year', 'yr') for snap in snaps]
+
+    Or, in terms of an orbital time, like '10 orbits'.
+
+    >>> plonk.units.define('binary_orbit = 100 years')
+    >>> time_string(snap, 'binary_orbit', 'orbits')
     """
-    time = snap.properties['time'] * snap.units['time'].to(unit).magnitude
+    time = snap.properties['time'].to(unit).magnitude
+    if unit_str is None:
+        unit_str = unit
     return f't = {time:{float_format}} {unit_str}'
 
 
