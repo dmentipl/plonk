@@ -9,9 +9,9 @@ from matplotlib import animation as _animation
 
 from ..analysis import Profile
 from ..snap import SnapLike
-from ..utils import get_extent_from_percentile
-from .functions import plot
+from .functions import get_extent_from_percentile
 from .interpolation import interpolate
+from .visualization import plot
 
 _interp_kwargs = ('number_of_pixels', 'density_weighted')
 

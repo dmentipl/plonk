@@ -1,116 +1,11 @@
 """Functions for visualization."""
 
-from typing import Any, Dict, List, Optional, Union
+from typing import Optional
 
-from numpy import ndarray
+import numpy as np
 
 from .. import Quantity
 from .. import units as plonk_units
-from ..snap import SnapLike
-from ..utils import is_documented_by
-from .interpolation import Extent
-from .multi import MultiVisualization
-from .visualization import Visualization
-
-
-@is_documented_by(Visualization.plot)
-def plot(
-    *,
-    snap: SnapLike,
-    quantity: str,
-    x: str = 'x',
-    y: str = 'y',
-    kind: Optional[str] = None,
-    interp: str = 'projection',
-    z_slice: float = 0.0,
-    extent: Extent = (-1, -1, -1, -1),
-    units: Dict[str, Any] = None,
-    ax: Optional[Any] = None,
-    **kwargs,
-) -> Any:
-    return Visualization(snap).plot(
-        quantity=quantity,
-        x=x,
-        y=y,
-        kind=kind,
-        interp=interp,
-        z_slice=z_slice,
-        extent=extent,
-        units=units,
-        ax=ax,
-        **kwargs,
-    )
-
-
-@is_documented_by(Visualization.particle_plot)
-def particle_plot(
-    *,
-    snap: SnapLike,
-    x: str = 'x',
-    y: str = 'y',
-    color: Optional[str] = None,
-    size: Optional[str] = None,
-    xunit: Any = None,
-    yunit: Any = None,
-    cunit: Any = None,
-    xscale: str = None,
-    yscale: str = None,
-    ax: Optional[Any] = None,
-    **kwargs,
-) -> Any:
-    return Visualization(snap).particle_plot(
-        x=x,
-        y=y,
-        color=color,
-        size=size,
-        xunit=xunit,
-        yunit=yunit,
-        cunit=cunit,
-        xscale=xscale,
-        yscale=yscale,
-        ax=ax,
-        **kwargs,
-    )
-
-
-def plot_snaps(
-    snaps: List[SnapLike], quantity: Union[str, ndarray], **kwargs
-) -> MultiVisualization:
-    """Visualize multiple snaps.
-
-    Parameters
-    ----------
-    snaps
-        A list of Snap objects.
-    quantity
-        The quantity to visualize.
-    **kwargs
-        Keyword arguments to pass to Visualization plot method.
-
-    Returns
-    -------
-    MultiVisualization
-
-    Examples
-    --------
-    Initialize object passing in plotting parameters.
-
-    >>> vi = plot_snaps(
-    ...     snaps=sim.snaps,
-    ...     quantity='density',
-    ... )
-
-    Go forwards and backwards through snaps.
-
-    >>> vi.next()
-    >>> vi.prev()
-
-    Go to a particular snap, or skip ahead.
-
-    >>> vi.goto(10)
-    >>> vi.next(5)
-    """
-    return MultiVisualization(snaps=snaps, quantity=quantity, **kwargs)
 
 
 def str_to_units(quantity, extent, projection):
@@ -150,3 +45,54 @@ def str_to_units(quantity, extent, projection):
         raise ValueError('projection has incorrect dimensions')
 
     return {'quantity': quantity, 'extent': extent, 'projection': projection}
+
+
+def get_extent_from_percentile(
+    snap,
+    x: str,
+    y: str,
+    percentile: float = 99,
+    x_center_on: Optional[float] = None,
+    y_center_on: Optional[float] = None,
+    edge_factor: Optional[float] = None,
+):
+    """Get extent from percentile.
+
+    Parameters
+    ----------
+    x
+        The "x" coordinate.
+    y
+        The "x" coordinate.
+    percentile : optional
+        The percentile used in the calculation. Default is 99.
+    x_center_on : optional
+        Center on some x-value. Default is None.
+    y_center_on : optional
+        Center on some y-value. Default is None.
+    edge_factor : optional
+        Add extra spacing to extent. E.g. to add extra 5%, set this
+        value to 0.05. Default is None.
+
+    Returns
+    -------
+    tuple
+        The extent of the box as (xmin, xmax, ymin, ymax).
+    """
+    pl, pr = (100 - percentile) / 2, percentile + (100 - percentile) / 2
+    xlim = np.percentile(snap[x], [pl, pr])
+    ylim = np.percentile(snap[y], [pl, pr])
+
+    if x_center_on is not None:
+        xlim += x_center_on - xlim.mean()
+    if y_center_on is not None:
+        ylim += y_center_on - ylim.mean()
+
+    if edge_factor is not None:
+        dx = xlim[1] - xlim[0]
+        dy = ylim[1] - ylim[0]
+        xlim += (-dx * edge_factor, dx * edge_factor)
+        ylim += (-dy * edge_factor, dy * edge_factor)
+        return (xlim[0], xlim[1], ylim[0], ylim[1])
+
+    return (xlim[0], xlim[1], ylim[0], ylim[1])

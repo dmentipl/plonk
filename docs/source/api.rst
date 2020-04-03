@@ -38,13 +38,13 @@ pandas DataFrames to encapsulate all data within a single SPH simulation.
 Visualization
 -------------
 
-The :py:class:`Visualization` class contains all attributes and methods relating
-to a Plonk SPH visualization. This gives access to the underlying Matplotlib
-objects and methods.
+The following functions are for Plonk SPH visualization.
 
-.. autoclass:: plonk.Visualization
 .. autofunction:: plonk.visualize.plot
+.. autofunction:: plonk.visualize.particle_plot
+.. autofunction:: plonk.visualize.plot_snaps
 .. autofunction:: plonk.visualize.animation
+.. autofunction:: plonk.visualize.animation_profiles
 
 ~~~~~~~~~~~~~
 Interpolation
@@ -64,3 +64,4 @@ The :py:class:`Profile` class provides methods for generating radial profiles
 from the particle data.
 
 .. autoclass:: plonk.Profile
+.. autoclass:: plonk.load_profile

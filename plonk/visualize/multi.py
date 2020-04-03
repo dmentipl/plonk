@@ -6,7 +6,7 @@ import numpy as np
 from numpy import ndarray
 
 from ..snap import SnapLike
-from .visualization import Visualization
+from .visualization import plot
 
 
 class MultiVisualization:
@@ -17,7 +17,7 @@ class MultiVisualization:
     snaps
         A list of snaps.
     options
-        A dictionary of arguments passed to Visualization plot method.
+        A dictionary of arguments passed to visualize.plot.
     ax
         The matplotlib Axes object.
 
@@ -28,14 +28,14 @@ class MultiVisualization:
     quantity
         The quantity to visualize.
     **kwargs
-        Keyword arguments to pass to Visualization plot method.
+        Keyword arguments to pass to visualize.plot.
     """
 
     def __init__(self, snaps: List[SnapLike], quantity: Union[str, ndarray], **kwargs):
         self.snaps = snaps
         self.quantity = quantity
         self.options = kwargs
-        self.ax = Visualization(snap=snaps[0]).plot(quantity=quantity, **kwargs)
+        self.ax = plot(snap=snaps[0], quantity=quantity, **kwargs)
 
         self._len = -1
         self._where = 0
@@ -45,8 +45,8 @@ class MultiVisualization:
         if cbar is not None:
             cbar.remove()
         self.ax.clear()
-        self.ax = Visualization(snap=self.snaps[idx]).plot(
-            quantity=self.quantity, ax=self.ax, **self.options
+        self.ax = plot(
+            snap=self.snaps[idx], quantity=self.quantity, ax=self.ax, **self.options
         )
 
     def next(self, number: int = 1):
@@ -89,3 +89,43 @@ class MultiVisualization:
         if self._len == -1:
             self._len = len(self.snaps)
         return self._len
+
+
+def plot_snaps(
+    snaps: List[SnapLike], quantity: Union[str, ndarray], **kwargs
+) -> MultiVisualization:
+    """Visualize multiple snaps.
+
+    Parameters
+    ----------
+    snaps
+        A list of Snap objects.
+    quantity
+        The quantity to visualize.
+    **kwargs
+        Keyword arguments to pass to visualize.plot.
+
+    Returns
+    -------
+    MultiVisualization
+
+    Examples
+    --------
+    Initialize object passing in plotting parameters.
+
+    >>> vi = plot_snaps(
+    ...     snaps=sim.snaps,
+    ...     quantity='density',
+    ... )
+
+    Go forwards and backwards through snaps.
+
+    >>> vi.next()
+    >>> vi.prev()
+
+    Go to a particular snap, or skip ahead.
+
+    >>> vi.goto(10)
+    >>> vi.next(5)
+    """
+    return MultiVisualization(snaps=snaps, quantity=quantity, **kwargs)

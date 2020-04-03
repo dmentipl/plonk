@@ -33,9 +33,6 @@ Classes
     It contains a list of Snap objects, and time series data as pandas
     dataframes.
 
-- Visualization
-    Represents a visualization of a Snap object.
-
 Subpackages
 -----------
 
@@ -75,11 +72,10 @@ from . import analysis, simulation, snap, utils, visualize
 from .analysis import Profile, load_profile
 from .simulation import Simulation, load_ev, load_sim
 from .snap import Snap, load_snap
-from .visualize import Visualization
 
 
 __all__ = (
-    ['Profile', 'Simulation', 'Snap', 'Visualization']  # Classes
+    ['Profile', 'Simulation', 'Snap']  # Classes
     + ['analysis', 'simulation', 'snap', 'utils', 'visualize']  # Packages
     + ['load_ev', 'load_profile', 'load_snap', 'load_sim']  # User functions
     + ['units', 'Quantity']
