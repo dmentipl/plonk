@@ -324,22 +324,18 @@ def semi_major_axis(
 
     radius = norm(pos, axis=1)
 
-    specific_angular_momentum = cross(pos, vel)
-    specific_angular_momentum_magnitude = norm(specific_angular_momentum, axis=1)
+    _specific_angular_momentum = cross(pos, vel)
+    specific_angular_momentum_magnitude = norm(_specific_angular_momentum, axis=1)
 
-    specific_kinetic_energy = 1 / 2 * norm(vel, axis=1) ** 2
+    _specific_kinetic_energy = 1 / 2 * norm(vel, axis=1) ** 2
     specific_potential_energy = -mu / radius
-    specific_energy = specific_kinetic_energy + specific_potential_energy
+    specific_energy = _specific_kinetic_energy + specific_potential_energy
 
     term = specific_energy * (specific_angular_momentum_magnitude / mu) ** 2
 
-    eccentricity = np.sqrt(1 + 2 * term)
+    _eccentricity = np.sqrt(1 + 2 * term)
 
-    semi_major_axis = specific_angular_momentum_magnitude ** 2 / (
-        mu * (1 - eccentricity ** 2)
-    )
-
-    return semi_major_axis
+    return specific_angular_momentum_magnitude ** 2 / (mu * (1 - _eccentricity ** 2))
 
 
 def eccentricity(
@@ -388,17 +384,15 @@ def eccentricity(
 
     radius = norm(pos, axis=1)
 
-    specific_angular_momentum = cross(pos, vel)
-    specific_angular_momentum_magnitude = norm(specific_angular_momentum, axis=1)
+    _specific_angular_momentum = cross(pos, vel)
+    specific_angular_momentum_magnitude = norm(_specific_angular_momentum, axis=1)
 
-    specific_kinetic_energy = 1 / 2 * norm(vel, axis=1) ** 2
+    _specific_kinetic_energy = 1 / 2 * norm(vel, axis=1) ** 2
     specific_potential_energy = -mu / radius
-    specific_energy = specific_kinetic_energy + specific_potential_energy
+    specific_energy = _specific_kinetic_energy + specific_potential_energy
 
     term = specific_energy * (specific_angular_momentum_magnitude / mu) ** 2
-    eccentricity = np.sqrt(1 + 2 * term)
-
-    return eccentricity
+    return np.sqrt(1 + 2 * term)
 
 
 def inclination(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
@@ -433,13 +427,11 @@ def inclination(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
     origin = (mass[:, np.newaxis] * pos).sum(axis=0) / mass.sum()
     pos = pos - origin
 
-    specific_angular_momentum = cross(pos, vel)
+    _specific_angular_momentum = cross(pos, vel)
 
-    inclination = np.arccos(
-        specific_angular_momentum[:, 2] / norm(specific_angular_momentum, axis=1)
+    return np.arccos(
+        _specific_angular_momentum[:, 2] / norm(_specific_angular_momentum, axis=1)
     )
-
-    return inclination
 
 
 def gas_fraction(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
@@ -460,21 +452,21 @@ def gas_fraction(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
         The gas fraction on the particles.
     """
     if snap.properties['dust_method'] == 'dust/gas mixture':
-        dust_fraction: ndarray = snap['dust_fraction']
-        gas_fraction = 1 - dust_fraction.sum(axis=1)
+        _dust_fraction: ndarray = snap['dust_fraction']
+        _gas_fraction = 1 - _dust_fraction.sum(axis=1)
 
     elif snap.properties['dust_method'] == 'dust as separate sets of particles':
         particle_type = snap['type']
-        gas_fraction = np.ones(len(snap))
-        gas_fraction[particle_type != snap.particle_type['gas']] = 0
+        _gas_fraction = np.ones(len(snap))
+        _gas_fraction[particle_type != snap.particle_type['gas']] = 0
 
     else:
-        gas_fraction = np.ones(len(snap))
+        _gas_fraction = np.ones(len(snap))
 
     if ignore_accreted:
         h: ndarray = snap['smoothing_length']
-        return gas_fraction[h > 0]
-    return gas_fraction
+        return _gas_fraction[h > 0]
+    return _gas_fraction
 
 
 def gas_mass(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
@@ -495,19 +487,19 @@ def gas_mass(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
         The gas mass on the particles.
     """
     if snap.properties['dust_method'] == 'dust/gas mixture':
-        dust_fraction: ndarray = snap['dust_fraction']
-        gas_fraction = 1 - dust_fraction.sum(axis=1)
+        _dust_fraction: ndarray = snap['dust_fraction']
+        _gas_fraction = 1 - _dust_fraction.sum(axis=1)
 
     elif snap.properties['dust_method'] == 'dust as separate sets of particles':
         particle_type = snap['type']
-        gas_fraction = np.zeros(len(snap))
-        gas_fraction[particle_type == snap.particle_type['gas']] = 1
+        _gas_fraction = np.zeros(len(snap))
+        _gas_fraction[particle_type == snap.particle_type['gas']] = 1
 
     mass: ndarray = snap['mass']
     if ignore_accreted:
         h: ndarray = snap['smoothing_length']
-        return (mass * gas_fraction)[h > 0]
-    return mass * gas_fraction
+        return (mass * _gas_fraction)[h > 0]
+    return mass * _gas_fraction
 
 
 def gas_density(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
@@ -528,19 +520,19 @@ def gas_density(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
         The gas density on the particles.
     """
     if snap.properties['dust_method'] == 'dust/gas mixture':
-        dust_fraction: ndarray = snap['dust_fraction']
-        gas_fraction = 1 - dust_fraction.sum(axis=1)
+        _dust_fraction: ndarray = snap['dust_fraction']
+        _gas_fraction = 1 - _dust_fraction.sum(axis=1)
 
     elif snap.properties['dust_method'] == 'dust as separate sets of particles':
         particle_type = snap['type']
-        gas_fraction = np.zeros(len(snap))
-        gas_fraction[particle_type == snap.particle_type['gas']] = 1
+        _gas_fraction = np.zeros(len(snap))
+        _gas_fraction[particle_type == snap.particle_type['gas']] = 1
 
     density: ndarray = snap['density']
     if ignore_accreted:
         h: ndarray = snap['smoothing_length']
-        return (density * gas_fraction)[h > 0]
-    return density * gas_fraction
+        return (density * _gas_fraction)[h > 0]
+    return density * _gas_fraction
 
 
 def dust_fraction(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
@@ -561,22 +553,22 @@ def dust_fraction(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
         The gas fraction on the particles.
     """
     if snap.properties['dust_method'] == 'dust/gas mixture':
-        dust_fraction: ndarray = snap['dust_fraction']
+        _dust_fraction: ndarray = snap['dust_fraction']
 
     elif snap.properties['dust_method'] == 'dust as separate sets of particles':
         n_dust = len(snap.properties.get('grain_size', []))
         dust_type = snap['dust_type']
-        dust_fraction = np.zeros((len(snap), n_dust))
+        _dust_fraction = np.zeros((len(snap), n_dust))
         for idx in range(1, n_dust + 1):
-            dust_fraction[dust_type == idx, idx - 1] = 1
+            _dust_fraction[dust_type == idx, idx - 1] = 1
 
     else:
         raise ValueError('No dust available')
 
     if ignore_accreted:
         h: ndarray = snap['smoothing_length']
-        return dust_fraction[h > 0]
-    return dust_fraction
+        return _dust_fraction[h > 0]
+    return _dust_fraction
 
 
 def dust_mass(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
@@ -597,14 +589,14 @@ def dust_mass(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
         The dust mass per species on the particles.
     """
     if snap.properties['dust_method'] == 'dust/gas mixture':
-        dust_fraction: ndarray = snap['dust_fraction']
+        _dust_fraction: ndarray = snap['dust_fraction']
 
     elif snap.properties['dust_method'] == 'dust as separate sets of particles':
         n_dust = len(snap.properties.get('grain_size', []))
         dust_type = snap['dust_type']
-        dust_fraction = np.zeros((len(snap), n_dust))
+        _dust_fraction = np.zeros((len(snap), n_dust))
         for idx in range(1, n_dust + 1):
-            dust_fraction[dust_type == idx, idx - 1] = 1
+            _dust_fraction[dust_type == idx, idx - 1] = 1
 
     else:
         raise ValueError('No dust available')
@@ -612,9 +604,9 @@ def dust_mass(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
     mass: ndarray = snap['mass']
     if ignore_accreted:
         h: ndarray = snap['smoothing_length']
-        dust_mass = mass[:, np.newaxis] * dust_fraction
-        return dust_mass[h > 0]
-    return mass[:, np.newaxis] * dust_fraction
+        _dust_mass = mass[:, np.newaxis] * _dust_fraction
+        return _dust_mass[h > 0]
+    return mass[:, np.newaxis] * _dust_fraction
 
 
 def dust_density(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
@@ -635,14 +627,14 @@ def dust_density(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
         The dust density per species on the particles.
     """
     if snap.properties['dust_method'] == 'dust/gas mixture':
-        dust_fraction: ndarray = snap['dust_fraction']
+        _dust_fraction: ndarray = snap['dust_fraction']
 
     elif snap.properties['dust_method'] == 'dust as separate sets of particles':
         n_dust = len(snap.properties.get('grain_size', []))
         dust_type = snap['dust_type']
-        dust_fraction = np.zeros((len(snap), n_dust))
+        _dust_fraction = np.zeros((len(snap), n_dust))
         for idx in range(1, n_dust + 1):
-            dust_fraction[dust_type == idx, idx - 1] = 1
+            _dust_fraction[dust_type == idx, idx - 1] = 1
 
     else:
         raise ValueError('No dust available')
@@ -650,9 +642,9 @@ def dust_density(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
     density: ndarray = snap['density']
     if ignore_accreted:
         h: ndarray = snap['smoothing_length']
-        dust_mass = density[:, np.newaxis] * dust_fraction
-        return dust_mass[h > 0]
-    return density[:, np.newaxis] * dust_fraction
+        _dust_mass = density[:, np.newaxis] * _dust_fraction
+        return _dust_mass[h > 0]
+    return density[:, np.newaxis] * _dust_fraction
 
 
 def radial_distance(
@@ -687,10 +679,9 @@ def radial_distance(
 
     if coordinates == 'cylindrical':
         return np.sqrt(x ** 2 + y ** 2)
-    elif coordinates == 'spherical':
+    if coordinates == 'spherical':
         return np.sqrt(x ** 2 + y ** 2 + z ** 2)
-    else:
-        raise ValueError('Cannot determine coordinates')
+    raise ValueError('Cannot determine coordinates')
 
 
 def azimuthal_angle(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:

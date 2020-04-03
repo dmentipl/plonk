@@ -23,8 +23,7 @@ def cross(x, y, **kwargs):
     """
     if isinstance(x, Quantity):
         return np.cross(x.magnitude, y.magnitude, **kwargs) * x.units * y.units
-    else:
-        return np.cross(x, y, **kwargs)
+    return np.cross(x, y, **kwargs)
 
 
 def norm(x, **kwargs):
@@ -45,8 +44,7 @@ def norm(x, **kwargs):
     """
     if isinstance(x, Quantity):
         return np.linalg.norm(x.magnitude, **kwargs) * x.units
-    else:
-        return np.linalg.norm(x, **kwargs)
+    return np.linalg.norm(x, **kwargs)
 
 
 def average(x, weights, **kwargs):
@@ -69,5 +67,4 @@ def average(x, weights, **kwargs):
     """
     if isinstance(x, Quantity):
         return np.average(x.magnitude, weights=weights.magnitude, **kwargs) * x.units
-    else:
-        return np.average(x, weights=weights, **kwargs)
+    return np.average(x, weights=weights, **kwargs)

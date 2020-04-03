@@ -66,7 +66,7 @@ def setup_integratedkernel():
             z = j * dz
             q2 = rxy2 + z * z
             wkern = w_cubic(q2)
-            if j == 0 or j == NPTS - 1:
+            if j in (0, NPTS - 1):
                 coldens = coldens + 0.5 * wkern * dz
             else:
                 coldens = coldens + wkern * dz
@@ -100,9 +100,7 @@ def wfromtable(q2, coltable):
     dwdx = (coltable[index1] - coltable[index]) * DDQ2TABLE
 
     # Compute value of integrated kernel
-    wfromtable = coltable[index] + dwdx * dxx
-
-    return wfromtable
+    return coltable[index] + dwdx * dxx
 
 
 @numba.njit

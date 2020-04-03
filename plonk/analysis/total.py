@@ -31,13 +31,13 @@ def center_of_mass(snap: SnapLike, ignore_accreted: bool = True) -> ndarray:
     """
     if ignore_accreted:
         h: ndarray = snap['smoothing_length']
-        mass: ndarray = snap['mass'][h > 0]
+        _mass: ndarray = snap['mass'][h > 0]
         pos: ndarray = snap['position'][h > 0]
     else:
-        mass = snap['mass']
+        _mass = snap['mass']
         pos = snap['position']
 
-    return (mass[:, np.newaxis] * pos).sum(axis=0) / mass.sum()
+    return (_mass[:, np.newaxis] * pos).sum(axis=0) / _mass.sum()
 
 
 def mass(snap: SnapLike, ignore_accreted: bool = True) -> float:
@@ -57,11 +57,11 @@ def mass(snap: SnapLike, ignore_accreted: bool = True) -> float:
     """
     if ignore_accreted:
         h: ndarray = snap['smoothing_length']
-        mass: ndarray = snap['mass'][h > 0]
+        _mass: ndarray = snap['mass'][h > 0]
     else:
-        mass = snap['mass']
+        _mass = snap['mass']
 
-    return mass.sum()
+    return _mass.sum()
 
 
 def gas_mass(snap: SnapLike, ignore_accreted: bool = True) -> float:
@@ -81,14 +81,14 @@ def gas_mass(snap: SnapLike, ignore_accreted: bool = True) -> float:
     """
     if ignore_accreted:
         h: ndarray = snap['smoothing_length']
-        mass: ndarray = snap['mass'][h > 0]
+        _mass: ndarray = snap['mass'][h > 0]
         dustfrac: ndarray = snap['dustfrac'][h > 0]
     else:
-        mass = snap['mass']
+        _mass = snap['mass']
         dustfrac = snap['dustfrac']
 
     gas_frac = 1 - dustfrac.sum(axis=1)
-    return (mass * gas_frac).sum()
+    return (_mass * gas_frac).sum()
 
 
 def dust_mass(snap: SnapLike, ignore_accreted: bool = True) -> float:
@@ -108,13 +108,13 @@ def dust_mass(snap: SnapLike, ignore_accreted: bool = True) -> float:
     """
     if ignore_accreted:
         h: ndarray = snap['smoothing_length']
-        mass: ndarray = snap['mass'][h > 0]
+        _mass: ndarray = snap['mass'][h > 0]
         dustfrac: ndarray = snap['dustfrac'][h > 0]
     else:
-        mass = snap['mass']
+        _mass = snap['mass']
         dustfrac = snap['dustfrac']
 
-    return (mass[:, np.newaxis] * dustfrac).sum(axis=0)
+    return (_mass[:, np.newaxis] * dustfrac).sum(axis=0)
 
 
 def accreted_mass(snap: SnapLike) -> float:
@@ -131,9 +131,9 @@ def accreted_mass(snap: SnapLike) -> float:
         The accreted mass.
     """
     h: ndarray = snap['smoothing_length']
-    mass: ndarray = snap['mass'][~(h > 0)]
+    _mass: ndarray = snap['mass'][~(h > 0)]
 
-    return mass.sum()
+    return _mass.sum()
 
 
 def momentum(snap: SnapLike, ignore_accreted: bool = True) -> ndarray:

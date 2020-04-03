@@ -273,7 +273,7 @@ class Snap:
         self._num_particles_of_type = -1
         self._num_sinks = -1
         self._num_dust_species = -1
-        self._families = {key: None for key in Snap.particle_type.keys()}
+        self._families = {key: None for key in Snap.particle_type}
         self.rotation = None
         self.translation = None
         self._physical_units = False
@@ -636,10 +636,8 @@ class Snap:
                     SubSnap(self, self._families['dust'][idx])
                     for idx in self._families['dust']
                 ]
-            else:
-                return SubSnap(self, self._families[name])
-        else:
-            raise ValueError('Family not available')
+            return SubSnap(self, self._families[name])
+        raise ValueError('Family not available')
 
     def get_array_unit(self, arr: str) -> Any:
         """Get array code units.
@@ -686,7 +684,7 @@ class Snap:
         index = None
 
         if name in self.available_arrays(sinks):
-            name = name
+            pass
         elif name in self._array_name_mapper.keys():
             name = self._array_name_mapper[name]
         elif name in self._array_split_mapper.keys():
@@ -702,13 +700,12 @@ class Snap:
             if index is None:
                 return array_dict[name]
             return array_dict[name][:, index]
-        elif name in Snap._array_registry or name in Snap._sink_registry:
+        if name in Snap._array_registry or name in Snap._sink_registry:
             self._get_array_from_registry(name, sinks)
             if index is None:
                 return array_dict[name]
             return array_dict[name][:, index]
-        else:
-            raise ValueError('Array not available')
+        raise ValueError('Array not available')
 
     def _getitem_from_str(self, inp: str, sinks: bool = False) -> ndarray:
         """Return item from string."""
@@ -717,34 +714,33 @@ class Snap:
 
         if inp in self._families:
             return self._get_family_subsnap(inp)
-        elif inp in self.available_arrays(sinks):
+        if inp in self.available_arrays(sinks):
             return self._get_array(inp, sinks)
-        elif inp in self._array_name_mapper.keys():
+        if inp in self._array_name_mapper.keys():
             return self._get_array(inp, sinks)
-        elif inp in self._array_split_mapper.keys():
+        if inp in self._array_split_mapper.keys():
             return self._get_array(inp, sinks)
-        elif inp_root in self._vector_arrays:
+        if inp_root in self._vector_arrays:
             if inp_suffix == 'x':
                 return self._get_array(inp_root, sinks)[:, 0]
-            elif inp_suffix == 'y':
+            if inp_suffix == 'y':
                 return self._get_array(inp_root, sinks)[:, 1]
-            elif inp_suffix == 'z':
+            if inp_suffix == 'z':
                 return self._get_array(inp_root, sinks)[:, 2]
-            elif inp_suffix == 'magnitude':
+            if inp_suffix == 'magnitude':
                 return norm(self._get_array(inp_root, sinks), axis=1)
-        elif inp_root in self._dust_arrays:
+        if inp_root in self._dust_arrays:
             if _str_is_int(inp_suffix):
                 return self._get_array(inp_root)[:, int(inp_suffix) - 1]
-            elif inp_suffix == 'total':
+            if inp_suffix == 'total':
                 return self._get_array(inp_root).sum(axis=1)
 
         if self._extra_quantities:
             raise ValueError('Cannot determine item to return.')
-        else:
-            raise ValueError(
-                'Cannot determine item to return. Extra quantities are available via\n'
-                'snap.extra_quantities().'
-            )
+        raise ValueError(
+            'Cannot determine item to return. Extra quantities are available via\n'
+            'snap.extra_quantities().'
+        )
 
     def _getitem(
         self, inp: Union[str, ndarray, int, slice], sinks: bool = False,
@@ -752,16 +748,16 @@ class Snap:
         """Return an array, or family, or subset."""
         if isinstance(inp, str):
             return self._getitem_from_str(inp, sinks)
-        elif sinks:
+        if sinks:
             raise ValueError('Cannot return sinks as SubSnap')
-        elif isinstance(inp, ndarray):
+        if isinstance(inp, ndarray):
             if np.issubdtype(np.bool, inp.dtype):
                 return SubSnap(self, np.flatnonzero(inp))
-            elif np.issubdtype(np.int, inp.dtype):
+            if np.issubdtype(np.int, inp.dtype):
                 return SubSnap(self, inp)
-        elif isinstance(inp, int):
+        if isinstance(inp, int):
             return SubSnap(self, np.array([inp]))
-        elif isinstance(inp, slice):
+        if isinstance(inp, slice):
             i1, i2, step = inp.start, inp.stop, inp.step
             if i1 is None:
                 i1 = 0
@@ -772,11 +768,10 @@ class Snap:
             return SubSnap(self, np.arange(i1, i2))
         if self._extra_quantities:
             raise ValueError('Cannot determine item to return.')
-        else:
-            raise ValueError(
-                'Cannot determine item to return. Extra quantities are available via\n'
-                'snap.extra_quantities().'
-            )
+        raise ValueError(
+            'Cannot determine item to return. Extra quantities are available via\n'
+            'snap.extra_quantities().'
+        )
 
     def __getitem__(
         self, inp: Union[str, ndarray, int, slice]
@@ -795,7 +790,7 @@ class Snap:
                 'Attempting to overwrite existing array. To do so, first delete the '
                 'array\nwith del snap["array"], then try again.'
             )
-        elif (
+        if (
             name in self.available_arrays()
             or name in self._array_split_mapper.keys()
             or name in self._array_name_mapper.keys()

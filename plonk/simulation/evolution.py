@@ -54,5 +54,4 @@ def load_ev(
     """
     if data_source == 'Phantom':
         return load_data_from_file_phantom(filenames)
-    else:
-        raise ValueError('Cannot determine code used to produce evolution data')
+    raise ValueError('Cannot determine code used to produce evolution data')

@@ -138,8 +138,8 @@ class Profile:
 
         self.snap = snap
         self.ndim = ndim
-        self.aggregation = self._check_aggregation(aggregation)
-        self.spacing = self._check_spacing(spacing)
+        self.aggregation = _check_aggregation(aggregation)
+        self.spacing = _check_spacing(spacing)
         self.properties: Dict[str, Any] = {}
 
         self._profiles: Dict[str, ndarray] = {}
@@ -171,20 +171,6 @@ class Profile:
         n_dust = len(self.snap.properties.get('grain_size', []))
         _generate_profiles(n_dust)
 
-    def _check_aggregation(self, method: str) -> str:
-        if method in _aggregations:
-            return method
-        raise ValueError(
-            f'Cannot determine aggregation method: choose from {_aggregations}'
-        )
-
-    def _check_spacing(self, spacing: str) -> str:
-        if spacing.lower() in ('lin', 'linear'):
-            return 'linear'
-        elif spacing.lower() in ('log', 'logarithm', 'logarithmic'):
-            return 'log'
-        raise ValueError('Cannot determine spacing')
-
     def _setup_particle_mask(self, ignore_accreted: bool) -> ndarray:
         if ignore_accreted is False:
             return np.ones(len(self.snap), dtype=bool)
@@ -196,18 +182,18 @@ class Profile:
         pos = pos[self._mask]
         if self.ndim == 1:
             return pos[:, 0]
-        elif self.ndim == 2:
+        if self.ndim == 2:
             return np.sqrt(pos[:, 0] ** 2 + pos[:, 1] ** 2)
-        elif self.ndim == 3:
+        if self.ndim == 3:
             return np.sqrt(pos[:, 0] ** 2 + pos[:, 1] ** 2 + pos[:, 2] ** 2)
+        raise ValueError('Unknown ndim: cannot calculate x array')
 
     def _set_range(
         self, radius_min: Optional[Any], radius_max: Optional[Any]
     ) -> Tuple[float, float]:
         if self.snap._physical_units:
             return self._set_range_physical_units(radius_min, radius_max)
-        else:
-            return self._set_range_code_units(radius_min, radius_max)
+        return self._set_range_code_units(radius_min, radius_max)
 
     def _set_range_code_units(
         self, radius_min: Optional[float], radius_max: Optional[float]
@@ -310,7 +296,7 @@ class Profile:
 
         if name in self._profiles:
             return self._profiles[name]
-        elif name in Profile._profile_functions:
+        if name in Profile._profile_functions:
             self._profiles[name] = Profile._profile_functions[name](self)
             return self._profiles[name]
 
@@ -329,18 +315,16 @@ class Profile:
                 print(
                     'Profile unavailable. Try calling extra_quantities method on Snap.'
                 )
-            return
         if array.ndim == 1:
             self._profiles[name] = self.particles_to_binned_quantity(aggregation, array)
             return self._profiles[name]
-        else:
-            raise ValueError(
-                'Requested profile has array dimension > 1.\nTo access x-, y-, or '
-                'z-components, or magnitude of vector quantities,\ntry, for '
-                'example, prof["velocity_x"] or prof["momentum_magnitude"].\nTo '
-                'access dust profiles, try, for example, prof["stopping_time_001"] '
-                'or\nprof["dust_mass_sum"].'
-            )
+        raise ValueError(
+            'Requested profile has array dimension > 1.\nTo access x-, y-, or '
+            'z-components, or magnitude of vector quantities,\ntry, for '
+            'example, prof["velocity_x"] or prof["momentum_magnitude"].\nTo '
+            'access dust profiles, try, for example, prof["stopping_time_001"] '
+            'or\nprof["dust_mass_sum"].'
+        )
 
     def __getitem__(self, name: str) -> ndarray:
         """Return the profile of a given kind."""
@@ -357,7 +341,7 @@ class Profile:
                 'Attempting to overwrite existing profile. To do so, first delete the '
                 'profile\nwith del prof["profile"], then try again.'
             )
-        elif name in self.available_profiles():
+        if name in self.available_profiles():
             raise ValueError(
                 'Attempting to set profile already available. '
                 'See prof.available_profiles().'
@@ -445,8 +429,7 @@ class Profile:
         if x_unit is not None:
             if not self.snap._physical_units:
                 raise ValueError('Cannot set unit if snap is not in physical units')
-            else:
-                _x = _x.to(x_unit)
+            _x = _x.to(x_unit)
 
         if ax is None:
             _, ax = plt.subplots()
@@ -676,3 +659,19 @@ def load_profile(
         spacing=spacing,
         ignore_accreted=ignore_accreted,
     )
+
+
+def _check_aggregation(method: str) -> str:
+    if method in _aggregations:
+        return method
+    raise ValueError(
+        f'Cannot determine aggregation method: choose from {_aggregations}'
+    )
+
+
+def _check_spacing(spacing: str) -> str:
+    if spacing.lower() in ('lin', 'linear'):
+        return 'linear'
+    if spacing.lower() in ('log', 'logarithm', 'logarithmic'):
+        return 'log'
+    raise ValueError('Cannot determine spacing')

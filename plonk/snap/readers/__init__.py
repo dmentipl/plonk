@@ -31,5 +31,4 @@ def load_snap(filename: Union[str, Path], data_source: str = 'Phantom') -> Snap:
 
     if data_source == 'Phantom':
         return read_phantom(filename)
-    else:
-        raise ValueError('Cannot load snapshot')
+    raise ValueError('Cannot load snapshot')

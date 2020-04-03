@@ -364,7 +364,7 @@ def _get_arrays_from_str(*, snap, quantity, x, y):
 
     if quantity.ndim > 2:
         raise ValueError('Cannot interpret quantity with ndim > 2')
-    elif quantity.ndim == 2:
+    if quantity.ndim == 2:
         try:
             quantity_x = snap[quantity_str + '_' + x_str]
             quantity_y = snap[quantity_str + '_' + y_str]

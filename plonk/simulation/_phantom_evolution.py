@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from pandas import DataFrame
 
-name_map = {
+NAME_MAP = {
     'time': 'time',
     'ekin': 'energy_kinetic',
     'etherm': 'energy_thermal',
@@ -71,7 +71,7 @@ name_map = {
     'fssz': 'sink_sink_force_z',
 }
 
-name_map.update({f'DustMass{idx:03}': f'dust_mass_{idx:03}' for idx in range(100)})
+NAME_MAP.update({f'DustMass{idx:03}': f'dust_mass_{idx:03}' for idx in range(100)})
 
 
 def load_data_from_file(
@@ -91,8 +91,8 @@ def load_data_from_file(
         _file_paths.append(path.resolve())
     file_paths = tuple(_file_paths)
 
-    _check_file_consistency(file_paths, name_map)
-    columns = _get_columns(file_paths[0], name_map)
+    _check_file_consistency(file_paths, NAME_MAP)
+    columns = _get_columns(file_paths[0], NAME_MAP)
     dataframe = _get_data(columns, file_paths)
 
     return dataframe

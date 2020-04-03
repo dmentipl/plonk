@@ -204,7 +204,7 @@ def plot(
         elif interpolated_data.ndim == 3:
             kind = 'quiver'
 
-    show_colorbar = _kwargs.pop('show_colorbar', True if kind == 'image' else False)
+    show_colorbar = _kwargs.pop('show_colorbar', kind == 'image')
 
     if kind in ('image', 'contour', 'quiver', 'streamplot'):
         plot_object = _kind_to_function[kind](
@@ -297,8 +297,6 @@ def particle_plot(
     """
     _kwargs = copy(kwargs)
 
-    snap = snap
-
     if ax is None:
         fig, ax = plt.subplots()
     else:
@@ -336,7 +334,7 @@ def particle_plot(
         if snap._physical_units:
             _size = _size.magnitude
 
-    show_colorbar = _kwargs.pop('show_colorbar', True if _color is not None else False)
+    show_colorbar = _kwargs.pop('show_colorbar', _color is not None)
 
     if _size is None and _color is None:
         plot_object = plots.plot(x=_x, y=_y, ax=ax, **_kwargs)

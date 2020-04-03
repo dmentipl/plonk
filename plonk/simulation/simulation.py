@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from copy import copy
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 from pandas import DataFrame
@@ -64,6 +64,7 @@ class Simulation:
         self._global_quantities: DataFrame = None
         self._sink_quantities: List[DataFrame] = None
 
+        self._snap_file_extension = ''
         self._len = -1
 
     def load_sim(
@@ -91,8 +92,7 @@ class Simulation:
 
         if data_source not in _data_sources:
             raise ValueError(f'Data source not available: try {_data_sources}')
-        else:
-            self.data_source = data_source
+        self.data_source = data_source
 
         if directory is None:
             directory = '.'
@@ -108,7 +108,7 @@ class Simulation:
         if not list(self.paths['directory'].glob(self.prefix + '*')):
             raise FileNotFoundError(f'No files with prefix: {prefix}')
 
-        self._snap_file_type, self._snap_file_extension = self._get_snap_file_type()
+        self._snap_file_extension = self._get_snap_file_extension()
 
         self.paths['snaps'] = self._get_snap_files()
         self.paths['global_quantities'] = self._get_global_ev_files()
@@ -180,7 +180,7 @@ class Simulation:
                 if isinstance(val[0], Quantity):
                     prop[key] = np.array([v.m for v in val]) * val[0].u
                 else:
-                    prop[key] = np.array([v for v in val])
+                    prop[key] = np.array(val)
         self._properties = prop
 
     def _generate_units(self):
@@ -200,10 +200,8 @@ class Simulation:
 
     def _generate_sink_quantities(self):
         """Generate sink quantity time series objects."""
-        self._sink_quantities = list()
-        [
-            self._sink_quantities.append(load_ev(files))
-            for files in self.paths['sink_quantities']
+        self._sink_quantities = [
+            load_ev(files) for files in self.paths['sink_quantities']
         ]
 
     def _get_global_ev_files(self, glob: str = None) -> List[Path]:
@@ -221,9 +219,7 @@ class Simulation:
             glob = self.prefix + 'Sink[0-9][0-9][0-9][0-9]N[0-9][0-9].ev'
 
         n = len(self.prefix) + len('Sink')
-        n_sinks = len(
-            set([p.name[n : n + 4] for p in list(self.paths['directory'].glob(glob))])
-        )
+        n_sinks = len({p.name[n : n + 4] for p in self.paths['directory'].glob(glob)})
 
         sinks = list()
         for idx in range(1, n_sinks + 1):
@@ -247,8 +243,8 @@ class Simulation:
 
         return sorted(list(self.paths['directory'].glob(glob)))
 
-    def _get_snap_file_type(self, glob: str = None) -> Tuple[str, str]:
-        """Snapshot file type.
+    def _get_snap_file_extension(self, glob: str = None):
+        """Snapshot file extension.
 
         Determine snap file type from extension assuming file names
         follow a glob pattern.
@@ -257,14 +253,14 @@ class Simulation:
             # Phantom HDF5 snapshot file name format
             glob = self.prefix + '_[0-9][0-9][0-9][0-9][0-9].h5'
 
-        file_types = set([f.suffix for f in self.paths['directory'].glob(glob)])
+        file_types = {f.suffix for f in self.paths['directory'].glob(glob)}
 
         if len(file_types) > 1:
             raise ValueError(
                 'Cannot determine simulation snapshot file type: '
                 f'is it one of {file_types}?'
             )
-        elif len(file_types) == 0:
+        if len(file_types) == 0:
             raise ValueError(
                 'Cannot determine snapshot file type: '
                 'no files named like prefix_xxxxx.ext'
@@ -272,10 +268,10 @@ class Simulation:
 
         file_ext = file_types.pop()[1:]
 
-        if file_ext == 'h5':
-            file_type = 'HDF5'
+        if file_ext not in ('h5',):
+            raise ValueError('File extension not available; must be ".h5"')
 
-        return file_type, file_ext
+        return file_ext
 
     def __len__(self):
         """Length as number of snaps."""

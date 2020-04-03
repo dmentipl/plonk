@@ -33,8 +33,7 @@ def plot(
     """
     _kwargs = copy(kwargs)
     fmt = _kwargs.pop('fmt', 'k.')
-    lines = ax.plot(x, y, fmt, **_kwargs)
-    return lines
+    return ax.plot(x, y, fmt, **_kwargs)
 
 
 def scatter(
@@ -93,8 +92,7 @@ def scatter(
     _kwargs = copy(kwargs)
     alpha = _kwargs.pop('alpha', 0.5)
 
-    paths = ax.scatter(x, y, c=color, s=size, alpha=alpha, **_kwargs)
-    return paths
+    return ax.scatter(x, y, c=color, s=size, alpha=alpha, **_kwargs)
 
 
 def imshow(
@@ -130,11 +128,9 @@ def imshow(
     else:
         raise ValueError('Cannot determine normalization for colorbar')
 
-    image = ax.imshow(
+    return ax.imshow(
         interpolated_data, origin='lower', extent=extent, norm=norm, **_kwargs
     )
-
-    return image
 
 
 def contour(
@@ -163,9 +159,7 @@ def contour(
         np.linspace(*extent[:2], n_interp_x), np.linspace(*extent[2:], n_interp_y),
     )
 
-    contour = ax.contour(X, Y, interpolated_data, **kwargs)
-
-    return contour
+    return ax.contour(X, Y, interpolated_data, **kwargs)
 
 
 def quiver(
@@ -211,9 +205,7 @@ def quiver(
         U /= norm
         V /= norm
 
-    quiver = ax.quiver(X, Y, U, V, **_kwargs)
-
-    return quiver
+    return ax.quiver(X, Y, U, V, **_kwargs)
 
 
 def streamplot(
@@ -243,6 +235,4 @@ def streamplot(
     )
     U, V = interpolated_data[0], interpolated_data[1]
 
-    streamplot = ax.streamplot(X, Y, U, V, **kwargs)
-
-    return streamplot
+    return ax.streamplot(X, Y, U, V, **kwargs)
