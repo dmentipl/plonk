@@ -6,7 +6,6 @@ from typing import Any, Dict, List, Optional, Union
 
 import matplotlib.pyplot as plt
 from matplotlib import animation as _animation
-from numpy import ndarray
 
 from ..analysis import Profile
 from ..snap import SnapLike
@@ -21,14 +20,15 @@ def animation(
     *,
     filename: Union[str, Path],
     snaps: List[SnapLike],
-    quantity: Optional[Union[str, ndarray]] = None,
+    quantity: str,
+    image: Optional[Any] = None,
     text: List[str] = None,
     text_kwargs: Dict[str, Any] = {},
     func_animation_kwargs: Dict[str, Any] = {},
     save_kwargs: Dict[str, Any] = {},
     **kwargs,
 ):
-    """Generate an animation.
+    """Generate an animation of a rendered image.
 
     Parameters
     ----------
@@ -37,11 +37,10 @@ def animation(
     snaps
         A list of Snap objects to animate.
     quantity
-        The quantity to visualize. Can be a string to pass to Snap, or
-        a 1d array (N,) of scalar data, or a 2d array (N, 3) of
-        vector data. If quantity is 2d, only the first two components
-        are interpolated, i.e. quantity[:, 0] and quantity[:, 1].
-        Default is None.
+        The quantity to visualize. Must be a string to pass to Snap.
+    image
+        The matplotlib AxesImage object that represents the quantity to
+        animate. If None, generate a new AxesImage object.
     text
         List of strings to display per snap.
     text_kwargs : optional
@@ -79,9 +78,15 @@ def animation(
     x = kwargs.get('x', 'x')
     y = kwargs.get('x', 'y')
 
-    fig, ax = plt.subplots()
-    viz = plot(snap=snaps[0], quantity=quantity, ax=ax, **kwargs)
-    im = viz.objects['image']
+    if image is None:
+        fig, ax = plt.subplots()
+        viz = plot(snap=snaps[0], quantity=quantity, ax=ax, **kwargs)
+        im = viz.objects['image']
+    else:
+        im = image
+        ax = image.axes
+        fig = ax.figure
+
     if im is None:
         raise NotImplementedError(
             'Can only currently produce animations of rendered images. (Or profiles\n'
@@ -95,9 +100,7 @@ def animation(
     def animate(idx):
         print(f'Visualizing snap: {idx}')
         _kwargs = {k: v for k, v in kwargs.items() if k in _interp_kwargs}
-        extent = kwargs.get(
-            'extent', get_extent_from_percentile(snaps[idx][x], snaps[idx][y])
-        )
+        extent = kwargs.get('extent', get_extent_from_percentile(snaps[idx], x, y))
         interp_data = interpolate(
             snap=snaps[idx], interp=interp, quantity=quantity, extent=extent, **_kwargs,
         )
@@ -126,13 +129,14 @@ def animation_profiles(
     filename: Union[str, Path],
     profiles: List[Profile],
     quantity: str,
+    line: Optional[Any] = None,
     text: List[str] = None,
     text_kwargs: Dict[str, Any] = {},
     func_animation_kwargs: Dict[str, Any] = {},
     save_kwargs: Dict[str, Any] = {},
     **kwargs,
 ):
-    """Generate an animation.
+    """Generate an animation of a radial profile.
 
     Parameters
     ----------
@@ -141,7 +145,10 @@ def animation_profiles(
     profiles
         A list of Profile objects to animate.
     quantity
-        The quantity to profile. Can be a string to pass to Profile.
+        The quantity to profile. Must be a string to pass to Profile.
+    line
+        The matplotlib Line2D object that represents the quantity to
+        animate. If None, generate a new Line2D object.
     text
         List of strings to display per profile plot.
     text_kwargs : optional
@@ -162,8 +169,13 @@ def animation_profiles(
     if filepath.suffix != '.mp4':
         raise ValueError('filename should end in ".mp4"')
 
-    fig, ax = plt.subplots()
-    [line] = ax.plot(profiles[0]['radius'], profiles[0][quantity], **kwargs)
+    if line is None:
+        fig, ax = plt.subplots()
+        [line] = ax.plot(profiles[0]['radius'], profiles[0][quantity], **kwargs)
+    else:
+        ax = line.axes
+        fig = ax.figure
+
     if text is not None:
         _text = ax.text(
             0.9, 0.9, text[0], ha='right', transform=ax.transAxes, **text_kwargs
