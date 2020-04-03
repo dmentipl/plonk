@@ -28,7 +28,7 @@ def animation(
     save_kwargs: Dict[str, Any] = {},
     **kwargs,
 ):
-    """Generate an animation of a rendered image.
+    """Generate an animation of images.
 
     Parameters
     ----------
@@ -80,8 +80,8 @@ def animation(
 
     if image is None:
         fig, ax = plt.subplots()
-        viz = plot(snap=snaps[0], quantity=quantity, ax=ax, **kwargs)
-        im = viz.objects['image']
+        ax = plot(snap=snaps[0], quantity=quantity, ax=ax, **kwargs)
+        im = ax.images[0]
     else:
         im = image
         ax = image.axes
@@ -89,7 +89,7 @@ def animation(
 
     if im is None:
         raise NotImplementedError(
-            'Can only currently produce animations of rendered images. (Or profiles\n'
+            'Can only currently produce animations of images. (Or profiles\n'
             'with animation_profile.)'
         )
     if text is not None:

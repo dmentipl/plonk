@@ -301,24 +301,19 @@ plot of column density, i.e. a projection plot.
 
 .. code-block:: pycon
 
-    >>> viz = plonk.visualize.plot(
-    ...     snap=snap,
-    ...     quantity='density',
-    ...     extent=(-150, 150, -150, 150),
-    ... )
+    >>> ax = plonk.visualize.plot(snap=snap, quantity='density')
 
 .. figure:: _static/density.png
 
     The total column density.
 
-This produces an image via Matplotlib. The :py:class:`Visualization` object has
-attributes to access the underlying Matplotlib objects, and their methods. For
-example, we can use the Matplotlib :py:class:`image.AxesImage` object to set the
-limits of the colorbar.
+This produces an image via Matplotlib. The function returns a Matplotlib
+:py:class:`image.AxesImage` object. We can use that to manipulate the figure.
+For example, we can change the colorbar limits.
 
 .. code-block:: pycon
 
-    >>> viz.objects['image'].set_clim(vmin=0.5e-8, vmax=1.5e-8)
+    >>> ax.images[0].set_clim(vmin=0.0e-8, vmax=2.5e-8)
 
 Alternatively, you can pass keyword arguments to the matplotlib functions. For
 example, we set the colormap to 'gist_heat' and set the colorbar minimum and
@@ -326,13 +321,13 @@ maxiumum.
 
 .. code-block:: pycon
 
-    >>> viz = plonk.visualize.plot(
+    >>> plonk.visualize.plot(
     ...     snap=snap,
     ...     quantity='density',
     ...     extent=(-150, 150, -150, 150),
     ...     cmap='gist_heat',
-    ...     vmin=0.5e-8,
-    ...     vmax=1.5e-8,
+    ...     vmin=0.0e-8,
+    ...     vmax=2.5e-8,
     ... )
 
 More fine-grained control can be achieved by using the full details of

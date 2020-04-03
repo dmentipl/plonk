@@ -1,6 +1,4 @@
-"""
-Testing Visualization.
-"""
+"""Testing Visualization."""
 
 import pathlib
 
@@ -12,8 +10,7 @@ TEST_FILE = pathlib.Path(__file__).parent / 'stubdata/phantom_00000.h5'
 def test_initialization():
     """Test plot function."""
     snap = plonk.load_snap(TEST_FILE)
-    viz = plonk.Visualization(snap=snap)
-    viz.plot(
+    plonk.Visualization(snap=snap).plot(
         snap=snap,
         quantity='density',
         x='x',

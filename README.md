@@ -66,7 +66,7 @@ The Snap objects contain the particle arrays, lazily loaded from the HDF5 file, 
 
 ### Visualization
 
-To render the density on a snapshot:
+To visualize the column density on a snapshot:
 
 ```python
 >>> plonk.visualize.plot(snap=snap, quantity='density')

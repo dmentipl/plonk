@@ -27,9 +27,8 @@ def plot(
     units: Dict[str, Any] = None,
     ax: Optional[Any] = None,
     **kwargs,
-) -> Visualization:
-    viz = Visualization(snap)
-    viz.plot(
+) -> Any:
+    return Visualization(snap).plot(
         quantity=quantity,
         x=x,
         y=y,
@@ -41,7 +40,6 @@ def plot(
         ax=ax,
         **kwargs,
     )
-    return viz
 
 
 @is_documented_by(Visualization.particle_plot)
@@ -59,9 +57,8 @@ def particle_plot(
     yscale: str = None,
     ax: Optional[Any] = None,
     **kwargs,
-) -> Visualization:
-    viz = Visualization(snap)
-    viz.particle_plot(
+) -> Any:
+    return Visualization(snap).particle_plot(
         x=x,
         y=y,
         color=color,
@@ -74,7 +71,6 @@ def particle_plot(
         ax=ax,
         **kwargs,
     )
-    return viz
 
 
 def plot_snaps(

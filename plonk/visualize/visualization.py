@@ -19,26 +19,19 @@ from ..utils import get_extent_from_percentile
 from . import plots
 from .interpolation import Extent, interpolate
 
-_kind_to_object = {
-    'render': 'image',
-    'contour': 'contour',
-    'quiver': 'quiver',
-    'stream': 'streamplot',
-}
-
 _kind_to_function = {
-    'render': plots.render_plot,
-    'contour': plots.contour_plot,
-    'quiver': plots.quiver_plot,
-    'stream': plots.stream_plot,
+    'image': plots.imshow,
+    'contour': plots.contour,
+    'quiver': plots.quiver,
+    'streamplot': plots.streamplot,
 }
 
 
 class Visualization:
     """Visualize scalar and vector smoothed particle hydrodynamics data.
 
-    Visualize SPH data as a particle plot, a rendered image, a contour
-    plot, a vector plot, or a stream plot.
+    Visualize SPH data as a scatter plot, an image, a contour plot, a
+    vector plot, or a stream plot.
 
     Parameters
     ----------
@@ -49,55 +42,13 @@ class Visualization:
     ----------
     snap
         The associated Snap (or SubSnap) object to visualize.
-    fig
-        The matplotlib Figure object of the plot.
     ax
         The matplotlib Axes object of the plot.
-    units
-        The units of the plot: 'quantity', 'extent', 'projection'. The
-        values are pint Unit objects.
-    extent
-        A tuple (xmin, xmax, ymin, ymax) of the extent of the plot.
-    objects
-        A dictionary containing the matplotlib plot objects:
-
-        - 'lines' : list of matplotlib Line2D objects for particle plots
-        - 'paths' : matplotlib PathCollection object for scatter plots
-        - 'image' : matplotlib AxesImage object for rendered plots
-        - 'colorbar' : matplotlib Colorbar object for rendered plots
-        - 'contour' : matplotlib QuadContourSet object for contour plots
-        - 'quiver' : matplotlib Quiver object for quiver (arrow) plots
-        - 'streamplot' : matplotlib StreamplotSet for stream plots
-    data
-        A dictionary containing the data interpolated to a pixel grid:
-        'render', 'contour', 'quiver', 'stream'.
     """
 
     def __init__(self, snap: SnapLike):
         self.snap = snap
-        self.fig: Any = None
         self.ax: Any = None
-        self.units: Dict[str, Any] = {
-            'quantity': None,
-            'extent': None,
-            'projection': None,
-        }
-        self.extent: Extent = (-1, -1, -1, -1)
-        self.objects: Dict[str, Any] = {
-            'lines': None,
-            'paths': None,
-            'image': None,
-            'colorbar': None,
-            'contour': None,
-            'quiver': None,
-            'streamplot': None,
-        }
-        self.data: Dict[str, ndarray] = {
-            'render': None,
-            'contour': None,
-            'quiver': None,
-            'stream': None,
-        }
 
     def plot(
         self,
@@ -111,13 +62,14 @@ class Visualization:
         extent: Extent = (-1, -1, -1, -1),
         units: Dict[str, Any] = None,
         ax: Optional[Any] = None,
+        colorbar_kwargs={},
         **kwargs,
-    ) -> Visualization:
+    ) -> Any:
         """Visualize smoothed particle hydrodynamics data.
 
         Visualize SPH data by interpolation to a pixel grid. Including:
-        a rendered image or a contour plot for scalar data, a quiver
-        (arrow) plot or stream plot for vector data.
+        an image or a contour plot for scalar data, a quiver (arrow)
+        plot or stream plot for vector data.
 
         Parameters
         ----------
@@ -132,10 +84,10 @@ class Visualization:
         kind
             The type of plot.
 
-            - 'render' : rendered image (default for scalar quantities)
+            - 'image' : image plot (default for scalar quantities)
             - 'contour' : contour plot (scalar quantity)
             - 'quiver' : quiver plot (default for vector quantities)
-            - 'stream' : stream plot (vector quantity)
+            - 'streamplot' : stream plot (vector quantity)
         interp
             The interpolation type. Default is 'projection'.
 
@@ -154,19 +106,22 @@ class Visualization:
             'extent', 'projection'. The values are Pint Unit objects.
         ax
             A matplotlib Axes handle.
+        colorbar_kwargs
+            Keyword arguments to pass to matplotlib colorbar functions.
         **kwargs
             Additional keyword arguments to pass to interpolation and
             matplotlib functions.
 
         Returns
         -------
-        Visualization
+        ax
+            The matplotlib Axes object.
 
         Notes
         -----
         Additional parameters passed as keyword arguments will be
         passed to lower level functions as required. E.g. Plonk uses
-        matplotlib's imshow for a render plot, so additional arguments
+        matplotlib's imshow for a image plot, so additional arguments
         to imshow can be passed this way.
 
         See below for additional parameters for interpolation,
@@ -192,16 +147,16 @@ class Visualization:
 
         Examples
         --------
-        Render the surface density in xy-plane.
+        Show an image of the surface density in xy-plane.
 
-        >>> viz = plonk.visualize.plot(
+        >>> plonk.visualize.plot(
         ...     snap=snap,
         ...     quantity='density',
         ... )
 
         Quiver plot of velocity in xy-plane.
 
-        >>> viz = plonk.visualize.plot(
+        >>> plonk.visualize.plot(
         ...     snap=snap,
         ...     quantity='velocity',
         ... )
@@ -214,7 +169,7 @@ class Visualization:
         ...     'projection': plonk.units('cm'),
         ... }
 
-        >>> viz = plonk.visualize.plot(
+        >>> plonk.visualize.plot(
         ...     snap=snap,
         ...     quantity='density',
         ...     units=units,
@@ -229,9 +184,9 @@ class Visualization:
 
         if self.ax is None:
             if ax is None:
-                self.fig, self.ax = plt.subplots()
+                fig, self.ax = plt.subplots()
             else:
-                self.fig = ax.get_figure()
+                fig = ax.figure
                 self.ax = ax
         else:
             if ax is not None:
@@ -274,23 +229,17 @@ class Visualization:
                 units=units,
                 interp=interp,
             )
-            self.units.update(units)
-
-        self.extent = extent
 
         if kind is None:
             if interpolated_data.ndim == 2:
-                kind = 'render'
+                kind = 'image'
             elif interpolated_data.ndim == 3:
                 kind = 'quiver'
 
-        show_colorbar = _kwargs.pop(
-            'show_colorbar', True if kind == 'render' else False
-        )
+        show_colorbar = _kwargs.pop('show_colorbar', True if kind == 'image' else False)
 
-        if kind in ('render', 'contour', 'quiver', 'stream'):
-            self.data[kind] = interpolated_data
-            self.objects[_kind_to_object[kind]] = _kind_to_function[kind](
+        if kind in ('image', 'contour', 'quiver', 'streamplot'):
+            plot_object = _kind_to_function[kind](
                 interpolated_data=interpolated_data,
                 extent=extent,
                 ax=self.ax,
@@ -302,8 +251,14 @@ class Visualization:
 
         if show_colorbar:
             divider = make_axes_locatable(self.ax)
-            cax = divider.append_axes("right", size="5%", pad=0.05)
-            self.objects['colorbar'] = self.fig.colorbar(self.objects['image'], cax)
+            _kwargs = copy(colorbar_kwargs)
+            position = _kwargs.pop('position', 'right')
+            size = _kwargs.pop('size', '5%')
+            pad = _kwargs.pop('pad', '2%')
+            if position in ('top', 'bottom'):
+                _kwargs.update({'orientation': 'horizontal'})
+            cax = divider.append_axes(position=position, size=size, pad=pad)
+            fig.colorbar(plot_object, cax, **_kwargs)
 
         self.ax.set_xlim(*extent[:2])
         self.ax.set_ylim(*extent[2:])
@@ -312,7 +267,7 @@ class Visualization:
         if not max(ratio, 1 / ratio) > 10.0:
             self.ax.set_aspect('equal')
 
-        return self
+        return self.ax
 
     def particle_plot(
         self,
@@ -327,9 +282,10 @@ class Visualization:
         xscale: str = None,
         yscale: str = None,
         ax: Optional[Any] = None,
+        colorbar_kwargs={},
         **kwargs,
-    ) -> Visualization:
-        """Visualize smoothed particle hydrodynamics data.
+    ) -> Any:
+        """Particle plots.
 
         Visualize SPH data by plotting the particles, or a subset of
         the particles.
@@ -360,17 +316,24 @@ class Visualization:
             The yscale to pass to the matplotlib Axes method set_yscale.
         ax
             A matplotlib Axes handle.
+        colorbar_kwargs
+            Keyword arguments to pass to matplotlib colorbar functions.
         **kwargs
             Additional keyword arguments to pass to matplotlib
             functions.
+
+        Returns
+        -------
+        ax
+            The matplotlib Axes object.
         """
         _kwargs = copy(kwargs)
 
         if self.ax is None:
             if ax is None:
-                self.fig, self.ax = plt.subplots()
+                fig, self.ax = plt.subplots()
             else:
-                self.fig = ax.get_figure()
+                fig = ax.figure
                 self.ax = ax
         else:
             if ax is not None:
@@ -413,18 +376,22 @@ class Visualization:
         )
 
         if _size is None and _color is None:
-            self.objects['lines'] = plots.particle_plot(
-                x=_x, y=_y, ax=self.ax, **_kwargs,
-            )
+            plot_object = plots.plot(x=_x, y=_y, ax=self.ax, **_kwargs)
 
         else:
-            self.objects['paths'] = plots.scatter_plot(
+            plot_object = plots.scatter(
                 x=_x, y=_y, color=_color, size=_size, ax=self.ax, **_kwargs,
             )
             if show_colorbar:
                 divider = make_axes_locatable(self.ax)
-                cax = divider.append_axes("right", size="5%", pad=0.05)
-                self.objects['colorbar'] = self.fig.colorbar(self.objects['paths'], cax)
+                _kwargs = copy(colorbar_kwargs)
+                position = _kwargs.pop('position', 'right')
+                size = _kwargs.pop('size', '5%')
+                pad = _kwargs.pop('pad', '2%')
+                if position in ('top', 'bottom'):
+                    _kwargs.update({'orientation': 'horizontal'})
+                cax = divider.append_axes(position=position, size=size, pad=pad)
+                fig.colorbar(plot_object, cax, **_kwargs)
 
         if xscale is not None:
             self.ax.set_xscale(xscale)
@@ -435,7 +402,7 @@ class Visualization:
         if not max(ratio, 1 / ratio) > 10.0:
             self.ax.set_aspect('equal')
 
-        return self
+        return self.ax
 
     def __repr__(self):
         """Dunder repr method."""

@@ -10,7 +10,7 @@ from numpy import ndarray
 from .interpolation import Extent
 
 
-def particle_plot(
+def plot(
     *, x: ndarray, y: ndarray, ax: Any, **kwargs,
 ):
     """Plot particles.
@@ -37,7 +37,7 @@ def particle_plot(
     return lines
 
 
-def scatter_plot(
+def scatter(
     *,
     x: ndarray,
     y: ndarray,
@@ -97,10 +97,10 @@ def scatter_plot(
     return paths
 
 
-def render_plot(
+def imshow(
     *, interpolated_data: ndarray, extent: Extent, ax: Any, **kwargs,
 ):
-    """Plot 1d interpolated data as a rendered image.
+    """Plot 1d interpolated data as an image.
 
     Parameters
     ----------
@@ -137,7 +137,7 @@ def render_plot(
     return image
 
 
-def contour_plot(
+def contour(
     *, interpolated_data: ndarray, extent: Extent, ax: Any, **kwargs,
 ):
     """Plot 1d interpolated data as a contour plot.
@@ -168,7 +168,7 @@ def contour_plot(
     return contour
 
 
-def quiver_plot(
+def quiver(
     *, interpolated_data: ndarray, extent: Extent, ax: Any, **kwargs,
 ):
     """Plot 2d interpolated data as a quiver plot.
@@ -216,7 +216,7 @@ def quiver_plot(
     return quiver
 
 
-def stream_plot(
+def streamplot(
     *, interpolated_data: ndarray, extent: Extent, ax: Any, **kwargs,
 ):
     """Plot 2d interpolated data as a stream plot.

@@ -72,13 +72,13 @@ Visualization
 Projection plot
 ~~~~~~~~~~~~~~~
 
-Produce a projection rendering of density.
+Produce a projection image plot of density.
 
 .. code-block:: python
 
     >>> import plonk
     >>> snap = plonk.load_snap('disc_00030.h5')
-    >>> viz = plonk.visualize.plot(
+    >>> plonk.visualize.plot(
     ...    snap=snap,
     ...    quantity='density',
     ...    extent=(-150, 150, -150, 150),
