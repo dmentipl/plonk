@@ -850,6 +850,11 @@ class SubSnap(Snap):
         self._physical_units = self.base._physical_units
         self._extra_quantities = self.base._extra_quantities
 
+    @property
+    def sinks(self):
+        """Sink particle arrays."""
+        return self.base.sinks
+
     def __repr__(self):
         """Dunder repr method."""
         return self.__str__()
