@@ -14,6 +14,7 @@ import pandas as pd
 from numpy import ndarray
 from pandas import DataFrame
 from scipy.spatial.transform import Rotation
+from scipy.spatial import cKDTree
 
 from .. import Quantity
 from .. import units as plonk_units
@@ -278,6 +279,8 @@ class Snap:
         self.translation = None
         self._physical_units = False
         self._extra_quantities = False
+        self._neighbours = None
+        self._tree = None
 
     def close_file(self):
         """Close access to underlying file."""
@@ -587,6 +590,27 @@ class Snap:
             uses 2.381 for molecular hydrogen with solar metallicity.
         """
         self.properties['molecular_weight'] = molecular_weight
+
+    @property
+    def tree(self):
+        """Particle neighbour tree as scipy cKDTree."""
+        if self._tree is None:
+            self._tree = cKDTree(self['position'])
+        return self._tree
+
+    @property
+    def neighbours(self):
+        """Particle neighbours."""
+        if self._neighbours is None:
+            print('Finding neighbours... may take some time...', end='', flush=True)
+            tree = cKDTree(self['position'])
+            self._neighbours = tree.query_ball_point(
+                self['position'],
+                self.properties['kernel_radius'] * self['smoothing_length'],
+                n_jobs=-1,
+            )
+            print(' Done!', flush=True)
+        return self._neighbours
 
     def to_dataframe(
         self, columns: Union[Tuple[str, ...], List[str]] = None
