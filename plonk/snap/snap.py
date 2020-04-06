@@ -851,6 +851,11 @@ class SubSnap(Snap):
         self._extra_quantities = self.base._extra_quantities
 
     @property
+    def indices(self):
+        """Particle indices."""
+        return self._indices
+
+    @property
     def sinks(self):
         """Sink particle arrays."""
         return self.base.sinks
@@ -864,7 +869,7 @@ class SubSnap(Snap):
         return f'<plonk.SubSnap>'
 
     def _get_array(self, name: str, sinks: bool = False) -> ndarray:
-        return self.base._get_array(name, sinks)[self._indices]
+        return self.base._get_array(name, sinks)[self.indices]
 
 
 SnapLike = Union[Snap, SubSnap]
