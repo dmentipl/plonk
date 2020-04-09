@@ -22,12 +22,7 @@ from .. import Quantity
 from .. import units as plonk_units
 from ..analysis import particles
 from ..utils import norm
-
-kernel_radius = {
-    'cubic': 2.0,
-    'quintic': 3.0,
-    'Wendland C4': 2.0,
-}
+from ..utils.kernels import kernel_names, kernel_radius
 
 
 class _SinkUtility:
@@ -592,6 +587,18 @@ class Snap:
             ]
         return np.flatnonzero(self['type'] == self.particle_type[particle_type])
 
+    def set_kernel(self, kernel: str):
+        """Set kernel.
+
+        Parameters
+        ----------
+        kernel
+            The kernel name as a string.
+        """
+        if kernel not in kernel_names:
+            raise ValueError(f'Kernel must be in {kernel_names}')
+        self.properties['kernel'] = kernel
+
     def set_gravitational_parameter(self, sink_idx: Union[int, List[int]]):
         """Set standard gravitational parameter.
 
@@ -672,7 +679,7 @@ class Snap:
         if kernel is None:
             raise ValueError(
                 'To calculate particle neighbours, first set the kernel\n'
-                'via snap.properties["kernel"].'
+                'via snap.set_kernel.'
             )
         r_kern = kernel_radius[kernel]
         int_to_str_type = {val: key for key, val in self.particle_type.items()}
@@ -706,7 +713,7 @@ class Snap:
         if kernel is None:
             raise ValueError(
                 'To calculate particle neighbours, first set the kernel\n'
-                'via snap.properties["kernel"].'
+                'via snap.set_kernel.'
             )
         r_kern = kernel_radius[kernel]
         int_to_str_type = {val: key for key, val in self.particle_type.items()}
@@ -741,7 +748,7 @@ class Snap:
         if kernel is None:
             raise ValueError(
                 'To calculate particle neighbours, first set the kernel\n'
-                'via snap.properties["kernel"].'
+                'via snap.set_kernel.'
             )
         r_kern = kernel_radius[kernel]
         print('Finding neighbours... may take some time...', end='', flush=True)
