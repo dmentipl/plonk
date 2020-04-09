@@ -7,8 +7,10 @@ accessing a subset of particles in a Snap.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union, cast
 
+import h5py
 import numpy as np
 import pandas as pd
 from numpy import ndarray
@@ -782,6 +784,42 @@ class Snap:
         print(' Done!', flush=True)
 
         return _neighbours
+
+    def write_extra_arrays(self, arrays: List[str], filename: Union[str, Path] = None):
+        """Write extra arrays to file.
+
+        Parameters
+        ----------
+        arrays
+            A list of strings with array names.
+        filename : optional
+            A filename to write to.
+        """
+        if filename is None:
+            filename = f'{self.file_path.stem}_extra.h5'
+        f = h5py.File(filename, mode='w')
+        for array in arrays:
+            arr: ndarray = self[array]
+            dset = f.create_dataset(
+                array, arr.shape, dtype=arr.dtype, compression='gzip',
+            )
+            dset[:] = arr
+        f.close()
+
+    def read_extra_arrays(self, filename: Union[str, Path] = None):
+        """Read extra arrays from file.
+
+        Parameters
+        ----------
+        filename : optional
+            A filename to read from.
+        """
+        if filename is None:
+            filename = f'{self.file_path.stem}_extra.h5'
+        f = h5py.File(filename, mode='r')
+        for array in f:
+            self[array] = f[array][()]
+        f.close()
 
     def to_dataframe(
         self, columns: Union[Tuple[str, ...], List[str]] = None
