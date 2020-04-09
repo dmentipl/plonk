@@ -174,7 +174,7 @@ def _populate_particle_array_registry(
 
     elif ndustlarge > 0:
         # Read dust type if there are dust particles
-        array_registry['dust_type'] = _dust_particle_type
+        array_registry['sub_type'] = _dust_particle_type
         array_registry['stopping_time'] = _stopping_time
         array_registry['dust_to_gas_ratio'] = _dust_to_gas_ratio
         arrays.remove('dustfrac')
@@ -225,11 +225,9 @@ def _particle_type(snap: Snap) -> ndarray:
 def _dust_particle_type(snap: Snap) -> ndarray:
     idust = _get_dataset('idust', 'header')(snap)
     particle_type = np.abs(_get_dataset('itype', 'particles')(snap))
-    dust_type = np.zeros(particle_type.shape, dtype=np.int8)
-    dust_type[particle_type >= idust] = (
-        particle_type[particle_type >= idust] - idust + 1
-    )
-    return dust_type
+    sub_type = np.zeros(particle_type.shape, dtype=np.int8)
+    sub_type[particle_type >= idust] = particle_type[particle_type >= idust] - idust
+    return sub_type
 
 
 def _mass(snap: Snap) -> ndarray:

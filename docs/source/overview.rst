@@ -105,7 +105,6 @@ defined in the analysis module.
      'dust_density',
      'dust_fraction',
      'dust_mass',
-     'dust_type',
      'eccentricity',
      'gas_density',
      'gas_mass',
@@ -347,15 +346,13 @@ have been plotting the total density. We may want to visualize the dust and gas
 separately.
 
 To do this we take a :py:class:`SubSnap`. We can use the tags 'gas' and 'dust'
-to access those particles. Alternatively, we can use the 'dust_type' array. Gas
-particles have a 'dust_type' of 0. Dust particles have a 'dust_type' of 1 (or
-greater for multiple species). In this simulation there is only one dust
-species.
+to access those particles. Given that there may be sub-types of dust, using
+'dust' returns a list. In this simulation there is only one dust species.
 
 .. code-block:: pycon
 
-    >>> gas = snap[snap['dust_type'] == 0]
-    >>> dust = snap[snap['dust_type'] == 1]
+    >>> gas = snap['gas']
+    >>> dust = snap['dust'][0]
 
 You can access arrays on the :py:class:`SubSnap` objects as for any
 :py:class:`Snap` object.
@@ -402,13 +399,13 @@ the :py:meth:`extra_quantities` method. Before calling the method:
     >>> snap.available_arrays()
     ('density',
      'dust_to_gas_ratio',
-     'dust_type',
      'mass',
      'position',
      'pressure',
      'smoothing_length',
      'sound_speed',
      'stopping_time',
+     'sub_type',
      'timestep',
      'type',
      'velocity',
@@ -430,7 +427,6 @@ After calling :py:meth:`extra_quantities`:
      'dust_fraction',
      'dust_mass',
      'dust_to_gas_ratio',
-     'dust_type',
      'eccentricity',
      'gas_density',
      'gas_fraction',
@@ -454,6 +450,7 @@ After calling :py:meth:`extra_quantities`:
      'specific_kinetic_energy',
      'stokes_number',
      'stopping_time',
+     'sub_type',
      'temperature',
      'timestep',
      'type',
@@ -553,7 +550,6 @@ To see what profiles are loaded and what are available use the
      'dust_mass_001',
      'dust_surface_density_001',
      'dust_to_gas_ratio',
-     'dust_type',
      'gas_mass',
      'gas_surface_density',
      'mass',
@@ -566,6 +562,7 @@ To see what profiles are loaded and what are available use the
      'smoothing_length',
      'sound_speed',
      'stopping_time',
+     'sub_type',
      'surface_density',
      'timestep',
      'toomre_Q',

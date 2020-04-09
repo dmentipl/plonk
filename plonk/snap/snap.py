@@ -165,7 +165,6 @@ class Snap:
         'density': 'density',
         'differential_velocity': 'velocity',
         'dust_fraction': 'dimensionless',
-        'dust_type': 'dimensionless',
         'gravitational_potential': 'energy',
         'internal_energy': 'energy',
         'magnetic_field': 'magnetic_field',
@@ -176,6 +175,7 @@ class Snap:
         'sound_speed': 'velocity',
         'spin': 'angular_momentum',
         'stopping_time': 'time',
+        'sub_type': 'dimensionless',
         'timestep': 'time',
         'type': 'dimensionless',
         'velocity': 'velocity',
@@ -365,7 +365,9 @@ class Snap:
             for idx, num in enumerate(np.bincount(self['type'])):
                 if num > 0:
                     if idx == self.particle_type['dust']:
-                        d['dust'] = list(np.bincount(self['dust_type'])[1:])
+                        d['dust'] = list(
+                            np.bincount(self[self['type'] == idx]['sub_type'])
+                        )
                     else:
                         d[int_to_name[idx]] = num
             self._num_particles_of_type = d
@@ -551,6 +553,37 @@ class Snap:
 
         return self
 
+    def particle_indices(
+        self, particle_type: str, squeeze_subtype: bool = False,
+    ) -> Union[ndarray, List[ndarray]]:
+        """Particle indices of a particular type.
+
+        Parameters
+        ----------
+        particle_type
+            The particle type as a string.
+        squeeze_subtype
+            If True return all subtypes in a single array. Default is
+            False.
+
+        Returns
+        -------
+        ndarray or list of ndarray
+            If particle has no subtypes then returns an array of
+            indices of that type. Otherwise return a list of arrays of
+            indices, one for each subtype. However, if squeeze_subtype
+            is True, return a single array.
+        """
+        if particle_type == 'dust' and not squeeze_subtype:
+            return [
+                np.flatnonzero(
+                    (self['type'] == self.particle_type['dust'])
+                    & (self['sub_type'] == idx)
+                )
+                for idx in range(self.num_dust_species)
+            ]
+        return np.flatnonzero(self['type'] == self.particle_type[particle_type])
+
     def set_gravitational_parameter(self, sink_idx: Union[int, List[int]]):
         """Set standard gravitational parameter.
 
@@ -645,22 +678,14 @@ class Snap:
         """Get a family by name."""
         if name in self._families:
             if self._families[name] is None:
-                if name == 'dust':
-                    self._families[name] = {
-                        idx: np.flatnonzero(self['dust_type'] == idx + 1)
-                        for idx in range(self.num_dust_species)
-                    }
-                else:
-                    ind = np.flatnonzero(self['type'] == Snap.particle_type[name])
-                    if len(ind) == 0:
-                        raise ValueError(f'No {name} particles available')
-                    self._families[name] = ind
-            if name == 'dust':
-                return [
-                    SubSnap(self, self._families['dust'][idx])
-                    for idx in self._families['dust']
-                ]
-            return SubSnap(self, self._families[name])
+                ind = self.particle_indices(name)
+                if len(ind) == 0:
+                    raise ValueError(f'No {name} particles available')
+                self._families[name] = ind
+            ind = self._families[name]
+            if isinstance(ind, list):
+                return [SubSnap(self, _ind) for _ind in ind]
+            return SubSnap(self, ind)
         raise ValueError('Family not available')
 
     def get_array_unit(self, arr: str) -> Any:
