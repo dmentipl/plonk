@@ -13,13 +13,19 @@ import numpy as np
 import pandas as pd
 from numpy import ndarray
 from pandas import DataFrame
-from scipy.spatial.transform import Rotation
 from scipy.spatial import cKDTree
+from scipy.spatial.transform import Rotation
 
 from .. import Quantity
 from .. import units as plonk_units
 from ..analysis import particles
 from ..utils import norm
+
+kernel_radius = {
+    'cubic': 2.0,
+    'quintic': 3.0,
+    'Wendland C4': 2.0,
+}
 
 
 class _SinkUtility:
@@ -626,24 +632,156 @@ class Snap:
 
     @property
     def tree(self):
-        """Particle neighbour tree as scipy cKDTree."""
+        """Particle neighbour kd-trees.
+
+        Trees are represented by scipy cKDTree objects. There is one
+        tree per particle type stored in a dictionary. Particles with
+        subtypes, e.g. dust, have one tree per subtype.
+        """
         if self._tree is None:
-            self._tree = cKDTree(self['position'])
+            self._tree = dict()
+            for key in Snap.particle_type:
+                ind = self.particle_indices(key)
+                if len(ind) == 0:
+                    self._tree[key] = None
+                elif isinstance(ind, list):
+                    self._tree[key] = list()
+                    for _ind in ind:
+                        self._tree[key].append(cKDTree(self['position'][_ind]))
+                else:
+                    self._tree[key] = cKDTree(self['position'][ind])
         return self._tree
 
-    @property
-    def neighbours(self):
-        """Particle neighbours."""
-        if self._neighbours is None:
-            print('Finding neighbours... may take some time...', end='', flush=True)
-            tree = cKDTree(self['position'])
-            self._neighbours = tree.query_ball_point(
-                self['position'],
-                self.properties['kernel_radius'] * self['smoothing_length'],
-                n_jobs=-1,
+    def get_neighbours(self, idx):
+        """Get neighbours of a particle.
+
+        Parameters
+        ----------
+        idx
+            The particle index.
+
+        Returns
+        -------
+        list
+            The list of neighbours relative to the particle
+            type/sub-type.
+        """
+        kernel = self.properties.get('kernel')
+        if kernel is None:
+            raise ValueError(
+                'To calculate particle neighbours, first set the kernel\n'
+                'via snap.properties["kernel"].'
             )
-            print(' Done!', flush=True)
-        return self._neighbours
+        r_kern = kernel_radius[kernel]
+        int_to_str_type = {val: key for key, val in self.particle_type.items()}
+        particle_type = int_to_str_type[self['type'][idx]]
+        tree = self.tree[particle_type]
+        if particle_type == 'dust':
+            sub_type = self['sub_type'][idx]
+            tree = tree[sub_type]
+        neighbours = tree.query_ball_point(
+            self['position'][idx], r_kern * self['smoothing_length'][idx], n_jobs=-1,
+        )
+        return neighbours
+
+    def get_many_neighbours(self, indices):
+        """Get neighbours of more than one particle.
+
+        Assumes all particles are of same type.
+
+        Parameters
+        ----------
+        indices
+            The particle indices.
+
+        Returns
+        -------
+        ndarray of list
+            An array of neighbours lists relative to the particle
+            type/sub-type.
+        """
+        kernel = self.properties.get('kernel')
+        if kernel is None:
+            raise ValueError(
+                'To calculate particle neighbours, first set the kernel\n'
+                'via snap.properties["kernel"].'
+            )
+        r_kern = kernel_radius[kernel]
+        int_to_str_type = {val: key for key, val in self.particle_type.items()}
+        particle_type = int_to_str_type[self['type'][indices[0]]]
+        tree = self.tree[particle_type]
+        if particle_type == 'dust':
+            sub_type = self['sub_type'][indices[0]]
+            tree = tree[sub_type]
+        neighbours = tree.query_ball_point(
+            self['position'][indices],
+            r_kern * self['smoothing_length'][indices],
+            n_jobs=-1,
+        )
+        return neighbours
+
+    def get_all_neighbours(self):
+        """Get all particle neighbours.
+
+        Returns
+        -------
+        ndarray of lists
+            An 1d array where the index is the particle, and the item
+            is a list of neighbours.
+
+        Notes
+        -----
+        This has a large memory requirement. It is likely to crash if
+        the Snap has more than approximately 1 million particles
+        depending on the available memory.
+        """
+        kernel = self.properties.get('kernel')
+        if kernel is None:
+            raise ValueError(
+                'To calculate particle neighbours, first set the kernel\n'
+                'via snap.properties["kernel"].'
+            )
+        r_kern = kernel_radius[kernel]
+        print('Finding neighbours... may take some time...', end='', flush=True)
+
+        neighbours = np.zeros(len(self), dtype=object)
+        for key, tree in self.tree.items():
+            ind = self.particle_indices(key)
+            if len(ind) == 0:
+                continue
+            if isinstance(ind, list):
+                for idx, _ind in enumerate(ind):
+                    h = self['smoothing_length'][_ind]
+                    pos = self['position'][_ind]
+                    neighbours[_ind] = self.tree[key][idx].query_ball_point(
+                        pos, r_kern * h, n_jobs=-1
+                    )
+            else:
+                h = self['smoothing_length'][ind]
+                pos = self['position'][ind]
+                neighbours[ind] = self.tree[key].query_ball_point(
+                    pos, r_kern * h, n_jobs=-1
+                )
+
+        _neighbours = np.zeros(len(self), dtype=object)
+        ind = {key: self.particle_indices(key) for key in self.particle_type}
+        for idx, neigh in enumerate(neighbours):
+            if self['type'][idx] == self.particle_type['gas']:
+                _neighbours[idx] = ind['gas'][neigh]
+            elif self['type'][idx] == self.particle_type['dust']:
+                _neighbours[idx] = ind['dust'][self['sub_type'][idx] - 1][neigh]
+            elif self['type'][idx] == self.particle_type['boundary']:
+                _neighbours[idx] = ind['boundary'][neigh]
+            elif self['type'][idx] == self.particle_type['star']:
+                _neighbours[idx] = ind['star'][neigh]
+            elif self['type'][idx] == self.particle_type['darkmatter']:
+                _neighbours[idx] = ind['darkmatter'][neigh]
+            elif self['type'][idx] == self.particle_type['bulge']:
+                _neighbours[idx] = ind['bulge'][neigh]
+
+        print(' Done!', flush=True)
+
+        return _neighbours
 
     def to_dataframe(
         self, columns: Union[Tuple[str, ...], List[str]] = None
