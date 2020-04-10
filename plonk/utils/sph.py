@@ -117,7 +117,7 @@ def derivative(
         print(' Done!', flush=True)
 
     if derivative == 'div':
-        return result.T
+        return np.squeeze(result)
     return result
 
 
