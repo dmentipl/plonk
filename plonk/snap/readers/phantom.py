@@ -231,7 +231,7 @@ def _dust_particle_type(snap: Snap) -> ndarray:
 
 
 def _mass(snap: Snap) -> ndarray:
-    massoftype = snap._file_pointer['header/massoftype'][()]
+    massoftype = _get_dataset('massoftype', 'header')(snap)
     particle_type = _get_dataset('itype', 'particles')(snap)
     return massoftype[particle_type - 1]
 
@@ -247,7 +247,7 @@ def _density(snap: Snap) -> ndarray:
 
 
 def _pressure(snap: Snap) -> ndarray:
-    ieos = snap._file_pointer['header/ieos'][()]
+    ieos = _get_dataset('ieos', 'header')(snap)
     K = snap.properties['polytropic_constant']
     gamma = snap.properties['adiabatic_index']
     rho = _density(snap)
@@ -264,7 +264,7 @@ def _pressure(snap: Snap) -> ndarray:
 
 
 def _sound_speed(snap: Snap) -> ndarray:
-    ieos = snap._file_pointer['header/ieos'][()]
+    ieos = _get_dataset('ieos', 'header')(snap)
     gamma = snap.properties['adiabatic_index']
     rho = _density(snap)
     P = _pressure(snap)
@@ -279,7 +279,7 @@ def _sound_speed(snap: Snap) -> ndarray:
 
 
 def _stopping_time(snap: Snap) -> ndarray:
-    stopping_time = snap._file_pointer['particles/tstop'][()]
+    stopping_time = _get_dataset('tstop', 'particles')(snap)
     stopping_time[stopping_time == _bignumber] = np.inf
     return stopping_time
 
@@ -287,7 +287,7 @@ def _stopping_time(snap: Snap) -> ndarray:
 def _dust_fraction(snap: Snap) -> ndarray:
     if snap.properties['dust_method'] != 'dust/gas mixture':
         raise ValueError('Dust fraction only available for "dust/gas mixture"')
-    dust_fraction = snap._file_pointer['particles/dustfrac'][()]
+    dust_fraction = _get_dataset('dustfrac', 'particles')(snap)
     return dust_fraction
 
 
@@ -296,5 +296,5 @@ def _dust_to_gas_ratio(snap: Snap) -> ndarray:
         raise ValueError(
             'Dust fraction only available for "dust as separate sets of particles"'
         )
-    dust_to_gas_ratio = snap._file_pointer['particles/dustfrac'][()]
+    dust_to_gas_ratio = _get_dataset('dustfrac', 'particles')(snap)
     return dust_to_gas_ratio
