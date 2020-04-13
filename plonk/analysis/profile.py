@@ -364,6 +364,10 @@ class Profile:
         """Dunder str method."""
         return f'<plonk.Profile "{self.snap.file_path.name}">'
 
+    def _ipython_key_completions_(self):
+        """Tab completion for IPython __getitem__ method."""
+        return self.available_profiles()
+
     def loaded_profiles(self):
         """Return a listing of loaded profiles."""
         return tuple(sorted(self._profiles.keys()))
