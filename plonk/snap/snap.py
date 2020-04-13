@@ -8,7 +8,7 @@ accessing a subset of particles in a Snap.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union, cast
+from typing import Any, Callable, Dict, List, Set, Tuple, Union, cast
 
 import h5py
 import numpy as np
@@ -20,9 +20,9 @@ from scipy.spatial.transform import Rotation
 
 from .. import Quantity
 from .. import units as plonk_units
-from ..analysis import particles
 from ..utils import norm
 from ..utils.kernels import kernel_names, kernel_radius
+from .extra import extra_quantities
 
 
 class _SinkUtility:
@@ -79,15 +79,15 @@ class Snap:
 
     Alternatively, define a function.
 
-    >>> @plonk.Snap.add_array()
-    ... def radius(snap) -> ndarray:
+    >>> @snap.add_array()
+    ... def radius(snap):
     ...     radius = np.hypot(snap['x'], snap['y'])
     ...     return radius
 
     Possibly with units.
 
-    >>> @plonk.Snap.add_array(unit='length')
-    ... def radius(snap) -> ndarray:
+    >>> @snap.add_array(unit='length')
+    ... def radius(snap):
     ...     radius = np.hypot(snap['x'], snap['y'])
     ...     return radius
 
@@ -99,9 +99,6 @@ class Snap:
 
     >>> snap.physical_units()
     """
-
-    _array_registry: Dict[str, Callable] = {}
-    _sink_registry: Dict[str, Callable] = {}
 
     _array_name_mapper = {
         'B': 'magnetic_field',
@@ -209,8 +206,48 @@ class Snap:
     }
 
     @staticmethod
+    def add_alias(name: str, alias: str) -> None:
+        """Add alias to array.
+
+        Parameters
+        ----------
+        name
+            The name of the array.
+        alias
+            The alias to reference the array.
+        """
+        Snap._array_name_mapper[alias] = name
+
+    def __init__(self):
+
+        self.data_source = None
+        self.file_path = None
+        self.properties = {}
+        self.units = {}
+        self._array_registry: Dict[str, Callable] = {}
+        self._sink_registry: Dict[str, Callable] = {}
+        self._cache_arrays = True
+        self._arrays = {}
+        self._sinks = {}
+        self._file_pointer = None
+        self._num_particles = -1
+        self._num_particles_of_type = -1
+        self._num_sinks = -1
+        self._num_dust_species = -1
+        self._families = {key: None for key in self.particle_type}
+        self.rotation = None
+        self.translation = None
+        self._physical_units = False
+        self._extra_quantities = False
+        self._neighbours = None
+        self._tree = None
+
+    def close_file(self):
+        """Close access to underlying file."""
+        self._file_pointer.close()
+
     def add_array(
-        unit: str = None, rotatable: bool = None, dust: bool = False
+        self, unit: str = None, rotatable: bool = None, dust: bool = False
     ) -> Callable:
         """Decorate function to add array to Snap.
 
@@ -239,55 +276,17 @@ class Snap:
         """
 
         def _add_array(fn):
-            Snap._array_registry[fn.__name__] = fn
-            Snap._array_units[fn.__name__] = unit
+            self._array_registry[fn.__name__] = fn
+            self._array_units[fn.__name__] = unit
             if rotatable is True:
-                Snap._vector_arrays.add(fn.__name__)
+                self._vector_arrays.add(fn.__name__)
             elif rotatable is False:
-                Snap._vector_component_arrays.add(fn.__name__)
+                self._vector_component_arrays.add(fn.__name__)
             if dust is True:
-                Snap._dust_arrays.add(fn.__name__)
+                self._dust_arrays.add(fn.__name__)
             return fn
 
         return _add_array
-
-    @staticmethod
-    def add_alias(name: str, alias: str) -> None:
-        """Add alias to array.
-
-        Parameters
-        ----------
-        name
-            The name of the array.
-        alias
-            The alias to reference the array.
-        """
-        Snap._array_name_mapper[alias] = name
-
-    def __init__(self):
-
-        self.data_source = None
-        self.file_path = None
-        self.properties = {}
-        self.units = {}
-        self._arrays = {}
-        self._sinks = {}
-        self._file_pointer = None
-        self._num_particles = -1
-        self._num_particles_of_type = -1
-        self._num_sinks = -1
-        self._num_dust_species = -1
-        self._families = {key: None for key in Snap.particle_type}
-        self.rotation = None
-        self.translation = None
-        self._physical_units = False
-        self._extra_quantities = False
-        self._neighbours = None
-        self._tree = None
-
-    def close_file(self):
-        """Close access to underlying file."""
-        self._file_pointer.close()
 
     def loaded_arrays(self, sinks: bool = False):
         """Return a tuple of loaded arrays.
@@ -393,14 +392,22 @@ class Snap:
             self._num_dust_species = len(self.properties.get('grain_size', []))
         return self._num_dust_species
 
+    @property
+    def cache_arrays(self):
+        """Cache arrays in memory for faster access."""
+        return self._cache_arrays
+
+    @cache_arrays.setter
+    def cache_arrays(self, value):
+        if value is False:
+            self._arrays = {}
+        self._cache_arrays = value
+
     def extra_quantities(self):
         """Make extra quantities available."""
         if self._extra_quantities:
             raise ValueError('Extra quantities already available')
-        n_dust = len(self.properties.get('grain_size', []))
-        dust = n_dust > 0
-        dust_method = self.properties.get('dust_method')
-        extra_quantities(dust=dust, dust_method=dust_method)
+        extra_quantities(snap=self)
         self._extra_quantities = True
         return self
 
@@ -649,7 +656,7 @@ class Snap:
         """
         if self._tree is None:
             self._tree = dict()
-            for key in Snap.particle_type:
+            for key in self.particle_type:
                 ind = self.particle_indices(key)
                 if len(ind) == 0:
                     self._tree[key] = None
@@ -896,20 +903,17 @@ class Snap:
 
     def _get_array_from_registry(self, name: str, sinks: bool = False):
         if sinks:
-            array = Snap._sink_registry[name](self)
-            array_dict = self._sinks
+            array = self._sink_registry[name](self)
         else:
-            array = Snap._array_registry[name](self)
-            array_dict = self._arrays
+            array = self._array_registry[name](self)
         if self.rotation is not None and name in self._vector_arrays:
             array = self.rotation.apply(array)
         if self.translation is not None and name == 'position':
             array += self.translation
         if self._physical_units and not isinstance(array, Quantity):
             unit = self.get_array_unit(name)
-            array_dict[name] = unit * array
-        else:
-            array_dict[name] = array
+            return unit * array
+        return array
 
     def _get_array(self, name: str, sinks: bool = False) -> ndarray:
         """Get an array by name."""
@@ -932,11 +936,13 @@ class Snap:
             if index is None:
                 return array_dict[name]
             return array_dict[name][:, index]
-        if name in Snap._array_registry or name in Snap._sink_registry:
-            self._get_array_from_registry(name, sinks)
+        if name in self._array_registry or name in self._sink_registry:
+            array = self._get_array_from_registry(name, sinks)
+            if self.cache_arrays:
+                self._arrays[name] = array
             if index is None:
-                return array_dict[name]
-            return array_dict[name][:, index]
+                return array
+            return array[:, index]
         raise ValueError('Array not available')
 
     def _getitem_from_str(self, inp: str, sinks: bool = False) -> ndarray:
@@ -1130,192 +1136,6 @@ def get_array_in_code_units(snap: SnapLike, name: str) -> ndarray:
     if isinstance(arr, Quantity):
         return (arr / snap.get_array_unit(name)).magnitude
     return arr
-
-
-def extra_quantities(
-    dust: bool = False, dust_method: Optional[str] = None,
-):
-    """Make extra quantities available.
-
-    Parameters
-    ----------
-    dust
-        Whether to add dust quantities.
-    dust_method
-        The dust method.
-    """
-
-    @Snap.add_array(unit='momentum', rotatable=True)
-    def momentum(snap) -> ndarray:
-        """Momentum."""
-        return particles.momentum(snap=snap)
-
-    @Snap.add_array(unit='angular_momentum', rotatable=True)
-    def angular_momentum(snap) -> ndarray:
-        """Angular momentum."""
-        origin = snap.translation if snap.translation is not None else (0.0, 0.0, 0.0)
-        return particles.angular_momentum(snap=snap, origin=origin)
-
-    @Snap.add_array(unit='specific_angular_momentum', rotatable=True)
-    def specific_angular_momentum(snap) -> ndarray:
-        """Specific angular momentum."""
-        origin = snap.translation if snap.translation is not None else (0.0, 0.0, 0.0)
-        return particles.specific_angular_momentum(snap=snap, origin=origin)
-
-    @Snap.add_array(unit='energy')
-    def kinetic_energy(snap) -> ndarray:
-        """Kinetic energy."""
-        return particles.kinetic_energy(snap=snap)
-
-    @Snap.add_array(unit='specific_energy')
-    def specific_kinetic_energy(snap) -> ndarray:
-        """Specific kinetic energy."""
-        return particles.specific_kinetic_energy(snap=snap)
-
-    @Snap.add_array(unit='frequency')
-    def keplerian_frequency(snap) -> ndarray:
-        """Keplerian orbital frequency."""
-        gravitational_parameter = snap.properties.get('gravitational_parameter')
-        if gravitational_parameter is None:
-            raise ValueError(
-                'To get Keplerian frequency, first set the gravitational parameter\n'
-                'via snap.set_gravitational_parameter.'
-            )
-        origin = snap.translation if snap.translation is not None else (0.0, 0.0, 0.0)
-        return particles.keplerian_frequency(
-            snap=snap, gravitational_parameter=gravitational_parameter, origin=origin
-        )
-
-    @Snap.add_array(unit='length')
-    def semi_major_axis(snap) -> ndarray:
-        """Semi-major axis."""
-        gravitational_parameter = snap.properties.get('gravitational_parameter')
-        if gravitational_parameter is None:
-            raise ValueError(
-                'To get semi-major axis, first set the gravitational parameter\n'
-                'via snap.set_gravitational_parameter.'
-            )
-        origin = snap.translation if snap.translation is not None else (0.0, 0.0, 0.0)
-        return particles.semi_major_axis(
-            snap=snap, gravitational_parameter=gravitational_parameter, origin=origin
-        )
-
-    @Snap.add_array(unit='dimensionless')
-    def eccentricity(snap) -> ndarray:
-        """Eccentricity."""
-        gravitational_parameter = snap.properties.get('gravitational_parameter')
-        if gravitational_parameter is None:
-            raise ValueError(
-                'To get eccentricity, first set the gravitational parameter\n'
-                'via snap.set_gravitational_parameter.'
-            )
-        origin = snap.translation if snap.translation is not None else (0.0, 0.0, 0.0)
-        return particles.eccentricity(
-            snap=snap, gravitational_parameter=gravitational_parameter, origin=origin
-        )
-
-    @Snap.add_array(unit='radian', rotatable=False)
-    def inclination(snap) -> ndarray:
-        """Inclination."""
-        return particles.inclination(snap=snap)
-
-    @Snap.add_array(unit='length', rotatable=False)
-    def radius_cylindrical(snap) -> ndarray:
-        """Cylindrical radius."""
-        return particles.radial_distance(snap=snap, coordinates='cylindrical')
-
-    @Snap.add_array(unit='length', rotatable=False)
-    def radius_spherical(snap) -> ndarray:
-        """Spherical radius."""
-        return particles.radial_distance(snap=snap, coordinates='spherical')
-
-    @Snap.add_array(unit='radian', rotatable=False)
-    def azimuthal_angle(snap) -> ndarray:
-        """Azimuthal angle."""
-        return particles.azimuthal_angle(snap=snap)
-
-    @Snap.add_array(unit='radian', rotatable=False)
-    def polar_angle(snap) -> ndarray:
-        """Polar angle."""
-        return particles.polar_angle(snap=snap)
-
-    @Snap.add_array(unit='velocity', rotatable=False)
-    def radial_velocity_cylindrical(snap) -> ndarray:
-        """Cylindrical radial velocity."""
-        return particles.radial_velocity(snap=snap, coordinates='cylindrical')
-
-    @Snap.add_array(unit='velocity', rotatable=False)
-    def radial_velocity_spherical(snap) -> ndarray:
-        """Spherical radial velocity."""
-        return particles.radial_velocity(snap=snap, coordinates='spherical')
-
-    @Snap.add_array(unit='frequency', rotatable=False)
-    def angular_velocity(snap) -> ndarray:
-        """Angular velocity."""
-        return particles.angular_velocity(snap=snap)
-
-    @Snap.add_array(unit='temperature')
-    def temperature(snap) -> ndarray:
-        """Temperature."""
-        molecular_weight = snap.properties.get('molecular_weight')
-        if molecular_weight is None:
-            raise ValueError(
-                'To get temperature, first set the molecular weight parameter\n'
-                'via snap.set_molecular_weight method.'
-            )
-        return particles.temperature(snap=snap, molecular_weight=molecular_weight)
-
-    if dust:
-
-        @Snap.add_array(unit='dimensionless')
-        def gas_fraction(snap) -> ndarray:
-            """Gas fraction."""
-            return particles.gas_fraction(snap=snap)
-
-        @Snap.add_array(unit='mass')
-        def gas_mass(snap) -> ndarray:
-            """Gas mass."""
-            return particles.gas_mass(snap=snap)
-
-        @Snap.add_array(unit='density')
-        def gas_density(snap) -> ndarray:
-            """Gas density."""
-            return particles.gas_density(snap=snap)
-
-        if dust_method == 'dust as separate sets of particles':
-
-            @Snap.add_array(unit='dimensionless', dust=True)
-            def dust_fraction(snap) -> ndarray:
-                """Dust fraction."""
-                return particles.dust_fraction(snap=snap)
-
-        @Snap.add_array(unit='mass', dust=True)
-        def dust_mass(snap) -> ndarray:
-            """Dust mass."""
-            return particles.dust_mass(snap=snap)
-
-        @Snap.add_array(unit='density', dust=True)
-        def dust_density(snap) -> ndarray:
-            """Dust density."""
-            return particles.dust_density(snap=snap)
-
-        @Snap.add_array(unit='dimensionless', dust=True)
-        def stokes_number(snap) -> ndarray:
-            """Stokes number."""
-            gravitational_parameter = snap.properties.get('gravitational_parameter')
-            if gravitational_parameter is None:
-                raise ValueError(
-                    'To get eccentricity, first set the gravitational parameter\n'
-                    'via snap.set_gravitational_parameter.'
-                )
-            origin = (
-                snap.translation if snap.translation is not None else (0.0, 0.0, 0.0)
-            )
-            return particles.stokes_number(
-                snap=snap,
-                gravitational_parameter=gravitational_parameter,
-                origin=origin,
-            )
 
 
 def _str_is_int(string):

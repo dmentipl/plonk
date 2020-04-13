@@ -13,25 +13,104 @@ from .. import units as plonk_units
 from ..snap import SnapLike
 from ..utils.math import cross, norm
 
-_units = {
-    'momentum': 'momentum',
+array_units = {
     'angular_momentum': 'angular_momentum',
-    'specific_angular_momentum': 'specific_angular_momentum',
-    'kinetic_energy': 'energy',
-    'specific_kinetic_energy': 'specific_energy',
-    'semi_major_axis': 'length',
-    'eccentricity': 'dimensionless',
-    'inclination': 'radian',
-    'gas_mass': 'mass',
-    'dust_mass': 'mass',
-    'gas_density': 'density',
-    'dust_density': 'density',
-    'radial_distance': 'length',
-    'azimuthal_angle': 'radian',
-    'polar_angle': 'radian',
-    'radial_velocity': 'velocity',
     'angular_velocity': 'velocity',
+    'azimuthal_angle': 'radian',
+    'dust_density': 'density',
+    'dust_fraction': 'dimensionless',
+    'dust_mass': 'mass',
+    'eccentricity': 'dimensionless',
+    'gas_density': 'density',
+    'gas_fraction': 'dimensionless',
+    'gas_mass': 'mass',
+    'inclination': 'radian',
+    'keplerian_frequency': 'frequency',
+    'kinetic_energy': 'energy',
+    'momentum': 'momentum',
+    'polar_angle': 'radian',
+    'radial_distance': 'length',
+    'radial_velocity': 'velocity',
+    'semi_major_axis': 'length',
+    'specific_angular_momentum': 'specific_angular_momentum',
+    'specific_kinetic_energy': 'specific_energy',
+    'stokes_number': 'dimensionless',
     'temperature': 'temperature',
+}
+
+array_requires = {
+    'angular_momentum': ('mass', 'position', 'velocity'),
+    'angular_velocity': ('position', 'velocity'),
+    'azimuthal_angle': ('position',),
+    'dust_density': ('dust_fraction',),
+    'dust_fraction': ('dust_fraction',),
+    'dust_mass': ('dust_fraction',),
+    'eccentricity': ('position', 'velocity'),
+    'gas_density': ('dust_fraction',),
+    'gas_fraction': ('dust_fraction',),
+    'gas_mass': ('dust_fraction',),
+    'inclination': ('mass', 'position', 'velocity'),
+    'keplerian_frequency': ('position',),
+    'kinetic_energy': ('mass', 'velocity'),
+    'momentum': ('mass', 'velocity'),
+    'polar_angle': ('position',),
+    'radial_distance': ('position',),
+    'radial_velocity': ('position', 'velocity'),
+    'semi_major_axis': ('position', 'velocity'),
+    'specific_angular_momentum': ('position', 'velocity'),
+    'specific_kinetic_energy': 'velocity',
+    'stokes_number': ('position', 'stopping_time'),
+    'temperature': ('sound_speed',),
+}
+
+array_rotatable = {
+    'angular_momentum': True,
+    'angular_velocity': False,
+    'azimuthal_angle': False,
+    'dust_density': False,
+    'dust_fraction': False,
+    'dust_mass': False,
+    'eccentricity': False,
+    'gas_density': False,
+    'gas_fraction': False,
+    'gas_mass': False,
+    'inclination': False,
+    'keplerian_frequency': False,
+    'kinetic_energy': False,
+    'momentum': True,
+    'polar_angle': False,
+    'radial_distance': False,
+    'radial_velocity': False,
+    'semi_major_axis': False,
+    'specific_angular_momentum': True,
+    'specific_kinetic_energy': False,
+    'stokes_number': False,
+    'temperature': False,
+}
+
+array_dust = {
+    'angular_momentum': False,
+    'angular_velocity': False,
+    'azimuthal_angle': False,
+    'dust_density': True,
+    'dust_fraction': True,
+    'dust_mass': True,
+    'eccentricity': False,
+    'gas_density': False,
+    'gas_fraction': False,
+    'gas_mass': False,
+    'inclination': False,
+    'keplerian_frequency': False,
+    'kinetic_energy': False,
+    'momentum': False,
+    'polar_angle': False,
+    'radial_distance': False,
+    'radial_velocity': False,
+    'semi_major_axis': False,
+    'specific_angular_momentum': False,
+    'specific_kinetic_energy': False,
+    'stokes_number': True,
+    'temperature': False,
 }
 
 
@@ -396,7 +475,7 @@ def eccentricity(
 
 
 def inclination(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
-    """Calculate the inclination with respect to the xy-plane.
+    """Calculate the inclination.
 
     The inclination is calculated by taking the angle between the
     angular momentum vector and the z-axis, with the angular momentum
