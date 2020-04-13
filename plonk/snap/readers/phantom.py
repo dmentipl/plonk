@@ -175,9 +175,11 @@ def _populate_particle_array_registry(
     elif ndustlarge > 0:
         # Read dust type if there are dust particles
         array_registry['sub_type'] = _dust_particle_type
-        array_registry['stopping_time'] = _stopping_time
         array_registry['dust_to_gas_ratio'] = _dust_to_gas_ratio
         arrays.remove('dustfrac')
+
+    if ndustsmall > 0 or ndustlarge > 0 and 'tstop' in arrays:
+        array_registry['stopping_time'] = _stopping_time
         arrays.remove('tstop')
 
     # Read arrays if available
