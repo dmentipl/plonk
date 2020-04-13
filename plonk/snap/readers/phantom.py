@@ -178,6 +178,7 @@ def _populate_particle_array_registry(
         array_registry['stopping_time'] = _stopping_time
         array_registry['dust_to_gas_ratio'] = _dust_to_gas_ratio
         arrays.remove('dustfrac')
+        arrays.remove('tstop')
 
     # Read arrays if available
     for name_on_file, name in name_map.items():

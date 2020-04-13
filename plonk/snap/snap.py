@@ -504,7 +504,7 @@ class Snap:
         >>> rot = rot * np.pi / 3 * np.linalg.norm(rot)
         >>> snap.rotate(rot)
         """
-        if isinstance(rotation, ndarray):
+        if isinstance(rotation, (list, tuple, ndarray)):
             rotation = Rotation.from_rotvec(rotation)
         for arr in self._vector_arrays:
             if arr in self.loaded_arrays():
@@ -1036,6 +1036,10 @@ class Snap:
     def __delitem__(self, name):
         """Delete an array from memory."""
         del self._arrays[name]
+
+    def _ipython_key_completions_(self):
+        """Tab completion for IPython __getitem__ method."""
+        return self.available_arrays()
 
     def __len__(self):
         """Length as number of particles."""
