@@ -14,6 +14,8 @@ from ... import units as plonk_units
 from ..snap import Snap
 from ..units import generate_units_dictionary
 
+igas, iboundary, istar, idarkmatter, ibulge = 1, 3, 4, 5, 6
+maxdusttypes = 100
 _bignumber = 1e29
 
 _particle_array_name_map = {
@@ -173,10 +175,10 @@ def _populate_particle_array_registry(
         arrays.remove('dustfrac')
 
     elif ndustlarge > 0:
-        # Read dust type if there are dust particles
-        array_registry['sub_type'] = _dust_particle_type
         array_registry['dust_to_gas_ratio'] = _dust_to_gas_ratio
         arrays.remove('dustfrac')
+        # Currently only dust as species has particle sub-types
+        array_registry['sub_type'] = _sub_type
 
     if ndustsmall > 0 or ndustlarge > 0 and 'tstop' in arrays:
         array_registry['stopping_time'] = _stopping_time
@@ -221,21 +223,28 @@ def _get_dataset(dataset: str, group: str) -> Callable:
 def _particle_type(snap: Snap) -> ndarray:
     idust = _get_dataset('idust', 'header')(snap)
     particle_type = np.abs(_get_dataset('itype', 'particles')(snap))
-    particle_type[particle_type >= idust] = 2
+    particle_type[particle_type >= idust] = snap.particle_type['dust']
     return particle_type
 
 
-def _dust_particle_type(snap: Snap) -> ndarray:
+def _sub_type(snap: Snap) -> ndarray:
     idust = _get_dataset('idust', 'header')(snap)
-    particle_type = np.abs(_get_dataset('itype', 'particles')(snap))
-    sub_type = np.zeros(particle_type.shape, dtype=np.int8)
-    sub_type[particle_type >= idust] = particle_type[particle_type >= idust] - idust
+    sub_type = np.abs(_get_dataset('itype', 'particles')(snap))
+    sub_type[
+        (sub_type == igas)
+        | (sub_type == iboundary)
+        | (sub_type == istar)
+        | (sub_type == idarkmatter)
+        | (sub_type == ibulge)
+    ] = -1
+    for idx in range(maxdusttypes):
+        sub_type[sub_type == idust + idx] = idx
     return sub_type
 
 
 def _mass(snap: Snap) -> ndarray:
     massoftype = _get_dataset('massoftype', 'header')(snap)
-    particle_type = _get_dataset('itype', 'particles')(snap)
+    particle_type = np.abs(_get_dataset('itype', 'particles')(snap))
     return massoftype[particle_type - 1]
 
 
@@ -243,10 +252,7 @@ def _density(snap: Snap) -> ndarray:
     m = _mass(snap)
     h = _get_dataset('h', 'particles')(snap)
     hfact = snap.properties['smoothing_length_factor']
-    rho = np.zeros(m.shape)
-    h = np.abs(h)
-    rho[h > 0] = m[h > 0] * (hfact / h[h > 0]) ** 3
-    return rho
+    return m * (hfact / np.abs(h)) ** 3
 
 
 def _pressure(snap: Snap) -> ndarray:
@@ -260,10 +266,10 @@ def _pressure(snap: Snap) -> ndarray:
         return K * rho ** (gamma - 1)
     if ieos == 3:
         q = snap.properties['sound_speed_index']
-        pos: ndarray = _get_dataset('xyz', 'particles')(snap)
+        pos = _get_dataset('xyz', 'particles')(snap)
         r_squared = pos[:, 0] ** 2 + pos[:, 1] ** 2 + pos[:, 2] ** 2
         return K * rho * r_squared ** (-q)
-    raise ValueError('Cannot determine equation of state')
+    raise ValueError('Unknown equation of state')
 
 
 def _sound_speed(snap: Snap) -> ndarray:
@@ -271,14 +277,11 @@ def _sound_speed(snap: Snap) -> ndarray:
     gamma = snap.properties['adiabatic_index']
     rho = _density(snap)
     P = _pressure(snap)
-    cs = np.zeros(P.shape)
     if ieos in (1, 3):
-        cs[rho > 0] = np.sqrt(P[rho > 0] / rho[rho > 0])
-    elif ieos == 2:
-        cs[rho > 0] = np.sqrt(gamma * P[rho > 0] / rho[rho > 0])
-    else:
-        raise ValueError('Cannot determine equation of state')
-    return cs
+        return np.sqrt(P / rho)
+    if ieos == 2:
+        return np.sqrt(gamma * P / rho)
+    raise ValueError('Unknown equation of state')
 
 
 def _stopping_time(snap: Snap) -> ndarray:
@@ -290,8 +293,7 @@ def _stopping_time(snap: Snap) -> ndarray:
 def _dust_fraction(snap: Snap) -> ndarray:
     if snap.properties['dust_method'] != 'dust/gas mixture':
         raise ValueError('Dust fraction only available for "dust/gas mixture"')
-    dust_fraction = _get_dataset('dustfrac', 'particles')(snap)
-    return dust_fraction
+    return _get_dataset('dustfrac', 'particles')(snap)
 
 
 def _dust_to_gas_ratio(snap: Snap) -> ndarray:
@@ -299,5 +301,4 @@ def _dust_to_gas_ratio(snap: Snap) -> ndarray:
         raise ValueError(
             'Dust fraction only available for "dust as separate sets of particles"'
         )
-    dust_to_gas_ratio = _get_dataset('dustfrac', 'particles')(snap)
-    return dust_to_gas_ratio
+    return _get_dataset('dustfrac', 'particles')(snap)
