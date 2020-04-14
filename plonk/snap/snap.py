@@ -374,12 +374,16 @@ class Snap:
         if self._num_particles_of_type == -1:
             int_to_name = {idx: name for name, idx in self.particle_type.items()}
             d = {}
-            for idx, num in enumerate(np.bincount(self['type'])):
+            particle_type = self['type']
+            if self.backend == 'dask':
+                particle_type = particle_type.compute()
+            for idx, num in enumerate(np.bincount(particle_type)):
                 if num > 0:
                     if idx == self.particle_type['dust']:
-                        d['dust'] = list(
-                            np.bincount(self[self['type'] == idx]['sub_type'])
-                        )
+                        sub_type = self['sub_type']
+                        if self.backend == 'dask':
+                            sub_type = sub_type.compute()
+                        d['dust'] = list(np.bincount(sub_type[particle_type == idx]))
                     else:
                         d[int_to_name[idx]] = num
             self._num_particles_of_type = d
