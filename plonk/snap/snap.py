@@ -165,6 +165,7 @@ class Snap:
         'density': 'density',
         'differential_velocity': 'velocity',
         'dust_fraction': 'dimensionless',
+        'dust_to_gas_ratio': 'dimensionless',
         'gravitational_potential': 'energy',
         'internal_energy': 'energy',
         'magnetic_field': 'magnetic_field',
@@ -910,7 +911,7 @@ class Snap:
             array = self.rotation.apply(array)
         if self.translation is not None and name == 'position':
             array += self.translation
-        if self._physical_units and not isinstance(array, Quantity):
+        if self._physical_units:
             unit = self.get_array_unit(name)
             return unit * array
         return array
