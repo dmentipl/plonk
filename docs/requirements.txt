@@ -1,3 +1,4 @@
+dask
 h5py
 matplotlib
 numba

@@ -17,6 +17,7 @@ dependencies:
   - conda-build
   - coverage
   - coveralls
+  - dask
   - doc8
   - flake8
   - h5py

@@ -12,6 +12,7 @@ __version__ = re.search(
 ).group(1)
 
 install_requires = [
+    'dask',
     'h5py',
     'matplotlib',
     'numba',
