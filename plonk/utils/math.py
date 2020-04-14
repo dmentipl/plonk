@@ -1,5 +1,6 @@
 """NumPy functions with Pint support."""
 
+import dask.array as da
 import numpy as np
 
 from .. import Quantity
@@ -21,8 +22,11 @@ def cross(x, y, **kwargs):
     ndarray
         The cross product of x and y.
     """
-    if isinstance(x, Quantity):
-        return np.cross(x.magnitude, y.magnitude, **kwargs) * x.units * y.units
+    if isinstance(x, da.Array):
+        result_x = x[:, 1] * y[:, 2] - x[:, 2] * y[:, 1]
+        result_y = x[:, 2] * y[:, 0] - x[:, 0] * y[:, 2]
+        result_z = x[:, 0] * y[:, 1] - x[:, 1] * y[:, 0]
+        return da.stack([result_x, result_y, result_z]).T
     return np.cross(x, y, **kwargs)
 
 
