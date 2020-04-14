@@ -83,10 +83,20 @@ def get_extent_from_percentile(
     pl, pr = (100 - percentile) / 2, percentile + (100 - percentile) / 2
     if isinstance(snap[x], da.Array):
         _x = snap[x].compute()
+    elif isinstance(snap[x], Quantity):
+        if isinstance(snap[x].magnitude, da.Array):
+            _x = snap[x].compute() * snap[x].units
+        else:
+            _x = snap[x]
     else:
         _x = snap[x]
     if isinstance(snap[y], da.Array):
         _y = snap[y].compute()
+    elif isinstance(snap[y], Quantity):
+        if isinstance(snap[y].magnitude, da.Array):
+            _y = snap[y].compute() * snap[y].units
+        else:
+            _y = snap[y]
     else:
         _y = snap[y]
     xlim = np.percentile(_x, [pl, pr])
