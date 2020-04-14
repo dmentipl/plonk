@@ -22,6 +22,12 @@ def cross(x, y, **kwargs):
     ndarray
         The cross product of x and y.
     """
+    if isinstance(x, Quantity):
+        if isinstance(x.magnitude, da.Array):
+            result_x = x[:, 1] * y[:, 2] - x[:, 2] * y[:, 1]
+            result_y = x[:, 2] * y[:, 0] - x[:, 0] * y[:, 2]
+            result_z = x[:, 0] * y[:, 1] - x[:, 1] * y[:, 0]
+            return da.stack([result_x, result_y, result_z]).T
     if isinstance(x, da.Array):
         result_x = x[:, 1] * y[:, 2] - x[:, 2] * y[:, 1]
         result_y = x[:, 2] * y[:, 0] - x[:, 0] * y[:, 2]

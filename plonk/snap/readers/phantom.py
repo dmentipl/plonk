@@ -88,6 +88,8 @@ def generate_snap_from_file(filename: Union[str, Path], backend: str = 'numpy') 
     snap.data_source = 'Phantom'
     snap.file_path = file_path
     snap._backend = backend
+    if backend == 'dask':
+        snap.cache_arrays = False
     snap._file_pointer = file_handle
 
     header = {key: val[()] for key, val in file_handle['header'].items()}
