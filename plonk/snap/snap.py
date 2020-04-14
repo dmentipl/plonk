@@ -939,7 +939,10 @@ class Snap:
         if name in self._array_registry or name in self._sink_registry:
             array = self._get_array_from_registry(name, sinks)
             if self.cache_arrays:
-                self._arrays[name] = array
+                if sinks:
+                    self._sinks[name] = array
+                else:
+                    self._arrays[name] = array
             if index is None:
                 return array
             return array[:, index]
