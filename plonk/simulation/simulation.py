@@ -11,11 +11,13 @@ from copy import copy
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
+import dask.array as da
 import numpy as np
 from pandas import DataFrame
 
 from .. import Quantity
 from ..snap import Snap, load_snap
+from ..snap.snap import _backends
 from .evolution import load_ev
 
 _properties_vary_per_snap = ('time',)
@@ -30,6 +32,12 @@ class Simulation:
     simulation at a particular time. Other files contain time series of
     global quantities on particles such as energy and momentum, and
     time series data for sink particles.
+
+    Parameters
+    ----------
+    backend : optional
+        This is the backend for the Snap objects. Either 'numpy' or
+        'dask'. Default is 'numpy'.
 
     Examples
     --------
@@ -57,6 +65,7 @@ class Simulation:
         self.data_source: str
         self.prefix: str
         self.paths: Dict[str, Any]
+        self.backend = None
 
         self._snaps: List[Snap] = None
         self._properties: Dict[str, Any] = None
@@ -72,6 +81,7 @@ class Simulation:
         prefix: str,
         directory: Optional[Union[str, Path]] = None,
         data_source: str = 'Phantom',
+        backend: str = 'numpy',
     ) -> Simulation:
         """Load Simulation.
 
@@ -89,6 +99,10 @@ class Simulation:
         """
         if not isinstance(prefix, str):
             raise TypeError('prefix must be str')
+
+        if backend not in _backends:
+            raise ValueError(f'Backend must be in {_backends}')
+        self.backend = backend
 
         if data_source not in _data_sources:
             raise ValueError(f'Data source not available: try {_data_sources}')
@@ -156,11 +170,27 @@ class Simulation:
 
         return self._sink_quantities
 
+    def array(self, name) -> da.Array:
+        """Simulation quantity as dask array.
+
+        This function returns a dask array for a quantity over the
+        whole simulation. It is required that the Simulation was
+        loaded with the 'dask' backend.
+
+        Parameters
+        ----------
+        quantity
+            The name of the quantity.
+        """
+        if self.backend != 'dask':
+            raise ValueError('Must load Simulation with dask backend')
+        return da.stack([snap[name] for snap in self.snaps])
+
     def _generate_snap_objects(self):
         """Generate Snap objects."""
         snaps = list()
-        for snap in self.paths['snaps']:
-            snaps.append(load_snap(snap))
+        for filename in self.paths['snaps']:
+            snaps.append(load_snap(filename=filename, backend=self.backend))
         self._snaps = snaps
 
     def _generate_properties(self):
@@ -295,6 +325,7 @@ def load_sim(
     prefix: str,
     directory: Optional[Union[str, Path]] = None,
     data_source: str = 'Phantom',
+    backend: str = 'numpy',
 ) -> Simulation:
     """Load Simulation.
 
@@ -309,7 +340,10 @@ def load_sim(
     data_source : optional
         The SPH code used to produce the simulation data. Default
         is 'Phantom'.
+    backend : optional
+        This is the backend for the Snap objects. Either 'numpy' or
+        'dask'. Default is 'numpy'.
     """
     return Simulation().load_sim(
-        prefix=prefix, directory=directory, data_source=data_source
+        prefix=prefix, directory=directory, data_source=data_source, backend=backend,
     )
