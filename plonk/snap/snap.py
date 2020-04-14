@@ -10,6 +10,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Set, Tuple, Union, cast
 
+import dask
+import dask.array as da
 import h5py
 import numpy as np
 import pandas as pd
@@ -915,7 +917,14 @@ class Snap:
         else:
             array = self._array_registry[name](self)
         if self.rotation is not None and name in self._vector_arrays:
-            array = self.rotation.apply(array)
+            if self.backend == 'dask':
+                array = da.from_delayed(
+                    dask.delayed(self.rotation.apply(array)),
+                    shape=array.shape,
+                    dtype=array.dtype,
+                )
+            else:
+                array = self.rotation.apply(array)
         if self.translation is not None and name == 'position':
             array += self.translation
         if self._physical_units:
