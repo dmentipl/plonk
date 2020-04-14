@@ -7,6 +7,7 @@ from bisect import bisect
 from functools import partial
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
+import dask.array as da
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -145,7 +146,11 @@ class Profile:
         self._profiles: Dict[str, ndarray] = {}
 
         self._weights = self.snap['mass']
+        if isinstance(self._weights, da.Array):
+            self._weights = self._weights.compute()
         self._mask = self._setup_particle_mask(ignore_accreted)
+        if isinstance(self._mask, da.Array):
+            self._mask = self._mask.compute()
         self._x = self._calculate_x()
         self.range = self._set_range(radius_min, radius_max)
         self.n_bins = n_bins
@@ -158,6 +163,8 @@ class Profile:
             )
         else:
             self._particle_bin = np.digitize(self._x, self.bin_edges)
+        if isinstance(self._particle_bin, da.Array):
+            self._particle_bin = self._particle_bin.compute()
         self.bin_indicies = self._set_particle_bin_indicies()
 
         self._profiles['radius'] = self.bin_centers
@@ -167,6 +174,8 @@ class Profile:
             )[0]
         else:
             self._profiles['number'] = np.histogram(self._x, self.bin_edges)[0]
+        if isinstance(self._profiles['number'], da.Array):
+            self._profiles['number'] = self._profiles['number'].compute()
 
         n_dust = len(self.snap.properties.get('grain_size', []))
         _generate_profiles(n_dust)
@@ -192,8 +201,9 @@ class Profile:
         self, radius_min: Optional[Any], radius_max: Optional[Any]
     ) -> Tuple[float, float]:
         if self.snap._physical_units:
-            return self._set_range_physical_units(radius_min, radius_max)
-        return self._set_range_code_units(radius_min, radius_max)
+            _range = self._set_range_physical_units(radius_min, radius_max)
+        _range = self._set_range_code_units(radius_min, radius_max)
+        return _range
 
     def _set_range_code_units(
         self, radius_min: Optional[float], radius_max: Optional[float]
@@ -206,6 +216,10 @@ class Profile:
             rmax = np.percentile(self._x, 99)
         else:
             rmax = radius_max
+        if isinstance(rmin, da.Array):
+            rmin = rmin.compute()
+        if isinstance(rmax, da.Array):
+            rmax = rmax.compute()[0]
 
         return rmin, rmax
 
@@ -518,6 +532,8 @@ class Profile:
         if aggregation not in _aggregations:
             raise ValueError('Cannot determine aggregation method')
 
+        if isinstance(array, da.Array):
+            array = array.compute()
         binned_quantity = np.zeros(self.n_bins)
         for idx, bin_ind in enumerate(self.bin_indicies):
             if bin_ind.size == 0:
@@ -536,6 +552,8 @@ class Profile:
             elif aggregation == 'sum':
                 val = np.sum(array[self._mask][bin_ind])
 
+            if isinstance(val, da.Array):
+                val = val.compute()
             if self.snap._physical_units:
                 binned_quantity[idx] = val.magnitude
             else:
