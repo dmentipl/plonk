@@ -9,7 +9,9 @@ from .phantom import generate_snap_from_file as read_phantom
 _data_sources = ('Phantom',)
 
 
-def load_snap(filename: Union[str, Path], data_source: str = 'Phantom') -> Snap:
+def load_snap(
+    filename: Union[str, Path], data_source: str = 'Phantom', backend: str = 'numpy'
+) -> Snap:
     """Load a snapshot from file.
 
     Parameters
@@ -18,6 +20,8 @@ def load_snap(filename: Union[str, Path], data_source: str = 'Phantom') -> Snap:
         Path to snapshot file.
     data_source : optional
         The SPH software that produced the data. Default is 'Phantom'.
+    backend : optional
+        Either 'numpy' or 'dask'. Default is 'numpy'.
 
     Returns
     -------
@@ -30,5 +34,5 @@ def load_snap(filename: Union[str, Path], data_source: str = 'Phantom') -> Snap:
         )
 
     if data_source == 'Phantom':
-        return read_phantom(filename)
+        return read_phantom(filename=filename, backend=backend)
     raise ValueError('Cannot load snapshot')

@@ -6,12 +6,13 @@ import pathlib
 from pathlib import Path
 from typing import Callable, Dict, List, Union
 
+import dask.array as da
 import h5py
 import numpy as np
 from numpy import ndarray
 
 from ... import units as plonk_units
-from ..snap import Snap
+from ..snap import Snap, _backends
 from ..units import generate_units_dictionary
 
 igas, iboundary, istar, idarkmatter, ibulge = 1, 3, 4, 5, 6
@@ -60,13 +61,15 @@ _sink_array_name_map = {
 }
 
 
-def generate_snap_from_file(filename: Union[str, Path]) -> Snap:
+def generate_snap_from_file(filename: Union[str, Path], backend: str = 'numpy') -> Snap:
     """Generate a Snap object from a Phantom HDF5 file.
 
     Parameters
     ----------
     filename
         The path to the file.
+    backend
+        Either 'numpy' or 'dask'.
 
     Returns
     -------
@@ -78,9 +81,13 @@ def generate_snap_from_file(filename: Union[str, Path]) -> Snap:
         raise FileNotFoundError('Cannot find snapshot file')
     file_handle = h5py.File(file_path, mode='r')
 
+    if backend not in _backends:
+        raise ValueError(f'Backend must be in {_backends}')
+
     snap = Snap()
     snap.data_source = 'Phantom'
     snap.file_path = file_path
+    snap._backend = backend
     snap._file_pointer = file_handle
 
     header = {key: val[()] for key, val in file_handle['header'].items()}
@@ -215,7 +222,10 @@ def _populate_sink_array_registry(name_map: Dict[str, str]):
 
 def _get_dataset(dataset: str, group: str) -> Callable:
     def func(snap: Snap) -> ndarray:
-        return snap._file_pointer[f'{group}/{dataset}'][()]
+        if snap.backend == 'numpy':
+            return snap._file_pointer[f'{group}/{dataset}'][()]
+        elif snap.backend == 'dask':
+            return da.from_array(snap._file_pointer[f'{group}/{dataset}'])
 
     return func
 

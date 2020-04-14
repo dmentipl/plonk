@@ -24,6 +24,8 @@ from ..utils import norm
 from ..utils.kernels import kernel_names, kernel_radius
 from .extra import extra_quantities
 
+_backends = ('numpy', 'dask')
+
 
 class _SinkUtility:
     def __init__(self, fn):
@@ -224,6 +226,7 @@ class Snap:
         self.file_path = None
         self.properties = {}
         self.units = {}
+        self._backend = 'numpy'
         self._array_registry: Dict[str, Callable] = {}
         self._sink_registry: Dict[str, Callable] = {}
         self._cache_arrays = True
@@ -245,6 +248,10 @@ class Snap:
     def close_file(self):
         """Close access to underlying file."""
         self._file_pointer.close()
+
+    @property
+    def backend(self):
+        return self._backend
 
     def add_array(
         self, unit: str = None, rotatable: bool = None, dust: bool = False

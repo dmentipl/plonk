@@ -203,7 +203,7 @@ class Profile:
         else:
             rmin = radius_min
         if radius_max is None:
-            rmax = np.percentile(self._x, 99, axis=0)
+            rmax = np.percentile(self._x, 99)
         else:
             rmax = radius_max
 
@@ -222,7 +222,7 @@ class Profile:
                 )
             rmin = rmin.to_base_units()
         if radius_max is None:
-            rmax = np.percentile(self._x.magnitude, 99, axis=0) * self._x.units
+            rmax = np.percentile(self._x.magnitude, 99) * self._x.units
         else:
             rmax = Quantity(radius_max)
             if not rmax.dimensionality == Quantity('cm').dimensionality:
