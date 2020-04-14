@@ -923,10 +923,11 @@ def temperature(
     specific_gas_constant = (plonk_units.R / molecular_weight).to_base_units()
 
     if isinstance(cs, Quantity):
-        T = cs ** 2 / (gamma * specific_gas_constant)
+        T = (
+            cs ** 2
+            * (snap.units['velocity'] ** 2 / (gamma * specific_gas_constant)).magnitude
+        )
     else:
         T = (cs * snap.units['velocity']) ** 2 / (gamma * specific_gas_constant)
 
-    if isinstance(cs, Quantity):
-        return T
-    return T.magnitude
+    return T
