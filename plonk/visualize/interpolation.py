@@ -6,6 +6,7 @@ for interpolation of vector fields.
 
 from typing import Optional, Tuple
 
+import dask.array as da
 import numpy as np
 from numpy import ndarray
 
@@ -77,6 +78,19 @@ def interpolate(
     _quantity, x, y, z = _get_arrays_from_str(snap=snap, quantity=quantity, x=x, y=y)
     h = get_array_in_code_units(snap, 'smoothing_length')
     m = get_array_in_code_units(snap, 'mass')
+
+    if isinstance(_quantity, da.Array):
+        _quantity = _quantity.compute()
+    if isinstance(x, da.Array):
+        x = x.compute()
+    if isinstance(y, da.Array):
+        y = y.compute()
+    if isinstance(z, da.Array):
+        z = z.compute()
+    if isinstance(m, da.Array):
+        m = m.compute()
+    if isinstance(h, da.Array):
+        h = h.compute()
 
     if interp == 'projection':
         cross_section = None

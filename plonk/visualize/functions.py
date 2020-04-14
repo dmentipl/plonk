@@ -2,6 +2,7 @@
 
 from typing import Optional
 
+import dask.array as da
 import numpy as np
 
 from .. import Quantity
@@ -80,8 +81,16 @@ def get_extent_from_percentile(
         The extent of the box as (xmin, xmax, ymin, ymax).
     """
     pl, pr = (100 - percentile) / 2, percentile + (100 - percentile) / 2
-    xlim = np.percentile(snap[x], [pl, pr])
-    ylim = np.percentile(snap[y], [pl, pr])
+    if isinstance(snap[x], da.Array):
+        _x = snap[x].compute()
+    else:
+        _x = snap[x]
+    if isinstance(snap[y], da.Array):
+        _y = snap[y].compute()
+    else:
+        _y = snap[y]
+    xlim = np.percentile(_x, [pl, pr])
+    ylim = np.percentile(_y, [pl, pr])
 
     if x_center_on is not None:
         xlim += x_center_on - xlim.mean()
