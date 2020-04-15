@@ -240,7 +240,6 @@ class Snap:
         self.translation = None
         self._physical_units = False
         self._extra_quantities = False
-        self._neighbours = None
         self._tree = None
 
     def close_file(self):
@@ -1080,17 +1079,25 @@ class SubSnap(Snap):
     def __init__(self, base: Snap, indices: ndarray):
         super().__init__()
 
+        # Attributes different to Snap
         self.base = base
         self._indices = indices
         self._num_particles = len(indices)
+        self._num_particles_of_type = -1
+        self._num_dust_species = -1
+        self._tree = None
 
+        # Attributes same as Snap
         self.data_source = self.base.data_source
         self.file_path = self.base.file_path
         self.properties = self.base.properties
         self.units = self.base.units
-        self._file_pointer = self.base._file_pointer
+        self._array_registry = self.base._array_registry
+        self._sink_registry = self.base._sink_registry
+        self._cache_arrays = self.base._cache_arrays
         self._arrays = self.base._arrays
         self._sinks = self.base._sinks
+        self._file_pointer = self.base._file_pointer
         self.rotation = self.base.rotation
         self.translation = self.base.translation
         self._physical_units = self.base._physical_units
