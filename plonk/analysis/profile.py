@@ -468,7 +468,10 @@ class Profile:
                 if std_dev_shading:
                     _y_std = _y_std.magnitude
                     _y_mean = _y_mean.magnitude
-            ax.plot(_x, _y, label=label, **kwargs)
+            if kwargs.get('label') is None:
+                ax.plot(_x, _y, label=label, **kwargs)
+            else:
+                ax.plot(_x, _y, **kwargs)
             if std_dev_shading:
                 color = ax.lines[idx].get_color()
                 ax.fill_between(
