@@ -245,7 +245,7 @@ def _sub_type(snap: Snap) -> ndarray:
         for idx in range(idustbound, idustbound + ndustlarge + 1):
             sub_type[sub_type == idx] = idx - idustbound + 1
     except KeyError:
-        if np.any(sub_type > idust + ndustlarge + 1):
+        if np.any(sub_type > idust + ndustlarge):
             print('Cannot determine dust boundary particles: they will not be read')
     return sub_type
 
