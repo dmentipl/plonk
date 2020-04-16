@@ -228,17 +228,25 @@ def _particle_type(snap: Snap) -> ndarray:
 
 
 def _sub_type(snap: Snap) -> ndarray:
-    idust = _get_dataset('idust', 'header')(snap)
     sub_type = np.abs(_get_dataset('itype', 'particles')(snap))
     sub_type[
         (sub_type == igas)
-        | (sub_type == iboundary)
         | (sub_type == istar)
         | (sub_type == idarkmatter)
         | (sub_type == ibulge)
     ] = -1
-    for idx in range(maxdusttypes):
-        sub_type[sub_type == idust + idx] = idx
+    sub_type[sub_type == iboundary] = 0
+    idust = _get_dataset('idust', 'header')(snap)
+    ndustlarge = _get_dataset('ndustlarge', 'header')(snap)
+    for idx in range(idust, idust + ndustlarge + 1):
+        sub_type[sub_type == idx] = idx - idust + 1
+    try:
+        idustbound = _get_dataset('idustbound', 'header')(snap)
+        for idx in range(idustbound, idustbound + ndustlarge + 1):
+            sub_type[sub_type == idx] = idx - idustbound + 1
+    except KeyError:
+        if np.any(sub_type > idust + ndustlarge + 1):
+            print('Cannot determine dust boundary particles: they will not be read')
     return sub_type
 
 
