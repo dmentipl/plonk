@@ -367,7 +367,13 @@ class Snap:
             for idx, num in enumerate(np.bincount(self['type'])):
                 if num > 0:
                     if idx == self.particle_type['dust']:
+                        # Dust particle sub-type skips zero: 1, 2, 3 ...
                         d['dust'] = list(
+                            np.bincount(self[self['type'] == idx]['sub_type'])[1:]
+                        )
+                    elif idx == self.particle_type['boundary']:
+                        # Boundary particle sub-type: 0 (gas), 1, 2, 3... (dust)
+                        d['boundary'] = list(
                             np.bincount(self[self['type'] == idx]['sub_type'])
                         )
                     else:
@@ -585,12 +591,22 @@ class Snap:
             is True, return a single array.
         """
         if particle_type == 'dust' and not squeeze_subtype:
+            # Dust particle sub-type skips zero: 1, 2, 3 ...
             return [
                 np.flatnonzero(
                     (self['type'] == self.particle_type['dust'])
-                    & (self['sub_type'] == idx)
+                    & (self['sub_type'] == idx + 1)
                 )
                 for idx in range(self.num_dust_species)
+            ]
+        if particle_type == 'boundary' and not squeeze_subtype:
+            # Boundary particle sub-type: 0 (gas), 1, 2, 3... (dust)
+            return [
+                np.flatnonzero(
+                    (self['type'] == self.particle_type['boundary'])
+                    & (self['sub_type'] == idx)
+                )
+                for idx in range(self.num_dust_species + 1)
             ]
         return np.flatnonzero(self['type'] == self.particle_type[particle_type])
 
@@ -695,6 +711,9 @@ class Snap:
         if particle_type == 'dust':
             sub_type = self['sub_type'][idx]
             tree = tree[sub_type]
+        if particle_type == 'boundary':
+            sub_type = self['sub_type'][idx]
+            tree = tree[sub_type]
         neighbours = tree.query_ball_point(
             self['position'][idx], r_kern * self['smoothing_length'][idx], n_jobs=-1,
         )
@@ -727,6 +746,9 @@ class Snap:
         particle_type = int_to_str_type[self['type'][indices[0]]]
         tree = self.tree[particle_type]
         if particle_type == 'dust':
+            sub_type = self['sub_type'][indices[0]]
+            tree = tree[sub_type]
+        if particle_type == 'boundary':
             sub_type = self['sub_type'][indices[0]]
             tree = tree[sub_type]
         neighbours = tree.query_ball_point(
@@ -787,7 +809,7 @@ class Snap:
             elif self['type'][idx] == self.particle_type['dust']:
                 _neighbours[idx] = ind['dust'][self['sub_type'][idx] - 1][neigh]
             elif self['type'][idx] == self.particle_type['boundary']:
-                _neighbours[idx] = ind['boundary'][neigh]
+                _neighbours[idx] = ind['boundary'][self['sub_type'][idx] - 1][neigh]
             elif self['type'][idx] == self.particle_type['star']:
                 _neighbours[idx] = ind['star'][neigh]
             elif self['type'][idx] == self.particle_type['darkmatter']:
