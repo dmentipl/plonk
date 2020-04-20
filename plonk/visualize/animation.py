@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional, Union
 import matplotlib.pyplot as plt
 from matplotlib import animation as _animation
 
+from .. import logger
 from ..analysis import Profile
 from ..snap import SnapLike
 from .functions import get_extent_from_percentile
@@ -98,7 +99,7 @@ def animation(
         )
 
     def animate(idx):
-        print(f'Visualizing snap: {idx}')
+        logger.info(f'Visualizing snap: {idx}')
         _kwargs = {k: v for k, v in kwargs.items() if k in _interp_kwargs}
         extent = kwargs.get('extent', get_extent_from_percentile(snaps[idx], x, y))
         interp_data = interpolate(
@@ -182,7 +183,7 @@ def animation_profiles(
         )
 
     def animate(idx):
-        print(f'Plotting profile: {idx}')
+        logger.info(f'Plotting profile: {idx}')
         line.set_data(profiles[idx]['radius'], profiles[idx][quantity])
         if text is not None:
             _text.set_text(text[idx])

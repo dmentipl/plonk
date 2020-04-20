@@ -18,7 +18,7 @@ from pandas import DataFrame
 from scipy.spatial import cKDTree
 from scipy.spatial.transform import Rotation
 
-from .. import Quantity
+from .. import Quantity, logger
 from .. import units as plonk_units
 from ..utils import norm
 from ..utils.kernels import kernel_names, kernel_radius
@@ -413,6 +413,7 @@ class Snap:
         """Make extra quantities available."""
         if self._extra_quantities:
             raise ValueError('Extra quantities already available')
+        logger.debug(f'Loading extra quantities: {self.file_path.name}')
         extra_quantities(snap=self)
         self._extra_quantities = True
         return self
@@ -485,6 +486,7 @@ class Snap:
             raise ValueError(
                 'Physical units already set: snap.unset(units=True) to unset.'
             )
+        logger.debug(f'Setting physical units: {self.file_path.name}')
         for arr in self.loaded_arrays():
             self._arrays[arr] = self._arrays[arr] * self.get_array_unit(arr)
         for arr in self.loaded_arrays(sinks=True):
@@ -517,6 +519,7 @@ class Snap:
         >>> rot = rot * np.pi / 3 * np.linalg.norm(rot)
         >>> snap.rotate(rot)
         """
+        logger.debug(f'Rotating snapshot: {self.file_path.name}')
         if isinstance(rotation, (list, tuple, ndarray)):
             rotation = Rotation.from_rotvec(rotation)
         for arr in self._vector_arrays:
@@ -557,6 +560,7 @@ class Snap:
         translation = np.array(translation)
         if translation.shape != (3,):
             raise ValueError('translation must be like (x, y, z)')
+        logger.debug(f'Translating snapshot: {self.file_path.name}')
         if 'position' in self.loaded_arrays():
             self._arrays['position'] += translation
         if 'position' in self.loaded_arrays(sinks=True):
@@ -780,7 +784,7 @@ class Snap:
                 'via snap.set_kernel.'
             )
         r_kern = kernel_radius[kernel]
-        print('Finding neighbours... may take some time...', end='', flush=True)
+        logger.info('Finding neighbours... may take some time...', end='', flush=True)
 
         neighbours = np.zeros(len(self), dtype=object)
         for key, tree in self.tree.items():
@@ -817,7 +821,7 @@ class Snap:
             elif self['type'][idx] == self.particle_type['bulge']:
                 _neighbours[idx] = ind['bulge'][neigh]
 
-        print(' Done!', flush=True)
+        logger.info(' Done!', flush=True)
 
         return _neighbours
 

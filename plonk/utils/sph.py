@@ -9,6 +9,7 @@ import numpy as np
 from numba.typed import List
 from numpy import ndarray
 
+from .. import logger
 from .kernels import (
     kernel_cubic,
     kernel_gradient_cubic,
@@ -61,7 +62,9 @@ def derivative(
         The derivative of the quantity.
     """
     end = '\n' if verbose else ''
-    print(f'Calculating {derivative}... may take some time...', end=end, flush=True)
+    logger.info(
+        f'Calculating {derivative}... may take some time...', end=end, flush=True
+    )
 
     if derivative not in ('grad', 'div', 'curl'):
         raise ValueError('derivative must be in ("grad", "div", "curl")')
@@ -112,9 +115,9 @@ def derivative(
     )
 
     if verbose:
-        print('Done!', flush=True)
+        logger.info('Done!', flush=True)
     else:
-        print(' Done!', flush=True)
+        logger.info(' Done!', flush=True)
 
     if derivative == 'div':
         return np.squeeze(result)
@@ -180,7 +183,7 @@ def summation(
 
     for particle_type in snap.particle_type:
         if verbose:
-            print(
+            logger.info(
                 f'Summing over {particle_type} particles...', flush=True,
             )
 
@@ -200,15 +203,17 @@ def summation(
                 array_chunks = [type_indices]
 
             if verbose and n_chunks > 1:
-                print(f'Number of chunks: {n_chunks}', flush=True)
-                print(f'Chunk size: {chunk_size}', flush=True)
+                logger.info(f'Number of chunks: {n_chunks}', flush=True)
+                logger.info(f'Chunk size: {chunk_size}', flush=True)
 
             for idx, indices in enumerate(array_chunks):
                 if verbose:
                     if n_chunks > 1:
-                        print(f'Finding neighbours for chunk: {idx}...', flush=True)
+                        logger.info(
+                            f'Finding neighbours for chunk: {idx}...', flush=True
+                        )
                     else:
-                        print(f'Finding neighbours...', flush=True)
+                        logger.info(f'Finding neighbours...', flush=True)
                 _neighbours = snap.get_many_neighbours(indices)
                 neighbours = List()
                 for neigh in _neighbours:
@@ -216,11 +221,11 @@ def summation(
 
                 if verbose:
                     if n_chunks > 1:
-                        print(
+                        logger.info(
                             f'Summing over neighbours for chunk: {idx}...', flush=True
                         )
                     else:
-                        print(f'Summing over neighbours...', flush=True)
+                        logger.info(f'Summing over neighbours...', flush=True)
 
                 result[indices] = compute_function(
                     indices=indices,

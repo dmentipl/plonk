@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ndarray
 
-from .. import Quantity
+from .. import Quantity, logger
 from ..snap import SnapLike
 from . import plots
 from .functions import get_extent_from_percentile
@@ -155,6 +155,7 @@ def plot(
 
     >>> units = plonk.visualize.str_to_units('g/cm^3', 'au', 'cm')
     """
+    logger.debug(f'Visualizing "{quantity}" on snap: {snap.file_path.name}')
     _kwargs = copy(kwargs)
 
     if ax is None:

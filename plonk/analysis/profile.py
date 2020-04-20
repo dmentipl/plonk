@@ -13,7 +13,7 @@ import pandas as pd
 from numpy import ndarray
 from pandas import DataFrame
 
-from .. import Quantity
+from .. import Quantity, logger
 from .. import units as plonk_units
 from ..snap import SnapLike, gravitational_constant_in_code_units
 from ..utils import average, is_documented_by
@@ -308,23 +308,25 @@ class Profile:
             array_name = name
         try:
             array: ndarray = self.snap[array_name]
+            if array.ndim == 1:
+                self._profiles[name] = self.particles_to_binned_quantity(
+                    aggregation, array
+                )
+                return self._profiles[name]
+            raise ValueError(
+                'Requested profile has array dimension > 1.\nTo access x-, y-, or '
+                'z-components, or magnitude of vector quantities,\ntry, for '
+                'example, prof["velocity_x"] or prof["momentum_magnitude"].\nTo '
+                'access dust profiles, try, for example, prof["stopping_time_001"] '
+                'or\nprof["dust_mass_sum"].'
+            )
         except ValueError:
             if self.snap._extra_quantities:
-                print('Profile unavailable.')
+                logger.error('Profile unavailable.')
             else:
-                print(
+                logger.error(
                     'Profile unavailable. Try calling extra_quantities method on Snap.'
                 )
-        if array.ndim == 1:
-            self._profiles[name] = self.particles_to_binned_quantity(aggregation, array)
-            return self._profiles[name]
-        raise ValueError(
-            'Requested profile has array dimension > 1.\nTo access x-, y-, or '
-            'z-components, or magnitude of vector quantities,\ntry, for '
-            'example, prof["velocity_x"] or prof["momentum_magnitude"].\nTo '
-            'access dust profiles, try, for example, prof["stopping_time_001"] '
-            'or\nprof["dust_mass_sum"].'
-        )
 
     def __getitem__(self, name: str) -> ndarray:
         """Return the profile of a given kind."""
@@ -656,6 +658,7 @@ def load_profile(
     spacing: str = 'linear',
     ignore_accreted: bool = True,
 ) -> Profile:
+    logger.debug(f'Loading profile: {snap.file_path.name}')
     return Profile(
         snap=snap,
         ndim=ndim,

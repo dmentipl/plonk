@@ -10,6 +10,7 @@ import h5py
 import numpy as np
 from numpy import ndarray
 
+from ... import logger
 from ... import units as plonk_units
 from ..snap import Snap
 from ..units import generate_units_dictionary
@@ -73,6 +74,7 @@ def generate_snap_from_file(filename: Union[str, Path]) -> Snap:
     Snap
         A Snap object.
     """
+    logger.debug(f'Loading Phantom snapshot: {filename}')
     file_path = pathlib.Path(filename).expanduser()
     if not file_path.is_file():
         raise FileNotFoundError('Cannot find snapshot file')
@@ -242,7 +244,7 @@ def _particle_type(snap: Snap) -> ndarray:
         ] = snap.particle_type['boundary']
     except KeyError:
         if np.any(particle_type >= idust + ndustlarge):
-            print('Cannot determine dust boundary particles')
+            logger.error('Cannot determine dust boundary particles')
     return particle_type
 
 
@@ -275,7 +277,7 @@ def _sub_type(snap: Snap) -> ndarray:
             sub_type[particle_type == idx] = idx - idustbound + 1
     except KeyError:
         if np.any(particle_type >= idust + ndustlarge):
-            print('Cannot determine dust boundary particles')
+            logger.error('Cannot determine dust boundary particles')
     return sub_type
 
 

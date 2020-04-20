@@ -5,3 +5,4 @@ dist/
 .coverage
 htmlcov/
 _build
+.plonk.log

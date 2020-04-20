@@ -7,6 +7,7 @@ import matplotlib as mpl
 import numpy as np
 from numpy import ndarray
 
+from .. import logger
 from .interpolation import Extent
 
 
@@ -76,7 +77,7 @@ def scatter(
     if color is None and size is None:
         raise ValueError('Should set size or color')
     if n_samples > 100_000:
-        print('n_samples > 100,000: this may be slow')
+        logger.warning('n_samples > 100,000: this may be slow')
     if random_seed is not None:
         np.random.seed(random_seed)
 

@@ -14,7 +14,7 @@ from typing import Any, Dict, List, Optional, Union
 import numpy as np
 from pandas import DataFrame
 
-from .. import Quantity
+from .. import Quantity, logger
 from ..snap import Snap, load_snap
 from .evolution import load_ev
 
@@ -100,6 +100,7 @@ class Simulation:
             if not isinstance(directory, (str, Path)):
                 raise TypeError('directory must be str or pathlib.Path')
 
+        logger.debug(f'Loading {data_source} simulation: {prefix} at {directory}')
         self.prefix = prefix
         self.paths = {
             'directory': Path(directory).expanduser().resolve(),

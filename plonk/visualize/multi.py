@@ -5,6 +5,7 @@ from typing import List, Union
 import numpy as np
 from numpy import ndarray
 
+from .. import logger
 from ..snap import SnapLike
 from .visualization import plot
 
@@ -56,7 +57,7 @@ class MultiVisualization:
             self._fn(idx)
             self._where += number
         else:
-            print('Too far forward. Going to last snap.')
+            logger.info('Too far forward. Going to last snap.')
             self._fn(len(self) - 1)
             self._where = len(self) - 1
 
@@ -67,7 +68,7 @@ class MultiVisualization:
             self._fn(idx)
             self._where -= number
         else:
-            print('Too far back. Going to first snap.')
+            logger.info('Too far back. Going to first snap.')
             self._fn(0)
             self._where = 0
 
