@@ -62,14 +62,13 @@ available at https://github.com/dmentipl/plonk.
 """
 
 import logging
-import pathlib
 import platform
 from typing import Any
 
 import pint
 
 # Canonical version number
-__version__ = '0.4.1'
+__version__ = '0.5.0'
 
 # Units
 units: Any = pint.UnitRegistry(system='cgs')
