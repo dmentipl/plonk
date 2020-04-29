@@ -224,7 +224,7 @@ def orbital_period(m1, m2, x1, x2, v1, v2, G):
     """
     a = semi_major_axis(m1, m2, x1, x2, v1, v2, G)
     mu = G * (m1 + m2)
-    return np.sqrt(4 * np.pi * a ** 3 / mu)
+    return 2 * np.pi * np.sqrt(a ** 3 / mu)
 
 
 def mean_motion(m1, m2, x1, x2, v1, v2, G):
