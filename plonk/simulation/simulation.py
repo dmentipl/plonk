@@ -160,8 +160,13 @@ class Simulation:
     def _generate_snap_objects(self):
         """Generate Snap objects."""
         snaps = list()
+        fail = 0
         for snap in self.paths['snaps']:
-            snaps.append(load_snap(snap))
+            try:
+                snaps.append(load_snap(snap))
+            except (OSError, RuntimeError):
+                fail += 1
+        logger.warning(f'Cannot read {fail} snap(s)')
         self._snaps = snaps
 
     def _generate_properties(self):
