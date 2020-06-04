@@ -33,7 +33,11 @@ def load_snap(filename: Union[str, Path], data_source: str = 'Phantom') -> Snap:
     if data_source == 'Phantom':
         try:
             return read_phantom(filename)
-        except OSError:
+        except FileNotFoundError as e:
+            logger.error(f'File not found: {filename}')
+            raise e
+        except OSError as e:
             # Catch errors raised by h5py due to file corruption
-            logger.error(f'Cannot read file: {filename}')
-    raise ValueError('Cannot load snapshot')
+            logger.error(f'File likely corrupted: {filename}')
+            raise e
+    raise RuntimeError('Cannot load snap')
