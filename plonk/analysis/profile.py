@@ -453,7 +453,10 @@ class Profile:
                     _yi = '_'.join(yi.split('_')[:-1])
                 else:
                     _yi = yi
-                _y_std = self[_yi + '_std']
+                try:
+                    _y_std = self[_yi + '_std']
+                except ValueError:
+                    logger.warning('Cannot calculate standard deviation')
                 if self.aggregation != 'mean':
                     _y_mean = self[_yi + '_mean']
                 else:
