@@ -3,6 +3,7 @@
 from pathlib import Path
 from typing import Union
 
+from ... import logger
 from ..snap import Snap
 from .phantom import generate_snap_from_file as read_phantom
 
@@ -30,5 +31,9 @@ def load_snap(filename: Union[str, Path], data_source: str = 'Phantom') -> Snap:
         )
 
     if data_source == 'Phantom':
-        return read_phantom(filename)
+        try:
+            return read_phantom(filename)
+        except OSError:
+            # Catch errors raised by h5py due to file corruption
+            logger.error(f'Cannot read file: {filename}')
     raise ValueError('Cannot load snapshot')
