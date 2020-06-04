@@ -166,7 +166,8 @@ class Simulation:
                 snaps.append(load_snap(snap))
             except (OSError, RuntimeError):
                 fail += 1
-        logger.warning(f'Cannot read {fail} snap(s)')
+        if fail > 0:
+            logger.warning(f'Cannot read {fail} snap(s)')
         self._snaps = snaps
 
     def _generate_properties(self):
