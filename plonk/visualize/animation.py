@@ -2,7 +2,7 @@
 
 import pathlib
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 from matplotlib import animation as _animation
@@ -12,7 +12,7 @@ from ..analysis import Profile
 from ..snap import SnapLike
 from .functions import get_extent_from_percentile
 from .interpolation import interpolate
-from .visualization import plot
+from .visualization import particle_plot, plot
 
 _interp_kwargs = ('number_of_pixels', 'density_weighted')
 
@@ -39,10 +39,10 @@ def animation(
         A list of Snap objects to animate.
     quantity
         The quantity to visualize. Must be a string to pass to Snap.
-    image
+    image : optional
         The matplotlib AxesImage object that represents the quantity to
         animate. If None, generate a new AxesImage object.
-    text
+    text : optional
         List of strings to display per snap.
     text_kwargs : optional
         Keyword arguments to pass to matplotlib text.
@@ -91,7 +91,7 @@ def animation(
     if im is None:
         raise NotImplementedError(
             'Can only currently produce animations of images. (Or profiles\n'
-            'with animation_profile.)'
+            'with animation_profile or particles with animation_particles.)'
         )
     if text is not None:
         _text = ax.text(
@@ -147,10 +147,10 @@ def animation_profiles(
         A list of Profile objects to animate.
     quantity
         The quantity to profile. Must be a string to pass to Profile.
-    line
+    line : optional
         The matplotlib Line2D object that represents the quantity to
         animate. If None, generate a new Line2D object.
-    text
+    text : optional
         List of strings to display per profile plot.
     text_kwargs : optional
         Keyword arguments to pass to matplotlib text.
@@ -191,6 +191,117 @@ def animation_profiles(
 
     anim = _animation.FuncAnimation(
         fig, animate, frames=len(profiles), **func_animation_kwargs
+    )
+    anim.save(filepath, extra_args=['-vcodec', 'libx264'], **save_kwargs)
+    plt.close()
+
+    return anim
+
+
+def animation_particles(
+    *,
+    filename: Union[str, Path],
+    snaps: List[SnapLike],
+    x: str,
+    y: str,
+    xlim: Tuple[float, float] = None,
+    ylim: Tuple[float, float] = None,
+    line: Optional[Any] = None,
+    text: List[str] = None,
+    text_kwargs: Dict[str, Any] = {},
+    func_animation_kwargs: Dict[str, Any] = {},
+    save_kwargs: Dict[str, Any] = {},
+    **kwargs,
+):
+    """Generate an animation of particle plots.
+
+    Parameters
+    ----------
+    filename
+        The file name to save the animation to.
+    snaps
+        A list of Snap objects to animate.
+    x
+        The quantity for the x-axis. Must be a string to pass to Snap.
+    y
+        The quantity for the y-axis. Must be a string to pass to Snap.
+    xlim : optional
+        The x-axis range as (xmin, xmax).
+    ylim : optional
+        The y-axis range as (ymin, ymax).
+    line : optional
+        The matplotlib Line2D object that represents the quantity to
+        animate. If None, generate a new Line2D object.
+    text : optional
+        List of strings to display per snap.
+    text_kwargs : optional
+        Keyword arguments to pass to matplotlib text.
+    func_animation_kwargs : optional
+        Keyword arguments to pass to matplotlib FuncAnimation.
+    save_kwargs : optional
+        Keyword arguments to pass to matplotlib Animation.save.
+    **kwargs
+        Arguments to pass to visualize.particle_plot.
+
+    Returns
+    -------
+    anim
+        The matplotlib FuncAnimation object.
+
+    Examples
+    --------
+    Make an animation of multiple snaps.
+
+    >>> plonk.visualize.animation(
+    ...     snaps=snaps,
+    ...     x='x',
+    ...     y='density',
+    ...     xlim=(-100, 100),
+    ...     ylim=(0, 1),
+    ...     filename='animation.mp4',
+    ... )
+    """
+    filepath = pathlib.Path(filename)
+    if filepath.suffix != '.mp4':
+        raise ValueError('filename should end in ".mp4"')
+
+    if line is None:
+        fig, ax = plt.subplots()
+        ax = particle_plot(snap=snaps[0], x=x, y=y, ax=ax, **kwargs)
+        ax.set(xlim=xlim, ylim=ylim)
+        ll = ax.lines[0]
+    else:
+        ll = line
+        ax = line.axes
+        fig = ax.figure
+
+    if ll is None:
+        raise NotImplementedError
+    if text is not None:
+        _text = ax.text(
+            0.9, 0.9, text[0], ha='right', transform=ax.transAxes, **text_kwargs
+        )
+
+    def animate(idx):
+        logger.info(f'Visualizing snap: {idx}')
+        _x, _y = snaps[idx][x], snaps[idx][y]
+        ll.set_data(_x, _y)
+        _xlim, _ylim = None, None
+        if xlim is None:
+            xmin, xmax = _x.min(), _x.max()
+            dx = 0.05 * (xmax - xmin)
+            _xlim = (xmin - dx, xmax + dx)
+        if ylim is None:
+            ymin, ymax = _y.min(), _y.max()
+            dy = 0.05 * (ymax - ymin)
+            _ylim = (ymin - dy, ymax + dy)
+        ll.axes.set(xlim=_xlim, ylim=_ylim)
+        if text is not None:
+            _text.set_text(text[idx])
+        return [ll]
+
+    anim = _animation.FuncAnimation(
+        fig, animate, frames=len(snaps), **func_animation_kwargs
     )
     anim.save(filepath, extra_args=['-vcodec', 'libx264'], **save_kwargs)
     plt.close()
