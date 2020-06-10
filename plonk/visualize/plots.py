@@ -41,8 +41,8 @@ def scatter(
     *,
     x: ndarray,
     y: ndarray,
-    color: Optional[ndarray] = None,
-    size: Optional[ndarray] = None,
+    c: Optional[ndarray] = None,
+    s: Optional[ndarray] = None,
     n_samples=10_000,
     random_seed=None,
     ax: Any,
@@ -56,9 +56,9 @@ def scatter(
         The x-coordinates for the scatter plot.
     y
         The y-coordinates for the scatter plot.
-    color
+    c
         The quantity to color the particles.
-    size
+    s
         The quantity to set the particle size.
     n_samples
         The number of samples to take. Default is 10,000.
@@ -74,7 +74,7 @@ def scatter(
     paths
         A matplotlib PathCollection object.
     """
-    if color is None and size is None:
+    if c is None and s is None:
         raise ValueError('Should set size or color')
     if n_samples > 100_000:
         logger.warning('n_samples > 100,000: this may be slow')
@@ -85,15 +85,15 @@ def scatter(
 
     x = x[rand]
     y = y[rand]
-    if color is not None:
-        color = color[rand]
-    if size is not None:
-        size = size[rand]
+    if c is not None:
+        c = c[rand]
+    if s is not None:
+        s = s[rand]
 
     _kwargs = copy(kwargs)
     alpha = _kwargs.pop('alpha', 0.5)
 
-    return ax.scatter(x, y, c=color, s=size, alpha=alpha, **_kwargs)
+    return ax.scatter(x, y, c=c, s=s, alpha=alpha, **_kwargs)
 
 
 def imshow(

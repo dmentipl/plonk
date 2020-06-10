@@ -241,8 +241,8 @@ def particle_plot(
     snap: SnapLike,
     x: str = 'x',
     y: str = 'y',
-    color: Optional[str] = None,
-    size: Optional[str] = None,
+    c: Optional[str] = None,
+    s: Optional[str] = None,
     xunit: Any = None,
     yunit: Any = None,
     cunit: Any = None,
@@ -267,10 +267,10 @@ def particle_plot(
     y
         The y-coordinate for the visualization. Must be a string to
         pass to Snap. Default is 'y'.
-    color
+    c
         The quantity to color the particles. Must be a string to
         pass to Snap.
-    size
+    s
         The quantity to set the particle size. Must be a string to
         pass to Snap.
     xunit
@@ -305,8 +305,8 @@ def particle_plot(
 
     _x: ndarray = snap[x]
     _y: ndarray = snap[y]
-    _color: ndarray = snap[color] if color is not None else None
-    _size: ndarray = snap[size] if size is not None else None
+    _c: ndarray = snap[c] if c is not None else None
+    _s: ndarray = snap[s] if s is not None else None
 
     if snap._physical_units:
         if xunit is not None:
@@ -318,32 +318,30 @@ def particle_plot(
         else:
             _y = _y.magnitude
         if cunit is not None:
-            _color = _color.to(cunit).magnitude
+            _c = _c.to(cunit).magnitude
         else:
-            _color = _color.magnitude
+            _c = _c.magnitude
 
     h: ndarray = snap['smoothing_length']
     mask = h > 0
 
     _x = _x[mask]
     _y = _y[mask]
-    if _color is not None:
-        _color = _color[mask]
-    if _size is not None:
-        _size = _size[mask]
-        _size = 100 * _size / _size.max()
+    if _c is not None:
+        _c = _c[mask]
+    if _s is not None:
+        _s = _s[mask]
+        _s = 100 * _s / _s.max()
         if snap._physical_units:
-            _size = _size.magnitude
+            _s = _s.magnitude
 
-    show_colorbar = _kwargs.pop('show_colorbar', _color is not None)
+    show_colorbar = _kwargs.pop('show_colorbar', _c is not None)
 
-    if _size is None and _color is None:
+    if _s is None and _c is None:
         plot_object = plots.plot(x=_x, y=_y, ax=ax, **_kwargs)
 
     else:
-        plot_object = plots.scatter(
-            x=_x, y=_y, color=_color, size=_size, ax=ax, **_kwargs,
-        )
+        plot_object = plots.scatter(x=_x, y=_y, c=_c, s=_s, ax=ax, **_kwargs,)
         if show_colorbar:
             divider = make_axes_locatable(ax)
             _kwargs = copy(colorbar_kwargs)
