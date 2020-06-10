@@ -33,8 +33,9 @@ def plot(
         A list of matplotlib Line2D objects.
     """
     _kwargs = copy(kwargs)
-    fmt = _kwargs.pop('fmt', 'k.')
-    return ax.plot(x, y, fmt, **_kwargs)
+    linestyle = _kwargs.pop('linestyle', '')
+    marker = _kwargs.pop('marker', '.')
+    return ax.plot(x, y, linestyle=linestyle, marker=marker, **_kwargs)
 
 
 def scatter(
