@@ -203,10 +203,10 @@ def animation_particles(
     filename: Union[str, Path],
     snaps: List[SnapLike],
     x: str,
-    y: str,
+    y: Union[str, List[str]],
     xlim: Tuple[float, float] = None,
     ylim: Tuple[float, float] = None,
-    line: Optional[Any] = None,
+    lines: List[Any] = None,
     text: List[str] = None,
     text_kwargs: Dict[str, Any] = {},
     func_animation_kwargs: Dict[str, Any] = {},
@@ -224,14 +224,15 @@ def animation_particles(
     x
         The quantity for the x-axis. Must be a string to pass to Snap.
     y
-        The quantity for the y-axis. Must be a string to pass to Snap.
+        The quantity for the y-axis, or list of quantities. Must be a
+        string (or list of strings) to pass to Snap.
     xlim : optional
         The x-axis range as (xmin, xmax).
     ylim : optional
         The y-axis range as (ymin, ymax).
-    line : optional
-        The matplotlib Line2D object that represents the quantity to
-        animate. If None, generate a new Line2D object.
+    lines : optional
+        A list of matplotlib Line2D object that represents the quantity
+        to animate. If None, generate a new Line2D object.
     text : optional
         List of strings to display per snap.
     text_kwargs : optional
@@ -250,7 +251,7 @@ def animation_particles(
 
     Examples
     --------
-    Make an animation of multiple snaps.
+    Make an animation of x vs density on the particles.
 
     >>> plonk.visualize.animation(
     ...     snaps=snaps,
@@ -260,23 +261,40 @@ def animation_particles(
     ...     ylim=(0, 1),
     ...     filename='animation.mp4',
     ... )
+
+    Make an animation of x vs density and x vs velocity_x on the
+    particles on the same plot.
+
+    >>> plonk.visualize.animation(
+    ...     snaps=snaps,
+    ...     x='x',
+    ...     y=['density', 'velocity_x'],
+    ...     xlim=(-100, 100),
+    ...     ylim=(0, 1),
+    ...     filename='animation.mp4',
+    ... )
     """
     filepath = pathlib.Path(filename)
     if filepath.suffix != '.mp4':
         raise ValueError('filename should end in ".mp4"')
 
-    if line is None:
-        fig, ax = plt.subplots()
-        ax = particle_plot(snap=snaps[0], x=x, y=y, ax=ax, **kwargs)
-        ax.set(xlim=xlim, ylim=ylim)
-        ll = ax.lines[0]
+    if isinstance(y, (list, tuple)):
+        ys = y
+    elif isinstance(y, str):
+        ys = [y]
     else:
-        ll = line
-        ax = line.axes
+        raise ValueError('Cannot determine y')
+
+    if lines is None:
+        fig, ax = plt.subplots()
+        for y in ys:
+            particle_plot(snap=snaps[0], x=x, y=y, ax=ax, **kwargs)
+        ax.set(xlim=xlim, ylim=ylim)
+        lines = ax.lines
+    else:
+        ax = lines[0].axes
         fig = ax.figure
 
-    if ll is None:
-        raise NotImplementedError
     if text is not None:
         _text = ax.text(
             0.9, 0.9, text[0], ha='right', transform=ax.transAxes, **text_kwargs
@@ -284,21 +302,24 @@ def animation_particles(
 
     def animate(idx):
         logger.info(f'Visualizing snap: {idx}')
-        _x, _y = snaps[idx][x], snaps[idx][y]
-        ll.set_data(_x, _y)
-        _xlim, _ylim = None, None
+        _xlim, _ylim = None, [0, 0]
+        _x = snaps[idx][x]
         if xlim is None:
             xmin, xmax = _x.min(), _x.max()
             dx = 0.05 * (xmax - xmin)
             _xlim = (xmin - dx, xmax + dx)
-        if ylim is None:
-            ymin, ymax = _y.min(), _y.max()
-            dy = 0.05 * (ymax - ymin)
-            _ylim = (ymin - dy, ymax + dy)
-        ll.axes.set(xlim=_xlim, ylim=_ylim)
+        for y, line in zip(ys, lines):
+            _y = snaps[idx][y]
+            line.set_data(_x, _y)
+            if ylim is None:
+                ymin, ymax = _y.min(), _y.max()
+                dy = 0.05 * (ymax - ymin)
+                _ylim[0] = ymin - dy if ymin - dy < _ylim[0] else _ylim[0]
+                _ylim[1] = ymax + dy if ymax + dy > _ylim[1] else _ylim[1]
+            line.axes.set(xlim=_xlim, ylim=_ylim)
         if text is not None:
             _text.set_text(text[idx])
-        return [ll]
+        return lines
 
     anim = _animation.FuncAnimation(
         fig, animate, frames=len(snaps), **func_animation_kwargs
