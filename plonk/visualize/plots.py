@@ -1,4 +1,4 @@
-"""Plot functions for visualization."""
+"""Matplotlib wrapper functions for visualization."""
 
 from copy import copy
 from typing import Any, Optional
@@ -11,9 +11,7 @@ from .. import logger
 from .interpolation import Extent
 
 
-def plot(
-    *, x: ndarray, y: ndarray, ax: Any, **kwargs,
-):
+def plot(*, x: ndarray, y: ndarray, ax: Any, **kwargs):
     """Plot particles.
 
     Parameters
@@ -97,9 +95,7 @@ def scatter(
     return ax.scatter(x, y, c=c, s=s, alpha=alpha, **_kwargs)
 
 
-def imshow(
-    *, interpolated_data: ndarray, extent: Extent, ax: Any, **kwargs,
-):
+def imshow(*, interpolated_data: ndarray, extent: Extent, ax: Any, **kwargs):
     """Plot 1d interpolated data as an image.
 
     Parameters
@@ -135,9 +131,7 @@ def imshow(
     )
 
 
-def contour(
-    *, interpolated_data: ndarray, extent: Extent, ax: Any, **kwargs,
-):
+def contour(*, interpolated_data: ndarray, extent: Extent, ax: Any, **kwargs):
     """Plot 1d interpolated data as a contour plot.
 
     Parameters
@@ -164,9 +158,7 @@ def contour(
     return ax.contour(X, Y, interpolated_data, **kwargs)
 
 
-def quiver(
-    *, interpolated_data: ndarray, extent: Extent, ax: Any, **kwargs,
-):
+def quiver(*, interpolated_data: ndarray, extent: Extent, ax: Any, **kwargs):
     """Plot 2d interpolated data as a quiver plot.
 
     Parameters
@@ -210,9 +202,7 @@ def quiver(
     return ax.quiver(X, Y, U, V, **_kwargs)
 
 
-def streamplot(
-    *, interpolated_data: ndarray, extent: Extent, ax: Any, **kwargs,
-):
+def streamplot(*, interpolated_data: ndarray, extent: Extent, ax: Any, **kwargs):
     """Plot 2d interpolated data as a stream plot.
 
     Parameters
