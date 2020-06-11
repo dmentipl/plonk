@@ -614,6 +614,35 @@ class Snap:
             ]
         return np.flatnonzero(self['type'] == self.particle_type[particle_type])
 
+    def subsnaps_by_type(
+        self, split_subtypes: bool = True
+    ) -> Dict[str, Union[SubSnap, List[SubSnap]]]:
+        """Return particle-type subsnaps as a dict of SubSnaps.
+
+        Parameters
+        ----------
+        split_subtypes
+            If True, split particle types into subtypes.
+
+        Returns
+        -------
+        A dict of all SubSnaps.
+        """
+        subsnaps_by_type: Dict[str, Any] = dict()
+        for key in self.particle_type:
+            try:
+                subsnap = self[key]
+                if isinstance(subsnap, list):
+                    if len(subsnap[0]) > 0:
+                        subsnaps_by_type[key] = self[key]
+                else:
+                    if len(subsnap) > 0:
+                        subsnaps_by_type[key] = self[key]
+            except ValueError:
+                pass
+
+        return subsnaps_by_type
+
     def set_kernel(self, kernel: str):
         """Set kernel.
 
