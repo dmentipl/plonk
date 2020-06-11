@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 from copy import copy
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ndarray
 
 from .. import Quantity, logger
-from ..snap import SnapLike
+from ..snap import SnapLike, SubSnap
 from . import plots
 from .functions import get_extent_from_percentile
 from .interpolation import Extent, interpolate
@@ -296,12 +296,59 @@ def particle_plot(
     ax
         The matplotlib Axes object.
     """
-    _kwargs = copy(kwargs)
-
     if ax is None:
         fig, ax = plt.subplots()
     else:
         fig = ax.figure
+
+    _kwargs = {
+        'x': x,
+        'y': y,
+        'c': c,
+        's': s,
+        'xunit': xunit,
+        'yunit': yunit,
+        'cunit': cunit,
+        'xscale': xscale,
+        'yscale': yscale,
+        'fig': fig,
+        'ax': ax,
+        'colorbar_kwargs': colorbar_kwargs,
+        **kwargs,
+    }
+    if c is None and s is None:
+        subsnaps: List[SubSnap] = list()
+        for val in snap.subsnaps_by_type().values():
+            if isinstance(val, list):
+                subsnaps = subsnaps + val
+            else:
+                subsnaps.append(val)
+        for subsnap in subsnaps:
+            _particle_plot(snap=subsnap, **_kwargs)
+    else:
+        _particle_plot(snap=snap, **_kwargs)
+
+    return ax
+
+
+def _particle_plot(
+    *,
+    snap,
+    x='x',
+    y='y',
+    c=None,
+    s=None,
+    xunit=None,
+    yunit=None,
+    cunit=None,
+    xscale=None,
+    yscale=None,
+    fig,
+    ax,
+    colorbar_kwargs={},
+    **kwargs,
+):
+    _kwargs = copy(kwargs)
 
     _x: ndarray = snap[x]
     _y: ndarray = snap[y]
@@ -338,10 +385,10 @@ def particle_plot(
     show_colorbar = _kwargs.pop('show_colorbar', _c is not None)
 
     if _s is None and _c is None:
-        plot_object = plots.plot(x=_x, y=_y, ax=ax, **_kwargs)
+        plots.plot(x=_x, y=_y, ax=ax, **_kwargs)
 
     else:
-        plot_object = plots.scatter(x=_x, y=_y, c=_c, s=_s, ax=ax, **_kwargs,)
+        plot_object = plots.scatter(x=_x, y=_y, c=_c, s=_s, ax=ax, **_kwargs)
         if show_colorbar:
             divider = make_axes_locatable(ax)
             _kwargs = copy(colorbar_kwargs)
@@ -361,8 +408,6 @@ def particle_plot(
     ratio = (_x.max() - _x.min()) / (_y.max() - _y.min())
     if not max(ratio, 1 / ratio) > 10.0:
         ax.set_aspect('equal')
-
-    return ax
 
 
 def _convert_units(
