@@ -1145,7 +1145,7 @@ class SubSnap(Snap):
 
     def __str__(self):
         """Dunder str method."""
-        return f'<plonk.SubSnap>'
+        return self.base.__str__().replace('Snap', 'SubSnap')
 
     def _get_array(self, name: str, sinks: bool = False) -> ndarray:
         return self.base._get_array(name, sinks)[self.indices]
