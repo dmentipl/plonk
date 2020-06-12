@@ -139,7 +139,14 @@ You can also install Plonk via pip.
 pip install plonk
 ```
 
-This should install the required dependencies. For details on pip, see <https://pip.pypa.io/>.
+This should install the required dependencies. For details on pip, see
+<https://pip.pypa.io/>.
+
+Requirements
+------------
+
+Python 3.6+ with h5py, matplotlib, numba, numpy, pandas, pint, scikit-image,
+scipy, tqdm. Installing Plonk with conda or pip will install these dependencies.
 
 Getting help
 ------------
