@@ -302,21 +302,20 @@ def animation_particles(
 
     def animate(idx):
         logger.info(f'Visualizing snap: {idx}')
-        _xlim, _ylim = None, [0, 0]
-        _x = snaps[idx][x]
-        if xlim is None:
-            xmin, xmax = _x.min(), _x.max()
-            dx = 0.05 * (xmax - xmin)
-            _xlim = (xmin - dx, xmax + dx)
-        for y, line in zip(ys, lines):
-            _y = snaps[idx][y]
-            line.set_data(_x, _y)
-            if ylim is None:
-                ymin, ymax = _y.min(), _y.max()
-                dy = 0.05 * (ymax - ymin)
-                _ylim[0] = ymin - dy if ymin - dy < _ylim[0] else _ylim[0]
-                _ylim[1] = ymax + dy if ymax + dy > _ylim[1] else _ylim[1]
-            line.axes.set(xlim=_xlim, ylim=_ylim)
+        subsnaps = snaps[idx].subsnaps_as_list()
+        num_subsnaps = len(subsnaps)
+        _xlim, _ylim = [0, 0], [0, 0]
+        for idxi, y in enumerate(ys):
+            for idxj, subsnap in enumerate(snaps[idx].subsnaps_as_list()):
+                _x = subsnap[x]
+                _y = subsnap[y]
+                ax.lines[idxi * num_subsnaps + idxj].set_data(_x, _y)
+                if xlim is None:
+                    _xlim = _get_range(_x, _xlim)
+                    ax.set_xlim(_xlim)
+                if ylim is None:
+                    _ylim = _get_range(_y, _ylim)
+                    ax.set_ylim(_ylim)
         if text is not None:
             _text.set_text(text[idx])
         return lines
@@ -328,3 +327,12 @@ def animation_particles(
     plt.close()
 
     return anim
+
+
+def _get_range(vals, vlim):
+    vmin, vmax = vals.min(), vals.max()
+    dv = 0.05 * (vmax - vmin)
+    return (
+        vmin - dv if vmin - dv < vlim[0] else vlim[0],
+        vmax + dv if vmax + dv > vlim[1] else vlim[1],
+    )
