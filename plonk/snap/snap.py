@@ -621,13 +621,15 @@ class Snap:
 
         Parameters
         ----------
-        split_subtypes
+        split_subtypes : optional
             If True, split particle types into subtypes.
 
         Returns
         -------
         A dict of all SubSnaps.
         """
+        if not split_subtypes:
+            raise NotImplementedError('Combined sub-types not implemented yet')
         subsnaps_by_type: Dict[str, Any] = dict()
         for key in self.particle_type:
             try:
@@ -642,6 +644,28 @@ class Snap:
                 pass
 
         return subsnaps_by_type
+
+    def subsnaps_as_list(self, split_subtypes: bool = True) -> List[SubSnap]:
+        """Return particle-type subsnaps as a list of SubSnaps.
+
+        Parameters
+        ----------
+        split_subtypes : optional
+            If True, split particle types into subtypes.
+
+        Returns
+        -------
+        A list of all SubSnaps.
+        """
+        if not split_subtypes:
+            raise NotImplementedError('Combined sub-types not implemented yet')
+        subsnaps: List[SubSnap] = list()
+        for val in self.subsnaps_by_type().values():
+            if isinstance(val, list):
+                subsnaps = subsnaps + val
+            else:
+                subsnaps.append(val)
+        return subsnaps
 
     def set_kernel(self, kernel: str):
         """Set kernel.

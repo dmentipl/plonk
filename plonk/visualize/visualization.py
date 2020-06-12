@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 from copy import copy
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ndarray
 
 from .. import Quantity, logger
-from ..snap import SnapLike, SubSnap
+from ..snap import SnapLike
 from . import plots
 from .functions import get_extent_from_percentile
 from .interpolation import Extent, interpolate
@@ -317,13 +317,7 @@ def particle_plot(
         **kwargs,
     }
     if c is None and s is None:
-        subsnaps: List[SubSnap] = list()
-        for val in snap.subsnaps_by_type().values():
-            if isinstance(val, list):
-                subsnaps = subsnaps + val
-            else:
-                subsnaps.append(val)
-        for subsnap in subsnaps:
+        for subsnap in snap.subsnaps_as_list():
             _particle_plot(snap=subsnap, **_kwargs)
     else:
         _particle_plot(snap=snap, **_kwargs)
