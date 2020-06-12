@@ -6,8 +6,8 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 from matplotlib import animation as _animation
+from tqdm import tqdm
 
-from .. import logger
 from ..analysis import Profile
 from ..snap import SnapLike
 from .functions import get_extent_from_percentile
@@ -98,8 +98,10 @@ def animation(
             0.9, 0.9, text[0], ha='right', transform=ax.transAxes, **text_kwargs
         )
 
+    pbar = tqdm(total=len(snaps))
+
     def animate(idx):
-        logger.info(f'Visualizing snap: {idx}')
+        pbar.update(n=1)
         _kwargs = {k: v for k, v in kwargs.items() if k in _interp_kwargs}
         extent = kwargs.get('extent', get_extent_from_percentile(snaps[idx], x, y))
         interp_data = interpolate(
@@ -121,6 +123,7 @@ def animation(
     )
     anim.save(filepath, extra_args=['-vcodec', 'libx264'], **save_kwargs)
     plt.close()
+    pbar.close()
 
     return anim
 
@@ -182,8 +185,10 @@ def animation_profiles(
             0.9, 0.9, text[0], ha='right', transform=ax.transAxes, **text_kwargs
         )
 
+    pbar = tqdm(total=len(profiles))
+
     def animate(idx):
-        logger.info(f'Plotting profile: {idx}')
+        pbar.update(n=1)
         line.set_data(profiles[idx]['radius'], profiles[idx][quantity])
         if text is not None:
             _text.set_text(text[idx])
@@ -194,6 +199,7 @@ def animation_profiles(
     )
     anim.save(filepath, extra_args=['-vcodec', 'libx264'], **save_kwargs)
     plt.close()
+    pbar.close()
 
     return anim
 
@@ -300,8 +306,10 @@ def animation_particles(
             0.9, 0.9, text[0], ha='right', transform=ax.transAxes, **text_kwargs
         )
 
+    pbar = tqdm(total=len(snaps))
+
     def animate(idx):
-        logger.info(f'Visualizing snap: {idx}')
+        pbar.update(n=1)
         subsnaps = snaps[idx].subsnaps_as_list()
         num_subsnaps = len(subsnaps)
         _xlim, _ylim = [0, 0], [0, 0]
@@ -325,6 +333,7 @@ def animation_particles(
     )
     anim.save(filepath, extra_args=['-vcodec', 'libx264'], **save_kwargs)
     plt.close()
+    pbar.close()
 
     return anim
 

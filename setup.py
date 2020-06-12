@@ -20,6 +20,7 @@ install_requires = [
     'pint>=0.10.1',
     'scikit-image>=0.16',
     'scipy',
+    'tqdm',
 ]
 packages = [
     'plonk',

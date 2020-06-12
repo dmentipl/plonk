@@ -6,3 +6,4 @@ pandas
 pint
 scikit-image
 scipy
+tqdm
