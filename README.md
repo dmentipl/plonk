@@ -22,7 +22,7 @@ Description
 
 Plonk is a Python tool for analysis and visualization of smoothed particle hydrodynamics data with a focus on astrophysical fluid dynamics.
 
-With Plonk we aim to integrate the high quality SPH visualisation of Splash into the modern Python astronomer workflow, and provide a framework for analysis of smoothed particle hydrodynamics simulation data.
+With Plonk we aim to integrate the high quality SPH visualisation of [Splash](https://github.com/danieljprice/splash) into the modern Python astronomer workflow, and provide a framework for analysis of smoothed particle hydrodynamics simulation data.
 
 Usage
 -----
