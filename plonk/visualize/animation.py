@@ -16,13 +16,19 @@ from .visualization import particle_plot, plot
 
 _interp_kwargs = ('number_of_pixels', 'density_weighted')
 
+Extent = Tuple[float, float, float, float]
+
 
 def animation(
     *,
     filename: Union[str, Path],
     snaps: List[SnapLike],
-    quantity: str,
-    image: Any = None,
+    quantity: Union[str, List[str]],
+    x: Union[str, List[str]] = 'x',
+    y: Union[str, List[str]] = 'y',
+    extent: Union[Extent, List[Extent]] = (-1, -1, -1, -1),
+    fig: Any = None,
+    adaptive_colorbar: bool = False,
     text: List[str] = None,
     text_kwargs: Dict[str, Any] = {},
     func_animation_kwargs: Dict[str, Any] = {},
@@ -38,10 +44,23 @@ def animation(
     snaps
         A list of Snap objects to animate.
     quantity
-        The quantity to visualize. Must be a string to pass to Snap.
-    image : optional
-        The matplotlib AxesImage object that represents the quantity to
-        animate. If None, generate a new AxesImage object.
+        The quantity, or quantities, to visualize. Must be a string, or
+        list of strings, to pass to Snap.
+    x
+        The x-axis as a string to pass to Snap. Can be a list of strings
+        if multiple quantities are animated.
+    y
+        The y-axis as a string to pass to Snap. Can be a list of strings
+        if multiple quantities are animated.
+    extent
+        The extent as a tuple (xmin, xmax, ymin, ymax). Can be a list
+        of tuples if multiple quantities are animated.
+    fig : optional
+        A matplotlib Figure object to animate. If None, generate a new
+        Figure.
+    adaptive_colorbar : optional
+        If True, adapt colorbar range during animation. If False, the
+        colorbar range is fixed by the initial plot. Default is False.
     text : optional
         List of strings to display per snap.
     text_kwargs : optional
@@ -65,6 +84,8 @@ def animation(
     >>> plonk.visualize.animation(
     ...     snaps=snaps,
     ...     quantity='density',
+    ...     x='x',
+    ...     y='y',
     ...     extent=(-100, 100, -100, 100),
     ...     vmin=0.0,
     ...     vmax=1.0,
@@ -75,24 +96,64 @@ def animation(
     if filepath.suffix != '.mp4':
         raise ValueError('filename should end in ".mp4"')
 
-    interp = kwargs.get('interp', 'projection')
-    x = kwargs.get('x', 'x')
-    y = kwargs.get('x', 'y')
-
-    if image is None:
-        fig, ax = plt.subplots()
-        ax = plot(snap=snaps[0], quantity=quantity, ax=ax, **kwargs)
-        im = ax.images[0]
+    if isinstance(quantity, list):
+        quantities = quantity
+    elif isinstance(quantity, str):
+        quantities = [quantity]
     else:
-        im = image
-        ax = image.axes
-        fig = ax.figure
+        raise ValueError('Cannot determine quantity')
+    if isinstance(x, list):
+        xs = x
+    elif isinstance(x, str):
+        xs = [x]
+    else:
+        raise ValueError('Cannot determine x')
+    if isinstance(y, list):
+        ys = y
+    elif isinstance(y, str):
+        ys = [y]
+    else:
+        raise ValueError('Cannot determine y')
+    if isinstance(extent, list):
+        extents = extent
+    elif isinstance(extent, tuple):
+        extents = [extent]
+    else:
+        raise ValueError('Cannot determine extent')
+    if len(quantities) > 1:
+        if len(xs) == 1:
+            xs = [xs[0] for _ in range(len(quantities))]
+        if len(ys) == 1:
+            ys = [ys[0] for _ in range(len(quantities))]
+        if len(extents) == 1:
+            extents = [extents[0] for _ in range(len(quantities))]
+    if len(xs) != len(quantities):
+        raise ValueError('x must have same length as quantity or be a single value')
+    if len(ys) != len(quantities):
+        raise ValueError('y must have same length as quantity or be a single value')
+    if len(extents) != len(quantities):
+        raise ValueError('extent have same length as quantity or be a single value')
 
-    if im is None:
-        raise NotImplementedError(
-            'Can only currently produce animations of images. (Or profiles\n'
-            'with animation_profile or particles with animation_particles.)'
-        )
+    interp = kwargs.get('interp', 'projection')
+
+    if fig is None:
+        fig, axs = plt.subplots(ncols=len(quantities), squeeze=False)
+        axs = axs.flatten()
+        images = list()
+        for quantity, x, y, extent, ax in zip(quantities, xs, ys, extents, axs):
+            plot(
+                snap=snaps[0],
+                quantity=quantity,
+                x=x,
+                y=y,
+                extent=extent,
+                ax=ax,
+                **kwargs,
+            )
+            images += ax.images
+    else:
+        images = [image for ax in fig.axes for image in ax.images]
+
     if text is not None:
         _text = ax.text(
             0.9, 0.9, text[0], ha='right', transform=ax.transAxes, **text_kwargs
@@ -103,20 +164,31 @@ def animation(
     def animate(idx):
         pbar.update(n=1)
         _kwargs = {k: v for k, v in kwargs.items() if k in _interp_kwargs}
-        extent = kwargs.get('extent', get_extent_from_percentile(snaps[idx], x, y))
-        interp_data = interpolate(
-            snap=snaps[idx], interp=interp, quantity=quantity, extent=extent, **_kwargs,
-        )
-        im.set_data(interp_data)
-        im.set_extent(extent)
-        im.axes.set_xlim(extent[:2])
-        im.axes.set_ylim(extent[2:])
-        vmin = kwargs.get('vmin', interp_data.min())
-        vmax = kwargs.get('vmax', interp_data.max())
-        im.set_clim(vmin, vmax)
+        for quantity, x, y, extent, image in zip(quantities, xs, ys, extents, images):
+            if extent == (-1, -1, -1, -1):
+                _extent = get_extent_from_percentile(snaps[idx], x, y)
+            else:
+                _extent = extent
+            interp_data = interpolate(
+                snap=snaps[idx],
+                interp=interp,
+                quantity=quantity,
+                x=x,
+                y=y,
+                extent=_extent,
+                **_kwargs,
+            )
+            image.set_data(interp_data)
+            image.set_extent(_extent)
+            image.axes.set_xlim(_extent[:2])
+            image.axes.set_ylim(_extent[2:])
+            if adaptive_colorbar:
+                vmin = kwargs.get('vmin', interp_data.min())
+                vmax = kwargs.get('vmax', interp_data.max())
+                image.set_clim(vmin, vmax)
         if text is not None:
             _text.set_text(text[idx])
-        return [im]
+        return images
 
     anim = _animation.FuncAnimation(
         fig, animate, frames=len(snaps), **func_animation_kwargs
@@ -159,7 +231,7 @@ def animation_profiles(
         Figure.
     adaptive_limits : optional
         If True, adapt plot limits during animation. If False, the plot
-        limits are fixed by the initial plot.
+        limits are fixed by the initial plot. Default is True.
     xlim : optional
         The x-axis range as a tuple (xmin, xmax). Only used if fig not
         passed in.
@@ -270,7 +342,7 @@ def animation_particles(
         Figure.
     adaptive_limits : optional
         If True, adapt plot limits during animation. If False, the plot
-        limits are fixed by the initial plot.
+        limits are fixed by the initial plot. Default is True.
     xlim : optional
         The x-axis range as a tuple (xmin, xmax). Only used if fig not
         passed in.
