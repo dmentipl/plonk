@@ -199,14 +199,16 @@ def animation_profiles(
             ax.plot(profiles[0]['radius'], profiles[0][quantity], **kwargs)
             ax.set(xlim=xlim, ylim=ylim)
         lines = ax.lines
+        if text is not None:
+            texts = [
+                ax.text(
+                    0.9, 0.9, text[0], ha='right', transform=ax.transAxes, **text_kwargs
+                )
+            ]
     else:
         lines = [line for ax in fig.axes for line in ax.lines]
-
-    if text is not None:
-        for ax in fig.axes:
-            _text = ax.text(
-                0.9, 0.9, text[0], ha='right', transform=ax.transAxes, **text_kwargs
-            )
+        if text is not None:
+            texts = [text for ax in fig.axes for text in ax.texts]
 
     pbar = tqdm(total=len(profiles))
 
@@ -220,7 +222,8 @@ def animation_profiles(
                 ylim = _get_range(y, (0, 0))
                 ax.set(ylim=ylim)
         if text is not None:
-            _text.set_text(text[idx])
+            for _text in texts:
+                _text.set_text(text[idx])
         return [line]
 
     anim = _animation.FuncAnimation(
@@ -330,14 +333,16 @@ def animation_particles(
             particle_plot(snap=snaps[0], x=x, y=y, ax=ax, **kwargs)
             ax.set(xlim=xlim, ylim=ylim)
         lines = ax.lines
+        if text is not None:
+            texts = [
+                ax.text(
+                    0.9, 0.9, text[0], ha='right', transform=ax.transAxes, **text_kwargs
+                )
+            ]
     else:
         lines = [line for ax in fig.axes for line in ax.lines]
-
-    if text is not None:
-        for ax in fig.axes:
-            _text = ax.text(
-                0.9, 0.9, text[0], ha='right', transform=ax.transAxes, **text_kwargs
-            )
+        if text is not None:
+            texts = [text for ax in fig.axes for text in ax.texts]
 
     pbar = tqdm(total=len(snaps))
 
@@ -357,7 +362,8 @@ def animation_particles(
                     _xlim, _ylim = _get_range(_x, _xlim), _get_range(_y, _ylim)
                     ax.set(xlim=_xlim, ylim=_ylim)
         if text is not None:
-            _text.set_text(text[idx])
+            for _text in texts:
+                _text.set_text(text[idx])
         return lines
 
     anim = _animation.FuncAnimation(
