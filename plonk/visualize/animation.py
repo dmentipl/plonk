@@ -2,7 +2,7 @@
 
 import pathlib
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union
 
 import matplotlib.pyplot as plt
 from matplotlib import animation as _animation
@@ -22,7 +22,7 @@ def animation(
     filename: Union[str, Path],
     snaps: List[SnapLike],
     quantity: str,
-    image: Optional[Any] = None,
+    image: Any = None,
     text: List[str] = None,
     text_kwargs: Dict[str, Any] = {},
     func_animation_kwargs: Dict[str, Any] = {},
@@ -132,8 +132,11 @@ def animation_profiles(
     *,
     filename: Union[str, Path],
     profiles: List[Profile],
-    quantity: str,
-    line: Optional[Any] = None,
+    quantity: Union[str, List[str]],
+    fig: Any = None,
+    adaptive_limits: bool = True,
+    xlim: Tuple[float, float] = None,
+    ylim: Tuple[float, float] = None,
     text: List[str] = None,
     text_kwargs: Dict[str, Any] = {},
     func_animation_kwargs: Dict[str, Any] = {},
@@ -149,10 +152,20 @@ def animation_profiles(
     profiles
         A list of Profile objects to animate.
     quantity
-        The quantity to profile. Must be a string to pass to Profile.
-    line : optional
-        The matplotlib Line2D object that represents the quantity to
-        animate. If None, generate a new Line2D object.
+        The quantity, or quantities, to profile. Must be a string to
+        pass to Profile, or a list of such strings.
+    fig : optional
+        A matplotlib Figure object to animate. If None, generate a new
+        Figure.
+    adaptive_limits : optional
+        If True, adapt plot limits during animation. If False, the plot
+        limits are fixed by the initial plot.
+    xlim : optional
+        The x-axis range as a tuple (xmin, xmax). Only used if fig not
+        passed in.
+    ylim : optional
+        The y-axis range as a tuple (ymin, ymax). Only used if fig not
+        passed in.
     text : optional
         List of strings to display per profile plot.
     text_kwargs : optional
@@ -173,23 +186,39 @@ def animation_profiles(
     if filepath.suffix != '.mp4':
         raise ValueError('filename should end in ".mp4"')
 
-    if line is None:
-        fig, ax = plt.subplots()
-        [line] = ax.plot(profiles[0]['radius'], profiles[0][quantity], **kwargs)
+    if isinstance(quantity, list):
+        quantities = quantity
+    elif isinstance(quantity, str):
+        quantities = [quantity]
     else:
-        ax = line.axes
-        fig = ax.figure
+        raise ValueError('Cannot determine quantity')
+
+    if fig is None:
+        fig, ax = plt.subplots()
+        for quantity in quantities:
+            ax.plot(profiles[0]['radius'], profiles[0][quantity], **kwargs)
+            ax.set(xlim=xlim, ylim=ylim)
+        lines = ax.lines
+    else:
+        lines = [line for ax in fig.axes for line in ax.lines]
 
     if text is not None:
-        _text = ax.text(
-            0.9, 0.9, text[0], ha='right', transform=ax.transAxes, **text_kwargs
-        )
+        for ax in fig.axes:
+            _text = ax.text(
+                0.9, 0.9, text[0], ha='right', transform=ax.transAxes, **text_kwargs
+            )
 
     pbar = tqdm(total=len(profiles))
 
     def animate(idx):
         pbar.update(n=1)
-        line.set_data(profiles[idx]['radius'], profiles[idx][quantity])
+        for line, quantity in zip(lines, quantities):
+            x, y = profiles[idx]['radius'], profiles[idx][quantity]
+            line.set_data(x, y)
+            if adaptive_limits:
+                ax = line.axes
+                ylim = _get_range(y, (0, 0))
+                ax.set(ylim=ylim)
         if text is not None:
             _text.set_text(text[idx])
         return [line]
