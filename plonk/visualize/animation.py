@@ -210,9 +210,10 @@ def animation_particles(
     snaps: List[SnapLike],
     x: str,
     y: Union[str, List[str]],
+    fig: Any = None,
+    adaptive_limits: bool = True,
     xlim: Tuple[float, float] = None,
     ylim: Tuple[float, float] = None,
-    lines: List[Any] = None,
     text: List[str] = None,
     text_kwargs: Dict[str, Any] = {},
     func_animation_kwargs: Dict[str, Any] = {},
@@ -232,13 +233,18 @@ def animation_particles(
     y
         The quantity for the y-axis, or list of quantities. Must be a
         string (or list of strings) to pass to Snap.
+    fig : optional
+        A matplotlib Figure object to animate. If None, generate a new
+        Figure.
+    adaptive_limits : optional
+        If True, adapt plot limits during animation. If False, the plot
+        limits are fixed by the initial plot.
     xlim : optional
-        The x-axis range as (xmin, xmax).
+        The x-axis range as a tuple (xmin, xmax). Only used if fig not
+        passed in.
     ylim : optional
-        The y-axis range as (ymin, ymax).
-    lines : optional
-        A list of matplotlib Line2D object that represents the quantity
-        to animate. If None, generate a new Line2D object.
+        The y-axis range as a tuple (ymin, ymax). Only used if fig not
+        passed in.
     text : optional
         List of strings to display per snap.
     text_kwargs : optional
@@ -263,13 +269,11 @@ def animation_particles(
     ...     snaps=snaps,
     ...     x='x',
     ...     y='density',
-    ...     xlim=(-100, 100),
-    ...     ylim=(0, 1),
     ...     filename='animation.mp4',
     ... )
 
-    Make an animation of x vs density and x vs velocity_x on the
-    particles on the same plot.
+    Make an animation of x vs density x vs velocity_x on the
+    particles on the same axes, specifying the x- and y-plot limits.
 
     >>> plonk.visualize.animation(
     ...     snaps=snaps,
@@ -284,27 +288,27 @@ def animation_particles(
     if filepath.suffix != '.mp4':
         raise ValueError('filename should end in ".mp4"')
 
-    if isinstance(y, (list, tuple)):
+    if isinstance(y, list):
         ys = y
     elif isinstance(y, str):
         ys = [y]
     else:
         raise ValueError('Cannot determine y')
 
-    if lines is None:
+    if fig is None:
         fig, ax = plt.subplots()
         for y in ys:
             particle_plot(snap=snaps[0], x=x, y=y, ax=ax, **kwargs)
-        ax.set(xlim=xlim, ylim=ylim)
+            ax.set(xlim=xlim, ylim=ylim)
         lines = ax.lines
     else:
-        ax = lines[0].axes
-        fig = ax.figure
+        lines = [line for ax in fig.axes for line in ax.lines]
 
     if text is not None:
-        _text = ax.text(
-            0.9, 0.9, text[0], ha='right', transform=ax.transAxes, **text_kwargs
-        )
+        for ax in fig.axes:
+            _text = ax.text(
+                0.9, 0.9, text[0], ha='right', transform=ax.transAxes, **text_kwargs
+            )
 
     pbar = tqdm(total=len(snaps))
 
@@ -312,18 +316,17 @@ def animation_particles(
         pbar.update(n=1)
         subsnaps = snaps[idx].subsnaps_as_list()
         num_subsnaps = len(subsnaps)
-        _xlim, _ylim = [0, 0], [0, 0]
         for idxi, y in enumerate(ys):
-            for idxj, subsnap in enumerate(snaps[idx].subsnaps_as_list()):
+            _xlim, _ylim = (0.0, 0.0), (0.0, 0.0)
+            for idxj, subsnap in enumerate(subsnaps):
+                line = lines[idxi * num_subsnaps + idxj]
                 _x = subsnap[x]
                 _y = subsnap[y]
-                ax.lines[idxi * num_subsnaps + idxj].set_data(_x, _y)
-                if xlim is None:
-                    _xlim = _get_range(_x, _xlim)
-                    ax.set_xlim(_xlim)
-                if ylim is None:
-                    _ylim = _get_range(_y, _ylim)
-                    ax.set_ylim(_ylim)
+                line.set_data(_x, _y)
+                if adaptive_limits:
+                    ax = line.axes
+                    _xlim, _ylim = _get_range(_x, _xlim), _get_range(_y, _ylim)
+                    ax.set(xlim=_xlim, ylim=_ylim)
         if text is not None:
             _text.set_text(text[idx])
         return lines
