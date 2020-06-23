@@ -1,6 +1,3 @@
-splash.c
-splash/splash
-examples/data
 *.so
 build/
 dist/
@@ -8,3 +5,4 @@ dist/
 .coverage
 htmlcov/
 _build
+.plonk.log

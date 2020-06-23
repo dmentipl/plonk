@@ -17,12 +17,24 @@ dependencies:
   - conda-build
   - coverage
   - coveralls
-  - cython
+  - doc8
+  - flake8
   - h5py
+  - ipython
   - isort
+  - jupyterlab
   - matplotlib
+  - mypy
+  - numba
   - numpy
   - pandas
+  - pint>=0.10.1
+  - pip
+  - pydocstyle
+  - pylint
+  - pytest
+  - scikit-image>=0.16
+  - scipy
   - sphinx
   - sphinx_rtd_theme
-  - sympy
+  - tqdm

@@ -1,7 +1,7 @@
 Contributions
 =============
 
-Thank you for considering contributing to Plonk. Please read carefully the following guidelines on contributing to Plonk.
+Thank you for considering contributing to Plonk. Please read the following guidelines on contributing to Plonk.
 
 Code of conduct
 ---------------
@@ -19,42 +19,35 @@ git clone https://github.com/your_user_name/plonk
 
 Replace `your_user_name` with your GitHub user name.
 
-There is a compiled Fortran component to Plonk which is derived from Splash. You must compile this before development. This requires a Fortran compiler, e.g. gfortran. We compile Splash into a shared object library, and then uses Cython to build a Python interface to that library. Then we use Conda to install Plonk in development mode. So, the steps are
-
-1. Compile Splash into a library.
-2. Build the Cython extension.
-3. Install Plonk in Conda development mode.
-
-There is a Makefile in the root directory of the repository to facilitate this.
-
-```bash
-make development
-```
-
-Then you can make changes to your local copy of Plonk and these changes will be reflected when you import Plonk and use it.
-
-The Python interpreter must know where the Splash shared object library, `libsplash.so`, is at runtime. By default the Makefile installs it to `~/anaconda/lib`. If your Conda installation is different you can set the Makefile variable `INSTALL_DIR` as required
-
-```bash
-INSTALL_DIR=/path/to/conda/lib make development
-```
-
-You need to make sure the required dependencies are installed (via Conda). To satisfy these requirements there is a `environment.yml` file. You can set up a Conda environment for development and install Plonk in it. In the root directory of the repository, do the following
+Set up an environment for Plonk development with Conda.
 
 ```bash
 conda env create --file environment.yml
+conda develop --name plonk-dev .
+```
+
+Use this environment for Plonk development.
+
+```bash
 conda activate plonk-dev
 ```
 
-and then follow the instructions above. To leave the development environment: `conda deactivate`.
-
-If you make changes to Plonk that you would like to contribute you need to test that your code passes the test suite, and satisfies the code style requirements. To run the tests and check the code formatting do the following
+Then you can make changes to your local copy of Plonk and these changes will be reflected when you import Plonk and use it. You can leave the development environment when done.
 
 ```bash
-make test
+conda deactivate
 ```
 
-If this fails then there is either a test failure, or the code needs to be formatted in line with the chosen code style for Plonk. (See below.)
+If you make changes to Plonk that you would like to contribute, you need to test that your code passes the test suite, and satisfies the code style requirements. To run the tests and check the code formatting do the following
+
+```bash
+python -m coverage run -m pytest && coverage html
+isort --skip plonk/__init__.py --check-only -rc
+black --check --skip-string-normalization plonk tests
+mypy --no-strict-optional --ignore-missing-imports plonk tests
+```
+
+If any of these commands fail then there is either a test failure, or you need to reformat the code in line with the chosen code style for Plonk. (See below.)
 
 After you have committed and pushed your changes to your forked repository you
 can issue a [pull request](https://github.com/dmentipl/plonk/pull/new/master).
@@ -66,15 +59,15 @@ We follow [PEP 8](https://www.python.org/dev/peps/pep-0008/) for code style, and
 
 > isort your python imports for you so you don't have to.
 
- Black is sponsered by the Python Software Foundation.
+ Black is sponsored by the Python Software Foundation.
 
 > Black is the uncompromising Python code formatter. By using it, you agree to cede control over minutiae of hand-formatting. In return, Black gives you speed, determinism, and freedom from pycodestyle nagging about formatting. You will save time and mental energy for more important matters.
 
 To format your changes run the following from the main repository directory:
 
 ```bash
-isort -rc
-black --skip-string-normalization .
+isort --skip plonk/__init__.py -rc
+black --skip-string-normalization plonk tests
 ```
 
 ### Commit messages
@@ -91,7 +84,7 @@ When writing commit messages it's important to follow conventions to write clear
 
 Here is an example from the [Git documentation](https://git-scm.com/book/ch5-2.html)
 
-> ```
+> ```git
 > Short (50 chars or less) summary of changes
 >
 > More detailed explanatory text, if necessary.  Wrap it to about 72
@@ -116,17 +109,11 @@ As well as adding new features, contributions to documentation and testing are w
 
 ### Documentation
 
-The documentation is not comprehensive.
-
-- Add documentation for general usage.
-- Add documentation for `plonk.Visualization`.
-- Add documentation for `plonk.analysis`.
-
-Documentation of use cases is also encouraged.
+The documentation is not comprehensive. Documentation of use cases is encouraged.
 
 ### Testing
 
-We encourage contributions to the testing framework. To see where test coverage is lacking run `make test` and then open htmlcov/index.html in a web browser.
+We welcome contributions to the testing framework. To see where test coverage is lacking run `python -m coverage run -m pytest && coverage html` and then open `htmlcov/index.html` in a web browser.
 
 Coming up with ideas of what to test is useful.
 
@@ -134,6 +121,85 @@ Coming up with ideas of what to test is useful.
 
 Suggestions for new features include:
 
-- additional analysis functions;
-- a framework for modifying dump files;
-- handling extra physics, such as magnetic fields, dust, and binary discs, etc.
+- [x] better support for physical units (with Pint);
+- [ ] more analysis functions, e.g. for binary discs;
+- [ ] a framework for modifying snapshot files;
+- [ ] handling extra Phantom header quantities;
+- [ ] out-of-core processing, e.g. using Dask or Vaex;
+- [ ] extra visualization features, e.g. widgets in a Jupyter notebook with Bokeh;
+- [ ] tracking particles through multiple snapshots;
+- [ ] handling extra physics, such as magnetic fields.
+
+New releases and PyPI and Conda packages
+----------------------------------------
+
+**Note: these instructions are for the Plonk maintainers only (e.g. [@dmentipl](https://github.com/dmentipl)).**
+
+### Make a release
+
+First, increase the version number in `__init__.py`, and commit the change with a message like "Bump version to v0.3.1".
+
+Then, make a new release on GitHub at <https://github.com/dmentipl/plonk/releases>. The title and tag should both be like "v0.3.1" which corresponds to the Plonk version number. This creates a git tag for the commit, and generates a GitHub release with downloadable source as a tar.gz file.
+
+### PyPI and pip
+
+To generate a package installable from PyPI, first install twine (via the PyPI or Conda package). Then build a source and wheel distribution.
+
+```bash
+python setup.py sdist bdist_wheel
+```
+
+You can check that the build succeeded with the following.
+
+```bash
+python -m twine check dist/*
+```
+
+Then upload the package to the test PyPI to check that everything looks correct. You will be required to use your credentials.
+
+```bash
+python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+```
+
+If everything is good, upload to PyPI. The credentials are separate from the test PyPI.
+
+```bash
+python -m twine upload dist/*
+```
+
+### Conda
+
+*Note: We use conda-forge to build the conda package.*
+
+Clone [my fork](https://github.com/dmentipl/plonk-feedstock) of the Plonk feedstock. Modify the `meta.yml` file in two ways:
+
+1. Update the version number.
+2. Update the sha256 hash to correspond to the version on [PyPI](https://pypi.org/project/plonk/).
+
+Commit the change with a message like "Update to version 0.3.1". Then go to the GitHub page and generate a new [pull request](https://github.com/dmentipl/plonk-feedstock/pull/new/master). This will run several tests. If they pass merge the pull request into the conda-forge/plonk-feedstock repository. Then a new conda package should soon be available on the [Anaconda cloud](https://anaconda.org/conda-forge/plonk).
+
+### Old instructions for local conda package
+
+**These instructions are deprecated.**
+
+*Note: you must build a Conda package for each operating system. We support macOS and Linux.*
+
+From the root directory of the repository build the Conda package.
+
+```bash
+conda build conda
+```
+
+Then upload to Anaconda Cloud, with the correct path to the Conda package.
+
+```bash
+anaconda upload path_to_plonk_conda_package.tar.bz2
+```
+
+The path will be something like `~/conda/conda-bld/<os>/plonk-<v.v.v>-py3<x>_0.tar.bz2`, replacing:
+
+* `<os>` with either `osx-64` for macOS or `linux-64` for Linux,
+* `<v.v.v>` with the version number, e.g. `0.2.1`, and
+* `<x>` with the Python minor version number, e.g. `7`.
+
+The first time you run this command you will be required to enter credentials. However, they are usually cached for future uploads.

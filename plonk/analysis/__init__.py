@@ -1,21 +1,34 @@
-"""
-This is the analysis module.
+"""The analysis sub-package.
 
 It contains Plonk implementations of typical smoothed particle
 hydrodynamics post-simulation analysis tasks.
 
 Examples
 --------
-Analyzing a disc by radially binning from the central object.
+Create a radial profile in the xy-plane.
 
->>> radial_averages = plonk.analysis.disc(
-...     dump=dump,
-...     radius_in=radius_in,
-...     radius_out=radius_out,
-...     number_radial_bins=number_radial_bins,
-... )
+>>> p = Profile(snap, radius_min=10, radius_max=200, n_bins=100)
+>>> p.plot('radius', 'density')
+
+Calculate the angular momentum on the particles.
+
+>>> angmom = particles.angular_momentum(snap)
+
+Calculate the total angular momentum over all particles.
+
+>>> angmom_tot = total.angular_momentum(snap)
+
+Calculate the Roche sphere radius given two sink particles.
+
+>>> m1 = snap.sinks['mass'][0]
+>>> m2 = snap.sinks['mass'][1]
+>>> separation = np.linalg.norm(
+        snap.sinks['position'][0] - snap.sinks['position'][1]
+    )
+>>> Roche = sinks.Roche_sphere(m1, m2, separation)
 """
 
-from .disc import disc_analysis as disc
+from . import particles, sinks, total
+from .profile import Profile, load_profile
 
-__all__ = ['disc']
+__all__ = ['Profile', 'load_profile', 'particles', 'sinks', 'total']
