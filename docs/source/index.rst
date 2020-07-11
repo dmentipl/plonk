@@ -14,10 +14,10 @@ With Plonk we aim to integrate the high quality SPH visualisation of
 Splash into the modern Python astronomer workflow, and provide a framework for
 analysis of smoothed particle hydrodynamics simulation data.
 
-.. warning::
-    Plonk is under development. However, it is becoming more stable. Please use
-    Plonk and if you have any issues or feature requests please leave feedback
-    by raising a `GitHub issue
+.. note::
+    Plonk is under development. However, the basic feature set is stable. Please
+    use Plonk and if you have any issues or feature requests please leave
+    feedback by raising a `GitHub issue
     <https://github.com/dmentipl/plonk/issues/new/choose>`_.
 
 .. toctree::
@@ -93,5 +93,3 @@ Indices and tables
 ------------------
 
 * :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

@@ -1,6 +1,19 @@
-"""Global (total) quantities.
+"""Calculate global (total) quantities on the particles.
 
-Calculate various global (total) quantities on the particles.
+The following functions are available:
+
+- center_of_mass
+- mass
+- gas_mass
+- dust_mass
+- accreted_mass
+- momentum
+- angular_momentum
+- specific_angular_momentum
+- kinetic_energy
+- specific_kinetic_energy
+- inclination
+- position_angle
 """
 
 from typing import Tuple, Union
