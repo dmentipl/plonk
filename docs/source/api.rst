@@ -74,6 +74,15 @@ Global quantities
 
 .. automodule:: plonk.analysis.total
 
+~~~~~~~~~~~~~
+SPH summation
+~~~~~~~~~~~~~
+
+This section contains functions to perform SPH summation and derivatives.
+
+.. autofunction:: plonk.utils.sph.derivative
+.. autofunction:: plonk.utils.sph.summation
+
 -------------
 Visualization
 -------------
@@ -128,5 +137,4 @@ Here are some useful utility functions.
 .. autofunction:: plonk.utils.cross
 .. autofunction:: plonk.utils.is_documented_by
 .. autofunction:: plonk.utils.norm
-.. autofunction:: plonk.utils.sph
 .. autofunction:: plonk.utils.time_string
