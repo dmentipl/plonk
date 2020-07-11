@@ -68,7 +68,7 @@ from typing import Any
 import pint
 
 # Canonical version number
-__version__ = '0.5.0'
+__version__ = '0.5.1'
 
 # Units
 units: Any = pint.UnitRegistry(system='cgs')
