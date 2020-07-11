@@ -1,0 +1,4 @@
+include *.md
+include LICENSE
+include environment.yml
+include CITATION.bib
