@@ -18,7 +18,7 @@ Plonk supports the following SPH file formats:
 
 .. note::
     HDF5 output was added to Phantom as an option with git commit
-    `9b22ded <https://bitbucket.org/danielprice/phantom/commits/9b22ded9e7b4d512966f2b2e4b84d693b1afc9e6>`_
+    `9b22ded <https://github.com/danieljprice/phantom/commit/9b22ded9e7b4d512966f2b2e4b84d693b1afc9e6>`_
     on the 14th of March 2019. See the `Phantom documentation
     <https://phantomsph.readthedocs.io/>`_ for instructions on
     how to compile with HDF5 output and to convert from the sphNG-based

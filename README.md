@@ -29,7 +29,7 @@ Usage
 
 Plonk supports the following SPH file formats:
 
-+ [Phantom](https://phantomsph.bitbucket.io/) output in [HDF5](https://en.wikipedia.org/wiki/Hierarchical_Data_Format) format.
++ [Phantom](https://github.com/danieljprice/phantom) output in [HDF5](https://en.wikipedia.org/wiki/Hierarchical_Data_Format) format.
 
 *Note: you can convert Phantom non-HDF5 snapshots to HDF5. See the [Phantom docs](https://phantomsph.readthedocs.io).*
 
