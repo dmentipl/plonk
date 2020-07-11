@@ -49,6 +49,13 @@ JOSS.
 For BibTeX entry, see
 `CITATION.bib <https://github.com/dmentipl/plonk/blob/master/CITATION.bib>`_.
 
+----------
+Change log
+----------
+
+The change log is available at
+`CHANGELOG.md <https://github.com/dmentipl/plonk/blob/master/CHANGELOG.md>`_.
+
 ------------
 Contributors
 ------------
