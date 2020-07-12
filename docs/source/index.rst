@@ -11,8 +11,9 @@ Plonk is a Python tool for analysis and visualization of smoothed particle
 hydrodynamics data with a focus on astrophysical fluid dynamics.
 
 With Plonk we aim to integrate the high quality SPH visualisation of
-Splash into the modern Python astronomer workflow, and provide a framework for
-analysis of smoothed particle hydrodynamics simulation data.
+`Splash <https://github.com/danieljprice/splash>`_ into the modern Python
+astronomer workflow, and to provide a framework for analysis of smoothed
+particle hydrodynamics simulation data.
 
 .. note::
     Plonk is under development. However, the basic feature set is stable. Please
@@ -21,7 +22,7 @@ analysis of smoothed particle hydrodynamics simulation data.
     <https://github.com/dmentipl/plonk/issues/new/choose>`_.
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 1
     :caption: User Guide
 
     installation
@@ -93,7 +94,6 @@ smoothed particle hydrodynamics, and other scientific, data:
 In addition, `Splash <https://github.com/danieljprice/splash>`_ is a mature,
 Unix command line, "free and open source visualisation tool for Smoothed
 Particle Hydrodynamics (SPH) simulations", written in Fortran.
-
 
 ------------------
 Indices and tables
