@@ -10,10 +10,10 @@ import h5py
 import numpy as np
 from numpy import ndarray
 
-from ... import logger
-from ... import units as plonk_units
+from ..._logging import logger
+from ..._units import generate_units_dictionary
+from ..._units import units as plonk_units
 from ..snap import Snap
-from ..units import generate_units_dictionary
 
 igas, iboundary, istar, idarkmatter, ibulge = 1, 3, 4, 5, 6
 maxdusttypes = 100

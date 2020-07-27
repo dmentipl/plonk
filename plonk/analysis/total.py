@@ -16,15 +16,19 @@ The following functions are available:
 - position_angle
 """
 
-from typing import Tuple, Union
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Tuple, Union
 
 import numpy as np
 from numpy import ndarray
 
-from .. import Quantity
-from ..snap import SnapLike
+from .._units import Quantity
 from ..utils.math import norm
 from . import particles
+
+if TYPE_CHECKING:
+    from ..snap.snap import SnapLike
 
 
 def center_of_mass(snap: SnapLike, ignore_accreted: bool = True) -> ndarray:

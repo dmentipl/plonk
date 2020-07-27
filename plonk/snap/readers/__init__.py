@@ -1,11 +1,15 @@
 """Reader for snapshot files."""
 
-from pathlib import Path
-from typing import Union
+from __future__ import annotations
 
-from ... import logger
-from ..snap import Snap
+from pathlib import Path
+from typing import TYPE_CHECKING, Union
+
+from ..._logging import logger
 from .phantom import generate_snap_from_file as read_phantom
+
+if TYPE_CHECKING:
+    from ..snap import Snap
 
 _data_sources = ('Phantom',)
 

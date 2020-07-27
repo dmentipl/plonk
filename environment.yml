@@ -12,9 +12,7 @@ channels:
 
 dependencies:
   - python>=3.6
-  - anaconda-client
   - black
-  - conda-build
   - coverage
   - coveralls
   - doc8

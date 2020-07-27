@@ -4,14 +4,18 @@ There are two functions: one for interpolation of scalar fields, and one
 for interpolation of vector fields.
 """
 
-from typing import Optional, Tuple
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Optional, Tuple
 
 import numpy as np
 from numpy import ndarray
 
-from ..snap import SnapLike
 from ..snap.snap import get_array_in_code_units
 from .splash import interpolate_cross_section, interpolate_projection
+
+if TYPE_CHECKING:
+    from ..snap.snap import SnapLike
 
 Extent = Tuple[float, float, float, float]
 

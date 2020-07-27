@@ -1,13 +1,17 @@
 """Visualize multiple snaps together."""
 
-from typing import List, Union
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, List, Union
 
 import numpy as np
 from numpy import ndarray
 
-from .. import logger
-from ..snap import SnapLike
+from .._logging import logger
 from .visualization import plot
+
+if TYPE_CHECKING:
+    from ..snap.snap import SnapLike
 
 
 class MultiVisualization:

@@ -3,17 +3,20 @@
 from __future__ import annotations
 
 from copy import copy
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ndarray
 
-from .. import Quantity, logger
-from ..snap import SnapLike
+from .._logging import logger
+from .._units import Quantity
 from . import plots
 from .functions import get_extent_from_percentile
 from .interpolation import Extent, interpolate
+
+if TYPE_CHECKING:
+    from ..snap.snap import SnapLike
 
 _kind_to_function = {
     'image': plots.imshow,

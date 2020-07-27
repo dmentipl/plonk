@@ -18,10 +18,11 @@ from pandas import DataFrame
 from scipy.spatial import cKDTree
 from scipy.spatial.transform import Rotation
 
-from .. import Quantity, logger
-from .. import units as plonk_units
-from ..utils import norm
+from .._logging import logger
+from .._units import Quantity
+from .._units import units as plonk_units
 from ..utils.kernels import kernel_names, kernel_radius
+from ..utils.math import norm
 from .extra import extra_quantities
 
 

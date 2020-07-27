@@ -9,14 +9,18 @@ from __future__ import annotations
 
 from copy import copy
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 import numpy as np
 from pandas import DataFrame
 
-from .. import Quantity, logger
-from ..snap import Snap, load_snap
+from .._logging import logger
+from .._units import Quantity
+from ..snap.readers import load_snap
 from .evolution import load_ev
+
+if TYPE_CHECKING:
+    from ..snap.snap import Snap
 
 _properties_vary_per_snap = ('time',)
 _data_sources = ('Phantom',)

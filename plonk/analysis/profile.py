@@ -3,9 +3,11 @@
 Heavily inspired by pynbody (https://pynbody.github.io/).
 """
 
+from __future__ import annotations
+
 from bisect import bisect
 from functools import partial
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,10 +15,15 @@ import pandas as pd
 from numpy import ndarray
 from pandas import DataFrame
 
-from .. import Quantity, logger
-from .. import units as plonk_units
-from ..snap import SnapLike, gravitational_constant_in_code_units
-from ..utils import average, is_documented_by
+from .._logging import logger
+from .._units import Quantity
+from .._units import units as plonk_units
+from ..snap.utils import gravitational_constant_in_code_units
+from ..utils.math import average
+from ..utils.utils import is_documented_by
+
+if TYPE_CHECKING:
+    from ..snap.snap import SnapLike
 
 _aggregations = ('average', 'mean', 'median', 'std', 'sum')
 

@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from .. import Quantity
+from .._units import Quantity
 
 
 def cross(x, y, **kwargs):

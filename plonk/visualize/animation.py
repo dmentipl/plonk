@@ -1,18 +1,22 @@
 """Animations of visualizations."""
 
+from __future__ import annotations
+
 import pathlib
 from pathlib import Path
-from typing import Any, Dict, List, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union
 
 import matplotlib.pyplot as plt
 from matplotlib import animation as _animation
 from tqdm import tqdm
 
-from ..analysis import Profile
-from ..snap import SnapLike
+from ..analysis.profile import Profile
 from .functions import get_extent_from_percentile
 from .interpolation import interpolate
 from .visualization import particle_plot, plot
+
+if TYPE_CHECKING:
+    from ..snap.snap import SnapLike
 
 _interp_kwargs = ('number_of_pixels', 'density_weighted')
 

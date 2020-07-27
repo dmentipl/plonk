@@ -6,7 +6,7 @@ snapshot file.
 
 from .readers import load_snap
 from .snap import Snap, SnapLike, SubSnap
-from .units import gravitational_constant_in_code_units
+from .utils import gravitational_constant_in_code_units
 
 __all__ = [
     'Snap',

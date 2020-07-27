@@ -42,7 +42,7 @@ def test_read_properties_from_phantom():
     snap = plonk.load_snap(TEST_FILE)
 
     for key, value in properties.items():
-        if isinstance(snap.properties[key], plonk.Quantity):
+        if isinstance(snap.properties[key], plonk.units.Quantity):
             snap_value = snap.properties[key].magnitude
         else:
             snap_value = snap.properties[key]

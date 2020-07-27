@@ -4,8 +4,8 @@ from typing import Optional
 
 import numpy as np
 
-from .. import Quantity
-from .. import units as plonk_units
+from .._units import Quantity
+from .._units import units as plonk_units
 
 
 def str_to_units(quantity, extent, projection):

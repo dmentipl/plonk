@@ -7,7 +7,7 @@ import matplotlib as mpl
 import numpy as np
 from numpy import ndarray
 
-from .. import logger
+from .._logging import logger
 from .interpolation import Extent
 
 
