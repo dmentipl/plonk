@@ -1208,27 +1208,6 @@ class SubSnap(Snap):
 SnapLike = Union[Snap, SubSnap]
 
 
-def get_array_in_code_units(snap: SnapLike, name: str) -> ndarray:
-    """Get array in code units.
-
-    Parameters
-    ----------
-    snap
-        The Snap or SubSnap.
-    name
-        The array name.
-
-    Returns
-    -------
-    ndarray
-        The array on the particles in code units.
-    """
-    arr = snap[name]
-    if isinstance(arr, Quantity):
-        return (arr / snap.get_array_unit(name)).magnitude
-    return arr
-
-
 def _str_is_int(string):
     try:
         int(string)

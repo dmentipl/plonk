@@ -10,12 +10,12 @@ import matplotlib.pyplot as plt
 from matplotlib import animation as _animation
 from tqdm import tqdm
 
-from ..analysis.profile import Profile
 from .functions import get_extent_from_percentile
 from .interpolation import interpolate
 from .visualization import particle_plot, plot
 
 if TYPE_CHECKING:
+    from ..analysis.profile import Profile
     from ..snap.snap import SnapLike
 
 _interp_kwargs = ('number_of_pixels', 'density_weighted')

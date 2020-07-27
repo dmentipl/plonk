@@ -25,12 +25,12 @@ install:
 
 script:
   - python -m coverage run -m pytest
-  - isort --check-only -rc
-  - black --check --skip-string-normalization plonk tests
-  - mypy --ignore-missing-imports plonk tests
+  - python -m isort --check-only -rc
+  - python -m black --check --skip-string-normalization plonk tests
+  - python -m mypy --ignore-missing-imports plonk tests
 
 after_success:
-  - coveralls
+  - python -m coveralls
 
 notifications:
   email:
