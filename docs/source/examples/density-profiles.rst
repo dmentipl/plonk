@@ -27,7 +27,7 @@ Plot a density profile for multiple snapshots.
     ...         radius_max=150 * plonk.units('au'),
     ...         n_bins=200
     ...     )
-    ...     _ = profile['density']
+    ...     _ = profile['surface_density']
     ...     profiles.append(profile)
 
     # Plot profiles
@@ -35,11 +35,11 @@ Plot a density profile for multiple snapshots.
     >>> for time, profile in zip(times, profiles):
     ...     ax.plot(
     ...         profile['radius'].to('au').m,
-    ...         profile['density'].to('g/cm^2').m,
+    ...         profile['surface_density'].to('g/cm^2').m,
     ...         label=f'{int(time)}'
     ...     )
     >>> ax.set_xlabel('Radius [au]')
-    >>> ax.set_ylabel('Density [g/cm${}^2$]')
+    >>> ax.set_ylabel('Surface Density [g/cm${}^2$]')
     >>> ax.legend(title='Time [yr]', loc='best')
 
     >>> plt.show()

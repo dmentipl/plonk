@@ -27,7 +27,8 @@ Load a single snapshot, and access particle arrays and properties.
            [  63.75108128,   66.7446782 ,    3.30169363],
            [   8.11639008,  139.45117413,    7.55340187]])
     >>> snap.properties['time']
-    12241.485887903227
+    61485663602.558136 <Unit('second')>
+
 
 ~~~~~~~~~~~~~~~~~~~~~
 Load auxilliary files
@@ -85,7 +86,7 @@ Produce a projection image plot of density.
     ...    cmap='gist_heat',
     ... )
 
-.. image:: _static/density.png
+.. image:: _static/density2.png
 
 --------
 Analysis
@@ -104,18 +105,34 @@ Create a radial profile.
     >>> snap = plonk.load_snap('disc_00030.h5')
     >>> prof = plonk.load_profile(snap)
     >>> prof.available_profiles()
-    ('angmom_mag',
-     'angmom_phi',
-     'angmom_theta',
+    ('angular_momentum_phi',
+     'angular_momentum_theta',
+     'aspect_ratio',
      'density',
-     'eccentricity',
+     'dust_mass_001',
+     'dust_surface_density_001',
+     'dust_to_gas_ratio',
+     'gas_mass',
+     'gas_surface_density',
      'mass',
      'number',
+     'position',
+     'pressure',
      'radius',
      'scale_height',
-     'smoothing_length')
+     'size',
+     'smoothing_length',
+     'sound_speed',
+     'stopping_time',
+     'sub_type',
+     'surface_density',
+     'timestep',
+     'toomre_Q',
+     'type',
+     'velocity',
+     'velocity_divergence')
     >>> with plt.style.context('seaborn'):
-    ...     fig, ax = prof.plot('radius', 'scale_height')
+    ...     ax = prof.plot('radius', 'scale_height')
     ...     ax.set_xlabel('Radius [au]')
     ...     ax.set_ylabel('Scale height [au]')
     >>> plt.show()

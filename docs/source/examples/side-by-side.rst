@@ -14,7 +14,7 @@ Plot dust and gas side-by-side.
 
     # Specify dust and gas subsnaps
     >>> gas = snap['gas']
-    >>> dust = snap['dust']
+    >>> dust = snap['dust'][0]
     >>> extent = (-150, 150, -150, 150)
 
     # Make plot

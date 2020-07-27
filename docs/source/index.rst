@@ -50,6 +50,9 @@ JOSS.
 For BibTeX entry, see
 `CITATION.bib <https://github.com/dmentipl/plonk/blob/master/CITATION.bib>`_.
 
+If you use the interpolation to pixel grid component of Plonk please cite the
+`Splash paper <https://doi.org/10.1071/AS07022>`_.
+
 ----------
 Change log
 ----------

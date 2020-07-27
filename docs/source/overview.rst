@@ -92,37 +92,20 @@ To see what arrays are loaded into memory you can use the
     ('position',)
 
 Use :py:meth:`available_arrays` to see what arrays are available. Some of these
-arrays are stored on file, while others are computed as required from functions
-defined in the analysis module.
+arrays are stored on file, while others are computed as required.
 
 .. code-block:: pycon
 
     >>> snap.available_arrays()
-    ('angular_momentum',
-     'angular_velocity',
-     'azimuthal_angle',
-     'density',
-     'dust_density',
-     'dust_fraction',
-     'dust_mass',
-     'eccentricity',
-     'gas_density',
-     'gas_mass',
-     'inclination',
-     'kinetic_energy',
+    ('density',
+     'dust_to_gas_ratio',
      'mass',
-     'momentum',
-     'polar_angle',
      'position',
      'pressure',
-     'radial_distance',
-     'radial_velocity',
-     'semi_major_axis',
      'smoothing_length',
      'sound_speed',
-     'specific_angular_momentum',
-     'specific_kinetic_energy',
      'stopping_time',
+     'sub_type',
      'timestep',
      'type',
      'velocity',
@@ -271,7 +254,7 @@ You can plot columns with the pandas plotting interface.
 
 .. code-block:: pycon
 
-    ev.plot('time', ['xcom', 'ycom', 'zcom'])
+    ev.plot('time', ['center_of_mass_x', 'center_of_mass_y', 'center_of_mass_z'])
 
 The previous code produces the following figure.
 
@@ -312,22 +295,26 @@ For example, we can change the colorbar limits.
 
 .. code-block:: pycon
 
-    >>> ax.images[0].set_clim(vmin=0.0e-8, vmax=2.5e-8)
+    >>> ax.images[0].set_clim(vmax=1.5e-8)
 
 Alternatively, you can pass keyword arguments to the matplotlib functions. For
 example, we set the colormap to 'gist_heat' and set the colorbar minimum and
-maxiumum.
+maxiumum. In addition, we set the extent, i.e. the x- and y-limits.
 
 .. code-block:: pycon
 
     >>> plonk.visualize.plot(
     ...     snap=snap,
     ...     quantity='density',
-    ...     extent=(-150, 150, -150, 150),
+    ...     extent=(20, 120, -50, 50),
     ...     cmap='gist_heat',
-    ...     vmin=0.0e-8,
+    ...     vmin=1.0e-8,
     ...     vmax=2.5e-8,
     ... )
+
+.. figure:: _static/density_zoom.png
+
+    The column density zoomed around the planet.
 
 More fine-grained control can be achieved by using the full details of
 :py:func:`visualize.plot`. See the API for more details.
@@ -423,14 +410,8 @@ After calling :py:meth:`extra_quantities`:
      'angular_velocity',
      'azimuthal_angle',
      'density',
-     'dust_density',
-     'dust_fraction',
-     'dust_mass',
      'dust_to_gas_ratio',
      'eccentricity',
-     'gas_density',
-     'gas_fraction',
-     'gas_mass',
      'inclination',
      'keplerian_frequency',
      'kinetic_energy',
@@ -447,7 +428,6 @@ After calling :py:meth:`extra_quantities`:
      'smoothing_length',
      'sound_speed',
      'specific_angular_momentum',
-     'specific_kinetic_energy',
      'stokes_number',
      'stopping_time',
      'sub_type',
@@ -461,8 +441,8 @@ You can create a new, derived array on the particles as follows.
 
 .. code-block:: pycon
 
-    >>> snap['r'] = np.sqrt(snap['x'] ** 2 + snap['y'] ** 2)
-    >>> snap['r']
+    >>> snap['rad'] = np.sqrt(snap['x'] ** 2 + snap['y'] ** 2)
+    >>> snap['rad']
     array([ 55.41064337, 133.88013245, 120.11389861, ..., 121.38944087,
             92.29871306, 139.68717104])
 
@@ -492,6 +472,7 @@ method accessing an array returns dimensionless quantities as pure NumPy arrays.
 
 .. code-block:: pycon
 
+    >>> snap = plonk.load_snap(filename)
     >>> snap['x']
     array([ -24.69953214, -108.99243136,  -51.22218782, ...,   93.296599  ,
              63.75108128,    8.11639008])
@@ -530,9 +511,11 @@ module.
 
 .. code-block:: pycon
 
+    >>> snap = plonk.load_snap(filename)
     >>> prof = plonk.load_profile(snap, radius_min=10, radius_max=200)
     >>> prof
-    <plonk.Profile: 100 bins>
+    <plonk.Profile "disc_00030.h5">
+
 
 To see what profiles are loaded and what are available use the
 :py:meth:`loaded_profiles` and :py:meth:`available_profiles` methods.
@@ -603,7 +586,9 @@ them into the DataFrame.
 
 .. code-block:: pycon
 
+    >>> snap.extra_quantities()
     >>> profiles = (
+    ...    'radius',
     ...    'angular_momentum_phi',
     ...    'angular_momentum_theta',
     ...    'surface_density',
@@ -613,20 +598,20 @@ them into the DataFrame.
     ...     prof[p]
     >>> df = prof.to_dataframe(columns=profiles)
     >>> df
-        angular_momentum_phi  angular_momentum_theta  surface_density  scale_height
-    0              -2.816044                0.021775     1.430097e-09      0.114181
-    1              -2.779819                0.041433     3.224447e-09      0.320315
-    2               0.328625                0.047102     4.576087e-09      0.442617
-    3               2.992063                0.050624     5.793719e-09      0.560383
-    4               1.888552                0.053376     7.333067e-09      0.670619
-    ..                   ...                     ...              ...           ...
-    95             -1.601260                0.143154     3.513620e-10     24.574487
-    96              1.172109                0.150343     3.155834e-10     26.160013
-    97              1.802767                0.145982     2.782487e-10     25.658521
-    98             -2.236464                0.145009     2.574287e-10     25.811094
-    99              0.513205                0.163601     2.316950e-10     29.672963
+        radius  angular_momentum_phi  angular_momentum_theta  surface_density  scale_height
+    0    10.95             -0.019731                0.049709     5.468106e-09      0.532838
+    1    12.85              1.930775                0.053272     7.105422e-09      0.657642
+    2    14.75              1.285037                0.056002     9.089863e-09      0.794080
+    3    16.65             -2.958286                0.057931     1.075723e-08      0.919486
+    4    18.55             -1.947547                0.059679     1.233050e-08      1.052757
+    ..     ...                   ...                     ...              ...           ...
+    95  191.45              3.020196                0.168752     1.566369e-10     32.270189
+    96  193.35             -0.099051                0.161859     1.485992e-10     31.039857
+    97  195.25             -0.217485                0.169546     1.244152e-10     33.096242
+    98  197.15             -1.305261                0.175302     1.278899e-10     34.623090
+    99  199.05              2.642077                0.176867     1.199359e-10     35.381584
 
-    [100 rows x 4 columns]
+    [100 rows x 5 columns]
 
 Then we can use pandas plotting methods.
 

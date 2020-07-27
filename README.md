@@ -123,35 +123,35 @@ Install
 
 ### Conda
 
-You can install Plonk via the package manager Conda from conda-forge.
+You can install Plonk via the package manager [Conda](https://docs.conda.io/) from [conda-forge](https://conda-forge.org/).
 
 ```bash
-conda install plonk
+conda install plonk --channel conda-forge
 ```
 
-This will install the required dependencies. Note: you may need to first add the `conda-forge` channel with `conda config --add channels conda-forge`. I also recommend strictly using conda-forge which you can do with `conda config --set channel_priority true`. For details on Conda, see <https://docs.conda.io/>.
+This will install the required dependencies.
+
+Note: You can simply use `conda install plonk` if you add the `conda-forge` channel with `conda config --add channels conda-forge`. I also recommend strictly using conda-forge which you can do with `conda config --set channel_priority true`. Both of these commands modify the Conda configuration file `~/.condarc`.
 
 ### pip
 
-You can also install Plonk via pip.
+You can also install Plonk from [PyPI](https://pypi.org/) via [pip](https://pip.pypa.io/).
 
 ```bash
 pip install plonk
 ```
 
-This should install the required dependencies. For details on pip, see
-<https://pip.pypa.io/>.
+This should install the required dependencies.
 
 Requirements
 ------------
 
-Python 3.6+ with h5py, matplotlib, numba, numpy, pandas, pint, scikit-image,
-scipy, tqdm. Installing Plonk with conda or pip will install these dependencies.
+Python 3.6+ with [h5py](https://www.h5py.org/), [matplotlib](https://www.matplotlib.org/), [numba](http://numba.pydata.org/), [numpy](https://numpy.org/), [pandas](https://pandas.pydata.org/), [pint](https://pint.readthedocs.io/), [scikit-image](https://scikit-image.org/), [scipy](https://www.scipy.org/), [tqdm](https://tqdm.github.io/). Installing Plonk with conda or pip will install these dependencies.
 
 Getting help
 ------------
 
-If you need help, please try the following, in order:
+If you need help, please try the following:
 
 1. Check the [documentation](https://plonk.readthedocs.io/).
 2. Check the built-in help, e.g. `help(plonk.load_snap)`.
@@ -173,6 +173,15 @@ Citation
 
 If you use Plonk in a scientific publication, please cite the paper published in JOSS.
 
-> [Plonk: Smoothed particle hydrodynamics analysis and visualization with Python](https://joss.theoj.org/papers/10.21105/joss.01884#)
+> [Plonk: Smoothed particle hydrodynamics analysis and visualization with Python](https://doi.org/10.21105/joss.01884)
+
+A BibTeX entry is available in [CITATION.bib](https://github.com/dmentipl/plonk/blob/master/CITATION.bib)
+
+If you use the interpolation to pixel grid component of Plonk please cite the [Splash paper](https://doi.org/10.1071/AS07022).
 
 You should also consider citing any other scientific software packages that you use.
+
+Change log
+----------
+
+The change log is available in [CHANGELOG.md](https://github.com/dmentipl/plonk/blob/master/CHANGELOG.md)
