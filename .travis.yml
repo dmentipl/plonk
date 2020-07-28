@@ -25,7 +25,7 @@ install:
 
 script:
   - python -m coverage run -m pytest
-  - python -m isort --check-only -rc
+  - python -m isort --check-only .
   - python -m black --check --skip-string-normalization plonk tests
   - python -m mypy --ignore-missing-imports plonk tests
 

@@ -19,7 +19,7 @@ dependencies:
   - flake8
   - h5py
   - ipython
-  - isort
+  - isort>=5.0
   - jupyterlab
   - matplotlib
   - mypy

@@ -58,7 +58,7 @@ python -m mypy --ignore-missing-imports plonk tests
 To check the code formatting do the following
 
 ```bash
-python -m isort --check-only -rc
+python -m isort --check-only .
 python -m black --check --skip-string-normalization plonk tests
 ```
 
@@ -89,8 +89,8 @@ We follow [PEP 8](https://www.python.org/dev/peps/pep-0008/) for code style, and
 To format your changes run the following from the main repository directory:
 
 ```bash
-isort -rc
-black --skip-string-normalization plonk tests
+python -m isort .
+python -m black --skip-string-normalization plonk tests
 ```
 
 ### Commit messages
