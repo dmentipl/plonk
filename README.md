@@ -158,11 +158,11 @@ cd plonk
 pip install -e .
 ```
 
-This assumes you have already installed the dependencies. One way to do this is by setting up a conda environment. The [environment.yml](https://github.com/dmentipl/plonk/blob/master/environment.yml) file provided sets up a conda environment "plonk-dev" for using or developing Plonk.
+This assumes you have already installed the dependencies. One way to do this is by setting up a conda environment. The [environment.yml](https://github.com/dmentipl/plonk/blob/master/environment.yml) file provided sets up a conda environment "plonk" for using or developing Plonk.
 
 ```bash
 conda env create --file environment.yml
-conda activate plonk-dev
+conda activate plonk
 ```
 
 Requirements

@@ -32,7 +32,7 @@ conda env create --file environment.yml
 Use this environment for Plonk development.
 
 ```bash
-conda activate plonk-dev
+conda activate plonk
 ```
 
 Then you must create an "editable" install with pip.

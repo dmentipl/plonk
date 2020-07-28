@@ -2,10 +2,10 @@
 #
 # Install:    conda env create --file environment.yml
 # Update:     conda env update --file environment.yml
-# Activate:   conda activate plonk-dev
+# Activate:   conda activate plonk
 # Deactivate: conda deactivate
 
-name: plonk-dev
+name: plonk
 
 channels:
   - conda-forge
