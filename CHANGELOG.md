@@ -18,6 +18,7 @@ Types of changes:
 ### Added
 
 - Change log.
+- Cartesian profiles in y- and z-direction, in addition to x-direction which was already implemented.
 
 ### Changed
 
