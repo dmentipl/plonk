@@ -15,6 +15,12 @@ Types of changes:
 
 ## [Unreleased]
 
+## [0.5.3] - 2020-07-28
+
+### Fixed
+
+- Fixed major bug in setting extra dust arrays on a Snap.
+
 ## [0.5.2] - 2020-07-28
 
 ### Added
