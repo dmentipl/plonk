@@ -15,6 +15,17 @@ Types of changes:
 
 ## [Unreleased]
 
+### Added
+
+- Change log.
+
+### Changed
+
+- Do not raise exception in extra_quantities and physical_units if already set.
+- Scikit-image and tqdm are no longer required dependencies.
+- Conda environment renamed from plonk-dev to plonk.
+- Refactor Plonk namespace. Fewer modules are directly imported.
+
 ## [0.5.1] - 2020-07-11
 
 ### Added
