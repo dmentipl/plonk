@@ -413,7 +413,7 @@ class Snap:
     def extra_quantities(self):
         """Make extra quantities available."""
         if self._extra_quantities:
-            raise ValueError('Extra quantities already available')
+            logger.info('Extra quantities already available')
         logger.debug(f'Loading extra quantities: {self.file_path.name}')
         extra_quantities(snap=self)
         self._extra_quantities = True
@@ -484,9 +484,7 @@ class Snap:
         Snap
         """
         if self._physical_units:
-            raise ValueError(
-                'Physical units already set: snap.unset(units=True) to unset.'
-            )
+            logger.info('Physical units already set: snap.unset(units=True) to unset.')
         logger.debug(f'Setting physical units: {self.file_path.name}')
         for arr in self.loaded_arrays():
             self._arrays[arr] = self._arrays[arr] * self.get_array_unit(arr)
