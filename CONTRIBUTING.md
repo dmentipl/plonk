@@ -39,7 +39,7 @@ Then you must create an "editable" install with pip.
 
 ```bash
 cd plonk
-pip install -e .
+python -m pip install -e .
 ```
 
 Then you can make changes to your local copy of Plonk and these changes will be reflected when you import Plonk and use it. You can leave the development environment when done.
@@ -160,9 +160,9 @@ New releases and PyPI and Conda packages
 
 ### Make a release
 
-First, increase the version number in `__init__.py`, and commit the change with a message like "Bump version to v0.3.1".
+First, increase the version number in `__init__.py`, and update the `CHANGELOG.md` adding a heading like `[v0.3.1] - yyyy-mm-dd` under "Unreleased" heading. Then commit the change with a message like "Bump version to v0.3.1".
 
-Then, make a new release on GitHub at <https://github.com/dmentipl/plonk/releases>. The title and tag should both be like "v0.3.1" which corresponds to the Plonk version number. This creates a git tag for the commit, and generates a GitHub release with downloadable source as a tar.gz file.
+Then, make a new release on GitHub at <https://github.com/dmentipl/plonk/releases>. The title and tag should both be like "v0.3.1" which corresponds to the Plonk version number. Copy in the changes from the `CHANGELOG.md`. This creates a git tag for the commit, and generates a GitHub release with downloadable source as a tar.gz file.
 
 ### PyPI and pip
 
