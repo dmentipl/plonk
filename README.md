@@ -168,7 +168,7 @@ conda activate plonk
 Requirements
 ------------
 
-Python 3.6+ with [h5py](https://www.h5py.org/), [matplotlib](https://www.matplotlib.org/), [numba](http://numba.pydata.org/), [numpy](https://numpy.org/), [pandas](https://pandas.pydata.org/), [pint](https://pint.readthedocs.io/), [scikit-image](https://scikit-image.org/), [scipy](https://www.scipy.org/), [tqdm](https://tqdm.github.io/). Installing Plonk with conda or pip will install these dependencies.
+Python 3.6+ with [h5py](https://www.h5py.org/), [matplotlib](https://www.matplotlib.org/), [numba](http://numba.pydata.org/), [numpy](https://numpy.org/), [pandas](https://pandas.pydata.org/), [pint](https://pint.readthedocs.io/), [scipy](https://www.scipy.org/). Installing Plonk with conda or pip will install these dependencies.
 
 Getting help
 ------------

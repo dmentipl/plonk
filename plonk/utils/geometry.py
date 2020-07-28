@@ -5,7 +5,13 @@ from typing import Tuple
 import numpy as np
 from numpy import ndarray
 from scipy.interpolate import RectBivariateSpline
-from skimage import transform
+
+try:
+    from skimage import transform
+except ImportError:
+    transform = None
+
+from .._logging import logger
 
 
 def cartesian_to_polar(
@@ -29,6 +35,11 @@ def cartesian_to_polar(
     extent_polar
         The extent on a polar grid (0, Rmax, 0, 2π).
     """
+    if transform is None:
+        logger.error(
+            'cartesian_to_polar requires skimage (scikit-image) which is unavailable\n'
+            'try pip install skimage --or-- conda install skimage'
+        )
     data, extent = interpolated_data_cartesian, extent_cartesian
 
     if not np.allclose(extent[1] - extent[0], extent[3] - extent[2]):

@@ -8,8 +8,13 @@ from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union
 
 import matplotlib.pyplot as plt
 from matplotlib import animation as _animation
-from tqdm import tqdm
 
+try:
+    from tqdm import tqdm
+except ImportError:
+    tqdm = None
+
+from .._logging import logger
 from .functions import get_extent_from_percentile
 from .interpolation import interpolate
 from .visualization import particle_plot, plot
@@ -163,10 +168,16 @@ def animation(
             0.9, 0.9, text[0], ha='right', transform=ax.transAxes, **text_kwargs
         )
 
-    pbar = tqdm(total=len(snaps))
+    if tqdm is not None:
+        pbar = tqdm(total=len(snaps))
+    else:
+        logger.info(
+            'progress bar not available\ntry pip install tqdm --or-- conda install tqdm'
+        )
 
     def animate(idx):
-        pbar.update(n=1)
+        if tqdm is not None:
+            pbar.update(n=1)
         _kwargs = {k: v for k, v in kwargs.items() if k in _interp_kwargs}
         for quantity, x, y, extent, image in zip(quantities, xs, ys, extents, images):
             if extent == (-1, -1, -1, -1):
@@ -199,7 +210,8 @@ def animation(
     )
     anim.save(filepath, extra_args=['-vcodec', 'libx264'], **save_kwargs)
     plt.close()
-    pbar.close()
+    if tqdm is not None:
+        pbar.close()
 
     return anim
 
@@ -286,10 +298,16 @@ def animation_profiles(
         if text is not None:
             texts = [text for ax in fig.axes for text in ax.texts]
 
-    pbar = tqdm(total=len(profiles))
+    if tqdm is not None:
+        pbar = tqdm(total=len(profiles))
+    else:
+        logger.info(
+            'progress bar not available\ntry pip install tqdm --or-- conda install tqdm'
+        )
 
     def animate(idx):
-        pbar.update(n=1)
+        if tqdm is not None:
+            pbar.update(n=1)
         for line, quantity in zip(lines, quantities):
             x, y = profiles[idx]['radius'], profiles[idx][quantity]
             line.set_data(x, y)
@@ -307,7 +325,8 @@ def animation_profiles(
     )
     anim.save(filepath, extra_args=['-vcodec', 'libx264'], **save_kwargs)
     plt.close()
-    pbar.close()
+    if tqdm is not None:
+        pbar.close()
 
     return anim
 
@@ -420,10 +439,16 @@ def animation_particles(
         if text is not None:
             texts = [text for ax in fig.axes for text in ax.texts]
 
-    pbar = tqdm(total=len(snaps))
+    if tqdm is not None:
+        pbar = tqdm(total=len(snaps))
+    else:
+        logger.info(
+            'progress bar not available\ntry pip install tqdm --or-- conda install tqdm'
+        )
 
     def animate(idx):
-        pbar.update(n=1)
+        if tqdm is not None:
+            pbar.update(n=1)
         subsnaps = snaps[idx].subsnaps_as_list()
         num_subsnaps = len(subsnaps)
         for idxi, y in enumerate(ys):
@@ -447,7 +472,8 @@ def animation_particles(
     )
     anim.save(filepath, extra_args=['-vcodec', 'libx264'], **save_kwargs)
     plt.close()
-    pbar.close()
+    if tqdm is not None:
+        pbar.close()
 
     return anim
 

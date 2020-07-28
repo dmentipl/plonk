@@ -4,10 +4,10 @@ import io
 import pathlib
 import re
 
-from setuptools import setup
+from setuptools import find_packages, setup
 
 __version__ = re.search(
-    r'__version__\s*=\s*[\'"]([^\'"]*)[\'"]',  # It excludes inline comment too
+    r'__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
     io.open('plonk/__init__.py', encoding='utf_8_sig').read(),
 ).group(1)
 
@@ -18,20 +18,10 @@ install_requires = [
     'numpy',
     'pandas',
     'pint>=0.10.1',
-    'scikit-image>=0.16',
     'scipy',
-    'tqdm',
-]
-packages = [
-    'plonk',
-    'plonk.analysis',
-    'plonk.simulation',
-    'plonk.snap',
-    'plonk.snap.readers',
-    'plonk.utils',
-    'plonk.visualize',
 ]
 
+packages = find_packages(exclude=['tests'])
 description = 'Smoothed particle hydrodynamics analysis and visualization with Python.'
 long_description = (pathlib.Path(__file__).parent / 'README.md').read_text()
 
