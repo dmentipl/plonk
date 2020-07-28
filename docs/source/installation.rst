@@ -53,10 +53,10 @@ You can install Plonk from source as follows.
     $ cd plonk
     $ pip install -e .
 
-You first need to install the dependencies. One way to do this is by setting
-up a conda environment containing the dependencies. The `environment.yml
-<https://github.com/dmentipl/plonk/blob/master/environment.yml>`_ file
-provided sets up a conda environment plonk-dev for developing Plonk.
+This assumes you have already installed the dependencies. One way to do this is
+by setting up a conda environment. The `environment.yml
+<https://github.com/dmentipl/plonk/blob/master/environment.yml>`_ file provided
+sets up a conda environment plonk-dev for using or developing Plonk.
 
 .. code-block:: console
 

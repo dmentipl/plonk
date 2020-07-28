@@ -143,6 +143,28 @@ pip install plonk
 
 This should install the required dependencies.
 
+### Source
+
+You can install Plonk from source as follows.
+
+```bash
+# clone via HTTPS
+git clone https://github.com/dmentipl/plonk.git
+
+# or clone via SSH
+git clone git@github.com:dmentipl/plonk
+
+cd plonk
+pip install -e .
+```
+
+This assumes you have already installed the dependencies. One way to do this is by setting up a conda environment. The [environment.yml](https://github.com/dmentipl/plonk/blob/master/environment.yml) file provided sets up a conda environment "plonk-dev" for using or developing Plonk.
+
+```bash
+conda env create --file environment.yml
+conda activate plonk-dev
+```
+
 Requirements
 ------------
 
@@ -177,9 +199,7 @@ If you use Plonk in a scientific publication, please cite the paper published in
 
 A BibTeX entry is available in [CITATION.bib](https://github.com/dmentipl/plonk/blob/master/CITATION.bib)
 
-If you use the interpolation to pixel grid component of Plonk please cite the [Splash paper](https://doi.org/10.1071/AS07022).
-
-You should also consider citing any other scientific software packages that you use.
+If you use the interpolation to pixel grid component of Plonk please cite the [Splash paper](https://doi.org/10.1071/AS07022). You should also consider citing any other scientific software packages that you use.
 
 Change log
 ----------
