@@ -16,9 +16,10 @@ astronomer workflow, and to provide a framework for analysis of smoothed
 particle hydrodynamics simulation data.
 
 .. note::
-    Plonk is under development. However, the basic feature set is stable. Please
-    use Plonk and if you have any issues or feature requests please leave
-    feedback by raising a `GitHub issue
+    Plonk is being used for `scientific publications
+    <https://ui.adsabs.harvard.edu/abs/2019JOSS....4.1884M/citations>`_.
+    However, no software is bug free. Please use Plonk and if you have any
+    issues or feature requests please leave feedback by raising a `GitHub issue
     <https://github.com/dmentipl/plonk/issues/new/choose>`_.
 
 .. toctree::
