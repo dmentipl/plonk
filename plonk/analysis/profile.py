@@ -60,6 +60,9 @@ class Profile:
     spacing : optional
         The spacing of radial bins. Can be 'linear' or 'log'. Default is
         'linear'.
+    coordinate : optional
+        The coordinate ('x', 'y', or 'z') for Cartesian profiles only,
+        i.e. when ndim==1, ignored otherwise. Default is 'x'.
     ignore_accreted : optional
         Ignore particles accreted onto sinks. Default is True.
 
@@ -140,6 +143,7 @@ class Profile:
         n_bins: int = 100,
         aggregation: str = 'average',
         spacing: str = 'linear',
+        coordinate: str = 'x',
         ignore_accreted: bool = True,
     ):
 
@@ -153,7 +157,7 @@ class Profile:
 
         self._weights = self.snap['mass']
         self._mask = self._setup_particle_mask(ignore_accreted)
-        self._x = self._calculate_x()
+        self._x = self._calculate_x(coordinate)
         self.range = self._set_range(radius_min, radius_max)
         self.n_bins = n_bins
 
@@ -184,11 +188,17 @@ class Profile:
         h: ndarray = self.snap['h']
         return h > 0
 
-    def _calculate_x(self) -> ndarray:
+    def _calculate_x(self, coordinate) -> ndarray:
         pos: ndarray = self.snap['xyz']
         pos = pos[self._mask]
         if self.ndim == 1:
-            return pos[:, 0]
+            if coordinate == 'x':
+                return pos[:, 0]
+            if coordinate == 'y':
+                return pos[:, 1]
+            if coordinate == 'z':
+                return pos[:, 2]
+            raise ValueError('coordinate must be "x", "y", or "z" for ndim==1')
         if self.ndim == 2:
             return np.sqrt(pos[:, 0] ** 2 + pos[:, 1] ** 2)
         if self.ndim == 3:
@@ -666,6 +676,7 @@ def load_profile(
     n_bins: int = 100,
     aggregation: str = 'average',
     spacing: str = 'linear',
+    coordinate: str = 'x',
     ignore_accreted: bool = True,
 ) -> Profile:
     logger.debug(f'Loading profile: {snap.file_path.name}')
@@ -677,6 +688,7 @@ def load_profile(
         n_bins=n_bins,
         aggregation=aggregation,
         spacing=spacing,
+        coordinate=coordinate,
         ignore_accreted=ignore_accreted,
     )
 
