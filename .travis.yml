@@ -21,7 +21,7 @@ before_install:
   - source activate plonk-dev
 
 install:
-  - conda develop .
+  - pip install -e .
 
 script:
   - python -m coverage run -m pytest
