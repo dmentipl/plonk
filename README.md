@@ -138,7 +138,7 @@ Note: You can simply use `conda install plonk` if you add the `conda-forge` chan
 You can also install Plonk from [PyPI](https://pypi.org/) via [pip](https://pip.pypa.io/).
 
 ```bash
-pip install plonk
+python -m pip install plonk
 ```
 
 This should install the required dependencies.
@@ -155,7 +155,7 @@ git clone https://github.com/dmentipl/plonk.git
 git clone git@github.com:dmentipl/plonk
 
 cd plonk
-pip install -e .
+python -m pip install -e .
 ```
 
 This assumes you have already installed the dependencies. One way to do this is by setting up a conda environment. The [environment.yml](https://github.com/dmentipl/plonk/blob/master/environment.yml) file provided sets up a conda environment "plonk" for using or developing Plonk.

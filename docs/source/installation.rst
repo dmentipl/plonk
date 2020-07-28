@@ -32,7 +32,7 @@ You can also install Plonk from `PyPI <https://pypi.org/>`_ via `pip
 
 .. code-block:: console
 
-    $ pip install plonk
+    $ python -m pip install plonk
 
 This should install the required dependencies.
 
@@ -51,7 +51,7 @@ You can install Plonk from source as follows.
     $ git clone git@github.com:dmentipl/plonk
 
     $ cd plonk
-    $ pip install -e .
+    $ python -m pip install -e .
 
 This assumes you have already installed the dependencies. One way to do this is
 by setting up a conda environment. The `environment.yml
