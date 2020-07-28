@@ -1,4 +1,4 @@
-# Conda environment for Plonk development
+# Conda environment for Plonk usage and development
 #
 # Install:    conda env create --file environment.yml
 # Update:     conda env update --file environment.yml
