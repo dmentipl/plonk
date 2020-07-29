@@ -300,10 +300,20 @@ def _pressure(snap: Snap) -> ndarray:
     gamma = snap.properties['adiabatic_index']
     rho = _density(snap)
     if ieos == 1:
+        # Globally isothermal
         return K * rho
     if ieos == 2:
-        return K * rho ** (gamma - 1)
+        # Adiabatic
+        try:
+            energy = _get_dataset('u', 'particles')(snap)
+            if gamma > 1.0001:
+                return (gamma - 1) * energy * rho
+            else:
+                return 2 / 3 * energy * rho
+        except KeyError:
+            return K * rho ** (gamma - 1)
     if ieos == 3:
+        # Vertically isothermal (for accretion disc)
         q = snap.properties['sound_speed_index']
         pos = _get_dataset('xyz', 'particles')(snap)
         r_squared = pos[:, 0] ** 2 + pos[:, 1] ** 2 + pos[:, 2] ** 2
