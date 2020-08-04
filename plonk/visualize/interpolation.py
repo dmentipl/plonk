@@ -361,7 +361,7 @@ def _get_arrays_from_str(*, snap, quantity, x, y):
     quantity_str, x_str, y_str = quantity, x, y
     z_str = coords.difference((x_str, y_str)).pop()
 
-    quantity = get_array_in_code_units(snap, quantity)
+    quantity = get_array_in_code_units(snap, quantity_str)
     x = get_array_in_code_units(snap, x_str)
     y = get_array_in_code_units(snap, y_str)
     z = get_array_in_code_units(snap, z_str)
@@ -370,8 +370,8 @@ def _get_arrays_from_str(*, snap, quantity, x, y):
         raise ValueError('Cannot interpret quantity with ndim > 2')
     if quantity.ndim == 2:
         try:
-            quantity_x = snap[quantity_str + '_' + x_str]
-            quantity_y = snap[quantity_str + '_' + y_str]
+            quantity_x = get_array_in_code_units(snap, quantity_str + '_' + x_str)
+            quantity_y = get_array_in_code_units(snap, quantity_str + '_' + y_str)
             quantity = np.stack([quantity_x, quantity_y]).T
         except ValueError:
             raise ValueError(

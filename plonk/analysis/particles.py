@@ -33,7 +33,6 @@ from typing import TYPE_CHECKING, Any, Tuple, Union
 import numpy as np
 from numpy import ndarray
 
-from .._units import Quantity
 from .._units import units as plonk_units
 from ..utils.math import cross, norm
 

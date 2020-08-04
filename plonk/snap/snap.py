@@ -890,7 +890,14 @@ class Snap:
             arr = self._array_name_mapper[arr]
         elif arr_root in self._vector_arrays | self._dust_arrays:
             arr = arr_root
-        unit = self._array_units[arr]
+        try:
+            unit = self._array_units[arr]
+        except KeyError:
+            _arr: Quantity = self[arr]
+            dim = _arr.units.dimensionality
+            unit = 1.0
+            for d in ['length', 'mass', 'time']:
+                unit *= self.properties[f'unit_{d}'] ** dim[f'[{d}]']
         return unit
 
     def _get_array_from_registry(self, name: str, sinks: bool = False):

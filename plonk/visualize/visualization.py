@@ -164,10 +164,13 @@ def plot(
         )
     else:
         logger.warning('extent has no units, assuming code units')
-    if isinstance(z_slice, Quantity):
-        z_slice = (z_slice / snap.properties['unit_length']).to_base_units().magnitude
-    else:
-        logger.warning('z_slice has no units, assuming code units')
+    if interp == 'cross_section':
+        if isinstance(z_slice, Quantity):
+            z_slice = (
+                (z_slice / snap.properties['unit_length']).to_base_units().magnitude
+            )
+        else:
+            logger.warning('z_slice has no units, assuming code units')
     if units is None:
         _units = {
             'quantity': 1 * snap[quantity].units,
