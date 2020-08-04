@@ -18,7 +18,6 @@ from pandas import DataFrame
 from .._logging import logger
 from .._units import Quantity
 from .._units import units as plonk_units
-from ..snap.utils import gravitational_constant_in_code_units
 from ..utils.math import average
 from ..utils.utils import is_documented_by
 
@@ -46,11 +45,13 @@ class Profile:
         binning is spherical. For ndim == 1, the radial binning is
         Cartesian along the x-axis. Default is 2.
     radius_min : optional
-        The minimum radius for binning. Defaults to minimum on the
-        particles.
+        The minimum radius for binning. Can be a string, e.g. '10 au',
+        or a quantity with units, e.g. plonk.units['10 au']. Defaults to
+        minimum on the particles.
     radius_max : optional
-        The maximum radius for binning. Defaults to the 99 percentile
-        distance.
+        The maximum radius for binning. Can be a string, e.g. '10 au',
+        or a quantity with units, e.g. plonk.units['10 au']. Defaults to
+        the 99 percentile distance.
     n_bins : optional
         The number of radial bins. Default is 100.
     aggregation : optional
@@ -72,17 +73,10 @@ class Profile:
 
     >>> prof = plonk.load_profile(snap=snap)
     >>> prof = plonk.load_profile(snap=snap, n_bins=300)
-    >>> prof = plonk.load_profile(snap=snap, radius_min=1, radius_max=300)
-    >>> prof = plonk.load_profile(snap=snap, spacing='log')
-
-    If snap has physical units and setting 'radius_min' or 'radius_max'
-    must use physical quantities.
-
-    >>> radius_min = plonk.Quantity('1 au')
-    >>> radius_max = plonk.Quantity('300 au')
     >>> prof = plonk.load_profile(
-    ...     snap=snap, radius_min=radius_min, radius_max=radius_max,
+    ...     snap=snap, radius_min='10 au', radius_max='300 au'
     ... )
+    >>> prof = plonk.load_profile(snap=snap, spacing='log')
 
     To access a profile.
 
@@ -220,7 +214,7 @@ class Profile:
             rmin = Quantity(radius_min)
             if not rmin.dimensionality == Quantity('cm').dimensionality:
                 raise ValueError(
-                    'Snap has physical units: must use dimensional radius_min'
+                    'must specificy radius_min units, e.g. radius_min="10 au"'
                 )
             rmin = rmin.to_base_units()
         if radius_max is None:
@@ -229,7 +223,7 @@ class Profile:
             rmax = Quantity(radius_max)
             if not rmax.dimensionality == Quantity('cm').dimensionality:
                 raise ValueError(
-                    'Snap has physical units: must use dimensional radius_max'
+                    'must specificy radius_min units, e.g. radius_max="100 au"'
                 )
             rmax = rmax.to_base_units()
 
@@ -400,11 +394,9 @@ class Profile:
             The y axis to plot. Can be string or multiple as a list of
             strings.
         x_unit : optional
-            The x axis quantity unit as a string. Only works if using
-            physical units.
+            The x axis quantity unit as a string.
         y_unit : optional
             The y axis quantity unit as a string or list of strings.
-            Only works if using physical units.
         std_dev_shading : optional
             Add shading for standard deviation of profile.
         ax : optional
