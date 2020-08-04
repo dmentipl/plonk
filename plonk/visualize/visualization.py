@@ -12,7 +12,7 @@ from numpy import ndarray
 from .._logging import logger
 from .._units import Quantity
 from . import plots
-from .functions import get_extent_from_percentile
+from .functions import get_extent_from_percentile, str_to_units
 from .interpolation import Extent, interpolate
 
 if TYPE_CHECKING:
@@ -177,11 +177,18 @@ def plot(
         )
     if isinstance(z_slice, Quantity):
         z_slice = (z_slice / snap.units['length']).to_base_units().magnitude
+    if units is None:
+        units = str_to_units(
+            str(snap[quantity].units),
+            str(snap['position'].units),
+            str(snap['position'].units),
+        )
 
     interpolation_kwargs = ('number_of_pixels', 'density_weighted')
     __kwargs = {key: val for key, val in _kwargs.items() if key in interpolation_kwargs}
     for key in __kwargs:
         _kwargs.pop(key)
+    # Interpolate in code units
     interpolated_data = interpolate(
         snap=snap,
         quantity=quantity,
@@ -192,15 +199,15 @@ def plot(
         extent=extent,
         **__kwargs,
     )
-    if units is not None:
-        interpolated_data, extent = _convert_units(
-            snap=snap,
-            quantity=quantity,
-            interpolated_data=interpolated_data,
-            extent=extent,
-            units=units,
-            interp=interp,
-        )
+    # Convert back to physical units
+    interpolated_data, extent = _convert_units(
+        snap=snap,
+        quantity=quantity,
+        interpolated_data=interpolated_data,
+        extent=extent,
+        units=units,
+        interp=interp,
+    )
 
     if kind is None:
         if interpolated_data.ndim == 2:
@@ -352,19 +359,18 @@ def _particle_plot(
     _c: ndarray = snap[c] if c is not None else None
     _s: ndarray = snap[s] if s is not None else None
 
-    if snap._physical_units:
-        if xunit is not None:
-            _x = _x.to(xunit).magnitude
-        else:
-            _x = _x.magnitude
-        if yunit is not None:
-            _y = _y.to(yunit).magnitude
-        else:
-            _y = _y.magnitude
-        if cunit is not None:
-            _c = _c.to(cunit).magnitude
-        else:
-            _c = _c.magnitude
+    if xunit is not None:
+        _x = _x.to(xunit).magnitude
+    else:
+        _x = _x.magnitude
+    if yunit is not None:
+        _y = _y.to(yunit).magnitude
+    else:
+        _y = _y.magnitude
+    if cunit is not None:
+        _c = _c.to(cunit).magnitude
+    else:
+        _c = _c.magnitude
 
     h: ndarray = snap['smoothing_length']
     mask = h > 0
@@ -376,8 +382,7 @@ def _particle_plot(
     if _s is not None:
         _s = _s[mask]
         _s = 100 * _s / _s.max()
-        if snap._physical_units:
-            _s = _s.magnitude
+        _s = _s.magnitude
 
     show_colorbar = _kwargs.pop('show_colorbar', _c is not None)
 

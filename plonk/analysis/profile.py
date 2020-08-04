@@ -163,21 +163,13 @@ class Profile:
 
         self.bin_edges, self['size'] = self._setup_bins()
         self.bin_centers = 0.5 * (self.bin_edges[:-1] + self.bin_edges[1:])
-        if self.snap._physical_units:
-            self._particle_bin = np.digitize(
-                self._x.magnitude, self.bin_edges.magnitude
-            )
-        else:
-            self._particle_bin = np.digitize(self._x, self.bin_edges)
+        self._particle_bin = np.digitize(self._x.magnitude, self.bin_edges.magnitude)
         self.bin_indicies = self._set_particle_bin_indicies()
 
         self._profiles['radius'] = self.bin_centers
-        if self.snap._physical_units:
-            self._profiles['number'] = np.histogram(
-                self._x.magnitude, self.bin_edges.magnitude
-            )[0]
-        else:
-            self._profiles['number'] = np.histogram(self._x, self.bin_edges)[0]
+        self._profiles['number'] = np.histogram(
+            self._x.magnitude, self.bin_edges.magnitude
+        )[0]
 
         n_dust = len(self.snap.properties.get('grain_size', []))
         _generate_profiles(n_dust)
@@ -205,13 +197,6 @@ class Profile:
             return np.sqrt(pos[:, 0] ** 2 + pos[:, 1] ** 2 + pos[:, 2] ** 2)
         raise ValueError('Unknown ndim: cannot calculate x array')
 
-    def _set_range(
-        self, radius_min: Optional[Any], radius_max: Optional[Any]
-    ) -> Tuple[float, float]:
-        if self.snap._physical_units:
-            return self._set_range_physical_units(radius_min, radius_max)
-        return self._set_range_code_units(radius_min, radius_max)
-
     def _set_range_code_units(
         self, radius_min: Optional[float], radius_max: Optional[float]
     ) -> Tuple[float, float]:
@@ -226,7 +211,7 @@ class Profile:
 
         return rmin, rmax
 
-    def _set_range_physical_units(
+    def _set_range(
         self, radius_min: Optional[Any], radius_max: Optional[Any]
     ) -> Tuple[float, float]:
         if radius_min is None:
@@ -251,10 +236,7 @@ class Profile:
         return rmin, rmax
 
     def _setup_bins(self) -> ndarray:
-        if self.snap._physical_units:
-            bin_edges = self._bin_edges_physical_units()
-        else:
-            bin_edges = self._bin_edges_code_units()
+        bin_edges = self._bin_edges()
         if self.ndim == 1:
             bin_sizes = bin_edges[1:] - bin_edges[:-1]
         elif self.ndim == 2:
@@ -263,7 +245,7 @@ class Profile:
             bin_sizes = 4 / 3 * np.pi * (bin_edges[1:] ** 3 - bin_edges[:-1] ** 3)
         return bin_edges, bin_sizes
 
-    def _bin_edges_physical_units(self):
+    def _bin_edges(self):
         if self.spacing == 'linear':
             bin_edges = (
                 np.linspace(
@@ -438,29 +420,22 @@ class Profile:
         if isinstance(y, str):
             y = [y]
 
-        if not self.snap._physical_units:
-            if x_unit is not None or y_unit is not None:
-                raise ValueError('Cannot set unit if snap is not in physical units')
-        else:
-            if y_unit is not None:
-                if isinstance(y_unit, str):
-                    y_unit = [y_unit]
-                if len(y) != len(y_unit):
-                    raise ValueError('Length of y does not match length of y_unit')
+        if y_unit is not None:
+            if isinstance(y_unit, str):
+                y_unit = [y_unit]
+            if len(y) != len(y_unit):
+                raise ValueError('Length of y does not match length of y_unit')
 
         _x = self[x]
         if x_unit is not None:
-            if not self.snap._physical_units:
-                raise ValueError('Cannot set unit if snap is not in physical units')
             _x = _x.to(x_unit)
 
         if ax is None:
             _, ax = plt.subplots()
 
         xlabel = x.capitalize().replace('_', ' ')
-        if self.snap._physical_units:
-            xlabel = ' '.join([xlabel, f'[{_x.units:~P}]'])
-            _x = _x.magnitude
+        xlabel = ' '.join([xlabel, f'[{_x.units:~P}]'])
+        _x = _x.magnitude
         ax.set_xlabel(xlabel)
 
         for idx, yi in enumerate(y):
@@ -479,17 +454,16 @@ class Profile:
                 else:
                     _y_mean = _y
             label = yi.capitalize().replace('_', ' ')
-            if self.snap._physical_units:
-                if y_unit is not None:
-                    _y = _y.to(y_unit[idx])
-                    if std_dev_shading:
-                        _y_std = _y_std.to(y_unit[idx])
-                        _y_mean = _y_mean.to(y_unit[idx])
-                label = ' '.join([label, f'[{_y.units:~P}]'])
-                _y = _y.magnitude
+            if y_unit is not None:
+                _y = _y.to(y_unit[idx])
                 if std_dev_shading:
-                    _y_std = _y_std.magnitude
-                    _y_mean = _y_mean.magnitude
+                    _y_std = _y_std.to(y_unit[idx])
+                    _y_mean = _y_mean.to(y_unit[idx])
+            label = ' '.join([label, f'[{_y.units:~P}]'])
+            _y = _y.magnitude
+            if std_dev_shading:
+                _y_std = _y_std.magnitude
+                _y_mean = _y_mean.magnitude
             if kwargs.get('label') is None:
                 lines = ax.plot(_x, _y, label=label, **kwargs)
             else:
@@ -561,13 +535,9 @@ class Profile:
             elif aggregation == 'sum':
                 val = np.sum(array[self._mask][bin_ind])
 
-            if self.snap._physical_units:
-                binned_quantity[idx] = val.magnitude
-            else:
-                binned_quantity[idx] = val
+            binned_quantity[idx] = val.magnitude
 
-        if self.snap._physical_units:
-            binned_quantity *= val.units
+        binned_quantity *= val.units
 
         return binned_quantity
 
@@ -618,10 +588,7 @@ def _generate_profiles(n_dust: int = 0):
     @Profile.profile_property
     def toomre_Q(prof) -> ndarray:
         """Toomre Q parameter."""
-        if not prof.snap._physical_units:
-            G = gravitational_constant_in_code_units(prof.snap)
-        else:
-            G = (1 * plonk_units.newtonian_constant_of_gravitation).to_base_units()
+        G = (1 * plonk_units.newtonian_constant_of_gravitation).to_base_units()
         return (
             prof['sound_speed']
             * prof['keplerian_frequency']

@@ -95,10 +95,6 @@ class Snap:
     Or, use an existing one.
 
     >>> snap['R'] = plonk.analysis.particles.radial_distance(snap)
-
-    Set physical units. Arrays are now Pint quantities.
-
-    >>> snap.physical_units()
     """
 
     _array_name_mapper = {
@@ -239,7 +235,6 @@ class Snap:
         self._families = {key: None for key in self.particle_type}
         self.rotation = None
         self.translation = None
-        self._physical_units = False
         self._extra_quantities = False
         self._tree = None
 
@@ -443,23 +438,19 @@ class Snap:
             self.units[unit_str] = unit
         self._array_units[name] = unit_str
 
-    def unset(
-        self, units: bool = False, rotation: bool = False, translation: bool = False,
-    ):
+    def unset(self, rotation: bool = False, translation: bool = False):
         """Unset.
 
         Unset some transformations on the Snap data.
 
         Parameters
         ----------
-        units
-            Set to True to unset physical units. Default is False.
         rotation
             Set to True to unset rotation. Default is False.
         translation
             Set to True to unset translation. Default is False.
         """
-        if any((units, rotation, translation)):
+        if any((rotation, translation)):
             for arr in self.loaded_arrays():
                 del self._arrays[arr]
             for arr in self.loaded_arrays(sinks=True):
@@ -467,30 +458,10 @@ class Snap:
         else:
             raise ValueError('Select something to unset')
 
-        if units:
-            self._physical_units = None
         if rotation:
             self.rotation = None
         if translation:
             self.translation = None
-
-        return self
-
-    def physical_units(self) -> Snap:
-        """Set physical units.
-
-        Returns
-        -------
-        Snap
-        """
-        if self._physical_units:
-            logger.info('Physical units already set: snap.unset(units=True) to unset.')
-        logger.debug(f'Setting physical units: {self.file_path.name}')
-        for arr in self.loaded_arrays():
-            self._arrays[arr] = self._arrays[arr] * self.get_array_unit(arr)
-        for arr in self.loaded_arrays(sinks=True):
-            self._sinks[arr] = self._sinks[arr] * self.get_array_unit(arr)
-        self._physical_units = True
 
         return self
 
@@ -697,10 +668,7 @@ class Snap:
             M = self.sinks['mass'][sink_idx]
         else:
             raise ValueError('Cannot determine gravitational parameter')
-        if self._physical_units:
-            G = (G * M).to_base_units()
-        else:
-            G = (G * self.units['mass'] * M).to_base_units()
+        G = (G * M).to_base_units()
         self.properties['gravitational_parameter'] = G
 
     def set_molecular_weight(self, molecular_weight: float):
@@ -976,7 +944,10 @@ class Snap:
             arr = self._array_name_mapper[arr]
         elif arr_root in self._vector_arrays | self._dust_arrays:
             arr = arr_root
-        unit = self.units[self._array_units[arr]]
+        try:
+            unit = self.units[self._array_units[arr]]
+        except KeyError:
+            unit = plonk_units[self._array_units[arr]]
         return unit
 
     def _get_array_from_registry(self, name: str, sinks: bool = False):
@@ -988,10 +959,8 @@ class Snap:
             array = self.rotation.apply(array)
         if self.translation is not None and name == 'position':
             array += self.translation
-        if self._physical_units:
-            unit = self.get_array_unit(name)
-            return unit * array
-        return array
+        unit = self.get_array_unit(name)
+        return unit * array
 
     def _get_array(self, name: str, sinks: bool = False) -> ndarray:
         """Get an array by name."""
@@ -1178,7 +1147,6 @@ class SubSnap(Snap):
         self._file_pointer = self.base._file_pointer
         self.rotation = self.base.rotation
         self.translation = self.base.translation
-        self._physical_units = self.base._physical_units
         self._extra_quantities = self.base._extra_quantities
 
     @property
