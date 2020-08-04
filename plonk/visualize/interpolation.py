@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Optional, Tuple
 import numpy as np
 from numpy import ndarray
 
-from .._units import Quantity
+from ..snap.utils import get_array_in_code_units
 from .splash import interpolate_cross_section, interpolate_projection
 
 if TYPE_CHECKING:
@@ -381,24 +381,3 @@ def _get_arrays_from_str(*, snap, quantity, x, y):
             )
 
     return quantity, x, y, z
-
-
-def get_array_in_code_units(snap: SnapLike, name: str) -> ndarray:
-    """Get array in code units.
-
-    Parameters
-    ----------
-    snap
-        The Snap or SubSnap.
-    name
-        The array name.
-
-    Returns
-    -------
-    ndarray
-        The array on the particles in code units.
-    """
-    arr = snap[name]
-    if isinstance(arr, Quantity):
-        return (arr / snap.get_array_unit(name)).magnitude
-    return arr
