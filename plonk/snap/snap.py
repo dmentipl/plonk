@@ -191,6 +191,7 @@ class Snap:
 
         self.data_source = None
         self.file_path = None
+        self.units = {}
         self._properties = {}
         self._array_units = {}
         self._array_registry: Dict[str, Callable] = {}

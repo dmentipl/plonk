@@ -87,6 +87,9 @@ def generate_snap_from_file(filename: Union[str, Path]) -> Snap:
     header = {key: val[()] for key, val in file_handle['header'].items()}
     snap._properties, units = _header_to_properties(header)
     snap._array_units = generate_units_array_dictionary(units)
+    snap.units = {
+        key: units[key] for key in ['length', 'time', 'mass', 'magnetic_field']
+    }
 
     arrays = list(file_handle['particles'])
     ndustsmall = header['ndustsmall']
