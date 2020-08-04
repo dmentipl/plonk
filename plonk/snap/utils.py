@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 from numpy import ndarray
 
-from .._units import Quantity
 from .._units import units as plonk_units
 
 if TYPE_CHECKING:
