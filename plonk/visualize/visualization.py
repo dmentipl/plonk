@@ -161,6 +161,8 @@ def plot(
             (extent[2] / snap.units['length']).to_base_units().magnitude,
             (extent[3] / snap.units['length']).to_base_units().magnitude,
         )
+    else:
+        logger.warning('extent has no units, assuming code units')
     if isinstance(z_slice, Quantity):
         z_slice = (z_slice / snap.units['length']).to_base_units().magnitude
     if units is None:
