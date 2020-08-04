@@ -27,7 +27,11 @@ def gravitational_constant_in_code_units(snap: SnapLike) -> float:
         The gravitational constant in code units.
     """
     G = plonk_units.newtonian_constant_of_gravitation
-    G_units = snap.units['length'] ** 3 / snap.units['mass'] / snap.units['time'] ** 2
+    G_units = (
+        snap.properties['unit_length'] ** 3
+        / snap.properties['unit_mass']
+        / snap.properties['unit_time'] ** 2
+    )
     G = (G / G_units).to_base_units().magnitude
     return G
 

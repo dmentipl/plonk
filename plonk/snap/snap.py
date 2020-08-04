@@ -74,27 +74,21 @@ class Snap:
     >>> subsnap = snap[snap['x'] > 0]
     >>> subsnap = snap['gas']
 
-    To set a new array.
+    To set a new array directly.
 
-    >>> snap['r'] = np.sqrt(snap['x'] ** 2 + snap['y'] ** 2)
+    >>> snap['my_r'] = np.sqrt(snap['x'] ** 2 + snap['y'] ** 2)
 
     Alternatively, define a function.
 
     >>> @snap.add_array()
-    ... def radius(snap):
-    ...     radius = np.hypot(snap['x'], snap['y'])
-    ...     return radius
+    ... def my_radius(snap):
+    ...     return np.hypot(snap['x'], snap['y'])
 
-    Possibly with units.
+    Or, use an existing one function.
 
-    >>> @snap.add_array(unit='length')
-    ... def radius(snap):
-    ...     radius = np.hypot(snap['x'], snap['y'])
-    ...     return radius
-
-    Or, use an existing one.
-
-    >>> snap['R'] = plonk.analysis.particles.radial_distance(snap)
+    >>> @snap.add_array()
+    ... def my_R(snap):
+    ...     return plonk.analysis.particles.radial_distance(snap)
     """
 
     _array_name_mapper = {
@@ -157,29 +151,6 @@ class Snap:
         'B_z': ('magnetic_field', 2),
     }
 
-    _array_units = {
-        'alpha_viscosity_numerical': 'dimensionless',
-        'density': 'density',
-        'differential_velocity': 'velocity',
-        'dust_fraction': 'dimensionless',
-        'dust_to_gas_ratio': 'dimensionless',
-        'gravitational_potential': 'energy',
-        'internal_energy': 'energy',
-        'magnetic_field': 'magnetic_field',
-        'mass': 'mass',
-        'position': 'length',
-        'pressure': 'pressure',
-        'smoothing_length': 'length',
-        'sound_speed': 'velocity',
-        'spin': 'angular_momentum',
-        'stopping_time': 'time',
-        'sub_type': 'dimensionless',
-        'timestep': 'time',
-        'type': 'dimensionless',
-        'velocity': 'velocity',
-        'velocity_divergence': 'frequency',
-    }
-
     _vector_arrays = {
         'magnetic_field',
         'position',
@@ -220,8 +191,8 @@ class Snap:
 
         self.data_source = None
         self.file_path = None
-        self.properties = {}
-        self.units = {}
+        self._properties = {}
+        self._array_units = {}
         self._array_registry: Dict[str, Callable] = {}
         self._sink_registry: Dict[str, Callable] = {}
         self._cache_arrays = True
@@ -242,9 +213,7 @@ class Snap:
         """Close access to underlying file."""
         self._file_pointer.close()
 
-    def add_array(
-        self, unit: str = None, rotatable: bool = None, dust: bool = False
-    ) -> Callable:
+    def add_array(self, rotatable: bool = None, dust: bool = False) -> Callable:
         """Decorate function to add array to Snap.
 
         This function decorates a function that returns an array. The
@@ -253,9 +222,6 @@ class Snap:
 
         Parameters
         ----------
-        unit
-            A string to represent the units of the array. E.g. 'length'
-            for a 'radius' array. Default is None.
         rotatable
             A bool to represent if the array should have rotations
             applied to it, i.e. it is a vector arrray. If True the
@@ -273,7 +239,6 @@ class Snap:
 
         def _add_array(fn):
             self._array_registry[fn.__name__] = fn
-            self._array_units[fn.__name__] = unit
             if rotatable is True:
                 self._vector_arrays.add(fn.__name__)
             elif rotatable is False:
@@ -343,6 +308,11 @@ class Snap:
         return tuple(sorted(set(loaded + registered)))
 
     @property
+    def properties(self):
+        """Snap properties."""
+        return {key: self._properties[key] for key in sorted(self._properties.keys())}
+
+    @property
     def sinks(self):
         """Sink particle arrays."""
         return _SinkUtility(self._getitem)
@@ -391,7 +361,7 @@ class Snap:
     def num_dust_species(self):
         """Return number of dust species."""
         if self._num_dust_species == -1:
-            self._num_dust_species = len(self.properties.get('grain_size', []))
+            self._num_dust_species = len(self._properties.get('grain_size', []))
         return self._num_dust_species
 
     @property
@@ -413,30 +383,6 @@ class Snap:
         extra_quantities(snap=self)
         self._extra_quantities = True
         return self
-
-    def add_unit(self, name: str, unit: Any, unit_str: str):
-        """Define a unit on an array.
-
-        Parameters
-        ----------
-        name
-            The name of the array.
-        unit
-            The Pint units Quantity.
-        unit_str
-            The unit string. See units attribute for units.
-
-        Examples
-        --------
-        New array 'arr' with dimension 'length' and units 'cm'.
-
-        >>> snap.add_unit('arr', plonk.units('cm'), 'length')
-        """
-        if name in self._array_units:
-            raise ValueError('Array unit already defined on Snap')
-        if unit_str not in self.units:
-            self.units[unit_str] = unit
-        self._array_units[name] = unit_str
 
     def unset(self, rotation: bool = False, translation: bool = False):
         """Unset.
@@ -647,7 +593,7 @@ class Snap:
         """
         if kernel not in kernel_names:
             raise ValueError(f'Kernel must be in {kernel_names}')
-        self.properties['kernel'] = kernel
+        self._properties['kernel'] = kernel
 
     def set_gravitational_parameter(self, sink_idx: Union[int, List[int]]):
         """Set standard gravitational parameter.
@@ -669,7 +615,7 @@ class Snap:
         else:
             raise ValueError('Cannot determine gravitational parameter')
         G = (G * M).to_base_units()
-        self.properties['gravitational_parameter'] = G
+        self._properties['gravitational_parameter'] = G
 
     def set_molecular_weight(self, molecular_weight: float):
         """Set molecular weight.
@@ -684,7 +630,7 @@ class Snap:
             The molecular weight in units of gram / mole. E.g. Phantom
             uses 2.381 for molecular hydrogen with solar metallicity.
         """
-        self.properties['molecular_weight'] = molecular_weight
+        self._properties['molecular_weight'] = molecular_weight
 
     @property
     def tree(self):
@@ -722,7 +668,7 @@ class Snap:
             The list of neighbours relative to the particle
             type/sub-type.
         """
-        kernel = self.properties.get('kernel')
+        kernel = self._properties.get('kernel')
         if kernel is None:
             raise ValueError(
                 'To calculate particle neighbours, first set the kernel\n'
@@ -759,7 +705,7 @@ class Snap:
             An array of neighbours lists relative to the particle
             type/sub-type.
         """
-        kernel = self.properties.get('kernel')
+        kernel = self._properties.get('kernel')
         if kernel is None:
             raise ValueError(
                 'To calculate particle neighbours, first set the kernel\n'
@@ -797,7 +743,7 @@ class Snap:
         the Snap has more than approximately 1 million particles
         depending on the available memory.
         """
-        kernel = self.properties.get('kernel')
+        kernel = self._properties.get('kernel')
         if kernel is None:
             raise ValueError(
                 'To calculate particle neighbours, first set the kernel\n'
@@ -944,10 +890,7 @@ class Snap:
             arr = self._array_name_mapper[arr]
         elif arr_root in self._vector_arrays | self._dust_arrays:
             arr = arr_root
-        try:
-            unit = self.units[self._array_units[arr]]
-        except KeyError:
-            unit = plonk_units[self._array_units[arr]]
+        unit = self._array_units[arr]
         return unit
 
     def _get_array_from_registry(self, name: str, sinks: bool = False):
@@ -959,8 +902,7 @@ class Snap:
             array = self.rotation.apply(array)
         if self.translation is not None and name == 'position':
             array += self.translation
-        unit = self.get_array_unit(name)
-        return unit * array
+        return array
 
     def _get_array(self, name: str, sinks: bool = False) -> ndarray:
         """Get an array by name."""
@@ -1137,8 +1079,8 @@ class SubSnap(Snap):
         # Attributes same as Snap
         self.data_source = self.base.data_source
         self.file_path = self.base.file_path
-        self.properties = self.base.properties
-        self.units = self.base.units
+        self._properties = self.base._properties
+        self._array_units = self.base._array_units
         self._array_registry = self.base._array_registry
         self._sink_registry = self.base._sink_registry
         self._cache_arrays = self.base._cache_arrays

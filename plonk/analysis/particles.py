@@ -330,8 +330,6 @@ def keplerian_frequency(
     pos = pos - origin
 
     mu = gravitational_parameter
-    if not isinstance(pos, Quantity):
-        mu = (mu * snap.units['time'] ** 2 / snap.units['length'] ** 3).magnitude
 
     radius = norm(pos, axis=1)
     return np.sqrt(mu / radius ** 3)
@@ -374,8 +372,6 @@ def stokes_number(
     pos = pos - origin
 
     mu = gravitational_parameter
-    if not isinstance(pos, Quantity):
-        mu = (mu * snap.units['time'] ** 2 / snap.units['length'] ** 3).magnitude
 
     radius = norm(pos, axis=1)
     Omega_k = np.sqrt(mu / radius ** 3)
@@ -425,8 +421,6 @@ def semi_major_axis(
     pos = pos - origin
 
     mu = gravitational_parameter
-    if not isinstance(pos, Quantity):
-        mu = (mu * snap.units['time'] ** 2 / snap.units['length'] ** 3).magnitude
 
     radius = norm(pos, axis=1)
 
@@ -485,8 +479,6 @@ def eccentricity(
     pos = pos - origin
 
     mu = gravitational_parameter
-    if not isinstance(pos, Quantity):
-        mu = (mu * snap.units['time'] ** 2 / snap.units['length'] ** 3).magnitude
 
     radius = norm(pos, axis=1)
 
@@ -949,11 +941,4 @@ def temperature(
     molecular_weight = molecular_weight * plonk_units('gram / mole')
     specific_gas_constant = (plonk_units.R / molecular_weight).to_base_units()
 
-    if isinstance(cs, Quantity):
-        T = cs ** 2 / (gamma * specific_gas_constant)
-    else:
-        T = (cs * snap.units['velocity']) ** 2 / (gamma * specific_gas_constant)
-
-    if isinstance(cs, Quantity):
-        return T
-    return T.magnitude
+    return cs ** 2 / (gamma * specific_gas_constant)

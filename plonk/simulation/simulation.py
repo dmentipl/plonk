@@ -45,9 +45,8 @@ class Simulation:
 
     >>> sim.snaps
 
-    Accessing the units and properties.
+    Accessing the properties.
 
-    >>> sim.units
     >>> sim.properties
 
     Accessing the global quantity and sink time series data.
@@ -64,7 +63,6 @@ class Simulation:
 
         self._snaps: List[Snap] = None
         self._properties: Dict[str, Any] = None
-        self._units: Dict[str, Any] = None
         self._global_quantities: DataFrame = None
         self._sink_quantities: List[DataFrame] = None
 
@@ -138,14 +136,6 @@ class Simulation:
         return self._properties
 
     @property
-    def units(self) -> Dict[str, Any]:
-        """Units associated with the simulation."""
-        if self._units is None:
-            self._generate_units()
-
-        return self._units
-
-    @property
     def global_quantities(self) -> DataFrame:
         """Global quantity time series data."""
         if self._global_quantities is None:
@@ -193,15 +183,6 @@ class Simulation:
                 else:
                     prop[key] = np.array(val)
         self._properties = prop
-
-    def _generate_units(self):
-        """Generate sim.units from snap.units."""
-        u = copy(self.snaps[0].units)
-        for snap in self.snaps:
-            for key, val in snap.units.items():
-                if u[key] != val:
-                    u[key] = '__inconsistent__'
-        self._units = u
 
     def _generate_global_quantities(self):
         """Generate global quantity time series objects."""
