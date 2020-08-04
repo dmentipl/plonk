@@ -157,18 +157,16 @@ def plot(
         extent = get_extent_from_percentile(snap=snap, x=x, y=y)
     if isinstance(extent[0], Quantity):
         extent = (
-            (extent[0] / snap.properties['unit_length']).to_base_units().magnitude,
-            (extent[1] / snap.properties['unit_length']).to_base_units().magnitude,
-            (extent[2] / snap.properties['unit_length']).to_base_units().magnitude,
-            (extent[3] / snap.properties['unit_length']).to_base_units().magnitude,
+            (extent[0] / snap.units['length']).to_base_units().magnitude,
+            (extent[1] / snap.units['length']).to_base_units().magnitude,
+            (extent[2] / snap.units['length']).to_base_units().magnitude,
+            (extent[3] / snap.units['length']).to_base_units().magnitude,
         )
     else:
         logger.warning('extent has no units, assuming code units')
     if interp == 'cross_section':
         if isinstance(z_slice, Quantity):
-            z_slice = (
-                (z_slice / snap.properties['unit_length']).to_base_units().magnitude
-            )
+            z_slice = (z_slice / snap.units['length']).to_base_units().magnitude
         else:
             logger.warning('z_slice has no units, assuming code units')
     if units is None:
@@ -493,7 +491,7 @@ def _convert_units(
     quantity_unit = snap.get_array_code_unit(quantity)
     if interp == 'projection':
         proj_unit = units['quantity'] * units['projection']
-        data = (interpolated_data * quantity_unit * snap.properties['unit_length']).to(
+        data = (interpolated_data * quantity_unit * snap.units['length']).to(
             proj_unit.units
         ).magnitude / proj_unit.magnitude
     elif interp == 'cross_section':
@@ -502,7 +500,7 @@ def _convert_units(
         ).magnitude / units['quantity'].magnitude
 
     new_extent = tuple(
-        (extent * snap.properties['unit_length']).to(units['extent'].units).magnitude
+        (extent * snap.units['length']).to(units['extent'].units).magnitude
         / units['extent'].magnitude
     )
 

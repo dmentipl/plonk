@@ -143,17 +143,13 @@ dictionary of metadata, i.e. non-array data, on the snapshot.
      'grain_density',
      'grain_size',
      'smoothing_length_factor',
-     'time',
-     'unit_length',
-     'unit_mass',
-     'unit_time']
+     'time']
 
-Units are available in the properties. We make use of the Python units library
-Pint.
+Units are available. We make use of the Python units library Pint.
 
 .. code-block:: pycon
 
-    >>> snap.properties['unit_length']
+    >>> snap.units['length']
     14960000000000.0 <Unit('centimeter')>
 
 Sink particles are handled separately from the fluid, e.g. gas or dust,

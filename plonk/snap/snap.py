@@ -898,7 +898,7 @@ class Snap:
             dim = _arr.units.dimensionality
             unit = 1.0
             for d in ['length', 'mass', 'time']:
-                unit *= self.properties[f'unit_{d}'] ** dim[f'[{d}]']
+                unit *= self.units[d] ** dim[f'[{d}]']
         return unit
 
     def _get_array_from_registry(self, name: str, sinks: bool = False):
