@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from bisect import bisect
 from functools import partial
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -131,9 +131,9 @@ class Profile:
     def __init__(
         self,
         snap: SnapLike,
-        ndim: Optional[int] = 2,
-        radius_min: Optional[Any] = None,
-        radius_max: Optional[Any] = None,
+        ndim: int = 2,
+        radius_min: Any = None,
+        radius_max: Any = None,
         n_bins: int = 100,
         aggregation: str = 'average',
         spacing: str = 'linear',
@@ -192,7 +192,7 @@ class Profile:
         raise ValueError('Unknown ndim: cannot calculate x array')
 
     def _set_range_code_units(
-        self, radius_min: Optional[float], radius_max: Optional[float]
+        self, radius_min: float, radius_max: float
     ) -> Tuple[float, float]:
         if radius_min is None:
             rmin = self._x.min()
@@ -205,16 +205,14 @@ class Profile:
 
         return rmin, rmax
 
-    def _set_range(
-        self, radius_min: Optional[Any], radius_max: Optional[Any]
-    ) -> Tuple[float, float]:
+    def _set_range(self, radius_min: Any, radius_max: Any) -> Tuple[float, float]:
         if radius_min is None:
             rmin = self._x.min()
         else:
             rmin = Quantity(radius_min)
             if not rmin.dimensionality == Quantity('cm').dimensionality:
                 raise ValueError(
-                    'must specificy radius_min units, e.g. radius_min="10 au"'
+                    'must specify radius_min units, e.g. radius_min="10 au"'
                 )
             rmin = rmin.to_base_units()
         if radius_max is None:
@@ -223,7 +221,7 @@ class Profile:
             rmax = Quantity(radius_max)
             if not rmax.dimensionality == Quantity('cm').dimensionality:
                 raise ValueError(
-                    'must specificy radius_min units, e.g. radius_max="100 au"'
+                    'must specify radius_min units, e.g. radius_max="100 au"'
                 )
             rmax = rmax.to_base_units()
 
@@ -378,8 +376,8 @@ class Profile:
         self,
         x: str,
         y: Union[str, List[str]],
-        x_unit: Optional[str] = None,
-        y_unit: Optional[Union[str, List[str]]] = None,
+        x_unit: str = None,
+        y_unit: Union[str, List[str]] = None,
         std_dev_shading: bool = False,
         ax: Any = None,
         **kwargs,
@@ -471,14 +469,19 @@ class Profile:
         return ax
 
     def to_dataframe(
-        self, columns: Union[Tuple[str, ...], List[str]] = None
+        self, columns: List[str] = None, units: List[str] = None
     ) -> DataFrame:
         """Convert Profile to DataFrame.
 
         Parameters
         ----------
         columns : optional
-            A list of columns to add to the data frame. Default is
+            A list of columns to add to the data frame. If None, add all
+            loaded columns. Default is None.
+        units : optional
+            A list of units corresponding to columns add to the data
+            frame. Units must be strings, and must be base units. I.e.
+            'cm' not '10 cm'. If None, use default, i.e. cgs. Default is
             None.
 
         Returns
@@ -488,8 +491,34 @@ class Profile:
         data = dict()
         if columns is None:
             columns = self.loaded_profiles()
-        for column in columns:
-            data[column] = self[column]
+        if units is None:
+            _units = list()
+            for column in columns:
+                try:
+                    _units.append(self[column].units)
+                except AttributeError:
+                    _units.append(plonk_units['dimensionless'])
+        else:
+            _units = list()
+            for unit in units:
+                u = plonk_units(unit)
+                if np.allclose(u.m, 1.0):
+                    _units.append(u.units)
+                else:
+                    raise ValueError(
+                        'Units must be strings, and must be base units. '
+                        'I.e. "cm" not "10 cm".'
+                    )
+        if len(_units) != len(columns):
+            raise ValueError('units and columns must have same length')
+        for column, unit in zip(columns, _units):
+            try:
+                name = column + f' [{unit:~}]'
+                array = self[column].to(unit).magnitude
+            except AttributeError:
+                name = column
+                array = self[column]
+            data[name] = array
         return pd.DataFrame(data)
 
     def particles_to_binned_quantity(self, aggregation: str, array: ndarray) -> ndarray:
@@ -629,9 +658,9 @@ def _generate_profiles(n_dust: int = 0):
 @is_documented_by(Profile)
 def load_profile(
     snap: SnapLike,
-    ndim: Optional[int] = 2,
-    radius_min: Optional[Any] = None,
-    radius_max: Optional[Any] = None,
+    ndim: int = 2,
+    radius_min: Any = None,
+    radius_max: Any = None,
     n_bins: int = 100,
     aggregation: str = 'average',
     spacing: str = 'linear',
