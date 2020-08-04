@@ -180,12 +180,12 @@ def extra_quantities(snap):
         dust = particles.array_dust['radial_velocity']
 
         @snap.add_array(rotatable=rotatable, dust=dust)
-        def radial_velocity_cylindrical(snap) -> ndarray:
+        def velocity_radial_cylindrical(snap) -> ndarray:
             """Cylindrical radial velocity."""
             return particles.radial_velocity(snap=snap, coordinates='cylindrical')
 
         @snap.add_array(rotatable=rotatable, dust=dust)
-        def radial_velocity_spherical(snap) -> ndarray:
+        def velocity_radial_spherical(snap) -> ndarray:
             """Spherical radial velocity."""
             return particles.radial_velocity(snap=snap, coordinates='spherical')
 
