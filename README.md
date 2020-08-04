@@ -52,13 +52,13 @@ You can load individual snapshots and access the particle arrays:
 ```python
 >>> snap = plonk.load_snap('disc_00030.h5')
 >>> snap['position']
-array([[ -24.69953214,   49.60113417,   -4.98059478],
-       [-108.99243136,   77.74663833,   12.89299546],
-       [ -51.22218782,  108.64454019,    1.56619644],
+array([[-3.69505001e+14,  7.42032967e+14, -7.45096980e+13],
+       [-1.63052677e+15,  1.16308971e+15,  1.92879212e+14],
+       [-7.66283930e+14,  1.62532232e+15,  2.34302988e+13],
        ...,
-       [  93.296599  ,  -77.66042087,    5.40835798],
-       [  63.75108128,   66.7446782 ,    3.30169363],
-       [   8.11639008,  139.45117413,    7.55340187]])
+       [ 1.39571712e+15, -1.16179990e+15,  8.09090354e+13],
+       [ 9.53716176e+14,  9.98500386e+14,  4.93933367e+13],
+       [ 1.21421196e+14,  2.08618956e+15,  1.12998892e+14]]) <Unit('centimeter')>
 ```
 
 The Snap objects contain the particle arrays, lazily loaded from the HDF5 file, as well as simulation metadata properties stored as a dictionary.
@@ -98,15 +98,9 @@ You can generate radial profiles on the snapshot. For example, to calculate the 
 array([ ... ])
 ```
 
-Physical units for array quantities and other properties are available.
+Physical units of array quantities and other properties allow for unit conversion:
 
 ```python
->>> snap['position'][0]
-array([-24.69953214,  49.60113417,  -4.98059478])
-
->>> snap.physical_units()
-<plonk.Snap "disc_00030.h5">
-
 >>> snap['position'][0]
 array([-3.69505001e+14,  7.42032967e+14, -7.45096980e+13]) <Unit('centimeter')>
 
