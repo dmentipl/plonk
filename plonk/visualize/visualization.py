@@ -36,7 +36,7 @@ def plot(
     interp: str = 'projection',
     z_slice: float = 0.0,
     extent: Extent = (-1, -1, -1, -1),
-    units: Dict[str, Any] = None,
+    units: Dict[str, str] = None,
     ax: Optional[Any] = None,
     colorbar_kwargs={},
     **kwargs,
@@ -81,7 +81,8 @@ def plot(
         99% of particles are contained within.
     units
         The units of the plot as a dictionary with keys 'quantity',
-        'extent', 'projection'. The values are Pint Unit objects.
+        'extent', 'projection'. The values are strings representing
+        units, e.g. 'g/cm^3'.
     ax
         A matplotlib Axes handle.
     colorbar_kwargs
@@ -127,36 +128,19 @@ def plot(
     --------
     Show an image of the surface density in xy-plane.
 
-    >>> plonk.visualize.plot(
-    ...     snap=snap,
-    ...     quantity='density',
-    ... )
+    >>> plonk.visualize.plot(snap=snap, quantity='density')
 
     Quiver plot of velocity in xy-plane.
 
-    >>> plonk.visualize.plot(
-    ...     snap=snap,
-    ...     quantity='velocity',
-    ... )
+    >>> plonk.visualize.plot(snap=snap, quantity='velocity')
 
     Set units for the plot.
 
     >>> units = {
-    ...     'quantity': plonk.units('g/cm^3'),
-    ...     'extent': plonk.units('au'),
-    ...     'projection': plonk.units('cm'),
+    ...     'quantity': 'g/cm^3', 'extent': 'au', 'projection': 'cm',
     ... }
 
-    >>> plonk.visualize.plot(
-    ...     snap=snap,
-    ...     quantity='density',
-    ...     units=units,
-    ... )
-
-    You can also use the utility function to generate the units
-    dictionary.
-
-    >>> units = plonk.visualize.str_to_units('g/cm^3', 'au', 'cm')
+    >>> plonk.visualize.plot(snap=snap, quantity='density', units=units)
     """
     logger.debug(f'Visualizing "{quantity}" on snap: {snap.file_path.name}')
     _kwargs = copy(kwargs)
@@ -178,11 +162,16 @@ def plot(
     if isinstance(z_slice, Quantity):
         z_slice = (z_slice / snap.units['length']).to_base_units().magnitude
     if units is None:
-        units = str_to_units(
-            str(snap[quantity].units),
-            str(snap['position'].units),
-            str(snap['position'].units),
-        )
+        _units = {
+            'quantity': 1 * snap[quantity].units,
+            'extent': 1 * snap['position'].units,
+            'projection': 1 * snap['position'].units,
+        }
+    else:
+        qunit = units.get('quantity', str(snap[quantity].units))
+        eunit = units.get('extent', str(snap['position'].units))
+        punit = units.get('projection', str(snap['position'].units))
+        _units = str_to_units(quantity=qunit, extent=eunit, projection=punit)
 
     interpolation_kwargs = ('number_of_pixels', 'density_weighted')
     __kwargs = {key: val for key, val in _kwargs.items() if key in interpolation_kwargs}
@@ -205,7 +194,7 @@ def plot(
         quantity=quantity,
         interpolated_data=interpolated_data,
         extent=extent,
-        units=units,
+        units=_units,
         interp=interp,
     )
 
@@ -236,15 +225,15 @@ def plot(
         cax = divider.append_axes(position=position, size=size, pad=pad)
         cbar = fig.colorbar(plot_object, cax, **_kwargs)
         if interp == 'projection':
-            _units = units['quantity'].units * units['projection'].units
+            qunit = _units['quantity'].units * _units['projection'].units
         elif interp == 'cross_section':
-            _units = units['quantity'].units
-        cbar.set_label(f'{quantity} [{_units:~P}]')
+            qunit = _units['quantity'].units
+        cbar.set_label(f'{quantity} [{qunit:~P}]')
 
     ax.set_xlim(*extent[:2])
     ax.set_ylim(*extent[2:])
-    ax.set_xlabel(f'{x} [{units["extent"].units:~P}]')
-    ax.set_ylabel(f'{y} [{units["extent"].units:~P}]')
+    ax.set_xlabel(f'{x} [{_units["extent"].units:~P}]')
+    ax.set_ylabel(f'{y} [{_units["extent"].units:~P}]')
 
     ratio = (extent[1] - extent[0]) / (extent[3] - extent[2])
     if not max(ratio, 1 / ratio) > 10.0:
