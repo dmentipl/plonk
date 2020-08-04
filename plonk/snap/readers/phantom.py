@@ -223,7 +223,13 @@ def _populate_sink_array_registry(name_map: Dict[str, str]):
 def _get_dataset(dataset: str, group: str) -> Callable:
     def func(snap: Snap) -> ndarray:
         array = snap._file_pointer[f'{group}/{dataset}'][()]
-        unit = snap._array_units[_particle_array_name_map[dataset]]
+        try:
+            unit = snap._array_units[_particle_array_name_map[dataset]]
+        except KeyError:
+            try:
+                unit = snap._array_units[_sink_array_name_map[dataset]]
+            except KeyError:
+                raise RuntimeError(f'Cannot get unit of {group}/{dataset}')
         return array * unit
 
     return func

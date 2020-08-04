@@ -14,6 +14,7 @@ units.define('jupiter_mass = 1.89813e30 g')
 
 # Array names with corresponding units as a string
 array_units_str = {
+    'accretion_radius': 'length',
     'alpha_viscosity_numerical': 'dimensionless',
     'density': 'density',
     'differential_velocity': 'velocity',
@@ -21,11 +22,14 @@ array_units_str = {
     'dust_to_gas_ratio': 'dimensionless',
     'gravitational_potential': 'energy',
     'internal_energy': 'specific_energy',
+    'last_injection_time': 'time',
     'magnetic_field': 'magnetic_field',
     'mass': 'mass',
+    'mass_accreted': 'mass',
     'position': 'length',
     'pressure': 'pressure',
     'smoothing_length': 'length',
+    'softening_radius': 'length',
     'sound_speed': 'velocity',
     'spin': 'angular_momentum',
     'stopping_time': 'time',
