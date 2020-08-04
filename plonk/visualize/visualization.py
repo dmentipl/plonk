@@ -311,6 +311,32 @@ def particle_plot(
     -------
     ax
         The matplotlib Axes object.
+
+    Examples
+    --------
+    Show the particles in xy-plane.
+
+    >>> plonk.visualize.particle_plot(snap=snap)
+
+    Plot density against x.
+
+    >>> plonk.visualize.particle_plot(snap=snap, x='x', y='density')
+
+    Color particles by density in xy-plane.
+
+    >>> plonk.visualize.particle_plot(
+    ...     snap=snap, x='x', y='y', c='density'
+    ... )
+
+    Set units for the plot.
+
+    >>> units = {
+    ...     'x': 'au', 'y': 'au', 'cunit': 'g/cm^3',
+    ... }
+
+    >>> plonk.visualize.particle_plot(
+    ...     snap=snap, x='x', y='y', c='density', units=units
+    ... )
     """
     if ax is None:
         fig, ax = plt.subplots()
