@@ -75,12 +75,13 @@ def plot(
         - 'cross_section' : 3d interpolation via cross-section in
             z-direction
     z_slice
-        The z-coordinate value of the cross-section slice. Default
-        is 0.0.
+        The z-coordinate value of the cross-section slice. Can be a
+        float or quantity with units of length. Default is 0.0.
     extent
-        The range in the x and y-coord as (xmin, xmax, ymin, ymax).
-        The default is to set the extent to a box of size such that
-        99% of particles are contained within.
+        The range in the x and y-coord as (xmin, xmax, ymin, ymax)
+        where xmin, etc. can be floats or quantities with units of
+        length. The default is to set the extent to a box of size such
+        that 99% of particles are contained within.
     units
         The units of the plot as a dictionary with keys 'quantity',
         'extent', 'projection'. The values are strings representing
@@ -165,6 +166,8 @@ def plot(
         logger.warning('extent has no units, assuming code units')
     if isinstance(z_slice, Quantity):
         z_slice = (z_slice / snap.units['length']).to_base_units().magnitude
+    else:
+        logger.warning('z_slice has no units, assuming code units')
     if units is None:
         _units = {
             'quantity': 1 * snap[quantity].units,
