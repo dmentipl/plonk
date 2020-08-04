@@ -51,4 +51,4 @@ def get_array_in_code_units(snap: SnapLike, name: str) -> ndarray:
     ndarray
         The array on the particles in code units.
     """
-    return (snap[name] / snap.get_array_unit(name)).magnitude
+    return (snap[name] / snap.get_array_code_unit(name)).magnitude

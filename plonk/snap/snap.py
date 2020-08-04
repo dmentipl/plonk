@@ -870,7 +870,7 @@ class Snap:
             return SubSnap(self, ind)
         raise ValueError('Family not available')
 
-    def get_array_unit(self, arr: str) -> Any:
+    def get_array_code_unit(self, arr: str) -> Any:
         """Get array code units.
 
         Parameters

@@ -484,7 +484,7 @@ def _convert_units(
     required_keys = {'extent', 'projection', 'quantity'}
     if not set(units) == required_keys:
         raise ValueError(f'units dictionary requires: {required_keys}')
-    quantity_unit = snap.get_array_unit(quantity)
+    quantity_unit = snap.get_array_code_unit(quantity)
     if interp == 'projection':
         proj_unit = units['quantity'] * units['projection']
         data = (interpolated_data * quantity_unit * snap.properties['unit_length']).to(
