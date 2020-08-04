@@ -16,7 +16,6 @@ from ..._units import units as plonk_units
 from ..snap import Snap
 
 igas, iboundary, istar, idarkmatter, ibulge = 1, 3, 4, 5, 6
-maxdusttypes = 100
 _bignumber = 1e29
 
 _particle_array_name_map = {
