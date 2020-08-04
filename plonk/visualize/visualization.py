@@ -234,10 +234,17 @@ def plot(
         if position in ('top', 'bottom'):
             _kwargs.update({'orientation': 'horizontal'})
         cax = divider.append_axes(position=position, size=size, pad=pad)
-        fig.colorbar(plot_object, cax, **_kwargs)
+        cbar = fig.colorbar(plot_object, cax, **_kwargs)
+        if interp == 'projection':
+            _units = units['quantity'].units * units['projection'].units
+        elif interp == 'cross_section':
+            _units = units['quantity'].units
+        cbar.set_label(f'{quantity} [{_units:~P}]')
 
     ax.set_xlim(*extent[:2])
     ax.set_ylim(*extent[2:])
+    ax.set_xlabel(f'{x} [{units["extent"].units:~P}]')
+    ax.set_ylabel(f'{y} [{units["extent"].units:~P}]')
 
     ratio = (extent[1] - extent[0]) / (extent[3] - extent[2])
     if not max(ratio, 1 / ratio) > 10.0:
