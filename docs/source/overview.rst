@@ -256,7 +256,7 @@ You can plot columns with the pandas plotting interface.
 
 .. code-block:: pycon
 
-    ev.plot('time', ['center_of_mass_x', 'center_of_mass_y', 'center_of_mass_z'])
+    >>> ev.plot('time', ['center_of_mass_x', 'center_of_mass_y', 'center_of_mass_z'])
 
 The previous code produces the following figure.
 
@@ -285,7 +285,7 @@ plot of column density, i.e. a projection plot.
 
 .. code-block:: pycon
 
-    >>> ax = plonk.plot(snap=snap, quantity='density')
+    >>> ax = snap.plot(quantity='density')
 
 .. figure:: _static/density.png
 
@@ -306,8 +306,7 @@ maxiumum. In addition, we set the extent, i.e. the x- and y-limits.
 .. code-block:: pycon
 
     >>> au = plonk.units('au')
-    >>> plonk.plot(
-    ...     snap=snap,
+    >>> snap.plot(
     ...     quantity='density',
     ...     extent=(20, 120, -50, 50) * au,
     ...     cmap='gist_heat',
@@ -366,13 +365,7 @@ Let's plot the gas and dust side-by-side.
     >>> fig, axs = plt.subplots(ncols=2, figsize=(14, 5))
 
     >>> for subsnap, ax in zip(subsnaps, axs):
-    ...     plonk.plot(
-    ...         snap=subsnap,
-    ...         quantity='density',
-    ...         extent=extent,
-    ...         cmap='gist_heat',
-    ...         ax=ax,
-    ...     )
+    ...     subsnap.plot(quantity='density', extent=extent, cmap='gist_heat', ax=ax)
 
 .. figure:: _static/dust-gas.png
 

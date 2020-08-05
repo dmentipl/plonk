@@ -33,12 +33,8 @@ Plot a density profile for multiple snapshots.
     for time, profile in zip(times, profiles):
         label = f'{time.m:.0f}'
         profile.plot(
-            'radius',
-            'surface_density',
-            x_unit='au',
-            label=label,
-            ax=ax
-    )
+            'radius', 'surface_density', x_unit='au', label=label, ax=ax
+        )
     ax.set_ylabel('Surface Density [g/cm${}^2$]')
     ax.legend(title='Time [yr]', loc='best')
 

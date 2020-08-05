@@ -68,7 +68,7 @@ The Snap objects contain the particle arrays, lazily loaded from the HDF5 file, 
 To visualize the column density on a snapshot:
 
 ```python
->>> plonk.plot(snap=snap, quantity='density')
+>>> snap.plot(quantity='density')
 ```
 
 For a more complicated example, here is the deviation from Keplerian velocity around a planet embedded in a protoplanetary disc.
