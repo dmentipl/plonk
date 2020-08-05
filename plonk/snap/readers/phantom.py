@@ -13,6 +13,7 @@ from numpy import ndarray
 from ..._logging import logger
 from ..._units import generate_units_array_dictionary, generate_units_dictionary
 from ..._units import units as plonk_units
+from ..extra import extra_quantities
 from ..snap import Snap
 
 igas, iboundary, istar, idarkmatter, ibulge = 1, 3, 4, 5, 6
@@ -106,6 +107,7 @@ def generate_snap_from_file(filename: Union[str, Path]) -> Snap:
         sink_registry = _populate_sink_array_registry(name_map=_sink_array_name_map)
         snap._sink_registry.update(sink_registry)
 
+    extra_quantities(snap)
     return snap
 
 

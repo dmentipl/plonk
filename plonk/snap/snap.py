@@ -209,7 +209,6 @@ class Snap:
         self._families = {key: None for key in self.particle_type}
         self.rotation = None
         self.translation = None
-        self._extra_quantities = False
         self._tree = None
 
     def close_file(self):
@@ -286,11 +285,6 @@ class Snap:
         Returns
         -------
         A tuple of names of available arrays.
-
-        Notes
-        -----
-        If an array is not available, it may be available after calling
-        the extra_quantities method.
         """
         if sinks:
             loaded = self.loaded_arrays(sinks)
@@ -337,11 +331,6 @@ class Snap:
         Returns
         -------
         A tuple of names of available arrays.
-
-        Notes
-        -----
-        If an array is not available, it may be available after calling
-        the extra_quantities method.
         """
         return self._available_arrays(sinks=False, all=all, aliases=aliases)
 
@@ -426,15 +415,6 @@ class Snap:
         if value is False:
             self._arrays = {}
         self._cache_arrays = value
-
-    def extra_quantities(self):
-        """Make extra quantities available."""
-        if self._extra_quantities:
-            logger.info('Extra quantities already available')
-        logger.debug(f'Loading extra quantities: {self.file_path.name}')
-        extra_quantities(snap=self)
-        self._extra_quantities = True
-        return self
 
     def unset(self, rotation: bool = False, translation: bool = False):
         """Unset.
@@ -1044,12 +1024,7 @@ class Snap:
             if inp_suffix == 'tot':
                 return self._get_array(inp_root).sum(axis=1)
 
-        if self._extra_quantities:
-            raise ValueError('Cannot determine item to return.')
-        raise ValueError(
-            'Cannot determine item to return. Extra quantities are available via\n'
-            'snap.extra_quantities().'
-        )
+        raise ValueError('Cannot determine item to return.')
 
     def _getitem(
         self, inp: Union[str, ndarray, int, slice], sinks: bool = False,
@@ -1075,12 +1050,7 @@ class Snap:
             if step is not None:
                 return SubSnap(self, np.arange(i1, i2, step))
             return SubSnap(self, np.arange(i1, i2))
-        if self._extra_quantities:
-            raise ValueError('Cannot determine item to return.')
-        raise ValueError(
-            'Cannot determine item to return. Extra quantities are available via\n'
-            'snap.extra_quantities().'
-        )
+        raise ValueError('Cannot determine item to return.')
 
     def __getitem__(
         self, inp: Union[str, ndarray, int, slice]
@@ -1172,7 +1142,6 @@ class SubSnap(Snap):
         self._file_pointer = self.base._file_pointer
         self.rotation = self.base.rotation
         self.translation = self.base.translation
-        self._extra_quantities = self.base._extra_quantities
 
     @property
     def indices(self):

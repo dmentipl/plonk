@@ -82,9 +82,6 @@ For a more complicated example, here is the deviation from Keplerian velocity ar
 Extra quantities not written to the snapshot file are available:
 
 ```python
->>> snap.extra_quantities()
-<plonk.Snap "disc_00030.h5">
-
 >>> snap['angular_momentum']
 array([ ... ])
 ```

@@ -312,12 +312,7 @@ class Profile:
                 'or\nprof["dust_mass_sum"].'
             )
         except ValueError:
-            if self.snap._extra_quantities:
-                logger.error('Profile unavailable.')
-            else:
-                logger.error(
-                    'Profile unavailable. Try calling extra_quantities method on Snap.'
-                )
+            logger.error('Profile unavailable.')
 
     def __getitem__(self, name: str) -> ndarray:
         """Return the profile of a given kind."""
