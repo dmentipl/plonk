@@ -458,7 +458,9 @@ class Snap:
 
         return self
 
-    def translate(self, translation: ndarray) -> Snap:
+    def translate(
+        self, translation: Union[Quantity, ndarray], unit: str = None
+    ) -> Snap:
         """Translate snapshot.
 
         I.e. shift the snapshot origin.
@@ -466,7 +468,11 @@ class Snap:
         Parameters
         ----------
         translation
-            The translation as a (3,) ndarray like (x, y, z).
+            The translation as an array like (x, y, z), optionally with
+            units. If no units are specified you must specify the units
+            parameter below.
+        unit
+            The length unit for the translation. E.g. 'au'.
 
         Returns
         -------
@@ -474,10 +480,21 @@ class Snap:
             The translated Snap. Note that the translation operation is
             in-place.
         """
-        translation = np.array(translation)
+        logger.debug(f'Translating snapshot: {self.file_path.name}')
+        if isinstance(translation, (list, tuple)):
+            translation = np.array(translation)
         if translation.shape != (3,):
             raise ValueError('translation must be like (x, y, z)')
-        logger.debug(f'Translating snapshot: {self.file_path.name}')
+        if isinstance(translation, Quantity):
+            if unit is not None:
+                logger.warning('units argument ignored as translation has units')
+        else:
+            if unit is None:
+                raise ValueError(
+                    'translation must have units, or you must specify units argument'
+                )
+            else:
+                translation *= plonk_units(unit)
         if 'position' in self.loaded_arrays():
             self._arrays['position'] += translation
         if 'position' in self.loaded_arrays(sinks=True):
