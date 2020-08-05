@@ -285,7 +285,7 @@ plot of column density, i.e. a projection plot.
 
 .. code-block:: pycon
 
-    >>> ax = plonk.visualize.plot(snap=snap, quantity='density')
+    >>> ax = plonk.plot(snap=snap, quantity='density')
 
 .. figure:: _static/density.png
 
@@ -306,7 +306,7 @@ maxiumum. In addition, we set the extent, i.e. the x- and y-limits.
 .. code-block:: pycon
 
     >>> au = plonk.units('au')
-    >>> plonk.visualize.plot(
+    >>> plonk.plot(
     ...     snap=snap,
     ...     quantity='density',
     ...     extent=(20, 120, -50, 50) * au,
@@ -366,7 +366,7 @@ Let's plot the gas and dust side-by-side.
     >>> fig, axs = plt.subplots(ncols=2, figsize=(14, 5))
 
     >>> for subsnap, ax in zip(subsnaps, axs):
-    ...     plonk.visualize.plot(
+    ...     plonk.plot(
     ...         snap=subsnap,
     ...         quantity='density',
     ...         extent=extent,

@@ -90,7 +90,7 @@ def animation(
     --------
     Make an animation of multiple snaps.
 
-    >>> plonk.visualize.animation(
+    >>> plonk.animation(
     ...     snaps=snaps,
     ...     quantity='density',
     ...     x='x',
@@ -392,7 +392,7 @@ def animation_particles(
     --------
     Make an animation of x vs density on the particles.
 
-    >>> plonk.visualize.animation(
+    >>> plonk.animation(
     ...     snaps=snaps,
     ...     x='x',
     ...     y='density',
@@ -402,7 +402,7 @@ def animation_particles(
     Make an animation of x vs density x vs velocity_x on the
     particles on the same axes, specifying the x- and y-plot limits.
 
-    >>> plonk.visualize.animation(
+    >>> plonk.animation(
     ...     snaps=snaps,
     ...     x='x',
     ...     y=['density', 'velocity_x'],

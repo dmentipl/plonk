@@ -131,11 +131,11 @@ def plot(
     --------
     Show an image of the surface density in xy-plane.
 
-    >>> plonk.visualize.plot(snap=snap, quantity='density')
+    >>> plonk.plot(snap=snap, quantity='density')
 
     Quiver plot of velocity in xy-plane.
 
-    >>> plonk.visualize.plot(snap=snap, quantity='velocity')
+    >>> plonk.plot(snap=snap, quantity='velocity')
 
     Set units for the plot.
 
@@ -143,7 +143,7 @@ def plot(
     ...     'quantity': 'g/cm^3', 'extent': 'au', 'projection': 'cm',
     ... }
 
-    >>> plonk.visualize.plot(snap=snap, quantity='density', units=units)
+    >>> plonk.plot(snap=snap, quantity='density', units=units)
     """
     logger.debug(f'Visualizing "{quantity}" on snap: {snap.file_path.name}')
     _kwargs = copy(kwargs)
@@ -323,15 +323,15 @@ def particle_plot(
     --------
     Show the particles in xy-plane.
 
-    >>> plonk.visualize.particle_plot(snap=snap)
+    >>> plonk.particle_plot(snap=snap)
 
     Plot density against x.
 
-    >>> plonk.visualize.particle_plot(snap=snap, x='x', y='density')
+    >>> plonk.particle_plot(snap=snap, x='x', y='density')
 
     Color particles by density in xy-plane.
 
-    >>> plonk.visualize.particle_plot(
+    >>> plonk.particle_plot(
     ...     snap=snap, x='x', y='y', c='density'
     ... )
 
@@ -341,7 +341,7 @@ def particle_plot(
     ...     'x': 'au', 'y': 'au', 'cunit': 'g/cm^3',
     ... }
 
-    >>> plonk.visualize.particle_plot(
+    >>> plonk.particle_plot(
     ...     snap=snap, x='x', y='y', c='density', units=units
     ... )
     """

@@ -235,7 +235,7 @@ Produce a projection image plot of density.
 
     >>> snap = plonk.load_snap('disc_00030.h5')
 
-    >>> plonk.visualize.plot(snap=snap, quantity='density')
+    >>> plonk.plot(snap=snap, quantity='density')
 
 .. image:: _static/density.png
 
@@ -249,7 +249,7 @@ Set plot extent, colormap, colorbar range, and axis units.
 
     >>> au = plonk.units('au')
 
-    >>> ax = plonk.visualize.plot(
+    >>> ax = plonk.plot(
     ...     snap=snap,
     ...     quantity='density',
     ...     extent=(20, 120, -50, 50) * au,
@@ -273,7 +273,7 @@ Produce a cross-section image plot of density.
 
     >>> snap = plonk.load_snap('disc_00030.h5')
 
-    >>> ax = plonk.visualize.plot(
+    >>> ax = plonk.plot(
     ...     snap=snap,
     ...     quantity='density',
     ...     x='x',
@@ -300,7 +300,7 @@ The different colours refer to different particle types.
 
     >>> snap = plonk.load_snap('disc_00030.h5')
 
-    >>> ax = plonk.visualize.particle_plot(
+    >>> ax = plonk.particle_plot(
     ...     snap=snap, x='z', y='h', alpha=0.1,
     ... )
 
@@ -314,7 +314,7 @@ Plot particles with color representing density.
 
     >>> snap = plonk.load_snap('disc_00030.h5')
 
-    >>> ax = plonk.visualize.particle_plot(
+    >>> ax = plonk.particle_plot(
     ...     snap=snap, x='x', y='z', c='density', units={'x': 'au', 'y': 'au'},
     ... )
     >>> ax.set_xlim(-50, 50)

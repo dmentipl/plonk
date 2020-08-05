@@ -22,7 +22,7 @@ Rotate a snapshot and plot column density.
     snap.rotate(rotation)
 
     # Plot
-    plonk.visualize.plot(
+    plonk.plot(
         snap=snap,
         quantity='density',
         cmap='gist_heat',

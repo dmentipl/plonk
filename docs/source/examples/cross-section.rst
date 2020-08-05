@@ -11,7 +11,7 @@ Plot cross section at z=0.
 
     snap = plonk.load_snap('disc_00030.h5')
 
-    ax = plonk.visualize.plot(
+    ax = plonk.plot(
         snap=snap,
         quantity='density',
         x='x',

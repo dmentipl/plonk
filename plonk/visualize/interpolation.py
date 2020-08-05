@@ -71,7 +71,7 @@ def interpolate(
     --------
     Interpolate density to grid.
 
-    >>> grid_data = plonk.visualize.interpolate(
+    >>> grid_data = plonk.interpolate(
     ...     snap=snap,
     ...     quantity='density',
     ...     interp='projection',

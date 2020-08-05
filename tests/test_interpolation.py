@@ -2,7 +2,7 @@
 
 import numpy as np
 
-import plonk
+from plonk.visualize.interpolation import scalar_interpolation, vector_interpolation
 
 from .stubdata.interpolation_arrays import (
     scalar_cross_section,
@@ -32,7 +32,7 @@ HFACT = 1.0
 
 def test_scalar_interpolation_projection():
     """Test projection interpolation."""
-    im = plonk.visualize.interpolation.scalar_interpolation(
+    im = scalar_interpolation(
         quantity=S_DATA,
         x_coordinate=XX,
         y_coordinate=YY,
@@ -49,7 +49,7 @@ def test_scalar_interpolation_projection():
 
 def test_scalar_interpolation_cross_section():
     """Test cross section interpolation."""
-    im = plonk.visualize.interpolation.scalar_interpolation(
+    im = scalar_interpolation(
         quantity=S_DATA,
         x_coordinate=XX,
         y_coordinate=YY,
@@ -67,7 +67,7 @@ def test_scalar_interpolation_cross_section():
 
 def test_vector_interpolation_projection():
     """Test projection interpolation."""
-    vec = plonk.visualize.interpolation.vector_interpolation(
+    vec = vector_interpolation(
         quantity_x=X_DATA,
         quantity_y=Y_DATA,
         x_coordinate=XX,
@@ -85,7 +85,7 @@ def test_vector_interpolation_projection():
 
 def test_vector_interpolation_cross_section():
     """Test cross section interpolation."""
-    vec = plonk.visualize.interpolation.vector_interpolation(
+    vec = vector_interpolation(
         quantity_x=X_DATA,
         quantity_y=Y_DATA,
         x_coordinate=XX,
