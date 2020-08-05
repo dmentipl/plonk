@@ -441,9 +441,11 @@ class Snap:
             rotation = Rotation.from_rotvec(rotation)
         for arr in self._vector_arrays:
             if arr in self.loaded_arrays():
-                self._arrays[arr] = rotation.apply(self._arrays[arr])
+                array_m, array_u = self._arrays[arr].magnitude, self._arrays[arr].units
+                self._arrays[arr] = rotation.apply(array_m) * array_u
             if arr in self.loaded_arrays(sinks=True):
-                self._sinks[arr] = rotation.apply(self._sinks[arr])
+                array_m, array_u = self._sinks[arr].magnitude, self._sinks[arr].units
+                self._sinks[arr] = rotation.apply(array_m) * array_u
         for arr in self._vector_component_arrays:
             if arr in self.loaded_arrays():
                 del self._arrays[arr]
@@ -924,7 +926,8 @@ class Snap:
         else:
             array = self._array_registry[name](self)
         if self.rotation is not None and name in self._vector_arrays:
-            array = self.rotation.apply(array)
+            array_m, array_u = array.magnitude, array.units
+            array = self.rotation.apply(array_m) * array_u
         if self.translation is not None and name == 'position':
             array += self.translation
         return array
