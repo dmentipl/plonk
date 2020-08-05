@@ -1087,6 +1087,7 @@ class SubSnap(Snap):
         # Attributes same as Snap
         self.data_source = self.base.data_source
         self.file_path = self.base.file_path
+        self.units = self.base.units
         self._properties = self.base._properties
         self._array_units = self.base._array_units
         self._array_registry = self.base._array_registry
