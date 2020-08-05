@@ -1,4 +1,4 @@
-"""Radial profiles.
+"""Profiles.
 
 Heavily inspired by pynbody (https://pynbody.github.io/).
 """
@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from bisect import bisect
 from functools import partial
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,7 +18,6 @@ from pandas import DataFrame
 from .._logging import logger
 from .._units import Quantity
 from .._units import units as plonk_units
-from ..snap.utils import gravitational_constant_in_code_units
 from ..utils.math import average
 from ..utils.utils import is_documented_by
 
@@ -29,12 +28,14 @@ _aggregations = ('average', 'mean', 'median', 'std', 'sum')
 
 
 class Profile:
-    """Radial profiles.
+    """Profiles.
 
-    A radial profile is a binning of particles in cylindrical or
-    spherical shells around the origin, i.e. (0, 0, 0). For cylindrical
-    profiles the cylindrical cells are perpendicular to the xy-plane,
-    i.e. the bins are averaged azimuthally and in the z-direction.
+    A profile is a binning of particles in Cartesian slices, or
+    cylindrical or spherical shells around the origin, i.e. (0, 0, 0).
+    For cylindrical profiles the cylindrical cells are perpendicular to
+    the xy-plane, i.e. the bins are averaged azimuthally and in the
+    z-direction. Cartesian profiles can be in the x-, y-, and
+    z-directions.
 
     Parameters
     ----------
@@ -45,12 +46,14 @@ class Profile:
         is cylindrical in the xy-plane. For ndim == 3, the radial
         binning is spherical. For ndim == 1, the radial binning is
         Cartesian along the x-axis. Default is 2.
-    radius_min : optional
-        The minimum radius for binning. Defaults to minimum on the
-        particles.
-    radius_max : optional
-        The maximum radius for binning. Defaults to the 99 percentile
-        distance.
+    cmin : optional
+        The minimum coordinate for binning. Can be a string, e.g.
+        '10 au', or a quantity with units, e.g. plonk.units['10 au'].
+        Defaults to minimum on the particles.
+    cmax : optional
+        The maximum coordinate for binning. Can be a string, e.g.
+        '10 au', or a quantity with units, e.g. plonk.units['10 au'].
+        Defaults to the 99 percentile distance.
     n_bins : optional
         The number of radial bins. Default is 100.
     aggregation : optional
@@ -62,7 +65,8 @@ class Profile:
         'linear'.
     coordinate : optional
         The coordinate ('x', 'y', or 'z') for Cartesian profiles only,
-        i.e. when ndim==1, ignored otherwise. Default is 'x'.
+        i.e. when ndim==1. Default is 'x'. For cylindrical and spherical
+        profiles the coordinate is 'radius'.
     ignore_accreted : optional
         Ignore particles accreted onto sinks. Default is True.
 
@@ -72,17 +76,10 @@ class Profile:
 
     >>> prof = plonk.load_profile(snap=snap)
     >>> prof = plonk.load_profile(snap=snap, n_bins=300)
-    >>> prof = plonk.load_profile(snap=snap, radius_min=1, radius_max=300)
-    >>> prof = plonk.load_profile(snap=snap, spacing='log')
-
-    If snap has physical units and setting 'radius_min' or 'radius_max'
-    must use physical quantities.
-
-    >>> radius_min = plonk.Quantity('1 au')
-    >>> radius_max = plonk.Quantity('300 au')
     >>> prof = plonk.load_profile(
-    ...     snap=snap, radius_min=radius_min, radius_max=radius_max,
+    ...     snap=snap, cmin='10 au', cmax='300 au'
     ... )
+    >>> prof = plonk.load_profile(snap=snap, spacing='log')
 
     To access a profile.
 
@@ -137,9 +134,9 @@ class Profile:
     def __init__(
         self,
         snap: SnapLike,
-        ndim: Optional[int] = 2,
-        radius_min: Optional[Any] = None,
-        radius_max: Optional[Any] = None,
+        ndim: int = 2,
+        cmin: Any = None,
+        cmax: Any = None,
         n_bins: int = 100,
         aggregation: str = 'average',
         spacing: str = 'linear',
@@ -158,26 +155,21 @@ class Profile:
         self._weights = self.snap['mass']
         self._mask = self._setup_particle_mask(ignore_accreted)
         self._x = self._calculate_x(coordinate)
-        self.range = self._set_range(radius_min, radius_max)
+        self.range = self._set_range(cmin, cmax)
         self.n_bins = n_bins
 
         self.bin_edges, self['size'] = self._setup_bins()
         self.bin_centers = 0.5 * (self.bin_edges[:-1] + self.bin_edges[1:])
-        if self.snap._physical_units:
-            self._particle_bin = np.digitize(
-                self._x.magnitude, self.bin_edges.magnitude
-            )
-        else:
-            self._particle_bin = np.digitize(self._x, self.bin_edges)
+        self._particle_bin = np.digitize(self._x.magnitude, self.bin_edges.magnitude)
         self.bin_indicies = self._set_particle_bin_indicies()
 
-        self._profiles['radius'] = self.bin_centers
-        if self.snap._physical_units:
-            self._profiles['number'] = np.histogram(
-                self._x.magnitude, self.bin_edges.magnitude
-            )[0]
+        if ndim == 1:
+            self._profiles[coordinate] = self.bin_centers
         else:
-            self._profiles['number'] = np.histogram(self._x, self.bin_edges)[0]
+            self._profiles['radius'] = self.bin_centers
+        self._profiles['number'] = np.histogram(
+            self._x.magnitude, self.bin_edges.magnitude
+        )[0]
 
         n_dust = len(self.snap.properties.get('grain_size', []))
         _generate_profiles(n_dust)
@@ -205,56 +197,38 @@ class Profile:
             return np.sqrt(pos[:, 0] ** 2 + pos[:, 1] ** 2 + pos[:, 2] ** 2)
         raise ValueError('Unknown ndim: cannot calculate x array')
 
-    def _set_range(
-        self, radius_min: Optional[Any], radius_max: Optional[Any]
-    ) -> Tuple[float, float]:
-        if self.snap._physical_units:
-            return self._set_range_physical_units(radius_min, radius_max)
-        return self._set_range_code_units(radius_min, radius_max)
-
-    def _set_range_code_units(
-        self, radius_min: Optional[float], radius_max: Optional[float]
-    ) -> Tuple[float, float]:
-        if radius_min is None:
+    def _set_range_code_units(self, cmin: float, cmax: float) -> Tuple[float, float]:
+        if cmin is None:
             rmin = self._x.min()
         else:
-            rmin = radius_min
-        if radius_max is None:
+            rmin = cmin
+        if cmax is None:
             rmax = np.percentile(self._x, 99, axis=0)
         else:
-            rmax = radius_max
+            rmax = cmax
 
         return rmin, rmax
 
-    def _set_range_physical_units(
-        self, radius_min: Optional[Any], radius_max: Optional[Any]
-    ) -> Tuple[float, float]:
-        if radius_min is None:
+    def _set_range(self, cmin: Any, cmax: Any) -> Tuple[float, float]:
+        if cmin is None:
             rmin = self._x.min()
         else:
-            rmin = Quantity(radius_min)
+            rmin = Quantity(cmin)
             if not rmin.dimensionality == Quantity('cm').dimensionality:
-                raise ValueError(
-                    'Snap has physical units: must use dimensional radius_min'
-                )
+                raise ValueError('must specify cmin units, e.g. cmin="10 au"')
             rmin = rmin.to_base_units()
-        if radius_max is None:
+        if cmax is None:
             rmax = np.percentile(self._x.magnitude, 99, axis=0) * self._x.units
         else:
-            rmax = Quantity(radius_max)
+            rmax = Quantity(cmax)
             if not rmax.dimensionality == Quantity('cm').dimensionality:
-                raise ValueError(
-                    'Snap has physical units: must use dimensional radius_max'
-                )
+                raise ValueError('must specify cmin units, e.g. cmax="100 au"')
             rmax = rmax.to_base_units()
 
         return rmin, rmax
 
     def _setup_bins(self) -> ndarray:
-        if self.snap._physical_units:
-            bin_edges = self._bin_edges_physical_units()
-        else:
-            bin_edges = self._bin_edges_code_units()
+        bin_edges = self._bin_edges()
         if self.ndim == 1:
             bin_sizes = bin_edges[1:] - bin_edges[:-1]
         elif self.ndim == 2:
@@ -263,7 +237,7 @@ class Profile:
             bin_sizes = 4 / 3 * np.pi * (bin_edges[1:] ** 3 - bin_edges[:-1] ** 3)
         return bin_edges, bin_sizes
 
-    def _bin_edges_physical_units(self):
+    def _bin_edges(self):
         if self.spacing == 'linear':
             bin_edges = (
                 np.linspace(
@@ -402,8 +376,8 @@ class Profile:
         self,
         x: str,
         y: Union[str, List[str]],
-        x_unit: Optional[str] = None,
-        y_unit: Optional[Union[str, List[str]]] = None,
+        x_unit: str = None,
+        y_unit: Union[str, List[str]] = None,
         std_dev_shading: bool = False,
         ax: Any = None,
         **kwargs,
@@ -418,11 +392,9 @@ class Profile:
             The y axis to plot. Can be string or multiple as a list of
             strings.
         x_unit : optional
-            The x axis quantity unit as a string. Only works if using
-            physical units.
+            The x axis quantity unit as a string.
         y_unit : optional
             The y axis quantity unit as a string or list of strings.
-            Only works if using physical units.
         std_dev_shading : optional
             Add shading for standard deviation of profile.
         ax : optional
@@ -438,29 +410,22 @@ class Profile:
         if isinstance(y, str):
             y = [y]
 
-        if not self.snap._physical_units:
-            if x_unit is not None or y_unit is not None:
-                raise ValueError('Cannot set unit if snap is not in physical units')
-        else:
-            if y_unit is not None:
-                if isinstance(y_unit, str):
-                    y_unit = [y_unit]
-                if len(y) != len(y_unit):
-                    raise ValueError('Length of y does not match length of y_unit')
+        if y_unit is not None:
+            if isinstance(y_unit, str):
+                y_unit = [y_unit]
+            if len(y) != len(y_unit):
+                raise ValueError('Length of y does not match length of y_unit')
 
         _x = self[x]
         if x_unit is not None:
-            if not self.snap._physical_units:
-                raise ValueError('Cannot set unit if snap is not in physical units')
             _x = _x.to(x_unit)
 
         if ax is None:
             _, ax = plt.subplots()
 
         xlabel = x.capitalize().replace('_', ' ')
-        if self.snap._physical_units:
-            xlabel = ' '.join([xlabel, f'[{_x.units:~P}]'])
-            _x = _x.magnitude
+        xlabel = ' '.join([xlabel, f'[{_x.units:~P}]'])
+        _x = _x.magnitude
         ax.set_xlabel(xlabel)
 
         for idx, yi in enumerate(y):
@@ -479,17 +444,16 @@ class Profile:
                 else:
                     _y_mean = _y
             label = yi.capitalize().replace('_', ' ')
-            if self.snap._physical_units:
-                if y_unit is not None:
-                    _y = _y.to(y_unit[idx])
-                    if std_dev_shading:
-                        _y_std = _y_std.to(y_unit[idx])
-                        _y_mean = _y_mean.to(y_unit[idx])
-                label = ' '.join([label, f'[{_y.units:~P}]'])
-                _y = _y.magnitude
+            if y_unit is not None:
+                _y = _y.to(y_unit[idx])
                 if std_dev_shading:
-                    _y_std = _y_std.magnitude
-                    _y_mean = _y_mean.magnitude
+                    _y_std = _y_std.to(y_unit[idx])
+                    _y_mean = _y_mean.to(y_unit[idx])
+            label = ' '.join([label, f'[{_y.units:~P}]'])
+            _y = _y.magnitude
+            if std_dev_shading:
+                _y_std = _y_std.magnitude
+                _y_mean = _y_mean.magnitude
             if kwargs.get('label') is None:
                 lines = ax.plot(_x, _y, label=label, **kwargs)
             else:
@@ -505,14 +469,19 @@ class Profile:
         return ax
 
     def to_dataframe(
-        self, columns: Union[Tuple[str, ...], List[str]] = None
+        self, columns: List[str] = None, units: List[str] = None
     ) -> DataFrame:
         """Convert Profile to DataFrame.
 
         Parameters
         ----------
         columns : optional
-            A list of columns to add to the data frame. Default is
+            A list of columns to add to the data frame. If None, add all
+            loaded columns. Default is None.
+        units : optional
+            A list of units corresponding to columns add to the data
+            frame. Units must be strings, and must be base units. I.e.
+            'cm' not '10 cm'. If None, use default, i.e. cgs. Default is
             None.
 
         Returns
@@ -522,8 +491,34 @@ class Profile:
         data = dict()
         if columns is None:
             columns = self.loaded_profiles()
-        for column in columns:
-            data[column] = self[column]
+        if units is None:
+            _units = list()
+            for column in columns:
+                try:
+                    _units.append(self[column].units)
+                except AttributeError:
+                    _units.append(plonk_units['dimensionless'])
+        else:
+            _units = list()
+            for unit in units:
+                u = plonk_units(unit)
+                if np.allclose(u.m, 1.0):
+                    _units.append(u.units)
+                else:
+                    raise ValueError(
+                        'Units must be strings, and must be base units. '
+                        'I.e. "cm" not "10 cm".'
+                    )
+        if len(_units) != len(columns):
+            raise ValueError('units and columns must have same length')
+        for column, unit in zip(columns, _units):
+            try:
+                name = column + f' [{unit:~}]'
+                array = self[column].to(unit).magnitude
+            except AttributeError:
+                name = column
+                array = self[column]
+            data[name] = array
         return pd.DataFrame(data)
 
     def particles_to_binned_quantity(self, aggregation: str, array: ndarray) -> ndarray:
@@ -561,13 +556,9 @@ class Profile:
             elif aggregation == 'sum':
                 val = np.sum(array[self._mask][bin_ind])
 
-            if self.snap._physical_units:
-                binned_quantity[idx] = val.magnitude
-            else:
-                binned_quantity[idx] = val
+            binned_quantity[idx] = val.magnitude
 
-        if self.snap._physical_units:
-            binned_quantity *= val.units
+        binned_quantity *= val.units
 
         return binned_quantity
 
@@ -604,7 +595,7 @@ def _generate_profiles(n_dust: int = 0):
     def angular_momentum_theta(prof) -> ndarray:
         """Angle between specific angular momentum and xy-plane."""
         angular_momentum_z = prof['angular_momentum_z']
-        angular_momentum_magnitude = prof['angular_momentum_magnitude']
+        angular_momentum_magnitude = prof['angular_momentum_mag']
 
         return np.arccos(angular_momentum_z / angular_momentum_magnitude)
 
@@ -618,10 +609,7 @@ def _generate_profiles(n_dust: int = 0):
     @Profile.profile_property
     def toomre_Q(prof) -> ndarray:
         """Toomre Q parameter."""
-        if not prof.snap._physical_units:
-            G = gravitational_constant_in_code_units(prof.snap)
-        else:
-            G = (1 * plonk_units.newtonian_constant_of_gravitation).to_base_units()
+        G = (1 * plonk_units.newtonian_constant_of_gravitation).to_base_units()
         return (
             prof['sound_speed']
             * prof['keplerian_frequency']
@@ -670,9 +658,9 @@ def _generate_profiles(n_dust: int = 0):
 @is_documented_by(Profile)
 def load_profile(
     snap: SnapLike,
-    ndim: Optional[int] = 2,
-    radius_min: Optional[Any] = None,
-    radius_max: Optional[Any] = None,
+    ndim: int = 2,
+    cmin: Any = None,
+    cmax: Any = None,
     n_bins: int = 100,
     aggregation: str = 'average',
     spacing: str = 'linear',
@@ -683,8 +671,8 @@ def load_profile(
     return Profile(
         snap=snap,
         ndim=ndim,
-        radius_min=radius_min,
-        radius_max=radius_max,
+        cmin=cmin,
+        cmax=cmax,
         n_bins=n_bins,
         aggregation=aggregation,
         spacing=spacing,

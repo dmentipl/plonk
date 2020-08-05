@@ -231,7 +231,7 @@ def animation_profiles(
     save_kwargs: Dict[str, Any] = {},
     **kwargs,
 ):
-    """Generate an animation of a radial profile.
+    """Generate an animation of a profile.
 
     Parameters
     ----------

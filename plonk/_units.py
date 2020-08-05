@@ -12,6 +12,53 @@ units.define('earth_mass = 5.979e27 g')
 units.define('earth_radius = 6.371315e8 cm')
 units.define('jupiter_mass = 1.89813e30 g')
 
+# Array names with corresponding units as a string
+array_units_str = {
+    'accretion_radius': 'length',
+    'alpha_viscosity_numerical': 'dimensionless',
+    'density': 'density',
+    'differential_velocity': 'velocity',
+    'dust_fraction': 'dimensionless',
+    'dust_to_gas_ratio': 'dimensionless',
+    'gravitational_potential': 'energy',
+    'internal_energy': 'specific_energy',
+    'last_injection_time': 'time',
+    'magnetic_field': 'magnetic_field',
+    'mass': 'mass',
+    'mass_accreted': 'mass',
+    'position': 'length',
+    'pressure': 'pressure',
+    'smoothing_length': 'length',
+    'softening_radius': 'length',
+    'sound_speed': 'velocity',
+    'spin': 'angular_momentum',
+    'stopping_time': 'time',
+    'sub_type': 'dimensionless',
+    'timestep': 'time',
+    'type': 'dimensionless',
+    'velocity': 'velocity',
+    'velocity_divergence': 'frequency',
+}
+
+
+def generate_units_array_dictionary(units_dictionary):
+    """Generate units array dictionary.
+
+    Parameters
+    ----------
+    units_dictionary
+        TODO: See generate_units_dictionary.
+
+    Returns
+    -------
+    units
+        A dictionary of units as Pint quantities.
+    """
+    _units = dict()
+    for arr, unit in array_units_str.items():
+        _units[arr] = units_dictionary[unit]
+    return _units
+
 
 def generate_units_dictionary(length, mass, time, magnetic_field):
     """Generate units dictionary.
@@ -32,7 +79,7 @@ def generate_units_dictionary(length, mass, time, magnetic_field):
     units
         A dictionary of units as Pint quantities.
     """
-    _units = {}
+    _units = dict()
 
     _units['dimensionless'] = length / length
     _units['length'] = length

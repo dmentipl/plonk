@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Optional, Tuple
 import numpy as np
 from numpy import ndarray
 
-from .._units import Quantity
+from ..snap.utils import get_array_in_code_units
 from .splash import interpolate_cross_section, interpolate_projection
 
 if TYPE_CHECKING:
@@ -361,7 +361,7 @@ def _get_arrays_from_str(*, snap, quantity, x, y):
     quantity_str, x_str, y_str = quantity, x, y
     z_str = coords.difference((x_str, y_str)).pop()
 
-    quantity = get_array_in_code_units(snap, quantity)
+    quantity = get_array_in_code_units(snap, quantity_str)
     x = get_array_in_code_units(snap, x_str)
     y = get_array_in_code_units(snap, y_str)
     z = get_array_in_code_units(snap, z_str)
@@ -370,8 +370,8 @@ def _get_arrays_from_str(*, snap, quantity, x, y):
         raise ValueError('Cannot interpret quantity with ndim > 2')
     if quantity.ndim == 2:
         try:
-            quantity_x = snap[quantity_str + '_' + x_str]
-            quantity_y = snap[quantity_str + '_' + y_str]
+            quantity_x = get_array_in_code_units(snap, quantity_str + '_' + x_str)
+            quantity_y = get_array_in_code_units(snap, quantity_str + '_' + y_str)
             quantity = np.stack([quantity_x, quantity_y]).T
         except ValueError:
             raise ValueError(
@@ -381,24 +381,3 @@ def _get_arrays_from_str(*, snap, quantity, x, y):
             )
 
     return quantity, x, y, z
-
-
-def get_array_in_code_units(snap: SnapLike, name: str) -> ndarray:
-    """Get array in code units.
-
-    Parameters
-    ----------
-    snap
-        The Snap or SubSnap.
-    name
-        The array name.
-
-    Returns
-    -------
-    ndarray
-        The array on the particles in code units.
-    """
-    arr = snap[name]
-    if isinstance(arr, Quantity):
-        return (arr / snap.get_array_unit(name)).magnitude
-    return arr

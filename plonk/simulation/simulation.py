@@ -45,9 +45,8 @@ class Simulation:
 
     >>> sim.snaps
 
-    Accessing the units and properties.
+    Accessing the properties.
 
-    >>> sim.units
     >>> sim.properties
 
     Accessing the global quantity and sink time series data.

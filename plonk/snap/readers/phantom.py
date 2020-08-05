@@ -11,12 +11,11 @@ import numpy as np
 from numpy import ndarray
 
 from ..._logging import logger
-from ..._units import generate_units_dictionary
+from ..._units import generate_units_array_dictionary, generate_units_dictionary
 from ..._units import units as plonk_units
 from ..snap import Snap
 
 igas, iboundary, istar, idarkmatter, ibulge = 1, 3, 4, 5, 6
-maxdusttypes = 100
 _bignumber = 1e29
 
 _particle_array_name_map = {
@@ -86,7 +85,11 @@ def generate_snap_from_file(filename: Union[str, Path]) -> Snap:
     snap._file_pointer = file_handle
 
     header = {key: val[()] for key, val in file_handle['header'].items()}
-    snap.properties, snap.units = _header_to_properties(header)
+    snap._properties, units = _header_to_properties(header)
+    snap._array_units = generate_units_array_dictionary(units)
+    snap.units = {
+        key: units[key] for key in ['length', 'time', 'mass', 'magnetic_field']
+    }
 
     arrays = list(file_handle['particles'])
     ndustsmall = header['ndustsmall']
@@ -119,20 +122,21 @@ def _header_to_properties(header: dict):
     units = generate_units_dictionary(length, mass, time, magnetic_field)
 
     prop = dict()
+
     prop['time'] = header['time'] * units['time']
     prop['smoothing_length_factor'] = header['hfact']
 
-    prop['adiabatic_index'] = header['gamma']
-    prop['polytropic_constant'] = 2 / 3 * header['RK2']
-
+    gamma = header['gamma']
     ieos = header['ieos']
     if ieos == 1:
         prop['equation_of_state'] = 'isothermal'
+        prop['adiabatic_index'] = gamma
     elif ieos == 2:
         prop['equation_of_state'] = 'adiabatic'
+        prop['adiabatic_index'] = gamma
     elif ieos == 3:
         prop['equation_of_state'] = 'locally isothermal disc'
-        prop['sound_speed_index'] = header['qfacdisc']
+        prop['adiabatic_index'] = gamma
 
     ndustsmall = header['ndustsmall']
     ndustlarge = header['ndustlarge']
@@ -217,7 +221,15 @@ def _populate_sink_array_registry(name_map: Dict[str, str]):
 
 def _get_dataset(dataset: str, group: str) -> Callable:
     def func(snap: Snap) -> ndarray:
-        return snap._file_pointer[f'{group}/{dataset}'][()]
+        array = snap._file_pointer[f'{group}/{dataset}'][()]
+        try:
+            unit = snap._array_units[_particle_array_name_map[dataset]]
+        except KeyError:
+            try:
+                unit = snap._array_units[_sink_array_name_map[dataset]]
+            except KeyError:
+                raise RuntimeError(f'Cannot get unit of {group}/{dataset}')
+        return array * unit
 
     return func
 
@@ -231,21 +243,21 @@ def _particle_type(snap: Snap) -> ndarray:
     # Star        |                                     4 | 4
     # Dark matter |                                     5 | 5
     # Bulge       |                                     6 | 6
-    idust = _get_dataset('idust', 'header')(snap)
-    ndustlarge = _get_dataset('ndustlarge', 'header')(snap)
+    idust = snap._file_pointer['header/idust'][()]
+    ndustlarge = snap._file_pointer['header/ndustlarge'][()]
     particle_type = np.abs(_get_dataset('itype', 'particles')(snap))
     particle_type[
         (particle_type >= idust) & (particle_type < idust + ndustlarge)
     ] = snap.particle_type['dust']
     try:
-        idustbound = _get_dataset('idustbound', 'header')(snap)
+        idustbound = snap._file_pointer['header/idustbound'][()]
         particle_type[
             (particle_type >= idustbound) & (particle_type < idustbound + ndustlarge)
         ] = snap.particle_type['boundary']
     except KeyError:
         if np.any(particle_type >= idust + ndustlarge):
             logger.error('Cannot determine dust boundary particles')
-    return particle_type
+    return np.array(particle_type.magnitude, dtype=int) * plonk_units('dimensionless')
 
 
 def _sub_type(snap: Snap) -> ndarray:
@@ -267,12 +279,12 @@ def _sub_type(snap: Snap) -> ndarray:
         | (particle_type == ibulge)
     ] = 0
     sub_type[particle_type == iboundary] = 0
-    idust = _get_dataset('idust', 'header')(snap)
-    ndustlarge = _get_dataset('ndustlarge', 'header')(snap)
+    idust = snap._file_pointer['header/idust'][()]
+    ndustlarge = snap._file_pointer['header/ndustlarge'][()]
     for idx in range(idust, idust + ndustlarge):
         sub_type[particle_type == idx] = idx - idust + 1
     try:
-        idustbound = _get_dataset('idustbound', 'header')(snap)
+        idustbound = snap._file_pointer['header/idustbound'][()]
         for idx in range(idustbound, idustbound + ndustlarge):
             sub_type[particle_type == idx] = idx - idustbound + 1
     except KeyError:
@@ -282,25 +294,31 @@ def _sub_type(snap: Snap) -> ndarray:
 
 
 def _mass(snap: Snap) -> ndarray:
-    massoftype = _get_dataset('massoftype', 'header')(snap)
-    particle_type = np.abs(_get_dataset('itype', 'particles')(snap))
-    return massoftype[particle_type - 1]
+    massoftype = snap._file_pointer['header/massoftype'][()]
+    particle_type = np.array(
+        np.abs(_get_dataset('itype', 'particles')(snap)).magnitude, dtype=int
+    )
+    return massoftype[particle_type - 1] * snap._array_units['mass']
 
 
 def _density(snap: Snap) -> ndarray:
-    m = _mass(snap)
-    h = _get_dataset('h', 'particles')(snap)
+    m = (_mass(snap) / snap._array_units['mass']).magnitude
+    h = (
+        _get_dataset('h', 'particles')(snap) / snap._array_units['smoothing_length']
+    ).magnitude
     hfact = snap.properties['smoothing_length_factor']
-    return m * (hfact / np.abs(h)) ** 3
+    rho = m * (hfact / np.abs(h)) ** 3
+    return rho * snap._array_units['density']
 
 
 def _pressure(snap: Snap) -> ndarray:
-    ieos = _get_dataset('ieos', 'header')(snap)
-    K = snap.properties['polytropic_constant']
+    ieos = snap._file_pointer['header/ieos'][()]
+    K = 2 / 3 * snap._file_pointer['header/RK2'][()]
     gamma = snap.properties['adiabatic_index']
     rho = _density(snap)
     if ieos == 1:
         # Globally isothermal
+        K = K * snap.units['length'] ** 2 * snap.units['time'] ** (-2)
         return K * rho
     if ieos == 2:
         # Adiabatic
@@ -311,18 +329,26 @@ def _pressure(snap: Snap) -> ndarray:
             else:
                 return 2 / 3 * energy * rho
         except KeyError:
+            K = (
+                K
+                * snap.units['length'] ** (1 - gamma)
+                * snap.units['mass'] ** (-1 + 3 * gamma)
+                * snap.units['time'] ** (-2)
+            )
             return K * rho ** (gamma - 1)
     if ieos == 3:
         # Vertically isothermal (for accretion disc)
-        q = snap.properties['sound_speed_index']
+        K = K * snap.units['length'] ** 2 * snap.units['time'] ** (-2)
+        q = snap._file_pointer['header/qfacdisc'][()]
         pos = _get_dataset('xyz', 'particles')(snap)
         r_squared = pos[:, 0] ** 2 + pos[:, 1] ** 2 + pos[:, 2] ** 2
+        r_squared = (r_squared / snap._array_units['position'] ** 2).magnitude
         return K * rho * r_squared ** (-q)
     raise ValueError('Unknown equation of state')
 
 
 def _sound_speed(snap: Snap) -> ndarray:
-    ieos = _get_dataset('ieos', 'header')(snap)
+    ieos = snap._file_pointer['header/ieos'][()]
     gamma = snap.properties['adiabatic_index']
     rho = _density(snap)
     P = _pressure(snap)
@@ -335,7 +361,7 @@ def _sound_speed(snap: Snap) -> ndarray:
 
 def _stopping_time(snap: Snap) -> ndarray:
     stopping_time = _get_dataset('tstop', 'particles')(snap)
-    stopping_time[stopping_time == _bignumber] = np.inf
+    stopping_time[stopping_time == _bignumber] = np.inf * snap.units['time']
     return stopping_time
 
 

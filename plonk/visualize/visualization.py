@@ -6,11 +6,13 @@ from copy import copy
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
 import matplotlib.pyplot as plt
+import numpy as np
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ndarray
 
 from .._logging import logger
 from .._units import Quantity
+from .._units import units as plonk_units
 from . import plots
 from .functions import get_extent_from_percentile
 from .interpolation import Extent, interpolate
@@ -36,7 +38,7 @@ def plot(
     interp: str = 'projection',
     z_slice: float = 0.0,
     extent: Extent = (-1, -1, -1, -1),
-    units: Dict[str, Any] = None,
+    units: Dict[str, str] = None,
     ax: Optional[Any] = None,
     colorbar_kwargs={},
     **kwargs,
@@ -73,15 +75,17 @@ def plot(
         - 'cross_section' : 3d interpolation via cross-section in
             z-direction
     z_slice
-        The z-coordinate value of the cross-section slice. Default
-        is 0.0.
+        The z-coordinate value of the cross-section slice. Can be a
+        float or quantity with units of length. Default is 0.0.
     extent
-        The range in the x and y-coord as (xmin, xmax, ymin, ymax).
-        The default is to set the extent to a box of size such that
-        99% of particles are contained within.
+        The range in the x and y-coord as (xmin, xmax, ymin, ymax)
+        where xmin, etc. can be floats or quantities with units of
+        length. The default is to set the extent to a box of size such
+        that 99% of particles are contained within.
     units
         The units of the plot as a dictionary with keys 'quantity',
-        'extent', 'projection'. The values are Pint Unit objects.
+        'extent', 'projection'. The values are strings representing
+        units, e.g. 'g/cm^3'.
     ax
         A matplotlib Axes handle.
     colorbar_kwargs
@@ -127,36 +131,19 @@ def plot(
     --------
     Show an image of the surface density in xy-plane.
 
-    >>> plonk.visualize.plot(
-    ...     snap=snap,
-    ...     quantity='density',
-    ... )
+    >>> plonk.visualize.plot(snap=snap, quantity='density')
 
     Quiver plot of velocity in xy-plane.
 
-    >>> plonk.visualize.plot(
-    ...     snap=snap,
-    ...     quantity='velocity',
-    ... )
+    >>> plonk.visualize.plot(snap=snap, quantity='velocity')
 
     Set units for the plot.
 
     >>> units = {
-    ...     'quantity': plonk.units('g/cm^3'),
-    ...     'extent': plonk.units('au'),
-    ...     'projection': plonk.units('cm'),
+    ...     'quantity': 'g/cm^3', 'extent': 'au', 'projection': 'cm',
     ... }
 
-    >>> plonk.visualize.plot(
-    ...     snap=snap,
-    ...     quantity='density',
-    ...     units=units,
-    ... )
-
-    You can also use the utility function to generate the units
-    dictionary.
-
-    >>> units = plonk.visualize.str_to_units('g/cm^3', 'au', 'cm')
+    >>> plonk.visualize.plot(snap=snap, quantity='density', units=units)
     """
     logger.debug(f'Visualizing "{quantity}" on snap: {snap.file_path.name}')
     _kwargs = copy(kwargs)
@@ -175,13 +162,37 @@ def plot(
             (extent[2] / snap.units['length']).to_base_units().magnitude,
             (extent[3] / snap.units['length']).to_base_units().magnitude,
         )
-    if isinstance(z_slice, Quantity):
-        z_slice = (z_slice / snap.units['length']).to_base_units().magnitude
+    else:
+        logger.warning('extent has no units, assuming code units')
+    if interp == 'cross_section':
+        if isinstance(z_slice, Quantity):
+            z_slice = (z_slice / snap.units['length']).to_base_units().magnitude
+        else:
+            logger.warning('z_slice has no units, assuming code units')
+    if units is None:
+        _units = {
+            'quantity': 1 * snap[quantity].units,  # type: ignore
+            'extent': 1 * snap['position'].units,  # type: ignore
+            'projection': 1 * snap['position'].units,  # type: ignore
+        }
+    else:
+        qunit = 1 * plonk_units(
+            units.get('quantity', str(snap[quantity].units))  # type: ignore
+        )
+        eunit = 1 * plonk_units(
+            units.get('extent', str(snap['position'].units))  # type: ignore
+        )
+        punit = 1 * plonk_units(
+            units.get('projection', str(snap['position'].units))  # type: ignore
+        )
+        _units = {'quantity': qunit, 'extent': eunit, 'projection': punit}
 
     interpolation_kwargs = ('number_of_pixels', 'density_weighted')
     __kwargs = {key: val for key, val in _kwargs.items() if key in interpolation_kwargs}
     for key in __kwargs:
         _kwargs.pop(key)
+
+    # Interpolate in code units
     interpolated_data = interpolate(
         snap=snap,
         quantity=quantity,
@@ -192,15 +203,15 @@ def plot(
         extent=extent,
         **__kwargs,
     )
-    if units is not None:
-        interpolated_data, extent = _convert_units(
-            snap=snap,
-            quantity=quantity,
-            interpolated_data=interpolated_data,
-            extent=extent,
-            units=units,
-            interp=interp,
-        )
+    # Convert back to physical units
+    interpolated_data, extent = _convert_units(
+        snap=snap,
+        quantity=quantity,
+        interpolated_data=interpolated_data,
+        extent=extent,
+        units=_units,
+        interp=interp,
+    )
 
     if kind is None:
         if interpolated_data.ndim == 2:
@@ -227,10 +238,23 @@ def plot(
         if position in ('top', 'bottom'):
             _kwargs.update({'orientation': 'horizontal'})
         cax = divider.append_axes(position=position, size=size, pad=pad)
-        fig.colorbar(plot_object, cax, **_kwargs)
+        cbar = fig.colorbar(plot_object, cax, **_kwargs)
+        if interp == 'projection':
+            qunit = _units['quantity'] * _units['projection']
+        elif interp == 'cross_section':
+            qunit = _units['quantity']
+        if np.allclose(qunit.magnitude, 1.0):
+            qunit = qunit.units
+        cbar.set_label(f'{quantity} [{qunit:~P}]')
 
     ax.set_xlim(*extent[:2])
     ax.set_ylim(*extent[2:])
+
+    eunit = _units['extent']
+    if np.allclose(eunit.magnitude, 1.0):
+        eunit = eunit.units
+    ax.set_xlabel(f'{x} [{eunit:~P}]')
+    ax.set_ylabel(f'{y} [{eunit:~P}]')
 
     ratio = (extent[1] - extent[0]) / (extent[3] - extent[2])
     if not max(ratio, 1 / ratio) > 10.0:
@@ -246,9 +270,7 @@ def particle_plot(
     y: str = 'y',
     c: Optional[str] = None,
     s: Optional[str] = None,
-    xunit: Any = None,
-    yunit: Any = None,
-    cunit: Any = None,
+    units: Dict[str, str] = None,
     xscale: str = None,
     yscale: str = None,
     ax: Optional[Any] = None,
@@ -276,12 +298,10 @@ def particle_plot(
     s
         The quantity to set the particle size. Must be a string to
         pass to Snap.
-    xunit
-        The units of the x-coordinate.
-    yunit
-        The units of the y-coordinate.
-    cunit
-        The units of the color.
+    units
+        The units of the plot as a dictionary with keys 'x', 'y', 'c',
+        and 's'. The values are strings representing units, e.g.
+        'g/cm^3'.
     xscale
         The xscale to pass to the matplotlib Axes method set_xscale.
     yscale
@@ -298,6 +318,32 @@ def particle_plot(
     -------
     ax
         The matplotlib Axes object.
+
+    Examples
+    --------
+    Show the particles in xy-plane.
+
+    >>> plonk.visualize.particle_plot(snap=snap)
+
+    Plot density against x.
+
+    >>> plonk.visualize.particle_plot(snap=snap, x='x', y='density')
+
+    Color particles by density in xy-plane.
+
+    >>> plonk.visualize.particle_plot(
+    ...     snap=snap, x='x', y='y', c='density'
+    ... )
+
+    Set units for the plot.
+
+    >>> units = {
+    ...     'x': 'au', 'y': 'au', 'cunit': 'g/cm^3',
+    ... }
+
+    >>> plonk.visualize.particle_plot(
+    ...     snap=snap, x='x', y='y', c='density', units=units
+    ... )
     """
     if ax is None:
         fig, ax = plt.subplots()
@@ -309,9 +355,7 @@ def particle_plot(
         'y': y,
         'c': c,
         's': s,
-        'xunit': xunit,
-        'yunit': yunit,
-        'cunit': cunit,
+        'units': units,
         'xscale': xscale,
         'yscale': yscale,
         'fig': fig,
@@ -335,9 +379,7 @@ def _particle_plot(
     y='y',
     c=None,
     s=None,
-    xunit=None,
-    yunit=None,
-    cunit=None,
+    units=None,
     xscale=None,
     yscale=None,
     fig,
@@ -352,21 +394,37 @@ def _particle_plot(
     _c: ndarray = snap[c] if c is not None else None
     _s: ndarray = snap[s] if s is not None else None
 
-    if snap._physical_units:
-        if xunit is not None:
-            _x = _x.to(xunit).magnitude
-        else:
-            _x = _x.magnitude
-        if yunit is not None:
-            _y = _y.to(yunit).magnitude
-        else:
-            _y = _y.magnitude
-        if cunit is not None:
-            _c = _c.to(cunit).magnitude
-        else:
-            _c = _c.magnitude
+    if units is None:
+        _units = {
+            'x': 1 * snap[x].units,
+            'y': 1 * snap[y].units,
+        }
+        if c is not None:
+            _units['c'] = 1 * snap[c].units
+        if s is not None:
+            _units['s'] = 1 * snap[s].units
+    else:
+        xunit = units.get('x', str(snap[x].units))
+        yunit = units.get('y', str(snap[y].units))
+        _units = {
+            'x': 1 * plonk_units(xunit),
+            'y': 1 * plonk_units(yunit),
+        }
+        if c is not None:
+            cunit = units.get('c', str(snap[c].units))
+            _units['c'] = 1 * plonk_units(cunit)
+        if s is not None:
+            sunit = units.get('s', str(snap[s].units))
+            _units['s'] = 1 * plonk_units(sunit)
 
-    h: ndarray = snap['smoothing_length']
+    _x = _x.to(_units['x']).magnitude
+    _y = _y.to(_units['y']).magnitude
+    if _c is not None:
+        _c = _c.to(_units['c']).magnitude
+    if _s is not None:
+        _s = _s.to(_units['s']).magnitude
+
+    h: ndarray = snap['smoothing_length'].m
     mask = h > 0
 
     _x = _x[mask]
@@ -376,8 +434,7 @@ def _particle_plot(
     if _s is not None:
         _s = _s[mask]
         _s = 100 * _s / _s.max()
-        if snap._physical_units:
-            _s = _s.magnitude
+        _s = _s.magnitude
 
     show_colorbar = _kwargs.pop('show_colorbar', _c is not None)
 
@@ -395,7 +452,11 @@ def _particle_plot(
             if position in ('top', 'bottom'):
                 _kwargs.update({'orientation': 'horizontal'})
             cax = divider.append_axes(position=position, size=size, pad=pad)
-            fig.colorbar(plot_object, cax, **_kwargs)
+            cbar = fig.colorbar(plot_object, cax, **_kwargs)
+            cunit = _units['c']
+            if np.allclose(cunit.magnitude, 1.0):
+                cunit = cunit.units
+            cbar.set_label(f'{c} [{cunit:~P}]')
 
     if xscale is not None:
         ax.set_xscale(xscale)
@@ -405,6 +466,14 @@ def _particle_plot(
     ratio = (_x.max() - _x.min()) / (_y.max() - _y.min())
     if not max(ratio, 1 / ratio) > 10.0:
         ax.set_aspect('equal')
+
+    xunit, yunit = _units['x'], _units['y']
+    if np.allclose(xunit.magnitude, 1.0):
+        xunit = xunit.units
+    if np.allclose(yunit.magnitude, 1.0):
+        yunit = yunit.units
+    ax.set_xlabel(f'{x} [{xunit:~P}]')
+    ax.set_ylabel(f'{y} [{yunit:~P}]')
 
 
 def _convert_units(
@@ -419,16 +488,20 @@ def _convert_units(
     required_keys = {'extent', 'projection', 'quantity'}
     if not set(units) == required_keys:
         raise ValueError(f'units dictionary requires: {required_keys}')
-    _quantity_unit = snap.get_array_unit(quantity)
+    quantity_unit = snap.get_array_code_unit(quantity)
     if interp == 'projection':
-        data = (
-            (interpolated_data * _quantity_unit * snap.units['length'])
-            .to(units['quantity'] * units['projection'])
-            .magnitude
-        )
+        proj_unit = units['quantity'] * units['projection']
+        data = (interpolated_data * quantity_unit * snap.units['length']).to(
+            proj_unit.units
+        ).magnitude / proj_unit.magnitude
     elif interp == 'cross_section':
-        data = (interpolated_data * _quantity_unit).to(units['quantity']).magnitude
+        data = (interpolated_data * quantity_unit).to(
+            units['quantity'].units
+        ).magnitude / units['quantity'].magnitude
 
-    new_extent = tuple((extent * snap.units['length']).to(units['extent']).magnitude)
+    new_extent = tuple(
+        (extent * snap.units['length']).to(units['extent'].units).magnitude
+        / units['extent'].magnitude
+    )
 
     return data, new_extent

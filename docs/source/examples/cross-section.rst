@@ -4,23 +4,22 @@ Cross section
 
 Plot cross section at z=0.
 
-.. code-block:: pycon
+.. code-block:: python
 
-    >>> import matplotlib.pyplot as plt
-    >>> import plonk
+    import matplotlib.pyplot as plt
+    import plonk
 
-    # Load the snapshot
-    >>> snap = plonk.load_snap('disc_00030.h5')
+    snap = plonk.load_snap('disc_00030.h5')
 
-    # Plot cross section
-    >>> plonk.visualize.plot(
-    ...     snap=snap,
-    ...     quantity='density',
-    ...     interp='cross_section',
-    ...     z_slice=0.0,
-    ...     extent=(-150, 150, -150, 150),
-    ...     cmap='gist_heat',
-    ... )
-    >>> plt.show()
+    ax = plonk.visualize.plot(
+        snap=snap,
+        quantity='density',
+        x='x',
+        y='z',
+        interp='cross_section',
+        cmap='gist_heat',
+        units={'extent': 'au'},
+    )
+    plt.show()
 
 .. figure:: ../_static/cross_section.png

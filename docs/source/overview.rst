@@ -72,13 +72,13 @@ You can access arrays by their name passed in as a string.
 .. code-block:: pycon
 
     >>> snap['position']
-    array([[ -24.69953214,   49.60113417,   -4.98059478],
-           [-108.99243136,   77.74663833,   12.89299546],
-           [ -51.22218782,  108.64454019,    1.56619644],
+    array([[-3.69505001e+14,  7.42032967e+14, -7.45096980e+13],
+           [-1.63052677e+15,  1.16308971e+15,  1.92879212e+14],
+           [-7.66283930e+14,  1.62532232e+15,  2.34302988e+13],
            ...,
-           [  93.296599  ,  -77.66042087,    5.40835798],
-           [  63.75108128,   66.7446782 ,    3.30169363],
-           [   8.11639008,  139.45117413,    7.55340187]])
+           [ 1.39571712e+15, -1.16179990e+15,  8.09090354e+13],
+           [ 9.53716176e+14,  9.98500386e+14,  4.93933367e+13],
+           [ 1.21421196e+14,  2.08618956e+15,  1.12998892e+14]]) <Unit('centimeter')>
 
 There may be a small delay as the data is read from file. After the array is
 read from file it is cached in memory, so that subsequent calls are faster.
@@ -119,13 +119,13 @@ to use the name `'coordinate'` rather than `'position',` use the
 
     >>> snap.add_alias(name='position', alias='coordinate')
     >>> snap['coordinate']
-    array([[ -24.69953214,   49.60113417,   -4.98059478],
-           [-108.99243136,   77.74663833,   12.89299546],
-           [ -51.22218782,  108.64454019,    1.56619644],
+    array([[-3.69505001e+14,  7.42032967e+14, -7.45096980e+13],
+           [-1.63052677e+15,  1.16308971e+15,  1.92879212e+14],
+           [-7.66283930e+14,  1.62532232e+15,  2.34302988e+13],
            ...,
-           [  93.296599  ,  -77.66042087,    5.40835798],
-           [  63.75108128,   66.7446782 ,    3.30169363],
-           [   8.11639008,  139.45117413,    7.55340187]])
+           [ 1.39571712e+15, -1.16179990e+15,  8.09090354e+13],
+           [ 9.53716176e+14,  9.98500386e+14,  4.93933367e+13],
+           [ 1.21421196e+14,  2.08618956e+15,  1.12998892e+14]]) <Unit('centimeter')>
 
 The :py:class:`Snap` object has a :py:attr:`properties` attribute which is a
 dictionary of metadata, i.e. non-array data, on the snapshot.
@@ -137,18 +137,15 @@ dictionary of metadata, i.e. non-array data, on the snapshot.
 
 
     >>> list(snap.properties)
-    ['time',
-     'smoothing_length_factor',
-     'adiabatic_index',
-     'polytropic_constant',
-     'equation_of_state',
-     'sound_speed_index',
+    ['adiabatic_index',
      'dust_method',
+     'equation_of_state',
+     'grain_density',
      'grain_size',
-     'grain_density']
+     'smoothing_length_factor',
+     'time']
 
-Units are available vis the :py:attr:`units` attribute. We make use of the
-Python units library Pint.
+Units are available. We make use of the Python units library Pint.
 
 .. code-block:: pycon
 
@@ -160,7 +157,7 @@ particles. They are available as an attribute.
 
 .. code-block:: pycon
 
-    >>> snap.available_arrays(sinks=True)
+    >>> snap.available_sink_arrays()
     ('accretion_radius',
      'last_injection_time',
      'mass',
@@ -174,8 +171,9 @@ particles. They are available as an attribute.
     <plonk.snap sinks>
 
     >>> snap.sinks['spin']
-    array([[ 4.02648711e-10, -1.33037173e-09,  2.75977043e-06],
-           [ 4.67205458e-10,  1.34400022e-10,  2.96253856e-07]])
+    array([[ 3.56866999e+43, -1.17910663e+44,  2.44598074e+47],
+           [ 4.14083556e+43,  1.19118555e+43,  2.62569386e+46]]) <Unit('centimeter ** 2 * gram / second')>
+
 
 ~~~~~~~~~~
 Simulation
@@ -202,7 +200,11 @@ the first five snapshots with the following.
 .. code-block:: pycon
 
     >>> sim.snaps[:5]
-    [<plonk.Snap>, <plonk.Snap>, <plonk.Snap>, <plonk.Snap>, <plonk.Snap>]
+    [<plonk.Snap "disc_00000.h5">,
+     <plonk.Snap "disc_00001.h5">,
+     <plonk.Snap "disc_00002.h5">,
+     <plonk.Snap "disc_00003.h5">,
+     <plonk.Snap "disc_00004.h5">]
 
 The :py:class:`Simulation` class has attributes :py:attr:`global_quantities` and
 :py:attr:`sink_quantities` which are pandas DataFrames discussed in the next
@@ -295,7 +297,7 @@ For example, we can change the colorbar limits.
 
 .. code-block:: pycon
 
-    >>> ax.images[0].set_clim(vmax=1.5e-8)
+    >>> ax.images[0].set_clim(vmax=0.15)
 
 Alternatively, you can pass keyword arguments to the matplotlib functions. For
 example, we set the colormap to 'gist_heat' and set the colorbar minimum and
@@ -303,13 +305,14 @@ maxiumum. In addition, we set the extent, i.e. the x- and y-limits.
 
 .. code-block:: pycon
 
+    >>> au = plonk.units('au')
     >>> plonk.visualize.plot(
     ...     snap=snap,
     ...     quantity='density',
-    ...     extent=(20, 120, -50, 50),
+    ...     extent=(20, 120, -50, 50) * au,
     ...     cmap='gist_heat',
-    ...     vmin=1.0e-8,
-    ...     vmax=2.5e-8,
+    ...     vmin=0.1,
+    ...     vmax=0.2,
     ... )
 
 .. figure:: _static/density_zoom.png
@@ -347,18 +350,20 @@ You can access arrays on the :py:class:`SubSnap` objects as for any
 .. code-block:: pycon
 
     >>> gas['mass']
-    array([1.e-09, 1.e-09, 1.e-09, ..., 1.e-09, 1.e-09, 1.e-09])
+    array([1.9891e+24, 1.9891e+24, 1.9891e+24, ..., 1.9891e+24, 1.9891e+24,
+           1.9891e+24]) <Unit('gram')>
     >>> dust['mass']
-    array([1.e-10, 1.e-10, 1.e-10, ..., 1.e-10, 1.e-10, 1.e-10])
+    array([1.9891e+23, 1.9891e+23, 1.9891e+23, ..., 1.9891e+23, 1.9891e+23,
+           1.9891e+23]) <Unit('gram')>
 
 Let's plot the gas and dust side-by-side.
 
 .. code-block:: pycon
 
     >>> subsnaps = [gas, dust]
-    >>> extent = (-200, 200, -200, 200)
+    >>> extent = (-200, 200, -200, 200) * au
 
-    >>> fig, axs = plt.subplots(ncols=2, figsize=(12, 5))
+    >>> fig, axs = plt.subplots(ncols=2, figsize=(14, 5))
 
     >>> for subsnap, ax in zip(subsnaps, axs):
     ...     plonk.visualize.plot(
@@ -420,8 +425,6 @@ After calling :py:meth:`extra_quantities`:
      'polar_angle',
      'position',
      'pressure',
-     'radial_velocity_cylindrical',
-     'radial_velocity_spherical',
      'radius_cylindrical',
      'radius_spherical',
      'semi_major_axis',
@@ -435,7 +438,9 @@ After calling :py:meth:`extra_quantities`:
      'timestep',
      'type',
      'velocity',
-     'velocity_divergence')
+     'velocity_divergence',
+     'velocity_radial_cylindrical',
+     'velocity_radial_spherical')
 
 You can create a new, derived array on the particles as follows.
 
@@ -443,8 +448,8 @@ You can create a new, derived array on the particles as follows.
 
     >>> snap['rad'] = np.sqrt(snap['x'] ** 2 + snap['y'] ** 2)
     >>> snap['rad']
-    array([ 55.41064337, 133.88013245, 120.11389861, ..., 121.38944087,
-            92.29871306, 139.68717104])
+    array([8.28943225e+14, 2.00284678e+15, 1.79690392e+15, ...,
+           1.81598604e+15, 1.38078875e+15, 2.08972008e+15]) <Unit('centimeter')>
 
 Where, here, we have used the fact that Plonk knows that 'x' and 'y' refer to
 the x- and y-components of the position array.
@@ -459,36 +464,21 @@ the decorator :py:meth:`add_array`.
     ...     radius = np.hypot(snap['x'], snap['y'])
     ...     return radius
     >>> snap['radius']
-    array([ 55.41064337, 133.88013245, 120.11389861, ..., 121.38944087,
-            92.29871306, 139.68717104])
+    array([8.28943225e+14, 2.00284678e+15, 1.79690392e+15, ...,
+           1.81598604e+15, 1.38078875e+15, 2.08972008e+15]) <Unit('centimeter')>
 
 ~~~~~
 Units
 ~~~~~
 
-Plonk uses Pint to set arrays to physical units if requested. To set physical
-units on a Snap use the :py:meth:`physical_units` method. Before calling this
-method accessing an array returns dimensionless quantities as pure NumPy arrays.
+Plonk uses Pint to set arrays to physical units.
 
 .. code-block:: pycon
 
     >>> snap = plonk.load_snap(filename)
     >>> snap['x']
-    array([ -24.69953214, -108.99243136,  -51.22218782, ...,   93.296599  ,
-             63.75108128,    8.11639008])
-
-After calling the method, the Snap object returns a dimensional Pint NumPy
-array.
-
-.. code-block:: pycon
-
-    >>> snap.physical_units()
-    <plonk.Snap "disc_00030.h5">
-
-    >>> snap['x']
     array([-3.69505001e+14, -1.63052677e+15, -7.66283930e+14, ...,
-            1.39571712e+15,  9.53716176e+14,  1.21421196e+14])
-            <Unit('centimeter')>
+            1.39571712e+15,  9.53716176e+14,  1.21421196e+14]) <Unit('centimeter')>
 
 It is easy to convert quantities to different units as required.
 
@@ -502,7 +492,7 @@ It is easy to convert quantities to different units as required.
 Profiles
 ~~~~~~~~
 
-Generating a radial profile is a convenient method to reduce the dimensionality
+Generating a profile is a convenient method to reduce the dimensionality
 of the full data set. For example, we may want to see how the surface density
 and aspect ratio of the disc vary with radius.
 
@@ -512,7 +502,7 @@ module.
 .. code-block:: pycon
 
     >>> snap = plonk.load_snap(filename)
-    >>> prof = plonk.load_profile(snap, radius_min=10, radius_max=200)
+    >>> prof = plonk.load_profile(snap, cmin='10 au', cmax='200 au')
     >>> prof
     <plonk.Profile "disc_00030.h5">
 
@@ -559,26 +549,31 @@ To load a profile, simply call it.
 .. code-block:: pycon
 
     >>> prof['scale_height']
-    array([ 0.53283753,  0.65764182,  0.79408015,  0.91948552,  1.05275657,
-            1.19910797,  1.33466997,  1.47654871,  1.64732439,  1.76206771,
-            1.94608708,  2.08498252,  2.24052702,  2.39586258,  2.5815438 ,
-            2.73854455,  2.90642329,  3.08239663,  3.25909891,  3.39284713,
-            3.60151558,  3.77018252,  3.93425341,  4.11471983,  4.24600827,
-            4.51327863,  4.64383865,  4.89879019,  5.11922576,  5.32091328,
-            5.52735314,  5.58588938,  5.72802886,  6.00948951,  6.19699728,
-            6.32043944,  6.45868268,  6.78789496,  7.05552829,  7.19803381,
-            7.40436514,  7.62167875,  7.83422083,  8.02428074,  8.27231498,
-            8.34181189,  8.61131356,  8.77530896,  8.93144387,  8.99957151,
-            9.10605349,  9.31639016,  9.47826435,  9.81047539, 10.10202751,
-           10.32575742, 10.58213179, 10.71664894, 10.92376666, 10.99119008,
-           11.0977605 , 11.22392149, 11.26310651, 11.26604129, 11.45173308,
-           11.45583652, 11.74667361, 11.97488631, 12.28016749, 12.6217536 ,
-           12.90474017, 13.25549672, 13.72867804, 14.15111498, 14.32770244,
-           14.82836422, 15.1799221 , 15.8092354 , 15.98101886, 16.98468088,
-           17.44175012, 17.70165462, 18.31503516, 20.35168145, 20.96849404,
-           22.54955487, 23.53261191, 24.6949161 , 25.96108252, 25.67383453,
-           26.756722  , 29.19929018, 29.10519735, 29.72592619, 29.91977865,
-           32.27018866, 31.03985657, 33.09624188, 34.62309031, 35.38158365])
+    array([7.97124951e+12, 9.84227660e+12, 1.18761140e+13, 1.37555034e+13,
+           1.57492383e+13, 1.79386553e+13, 1.99666627e+13, 2.20898696e+13,
+           2.46311866e+13, 2.63718852e+13, 2.91092881e+13, 3.11944125e+13,
+           3.35101091e+13, 3.58479038e+13, 3.86137691e+13, 4.09731915e+13,
+           4.34677739e+13, 4.61230912e+13, 4.87471032e+13, 5.07589421e+13,
+           5.38769961e+13, 5.64068787e+13, 5.88487300e+13, 6.15197082e+13,
+           6.35591229e+13, 6.75146081e+13, 6.94786320e+13, 7.32840731e+13,
+           7.65750662e+13, 7.96047221e+13, 8.26764128e+13, 8.35658042e+13,
+           8.57126522e+13, 8.99037935e+13, 9.26761324e+13, 9.45798955e+13,
+           9.65997944e+13, 1.01555592e+14, 1.05554201e+14, 1.07641999e+14,
+           1.10797835e+14, 1.13976869e+14, 1.17181502e+14, 1.20083661e+14,
+           1.23779947e+14, 1.24785058e+14, 1.28800980e+14, 1.31290341e+14,
+           1.33602542e+14, 1.34618607e+14, 1.36220344e+14, 1.39412340e+14,
+           1.41778445e+14, 1.46713623e+14, 1.51140364e+14, 1.54496807e+14,
+           1.58327631e+14, 1.60316504e+14, 1.63374960e+14, 1.64446331e+14,
+           1.66063803e+14, 1.67890856e+14, 1.68505873e+14, 1.68507230e+14,
+           1.71353612e+14, 1.71314330e+14, 1.75704484e+14, 1.79183025e+14,
+           1.83696336e+14, 1.88823477e+14, 1.93080810e+14, 1.98301979e+14,
+           2.05279086e+14, 2.11912539e+14, 2.14224572e+14, 2.21647741e+14,
+           2.27153917e+14, 2.36605186e+14, 2.38922067e+14, 2.53901104e+14,
+           2.61297334e+14, 2.64782574e+14, 2.73832897e+14, 3.04654121e+14,
+           3.13575612e+14, 3.37636281e+14, 3.51482502e+14, 3.69591185e+14,
+           3.88308614e+14, 3.83982313e+14, 4.00147149e+14, 4.37288049e+14,
+           4.35330982e+14, 4.44686164e+14, 4.47133547e+14, 4.83307604e+14,
+           4.63783507e+14, 4.95119779e+14, 5.17961431e+14, 5.29308491e+14]) <Unit('centimeter')>
 
 You can convert the data in the :py:class:`Profile` object to a pandas DataFrame
 with the :py:meth:`to_dataframe` method. This takes all loaded profiles and puts
@@ -594,33 +589,31 @@ them into the DataFrame.
     ...    'surface_density',
     ...    'scale_height',
     ... )
-    >>> for p in profiles:
-    ...     prof[p]
     >>> df = prof.to_dataframe(columns=profiles)
     >>> df
-        radius  angular_momentum_phi  angular_momentum_theta  surface_density  scale_height
-    0    10.95             -0.019731                0.049709     5.468106e-09      0.532838
-    1    12.85              1.930775                0.053272     7.105422e-09      0.657642
-    2    14.75              1.285037                0.056002     9.089863e-09      0.794080
-    3    16.65             -2.958286                0.057931     1.075723e-08      0.919486
-    4    18.55             -1.947547                0.059679     1.233050e-08      1.052757
-    ..     ...                   ...                     ...              ...           ...
-    95  191.45              3.020196                0.168752     1.566369e-10     32.270189
-    96  193.35             -0.099051                0.161859     1.485992e-10     31.039857
-    97  195.25             -0.217485                0.169546     1.244152e-10     33.096242
-    98  197.15             -1.305261                0.175302     1.278899e-10     34.623090
-    99  199.05              2.642077                0.176867     1.199359e-10     35.381584
+         radius [cm]  angular_momentum_phi [rad]  angular_momentum_theta [rad]  surface_density [g / cm ** 2]  scale_height [cm]
+    0   1.638097e+14                   -0.019731                      0.049709                       0.048601       7.971250e+12
+    1   1.922333e+14                    1.914841                      0.053297                       0.063095       9.842277e+12
+    2   2.206569e+14                    1.293811                      0.055986                       0.080842       1.187611e+13
+    3   2.490805e+14                   -2.958286                      0.057931                       0.095611       1.375550e+13
+    4   2.775041e+14                   -1.947547                      0.059679                       0.109594       1.574924e+13
+    ..           ...                         ...                           ...                            ...                ...
+    95  2.864051e+15                    3.045660                      0.168944                       0.001388       4.833076e+14
+    96  2.892475e+15                   -0.054956                      0.161673                       0.001325       4.637835e+14
+    97  2.920898e+15                   -0.217485                      0.169546                       0.001106       4.951198e+14
+    98  2.949322e+15                   -1.305261                      0.175302                       0.001137       5.179614e+14
+    99  2.977746e+15                    2.642077                      0.176867                       0.001066       5.293085e+14
 
     [100 rows x 5 columns]
 
-Then we can use pandas plotting methods.
+We can also plot the profiles.
 
 .. code-block:: pycon
 
     >>> with plt.style.context('seaborn'):
     ...     fig, axs = plt.subplots(ncols=2, figsize=(12, 5))
-    ...     df.plot('radius', 'surface_density', ax=axs[0])
-    ...     df.plot('radius', 'scale_height', ax=axs[1])
+    ...     prof.plot('radius', 'surface_density', x_unit='au', y_unit='g/cm^2', ax=axs[0])
+    ...     prof.plot('radius', 'scale_height', x_unit='au', y_unit='au', ax=axs[1])
 
 .. figure:: _static/profile.png
 

@@ -13,11 +13,8 @@ CSV_FILE = pathlib.Path(__file__).parent / 'stubdata/phantom_00000_profile.csv'
 def test_profile():
     """Test Profile."""
     snap = plonk.load_snap(TEST_FILE)
-    snap.extra_quantities()
-    p = plonk.analysis.Profile(snap)
-    for key in (
-        'angular_momentum_magnitude',
-        'angular_momentum_x',
+    prof = plonk.analysis.Profile(snap)
+    columns = [
         'density',
         'mass',
         'number',
@@ -26,10 +23,8 @@ def test_profile():
         'size',
         'smoothing_length',
         'sound_speed',
-    ):
-        p[key]
-    df = p.to_dataframe()
+    ]
+    units = ['g/cm^3', 'g', '', 'au', 'au', 'au^2', 'au', 'km/s']
+    df = prof.to_dataframe(columns=columns, units=units)
 
-    pd.testing.assert_frame_equal(
-        df, pd.read_csv(CSV_FILE, index_col=0), check_less_precise=2
-    )
+    pd.testing.assert_frame_equal(df, pd.read_csv(CSV_FILE, index_col=0))
