@@ -97,19 +97,36 @@ arrays are stored on file, while others are computed as required.
 .. code-block:: pycon
 
     >>> snap.available_arrays()
-    ('density',
+    ('angular_momentum',
+     'angular_velocity',
+     'azimuthal_angle',
+     'density',
      'dust_to_gas_ratio',
+     'eccentricity',
+     'inclination',
+     'keplerian_frequency',
+     'kinetic_energy',
      'mass',
+     'momentum',
+     'polar_angle',
      'position',
      'pressure',
+     'radius_cylindrical',
+     'radius_spherical',
+     'semi_major_axis',
      'smoothing_length',
      'sound_speed',
+     'specific_angular_momentum',
+     'stokes_number',
      'stopping_time',
      'sub_type',
+     'temperature',
      'timestep',
      'type',
      'velocity',
-     'velocity_divergence')
+     'velocity_divergence',
+     'velocity_radial_cylindrical',
+     'velocity_radial_spherical')
 
 You can also define your own alias to access arrays. For example, if you prefer
 to use the name `'coordinate'` rather than `'position',` use the
@@ -376,30 +393,15 @@ Derived arrays
 ~~~~~~~~~~~~~~
 
 Sometimes you need new arrays on the particles that are not available in the
-snapshot files. Many are available in Plonk already. To access these arrays use
-the :py:meth:`extra_quantities` method. Before calling the method:
+snapshot files. Many are available in Plonk already. The following code block
+lists the available raw Phantom arrays on the file.
 
 .. code-block:: pycon
 
-    >>> snap.available_arrays()
-    ('density',
-     'dust_to_gas_ratio',
-     'mass',
-     'position',
-     'pressure',
-     'smoothing_length',
-     'sound_speed',
-     'stopping_time',
-     'sub_type',
-     'timestep',
-     'type',
-     'velocity',
-     'velocity_divergence')
+    >>> list(snap._file_pointer['particles'])
+    ['divv', 'dt', 'dustfrac', 'h', 'itype', 'tstop', 'vxyz', 'xyz']
 
-    >>> snap.extra_quantities()
-    <plonk.Snap "disc_00030.h5">
-
-After calling :py:meth:`extra_quantities`:
+To see all available arrays on the :py:class:`Snap` object:
 
 .. code-block:: pycon
 
@@ -574,7 +576,6 @@ them into the DataFrame.
 
 .. code-block:: pycon
 
-    >>> snap.extra_quantities()
     >>> profiles = (
     ...    'radius',
     ...    'angular_momentum_phi',

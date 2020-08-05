@@ -21,62 +21,6 @@ Load a single snapshot and see what arrays are available.
     >>> snap = plonk.load_snap('disc_00030.h5')
 
     >>> snap.available_arrays()
-    ('density',
-     'dust_to_gas_ratio',
-     'mass',
-     'position',
-     'pressure',
-     'smoothing_length',
-     'sound_speed',
-     'stopping_time',
-     'sub_type',
-     'timestep',
-     'type',
-     'velocity',
-     'velocity_divergence')
-
-Load a single snapshot and access particle arrays and properties.
-
-.. code-block:: python
-
-    >>> import plonk
-
-    >>> snap = plonk.load_snap('disc_00030.h5')
-
-    >>> snap['position']
-    array([[-3.69505001e+14,  7.42032967e+14, -7.45096980e+13],
-           [-1.63052677e+15,  1.16308971e+15,  1.92879212e+14],
-           [-7.66283930e+14,  1.62532232e+15,  2.34302988e+13],
-           ...,
-           [ 1.39571712e+15, -1.16179990e+15,  8.09090354e+13],
-           [ 9.53716176e+14,  9.98500386e+14,  4.93933367e+13],
-           [ 1.21421196e+14,  2.08618956e+15,  1.12998892e+14]]) <Unit('centimeter')>
-
-    >>> snap['position'].to('au')
-    array([[ -24.6998837 ,   49.60184016,   -4.98066567],
-           [-108.99398271,   77.74774493,   12.89317897],
-           [ -51.22291689,  108.64608658,    1.56621873],
-           ...,
-           [  93.29792694,  -77.66152625,    5.40843496],
-           [  63.75198868,   66.74562821,    3.30174062],
-           [   8.11650561,  139.453159  ,    7.55350939]]) <Unit('astronomical_unit')>
-
-    >>> snap.properties['time']
-    61485663602.558136 <Unit('second')>
-
-Load a single snapshot and add extra quantities on the particles, computed as
-required.
-
-.. code-block:: python
-
-    >>> import plonk
-
-    >>> snap = plonk.load_snap('disc_00030.h5')
-
-    >>> snap.extra_quantities()
-    <plonk.Snap "disc_00030.h5">
-
-    >>> snap.available_arrays()
     ('angular_momentum',
      'angular_velocity',
      'azimuthal_angle',
@@ -107,6 +51,35 @@ required.
      'velocity_divergence',
      'velocity_radial_cylindrical',
      'velocity_radial_spherical')
+
+Load a single snapshot and access particle arrays and properties.
+
+.. code-block:: python
+
+    >>> import plonk
+
+    >>> snap = plonk.load_snap('disc_00030.h5')
+
+    >>> snap['position']
+    array([[-3.69505001e+14,  7.42032967e+14, -7.45096980e+13],
+           [-1.63052677e+15,  1.16308971e+15,  1.92879212e+14],
+           [-7.66283930e+14,  1.62532232e+15,  2.34302988e+13],
+           ...,
+           [ 1.39571712e+15, -1.16179990e+15,  8.09090354e+13],
+           [ 9.53716176e+14,  9.98500386e+14,  4.93933367e+13],
+           [ 1.21421196e+14,  2.08618956e+15,  1.12998892e+14]]) <Unit('centimeter')>
+
+    >>> snap['position'].to('au')
+    array([[ -24.6998837 ,   49.60184016,   -4.98066567],
+           [-108.99398271,   77.74774493,   12.89317897],
+           [ -51.22291689,  108.64608658,    1.56621873],
+           ...,
+           [  93.29792694,  -77.66152625,    5.40843496],
+           [  63.75198868,   66.74562821,    3.30174062],
+           [   8.11650561,  139.453159  ,    7.55350939]]) <Unit('astronomical_unit')>
+
+    >>> snap.properties['time']
+    61485663602.558136 <Unit('second')>
 
 Load a single snapshot and access sink arrays.
 

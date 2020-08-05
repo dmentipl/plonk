@@ -29,9 +29,6 @@ radii in a disc.
             The radial width of the subset of particle on which to compute
             the vertical profile.
         """
-        # Load extra quantities, e.g. cylindrical radius
-        snap.extra_quantities()
-
         # Generate subsnap in a cylindrical ring
         subsnap = snap[
             (snap['R'] > radius - radial_width / 2)

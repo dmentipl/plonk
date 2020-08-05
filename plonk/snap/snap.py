@@ -24,7 +24,6 @@ from .._units import Quantity
 from .._units import units as plonk_units
 from ..utils.kernels import kernel_names, kernel_radius
 from ..utils.math import norm
-from .extra import extra_quantities
 
 
 class _SinkUtility:
