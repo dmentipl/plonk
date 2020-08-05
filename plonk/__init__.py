@@ -16,13 +16,13 @@ Here are some of the features of Plonk:
 - Access simulation parameters and units.
 - Compute extra quantities on particles.
 - Visualize data using kernel interpolation.
-- Generate radial profiles.
+- Generate profiles.
 
 Classes
 -------
 Profile
-    Represents a radial profile through the snapshot in either
-    cylindrical or spherical coordinates.
+    Represents a profile through the snapshot in Cartesian, cylindrical
+    or spherical coordinates.
 Snap
     Represents a smoothed particle hydrodynamics snapshot file,
     containing particles, sinks, and file header information.

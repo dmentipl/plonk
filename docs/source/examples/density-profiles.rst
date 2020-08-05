@@ -22,8 +22,8 @@ Plot a density profile for multiple snapshots.
     for snap in sim.snaps[::stride]:
         profile = plonk.load_profile(
             snap,
-            radius_min='10 au',
-            radius_max='150 au',
+            cmin='10 au',
+            cmax='150 au',
             n_bins=50,
         )
         profiles.append(profile)

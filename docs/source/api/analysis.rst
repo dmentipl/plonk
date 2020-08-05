@@ -8,8 +8,8 @@ Analysis
 Profile
 ~~~~~~~
 
-The :py:class:`Profile` class provides methods for generating radial profiles
-from the particle data.
+The :py:class:`Profile` class provides methods for generating profiles from the
+particle data.
 
 .. autoclass:: plonk.Profile
 .. autofunction:: plonk.load_profile

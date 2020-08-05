@@ -1,4 +1,4 @@
-"""Radial profiles.
+"""Profiles.
 
 Heavily inspired by pynbody (https://pynbody.github.io/).
 """
@@ -28,12 +28,14 @@ _aggregations = ('average', 'mean', 'median', 'std', 'sum')
 
 
 class Profile:
-    """Radial profiles.
+    """Profiles.
 
-    A radial profile is a binning of particles in cylindrical or
-    spherical shells around the origin, i.e. (0, 0, 0). For cylindrical
-    profiles the cylindrical cells are perpendicular to the xy-plane,
-    i.e. the bins are averaged azimuthally and in the z-direction.
+    A profile is a binning of particles in Cartesian slices, or
+    cylindrical or spherical shells around the origin, i.e. (0, 0, 0).
+    For cylindrical profiles the cylindrical cells are perpendicular to
+    the xy-plane, i.e. the bins are averaged azimuthally and in the
+    z-direction. Cartesian profiles can be in the x-, y-, and
+    z-directions.
 
     Parameters
     ----------
@@ -44,14 +46,14 @@ class Profile:
         is cylindrical in the xy-plane. For ndim == 3, the radial
         binning is spherical. For ndim == 1, the radial binning is
         Cartesian along the x-axis. Default is 2.
-    radius_min : optional
-        The minimum radius for binning. Can be a string, e.g. '10 au',
-        or a quantity with units, e.g. plonk.units['10 au']. Defaults to
-        minimum on the particles.
-    radius_max : optional
-        The maximum radius for binning. Can be a string, e.g. '10 au',
-        or a quantity with units, e.g. plonk.units['10 au']. Defaults to
-        the 99 percentile distance.
+    cmin : optional
+        The minimum coordinate for binning. Can be a string, e.g.
+        '10 au', or a quantity with units, e.g. plonk.units['10 au'].
+        Defaults to minimum on the particles.
+    cmax : optional
+        The maximum coordinate for binning. Can be a string, e.g.
+        '10 au', or a quantity with units, e.g. plonk.units['10 au'].
+        Defaults to the 99 percentile distance.
     n_bins : optional
         The number of radial bins. Default is 100.
     aggregation : optional
@@ -63,7 +65,8 @@ class Profile:
         'linear'.
     coordinate : optional
         The coordinate ('x', 'y', or 'z') for Cartesian profiles only,
-        i.e. when ndim==1, ignored otherwise. Default is 'x'.
+        i.e. when ndim==1. Default is 'x'. For cylindrical and spherical
+        profiles the coordinate is 'radius'.
     ignore_accreted : optional
         Ignore particles accreted onto sinks. Default is True.
 
@@ -74,7 +77,7 @@ class Profile:
     >>> prof = plonk.load_profile(snap=snap)
     >>> prof = plonk.load_profile(snap=snap, n_bins=300)
     >>> prof = plonk.load_profile(
-    ...     snap=snap, radius_min='10 au', radius_max='300 au'
+    ...     snap=snap, cmin='10 au', cmax='300 au'
     ... )
     >>> prof = plonk.load_profile(snap=snap, spacing='log')
 
@@ -132,8 +135,8 @@ class Profile:
         self,
         snap: SnapLike,
         ndim: int = 2,
-        radius_min: Any = None,
-        radius_max: Any = None,
+        cmin: Any = None,
+        cmax: Any = None,
         n_bins: int = 100,
         aggregation: str = 'average',
         spacing: str = 'linear',
@@ -152,7 +155,7 @@ class Profile:
         self._weights = self.snap['mass']
         self._mask = self._setup_particle_mask(ignore_accreted)
         self._x = self._calculate_x(coordinate)
-        self.range = self._set_range(radius_min, radius_max)
+        self.range = self._set_range(cmin, cmax)
         self.n_bins = n_bins
 
         self.bin_edges, self['size'] = self._setup_bins()
@@ -160,7 +163,10 @@ class Profile:
         self._particle_bin = np.digitize(self._x.magnitude, self.bin_edges.magnitude)
         self.bin_indicies = self._set_particle_bin_indicies()
 
-        self._profiles['radius'] = self.bin_centers
+        if ndim == 1:
+            self._profiles[coordinate] = self.bin_centers
+        else:
+            self._profiles['radius'] = self.bin_centers
         self._profiles['number'] = np.histogram(
             self._x.magnitude, self.bin_edges.magnitude
         )[0]
@@ -191,38 +197,32 @@ class Profile:
             return np.sqrt(pos[:, 0] ** 2 + pos[:, 1] ** 2 + pos[:, 2] ** 2)
         raise ValueError('Unknown ndim: cannot calculate x array')
 
-    def _set_range_code_units(
-        self, radius_min: float, radius_max: float
-    ) -> Tuple[float, float]:
-        if radius_min is None:
+    def _set_range_code_units(self, cmin: float, cmax: float) -> Tuple[float, float]:
+        if cmin is None:
             rmin = self._x.min()
         else:
-            rmin = radius_min
-        if radius_max is None:
+            rmin = cmin
+        if cmax is None:
             rmax = np.percentile(self._x, 99, axis=0)
         else:
-            rmax = radius_max
+            rmax = cmax
 
         return rmin, rmax
 
-    def _set_range(self, radius_min: Any, radius_max: Any) -> Tuple[float, float]:
-        if radius_min is None:
+    def _set_range(self, cmin: Any, cmax: Any) -> Tuple[float, float]:
+        if cmin is None:
             rmin = self._x.min()
         else:
-            rmin = Quantity(radius_min)
+            rmin = Quantity(cmin)
             if not rmin.dimensionality == Quantity('cm').dimensionality:
-                raise ValueError(
-                    'must specify radius_min units, e.g. radius_min="10 au"'
-                )
+                raise ValueError('must specify cmin units, e.g. cmin="10 au"')
             rmin = rmin.to_base_units()
-        if radius_max is None:
+        if cmax is None:
             rmax = np.percentile(self._x.magnitude, 99, axis=0) * self._x.units
         else:
-            rmax = Quantity(radius_max)
+            rmax = Quantity(cmax)
             if not rmax.dimensionality == Quantity('cm').dimensionality:
-                raise ValueError(
-                    'must specify radius_min units, e.g. radius_max="100 au"'
-                )
+                raise ValueError('must specify cmin units, e.g. cmax="100 au"')
             rmax = rmax.to_base_units()
 
         return rmin, rmax
@@ -659,8 +659,8 @@ def _generate_profiles(n_dust: int = 0):
 def load_profile(
     snap: SnapLike,
     ndim: int = 2,
-    radius_min: Any = None,
-    radius_max: Any = None,
+    cmin: Any = None,
+    cmax: Any = None,
     n_bins: int = 100,
     aggregation: str = 'average',
     spacing: str = 'linear',
@@ -671,8 +671,8 @@ def load_profile(
     return Profile(
         snap=snap,
         ndim=ndim,
-        radius_min=radius_min,
-        radius_max=radius_max,
+        cmin=cmin,
+        cmax=cmax,
         n_bins=n_bins,
         aggregation=aggregation,
         spacing=spacing,

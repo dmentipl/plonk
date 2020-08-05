@@ -466,8 +466,8 @@ radius.
     ...     subsnap,
     ...     ndim=1,
     ...     coordinate='z',
-    ...     radius_min='-15 au',
-    ...     radius_max='15 au',
+    ...     cmin='-15 au',
+    ...     cmax='15 au',
     ... )
 
     >>> with plt.style.context('seaborn'):

@@ -492,7 +492,7 @@ It is easy to convert quantities to different units as required.
 Profiles
 ~~~~~~~~
 
-Generating a radial profile is a convenient method to reduce the dimensionality
+Generating a profile is a convenient method to reduce the dimensionality
 of the full data set. For example, we may want to see how the surface density
 and aspect ratio of the disc vary with radius.
 
@@ -502,7 +502,7 @@ module.
 .. code-block:: pycon
 
     >>> snap = plonk.load_snap(filename)
-    >>> prof = plonk.load_profile(snap, radius_min='10 au', radius_max='200 au')
+    >>> prof = plonk.load_profile(snap, cmin='10 au', cmax='200 au')
     >>> prof
     <plonk.Profile "disc_00030.h5">
 
