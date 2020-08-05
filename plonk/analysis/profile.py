@@ -595,7 +595,7 @@ def _generate_profiles(n_dust: int = 0):
     def angular_momentum_theta(prof) -> ndarray:
         """Angle between specific angular momentum and xy-plane."""
         angular_momentum_z = prof['angular_momentum_z']
-        angular_momentum_magnitude = prof['angular_momentum_magnitude']
+        angular_momentum_magnitude = prof['angular_momentum_mag']
 
         return np.arccos(angular_momentum_z / angular_momentum_magnitude)
 
