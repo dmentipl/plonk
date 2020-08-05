@@ -171,20 +171,14 @@ def plot(
             logger.warning('z_slice has no units, assuming code units')
     if units is None:
         _units = {
-            'quantity': 1 * snap[quantity].units,  # type: ignore
-            'extent': 1 * snap['position'].units,  # type: ignore
-            'projection': 1 * snap['position'].units,  # type: ignore
+            'quantity': 1 * snap[quantity].units,
+            'extent': 1 * snap['position'].units,
+            'projection': 1 * snap['position'].units,
         }
     else:
-        qunit = 1 * plonk_units(
-            units.get('quantity', str(snap[quantity].units))  # type: ignore
-        )
-        eunit = 1 * plonk_units(
-            units.get('extent', str(snap['position'].units))  # type: ignore
-        )
-        punit = 1 * plonk_units(
-            units.get('projection', str(snap['position'].units))  # type: ignore
-        )
+        qunit = 1 * plonk_units(units.get('quantity', str(snap[quantity].units)))
+        eunit = 1 * plonk_units(units.get('extent', str(snap['position'].units)))
+        punit = 1 * plonk_units(units.get('projection', str(snap['position'].units)))
         _units = {'quantity': qunit, 'extent': eunit, 'projection': punit}
 
     interpolation_kwargs = ('number_of_pixels', 'density_weighted')
