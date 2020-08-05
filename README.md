@@ -75,7 +75,7 @@ For a more complicated example, here is the deviation from Keplerian velocity ar
 
 ![Planet embedded in protoplanetary disc](https://raw.githubusercontent.com/dmentipl/plonk/master/image.png)
 
-*Deviation from Keplerian velocity around a planet: at the disc midplane (left), and 10 (middle) and 20 au (right) above the disc midplane. Data from a Phantom simulation.*
+*Deviation from Keplerian velocity around a planet: at the disc midplane (left), and 10 (middle) and 20 au (right) above the disc midplane. See [here](https://plonk.readthedocs.io/en/latest/examples/deviation-from-keplerian.html) for details.*
 
 ### Analysis
 
