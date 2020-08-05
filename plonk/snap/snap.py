@@ -23,6 +23,7 @@ from .._units import Quantity
 from .._units import units as plonk_units
 from ..utils.kernels import kernel_names, kernel_radius
 from ..utils.math import norm
+from .. import visualize
 from .extra import extra_quantities
 
 
@@ -1128,6 +1129,9 @@ class Snap:
     def __str__(self):
         """Dunder str method."""
         return f'<plonk.Snap "{self.file_path.name}">'
+
+    plot = visualize.plot
+    particle_plot = visualize.particle_plot
 
 
 class SubSnap(Snap):

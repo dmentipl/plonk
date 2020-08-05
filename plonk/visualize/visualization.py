@@ -29,9 +29,9 @@ _kind_to_function = {
 
 
 def plot(
-    *,
     snap: SnapLike,
     quantity: str,
+    *,
     x: str = 'x',
     y: str = 'y',
     kind: Optional[str] = None,
@@ -264,8 +264,8 @@ def plot(
 
 
 def particle_plot(
-    *,
     snap: SnapLike,
+    *,
     x: str = 'x',
     y: str = 'y',
     c: Optional[str] = None,
