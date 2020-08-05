@@ -156,7 +156,7 @@ Suggestions for new features include:
 New releases and PyPI and Conda packages
 ----------------------------------------
 
-**Note: these instructions are for the Plonk maintainers only (e.g. [@dmentipl](https://github.com/dmentipl)).**
+**Note: these instructions are for the Plonk maintainers (e.g. [@dmentipl](https://github.com/dmentipl)).**
 
 ### Make a release
 
@@ -199,4 +199,4 @@ Clone [my fork](https://github.com/dmentipl/plonk-feedstock) of the Plonk feedst
 1. Update the version number.
 2. Update the sha256 hash to correspond to the source version on [PyPI](https://pypi.org/project/plonk/).
 
-Commit the change with a message like "Update to version 0.3.1". Then go to the GitHub page and generate a new [pull request](https://github.com/dmentipl/plonk-feedstock/pull/new/master). This will run several tests. If they pass merge the pull request into the conda-forge/plonk-feedstock repository. Then a new conda package should soon be available on the [Anaconda cloud](https://anaconda.org/conda-forge/plonk).
+Commit the change with a message like "Update to version 0.3.1". Then go to the GitHub page and generate a new [pull request](https://github.com/dmentipl/plonk-feedstock/pull/new/master). This will run several tests. If they pass, merge the pull request into the conda-forge/plonk-feedstock repository. Then a new conda package should soon be available on the [Anaconda cloud](https://anaconda.org/conda-forge/plonk).

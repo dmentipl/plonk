@@ -177,9 +177,16 @@ If you don't get an immediate response, please be patient. Plonk is maintained b
 Contributing
 ------------
 
-Thank you for considering contributing to Plonk. *All types of contributions are welcome from all types of people with different skill levels.*
+*All types of contributions are welcome from all types of people with different skill levels.*
 
-See [CONTRIBUTING.md](https://github.com/dmentipl/plonk/blob/master/CONTRIBUTING.md) for guidelines on how to contribute.
+Thank you for considering contributing to Plonk. There are many ways to contribute:
+
+1. If you find any bugs or cannot work out how to do something, please file a [bug report](https://github.com/dmentipl/plonk/issues/new?assignees=&labels=&template=bug_report.md&title=) in the issue tracker. Even if the issue is not a bug it may be that there is a lack of documentation.
+2. If you have any suggestions for new features, please raise a [feature request](https://github.com/dmentipl/plonk/issues/new?assignees=&labels=&template=feature_request.md&title=) in the issue tracker.
+3. If you use Plonk to do anything please consider contributing to the [examples](https://plonk.readthedocs.io/en/stable/examples.html) section in particular, or any other section, of the documentation.
+4. If you would like to contribute code, firstly thank you! We take code contributions via [pull request](https://github.com/dmentipl/plonk/pull/new/master).
+
+See [CONTRIBUTING.md](https://github.com/dmentipl/plonk/blob/master/CONTRIBUTING.md) for detailed guidelines on how to contribute.
 
 Citation
 --------
