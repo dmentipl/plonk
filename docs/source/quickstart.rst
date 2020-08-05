@@ -249,7 +249,7 @@ Set plot extent, colormap, colorbar range, and axis units.
 
     >>> au = plonk.units('au')
 
-    >>> ax = snap.plot(
+    >>> snap.plot(
     ...     quantity='density',
     ...     extent=(20, 120, -50, 50) * au,
     ...     units={'extent': 'au'},
@@ -272,7 +272,7 @@ Produce a cross-section image plot of density.
 
     >>> snap = plonk.load_snap('disc_00030.h5')
 
-    >>> ax = snap.plot(
+    >>> snap.plot(
     ...     quantity='density',
     ...     x='x',
     ...     y='z',
@@ -298,7 +298,7 @@ The different colours refer to different particle types.
 
     >>> snap = plonk.load_snap('disc_00030.h5')
 
-    >>> ax = plonk.particle_plot(snap=snap, x='z', y='h', alpha=0.1)
+    >>> plonk.particle_plot(snap=snap, x='z', y='h', alpha=0.1)
 
 .. image:: _static/particle_plot.png
 
