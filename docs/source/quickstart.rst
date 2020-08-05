@@ -108,6 +108,28 @@ required.
      'velocity_radial_cylindrical',
      'velocity_radial_spherical')
 
+Load a single snapshot and access sink arrays.
+
+.. code-block:: python
+
+    >>> import plonk
+
+    >>> snap = plonk.load_snap('disc_00030.h5')
+
+    >>> snap.available_sink_arrays()
+    ('accretion_radius',
+     'last_injection_time',
+     'mass',
+     'mass_accreted',
+     'position',
+     'softening_radius',
+     'spin',
+     'velocity')
+
+    >>> snap.sinks['spin']
+    array([[ 3.56866999e+43, -1.17910663e+44,  2.44598074e+47],
+           [ 4.14083556e+43,  1.19118555e+43,  2.62569386e+46]]) <Unit('centimeter ** 2 * gram / second')>
+
 
 ~~~~~~~~~~~~~~~~~~~~~
 Load auxilliary files
