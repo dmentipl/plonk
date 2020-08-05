@@ -224,15 +224,8 @@ def plot(
         raise ValueError('Cannot determine plot type')
 
     if show_colorbar:
-        divider = make_axes_locatable(ax)
-        _kwargs = copy(colorbar_kwargs)
-        position = _kwargs.pop('position', 'right')
-        size = _kwargs.pop('size', '5%')
-        pad = _kwargs.pop('pad', '2%')
-        if position in ('top', 'bottom'):
-            _kwargs.update({'orientation': 'horizontal'})
-        cax = divider.append_axes(position=position, size=size, pad=pad)
-        cbar = fig.colorbar(plot_object, cax, **_kwargs)
+        cbar = fig.colorbar(plot_object, ax=ax, **colorbar_kwargs)
+
         if interp == 'projection':
             qunit = _units['quantity'] * _units['projection']
         elif interp == 'cross_section':
@@ -438,15 +431,7 @@ def _particle_plot(
     else:
         plot_object = plots.scatter(x=_x, y=_y, c=_c, s=_s, ax=ax, **_kwargs)
         if show_colorbar:
-            divider = make_axes_locatable(ax)
-            _kwargs = copy(colorbar_kwargs)
-            position = _kwargs.pop('position', 'right')
-            size = _kwargs.pop('size', '5%')
-            pad = _kwargs.pop('pad', '2%')
-            if position in ('top', 'bottom'):
-                _kwargs.update({'orientation': 'horizontal'})
-            cax = divider.append_axes(position=position, size=size, pad=pad)
-            cbar = fig.colorbar(plot_object, cax, **_kwargs)
+            cbar = fig.colorbar(plot_object, ax=ax, **colorbar_kwargs)
             cunit = _units['c']
             if np.allclose(cunit.magnitude, 1.0):
                 cunit = cunit.units
