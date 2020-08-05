@@ -12,6 +12,7 @@ Plot deviation from Keplerian velocity around planet.
     from mpl_toolkits.axes_grid1 import AxesGrid
 
     au = plonk.units('au')
+    km_s = plonk.units('km/s')
 
     # Index of planet sink particle
     planet_index = 1
@@ -20,7 +21,7 @@ Plot deviation from Keplerian velocity around planet.
     z_slices = (0.0, 5.0, 10.0) * au
 
     # Maximum velocity (km/s)
-    velocity_max = 0.3
+    velocity_max = 0.3 * km_s
 
     # Width for plot
     window_width = 120 * au

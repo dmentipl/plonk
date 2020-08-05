@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ndarray
 
 from .._logging import logger
@@ -198,7 +197,7 @@ def plot(
         **__kwargs,
     )
     # Convert back to physical units
-    interpolated_data, extent = _convert_units(
+    interpolated_data, extent = _convert_units_for_interpolation(
         snap=snap,
         quantity=quantity,
         interpolated_data=interpolated_data,
@@ -214,6 +213,14 @@ def plot(
             kind = 'quiver'
 
     show_colorbar = _kwargs.pop('show_colorbar', kind == 'image')
+
+    vmin, vmax = _kwargs.get('vmin', None), _kwargs.get('vmax', None)
+    vmin = _convert_units_for_cmap(vmin, 'vmin', _units, interp)
+    vmax = _convert_units_for_cmap(vmax, 'vmax', _units, interp)
+    if vmin is not None:
+        _kwargs['vmin'] = vmin
+    if vmax is not None:
+        _kwargs['vmax'] = vmax
 
     if kind in ('image', 'contour', 'quiver', 'streamplot'):
         plot_object = _kind_to_function[kind](
@@ -455,7 +462,7 @@ def _particle_plot(
     ax.set_ylabel(f'{y} [{yunit:~P}]')
 
 
-def _convert_units(
+def _convert_units_for_interpolation(
     *,
     snap: SnapLike,
     quantity: str,
@@ -484,3 +491,19 @@ def _convert_units(
     )
 
     return data, new_extent
+
+
+def _convert_units_for_cmap(vm, name, units, interp):
+    if interp == 'projection':
+        quantity_unit = units['quantity'] * units['projection']
+    elif interp == 'cross_section':
+        quantity_unit = units['quantity']
+    if vm is not None:
+        if isinstance(vm, Quantity):
+            if vm.dimensionality != quantity_unit.dimensionality:
+                raise ValueError(f'{name} has incorrect units')
+            vm = (vm / quantity_unit).to_base_units().magnitude
+        else:
+            logger.warning(f'{name} has no units, assuming same units as quantity')
+
+    return vm
