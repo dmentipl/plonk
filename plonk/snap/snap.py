@@ -214,6 +214,10 @@ class Snap:
         """Close access to underlying file."""
         self._file_pointer.close()
 
+    def reopen_file(self):
+        """Re-open access to the underlying file."""
+        self._file_pointer = h5py.File(self.file_path, mode='r')
+
     def add_array(self, rotatable: bool = None, dust: bool = False) -> Callable:
         """Decorate function to add array to Snap.
 
