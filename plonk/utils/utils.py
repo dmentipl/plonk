@@ -1,7 +1,5 @@
 """Utility functions."""
 
-from typing import Optional
-
 
 def is_documented_by(original):
     """Wrap function to add docstring."""
@@ -14,7 +12,7 @@ def is_documented_by(original):
 
 
 def time_string(
-    snap, unit: str, unit_str: Optional[str] = None, float_format: str = '.0f',
+    snap, unit: str, unit_str: str = None, float_format: str = '.0f',
 ):
     """Generate time stamp string.
 

@@ -6,7 +6,7 @@ for interpolation of vector fields.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Tuple
+from typing import TYPE_CHECKING, Tuple
 
 import numpy as np
 from numpy import ndarray
@@ -27,7 +27,7 @@ def interpolate(
     x: str = 'x',
     y: str = 'y',
     interp: 'str',
-    z_slice: Optional[float] = None,
+    z_slice: float = None,
     extent: Extent,
     **kwargs,
 ) -> ndarray:
@@ -129,14 +129,14 @@ def scalar_interpolation(
     quantity: ndarray,
     x_coordinate: ndarray,
     y_coordinate: ndarray,
-    z_coordinate: Optional[ndarray] = None,
+    z_coordinate: ndarray = None,
     extent: Extent,
     smoothing_length: ndarray,
     particle_mass: ndarray,
     hfact: float,
     number_of_pixels: Tuple[float, float] = (512, 512),
-    cross_section: Optional[float] = None,
-    density_weighted: Optional[bool] = None,
+    cross_section: float = None,
+    density_weighted: bool = None,
 ) -> ndarray:
     """Interpolate scalar quantity to a pixel grid.
 
@@ -195,14 +195,14 @@ def vector_interpolation(
     quantity_y: ndarray,
     x_coordinate: ndarray,
     y_coordinate: ndarray,
-    z_coordinate: Optional[ndarray] = None,
+    z_coordinate: ndarray = None,
     extent: Extent,
     smoothing_length: ndarray,
     particle_mass: ndarray,
     hfact: float,
     number_of_pixels: Tuple[float, float] = (512, 512),
-    cross_section: Optional[float] = None,
-    density_weighted: Optional[bool] = None,
+    cross_section: float = None,
+    density_weighted: bool = None,
 ) -> ndarray:
     """Interpolate scalar quantity to a pixel grid.
 
@@ -276,14 +276,14 @@ def _interpolate(
     quantity: ndarray,
     x_coordinate: ndarray,
     y_coordinate: ndarray,
-    z_coordinate: Optional[ndarray] = None,
+    z_coordinate: ndarray = None,
     extent: Extent,
     smoothing_length: ndarray,
     particle_mass: ndarray,
     hfact: float,
     number_of_pixels: Tuple[float, float],
-    cross_section: Optional[float] = None,
-    density_weighted: Optional[bool] = None,
+    cross_section: float = None,
+    density_weighted: bool = None,
 ) -> ndarray:
     if cross_section is None:
         do_cross_section = False

@@ -1,6 +1,5 @@
 """Functions for visualization."""
 
-from typing import Optional
 
 import numpy as np
 
@@ -52,9 +51,9 @@ def get_extent_from_percentile(
     x: str,
     y: str,
     percentile: float = 99,
-    x_center_on: Optional[float] = None,
-    y_center_on: Optional[float] = None,
-    edge_factor: Optional[float] = None,
+    x_center_on: float = None,
+    y_center_on: float = None,
+    edge_factor: float = None,
 ):
     """Get extent from percentile.
 

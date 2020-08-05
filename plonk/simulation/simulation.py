@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from copy import copy
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Union
 
 import numpy as np
 from pandas import DataFrame
@@ -73,7 +73,7 @@ class Simulation:
     def load_sim(
         self,
         prefix: str,
-        directory: Optional[Union[str, Path]] = None,
+        directory: Union[str, Path] = None,
         data_source: str = 'Phantom',
     ) -> Simulation:
         """Load Simulation.
@@ -302,9 +302,7 @@ class Simulation:
 
 
 def load_sim(
-    prefix: str,
-    directory: Optional[Union[str, Path]] = None,
-    data_source: str = 'Phantom',
+    prefix: str, directory: Union[str, Path] = None, data_source: str = 'Phantom',
 ) -> Simulation:
     """Load Simulation.
 
