@@ -15,10 +15,10 @@ Plot dust and gas side-by-side.
     # Specify dust and gas subsnaps
     >>> gas = snap['gas']
     >>> dust = snap['dust'][0]
-    >>> extent = (-150, 150, -150, 150)
+    >>> extent = (-150, 150, -150, 150) * plonk.units('au')
 
     # Make plot
-    >>> fig, axs = plt.subplots(ncols=2, sharey=True, figsize=(12, 5))
+    >>> fig, axs = plt.subplots(ncols=2, sharey=True, figsize=(13, 5))
     >>> plonk.visualize.plot(
     ...     snap=gas,
     ...     quantity='density',
