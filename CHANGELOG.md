@@ -15,6 +15,8 @@ Types of changes:
 
 ## [Unreleased]
 
+## [0.6.0] - 2020-08-05
+
 ### Added
 
 - Added plot and particle_plot as methods of the Snap class. This allows for plotting with `snap.plot(quantity='quantity')` as opposed to `plonk.visualize.plot(snap=snap, quantity='quantity)`.

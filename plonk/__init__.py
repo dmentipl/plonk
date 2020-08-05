@@ -63,7 +63,7 @@ from .visualize.multi import plot_snaps
 from .visualize.visualization import particle_plot, plot
 
 # Canonical version number
-__version__ = '0.5.3'
+__version__ = '0.6.0'
 
 # Initialize logger
 _logger_init(__version__)
