@@ -111,7 +111,7 @@ array_rotatable = {
     'specific_angular_momentum': True,
     'specific_kinetic_energy': False,
     'stokes_number': False,
-    'temperature': False,
+    'temperature': True,
 }
 
 array_dust = {

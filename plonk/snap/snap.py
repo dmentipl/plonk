@@ -163,6 +163,7 @@ class Snap:
     _dust_arrays = {
         'stopping_time',
         'dust_fraction',
+        'dust_to_gas_ratio',
     }
 
     particle_type = {
@@ -266,7 +267,9 @@ class Snap:
             return tuple(sorted(self._sinks.keys()))
         return tuple(sorted(self._arrays.keys()))
 
-    def available_arrays(self, sinks: bool = False, aliases: bool = False):
+    def _available_arrays(
+        self, sinks: bool = False, all: bool = False, aliases: bool = False
+    ):
         """Return a tuple of available arrays.
 
         Parameters
@@ -274,6 +277,8 @@ class Snap:
         sinks
             If True, return available sink arrays. Default is
             False.
+        all
+            TODO. Default is False
         aliases
             If True, return array aliases. Default is False.
 
@@ -288,10 +293,20 @@ class Snap:
         """
         if sinks:
             loaded = self.loaded_arrays(sinks)
-            registered = tuple(self._sink_registry.keys())
+            registered = list(self._sink_registry.keys())
         else:
             loaded = self.loaded_arrays()
-            registered = tuple(sorted(self._array_registry.keys()))
+            registered = list(sorted(self._array_registry.keys()))
+            if all:
+                for arr in self._vector_arrays:
+                    if arr in registered:
+                        registered += [f'{arr}_x', f'{arr}_y', f'{arr}_z', f'{arr}_mag']
+                for arr in self._dust_arrays:
+                    if arr in registered:
+                        registered += [
+                            f'{arr}_{n:03}' for n in range(1, self.num_dust_species + 1)
+                        ]
+                        registered.append(f'{arr}_tot')
 
         if aliases:
             extra = tuple(
@@ -306,7 +321,42 @@ class Snap:
             )
             return tuple(sorted(set(extra), key=lambda x: x.lower()))
 
-        return tuple(sorted(set(loaded + registered)))
+        return tuple(sorted(set(loaded + tuple(registered))))
+
+    def available_arrays(self, all: bool = False, aliases: bool = False):
+        """Return a tuple of available particle arrays.
+
+        Parameters
+        ----------
+        all
+            TODO. Default is False
+        aliases
+            If True, return array aliases. Default is False.
+
+        Returns
+        -------
+        A tuple of names of available arrays.
+
+        Notes
+        -----
+        If an array is not available, it may be available after calling
+        the extra_quantities method.
+        """
+        return self._available_arrays(sinks=False, all=all, aliases=aliases)
+
+    def available_sink_arrays(self, aliases: bool = False):
+        """Return a tuple of available sink arrays.
+
+        Parameters
+        ----------
+        aliases
+            If True, return array aliases. Default is False.
+
+        Returns
+        -------
+        A tuple of names of available arrays.
+        """
+        return self._available_arrays(sinks=True, aliases=aliases)
 
     @property
     def properties(self):
@@ -936,7 +986,7 @@ class Snap:
         """Get an array by name."""
         index = None
 
-        if name in self.available_arrays(sinks):
+        if name in self._available_arrays(sinks):
             pass
         elif name in self._array_name_mapper.keys():
             name = self._array_name_mapper[name]
@@ -972,7 +1022,7 @@ class Snap:
 
         if inp in self._families:
             return self._get_family_subsnap(inp)
-        if inp in self.available_arrays(sinks):
+        if inp in self._available_arrays(sinks):
             return self._get_array(inp, sinks)
         if inp in self._array_name_mapper.keys():
             return self._get_array(inp, sinks)
@@ -985,12 +1035,12 @@ class Snap:
                 return self._get_array(inp_root, sinks)[:, 1]
             if inp_suffix == 'z':
                 return self._get_array(inp_root, sinks)[:, 2]
-            if inp_suffix == 'magnitude':
+            if inp_suffix == 'mag':
                 return norm(self._get_array(inp_root, sinks), axis=1)
         if inp_root in self._dust_arrays:
             if _str_is_int(inp_suffix):
                 return self._get_array(inp_root)[:, int(inp_suffix) - 1]
-            if inp_suffix == 'total':
+            if inp_suffix == 'tot':
                 return self._get_array(inp_root).sum(axis=1)
 
         if self._extra_quantities:
@@ -1049,7 +1099,7 @@ class Snap:
                 'array\nwith del snap["array"], then try again.'
             )
         if (
-            name in self.available_arrays()
+            name in self._available_arrays()
             or name in self._array_split_mapper.keys()
             or name in self._array_name_mapper.keys()
         ):
