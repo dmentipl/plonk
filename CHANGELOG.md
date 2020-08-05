@@ -15,6 +15,27 @@ Types of changes:
 
 ## [Unreleased]
 
+### Added
+
+- Added plot and particle_plot as methods of the Snap class. This allows for plotting with `snap.plot(quantity='quantity')` as opposed to `plonk.visualize.plot(snap=snap, quantity='quantity)`.
+- Axis and colorbars have labels by default now, including units.
+- The to_dataframe Snap method now indicates units in the column names, e.g. `position [au]`.
+- The available_arrays method of Snap has additional arguments to see all sub-arrays on particles, e.g. `velocity_x` and `dust_fraction_001`.
+- Added to examples and quick-start in documentation.
+- Added method to re-open a closed Snap file.
+
+### Changed
+
+- Physical units are turned on by default on Snap objects. All particle and sink arrays have units (provided by Pint).
+- The units attribute of Snap and Simulation now only has core units, i.e. length, time, mass, and magnetic field.
+- Some extra quantities have been renamed.
+- Extra quantities are available on Snap objects by default.
+- The arguments radius_min and radius_max in Profile have been renamed cmin and cmax to reflect that profiles are not just radial.
+
+### Fixed
+
+- Fixed setting pressure from Phantom equation of states.
+
 ## [0.5.3] - 2020-07-28
 
 ### Fixed
