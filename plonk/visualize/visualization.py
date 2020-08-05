@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from copy import copy
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -33,12 +33,12 @@ def plot(
     *,
     x: str = 'x',
     y: str = 'y',
-    kind: Optional[str] = None,
+    kind: str = None,
     interp: str = 'projection',
-    z_slice: float = 0.0,
+    z_slice: Union[Quantity, float] = None,
     extent: Extent = (-1, -1, -1, -1),
     units: Dict[str, str] = None,
-    ax: Optional[Any] = None,
+    ax: Any = None,
     colorbar_kwargs={},
     **kwargs,
 ) -> Any:
@@ -164,6 +164,8 @@ def plot(
     else:
         logger.warning('extent has no units, assuming code units')
     if interp == 'cross_section':
+        if z_slice is None:
+            z_slice = 0 * plonk_units('cm')
         if isinstance(z_slice, Quantity):
             z_slice = (z_slice / snap.units['length']).to_base_units().magnitude
         else:
@@ -262,12 +264,12 @@ def particle_plot(
     *,
     x: str = 'x',
     y: str = 'y',
-    c: Optional[str] = None,
-    s: Optional[str] = None,
+    c: str = None,
+    s: str = None,
     units: Dict[str, str] = None,
     xscale: str = None,
     yscale: str = None,
-    ax: Optional[Any] = None,
+    ax: Any = None,
     colorbar_kwargs={},
     **kwargs,
 ) -> Any:
