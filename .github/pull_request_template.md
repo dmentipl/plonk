@@ -1,14 +1,19 @@
 # Pull request template
 
+*Your pull request doesn't have to be 100% complete to start the process. The Plonk maintainers can help guide you after starting the pull request process.*
+
 ## Description
 
-Please include a summary of the change and which issue this pull request fixes. Please also include relevant motivation and context. List any dependencies required for this change.
+Please include a concise summary of the change. It can be helpful to include relevant motivation and context.
 
-Fixes # (issue)
+If this pull request fixes any particular issues add text like "Fixes #99" where
+the number refers to the issue number.
+
+If required, list any new dependencies required for this change.
 
 ## Change type
 
-Please delete options that are not relevant.
+Please delete options that are not relevant, and add a check mark if appropriate.
 
 + [ ] Bug fix (non-breaking change which fixes an issue)
 + [ ] New feature (non-breaking change which adds functionality)
