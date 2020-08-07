@@ -60,7 +60,7 @@ from .snap.snap import Snap
 from .visualize.animation import animation, animation_particles, animation_profiles
 from .visualize.interpolation import interpolate
 from .visualize.multi import plot_snaps
-from .visualize.visualization import particle_plot, plot
+from .visualize.visualization import image, plot, quiver
 
 # Canonical version number
 __version__ = '0.6.0'

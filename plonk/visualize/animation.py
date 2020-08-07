@@ -17,7 +17,7 @@ except ImportError:
 from .._logging import logger
 from .functions import get_extent_from_percentile
 from .interpolation import interpolate
-from .visualization import particle_plot, plot
+from .visualization import image, plot
 
 if TYPE_CHECKING:
     from ..analysis.profile import Profile
@@ -69,7 +69,7 @@ def animation(
         Figure.
     adaptive_colorbar : optional
         If True, adapt colorbar range during animation. If False, the
-        colorbar range is fixed by the initial plot. Default is False.
+        colorbar range is fixed by the initial image. Default is False.
     text : optional
         List of strings to display per snap.
     text_kwargs : optional
@@ -79,7 +79,7 @@ def animation(
     save_kwargs : optional
         Keyword arguments to pass to matplotlib Animation.save.
     **kwargs
-        Arguments to pass to visualize.plot.
+        Arguments to pass to visualize.image.
 
     Returns
     -------
@@ -150,7 +150,7 @@ def animation(
         axs = axs.flatten()
         images = list()
         for quantity, x, y, extent, ax in zip(quantities, xs, ys, extents, axs):
-            plot(
+            image(
                 snap=snaps[0],
                 quantity=quantity,
                 x=x,
@@ -381,7 +381,7 @@ def animation_particles(
     save_kwargs : optional
         Keyword arguments to pass to matplotlib Animation.save.
     **kwargs
-        Arguments to pass to visualize.particle_plot.
+        Arguments to pass to visualize.plot.
 
     Returns
     -------
@@ -425,7 +425,7 @@ def animation_particles(
     if fig is None:
         fig, ax = plt.subplots()
         for y in ys:
-            particle_plot(snap=snaps[0], x=x, y=y, ax=ax, **kwargs)
+            plot(snap=snaps[0], x=x, y=y, ax=ax, **kwargs)
             ax.set(xlim=xlim, ylim=ylim)
         lines = ax.lines
         if text is not None:

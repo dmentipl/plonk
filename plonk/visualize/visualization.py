@@ -27,13 +27,12 @@ _kind_to_function = {
 }
 
 
-def plot(
+def image(
     snap: SnapLike,
     quantity: str,
     *,
     x: str = 'x',
     y: str = 'y',
-    kind: str = None,
     interp: str = 'projection',
     z_slice: Union[Quantity, float] = None,
     extent: Extent = (-1, -1, -1, -1),
@@ -42,11 +41,10 @@ def plot(
     colorbar_kwargs={},
     **kwargs,
 ) -> Any:
-    """Visualize smoothed particle hydrodynamics data.
+    """Visualize scalar SPH data as an image.
 
-    Visualize SPH data by interpolation to a pixel grid. Including:
-    an image or a contour plot for scalar data, a quiver (arrow)
-    plot or stream plot for vector data.
+    Visualize scalar smoothed particle hydrodynamics data by
+    interpolation to a pixel grid.
 
     Parameters
     ----------
@@ -60,13 +58,6 @@ def plot(
     y
         The y-coordinate for the visualization. Must be a string to
         pass to Snap. Default is 'y'.
-    kind
-        The type of plot.
-
-        - 'image' : image plot (default for scalar quantities)
-        - 'contour' : contour plot (scalar quantity)
-        - 'quiver' : quiver plot (default for vector quantities)
-        - 'streamplot' : stream plot (vector quantity)
     interp
         The interpolation type. Default is 'projection'.
 
@@ -106,8 +97,8 @@ def plot(
     to imshow can be passed this way.
 
     See below for additional parameters for interpolation,
-    colorbars, quiver plots, etc. All other keyword arguments are
-    passed to the appropriate matplotlib function.
+    colorbars, etc. All other keyword arguments are passed to the
+    appropriate matplotlib function.
 
     Other Parameters
     ----------------
@@ -119,6 +110,111 @@ def plot(
         Default is False.
     show_colorbar : bool
         Whether or not to display a colorbar. Default is True.
+
+    Examples
+    --------
+    Show an image of the surface density in xy-plane.
+
+    >>> plonk.image(snap=snap, quantity='density')
+
+    Set units for the plot.
+
+    >>> units = {'quantity': 'g/cm^3', 'extent': 'au'}
+
+    >>> plonk.image(snap=snap, quantity='density', units=units)
+    """
+    return _interpolated_plot(
+        snap=snap,
+        quantity=quantity,
+        x=x,
+        y=y,
+        kind='image',
+        interp=interp,
+        z_slice=z_slice,
+        extent=extent,
+        units=units,
+        ax=ax,
+        colorbar_kwargs=colorbar_kwargs,
+        **kwargs,
+    )
+
+
+def quiver(
+    snap: SnapLike,
+    quantity: str,
+    *,
+    x: str = 'x',
+    y: str = 'y',
+    interp: str = 'projection',
+    z_slice: Union[Quantity, float] = None,
+    extent: Extent = (-1, -1, -1, -1),
+    units: Dict[str, str] = None,
+    ax: Any = None,
+    **kwargs,
+) -> Any:
+    """Visualize vector SPH data as a quiver plot.
+
+    Visualize scalar smoothed particle hydrodynamics data by
+    interpolation to a pixel grid of arrows.
+
+    Parameters
+    ----------
+    snap
+        The Snap (or SubSnap) object to visualize.
+    quantity
+        The quantity to visualize. Must be a string to pass to Snap.
+    x
+        The x-coordinate for the visualization. Must be a string to
+        pass to Snap. Default is 'x'.
+    y
+        The y-coordinate for the visualization. Must be a string to
+        pass to Snap. Default is 'y'.
+    interp
+        The interpolation type. Default is 'projection'.
+
+        - 'projection' : 2d interpolation via projection to xy-plane
+        - 'cross_section' : 3d interpolation via cross-section in
+          z-direction
+    z_slice
+        The z-coordinate value of the cross-section slice. Can be a
+        float or quantity with units of length. Default is 0.0.
+    extent
+        The range in the x and y-coord as (xmin, xmax, ymin, ymax)
+        where xmin, etc. can be floats or quantities with units of
+        length. The default is to set the extent to a box of size such
+        that 99% of particles are contained within.
+    units
+        The units of the plot as a dictionary with keys 'quantity',
+        'extent', 'projection'. The values are strings representing
+        units, e.g. 'g/cm^3'.
+    ax
+        A matplotlib Axes handle.
+    **kwargs
+        Additional keyword arguments to pass to interpolation and
+        matplotlib functions.
+
+    Returns
+    -------
+    ax
+        The matplotlib Axes object.
+
+    Notes
+    -----
+    Additional parameters passed as keyword arguments will be
+    passed to lower level functions as required.
+
+    See below for additional parameters for interpolation, quiver
+    properties, etc. All other keyword arguments are passed to the
+    appropriate matplotlib function.
+
+    Other Parameters
+    ----------------
+    number_of_pixels : tuple
+        The number of pixels to interpolate particle quantities
+        to as a tuple (nx, ny). Default is (512, 512).
+    density_weighted : bool
+        Whether to density weight the interpolation or not.
+        Default is False.
     number_of_arrows : tuple
         The number of arrows to display by sub-sampling the
         interpolated data. Default is (25, 25).
@@ -128,22 +224,46 @@ def plot(
 
     Examples
     --------
-    Show an image of the surface density in xy-plane.
-
-    >>> plonk.plot(snap=snap, quantity='density')
-
     Quiver plot of velocity in xy-plane.
 
-    >>> plonk.plot(snap=snap, quantity='velocity')
+    >>> plonk.quiver(snap=snap, quantity='velocity')
 
     Set units for the plot.
 
-    >>> units = {
-    ...     'quantity': 'g/cm^3', 'extent': 'au', 'projection': 'cm',
-    ... }
+    >>> units = {'quantity': 'km/s', 'extent': 'au'}
 
-    >>> plonk.plot(snap=snap, quantity='density', units=units)
+    >>> plonk.quiver(snap=snap, quantity='velocity', units=units)
     """
+    return _interpolated_plot(
+        snap=snap,
+        quantity=quantity,
+        x=x,
+        y=y,
+        kind='quiver',
+        interp=interp,
+        z_slice=z_slice,
+        extent=extent,
+        units=units,
+        ax=ax,
+        **kwargs,
+    )
+
+
+def _interpolated_plot(
+    snap: SnapLike,
+    quantity: str,
+    *,
+    x: str = 'x',
+    y: str = 'y',
+    kind: str = None,
+    interp: str = 'projection',
+    z_slice: Union[Quantity, float] = None,
+    extent: Extent = (-1, -1, -1, -1),
+    units: Dict[str, str] = None,
+    ax: Any = None,
+    colorbar_kwargs={},
+    **kwargs,
+) -> Any:
     logger.debug(f'Visualizing "{quantity}" on snap: {snap.file_path.name}')
     _kwargs = copy(kwargs)
 
@@ -259,7 +379,7 @@ def plot(
     return ax
 
 
-def particle_plot(
+def plot(
     snap: SnapLike,
     *,
     x: str = 'x',
@@ -273,10 +393,10 @@ def particle_plot(
     colorbar_kwargs={},
     **kwargs,
 ) -> Any:
-    """Particle plots.
+    """Visualize SPH data as a particle plot.
 
     Visualize SPH data by plotting the particles, or a subset of
-    the particles.
+    the particles, possibly with marker colors and different sizes.
 
     Parameters
     ----------
@@ -319,27 +439,21 @@ def particle_plot(
     --------
     Show the particles in xy-plane.
 
-    >>> plonk.particle_plot(snap=snap)
+    >>> plonk.plot(snap=snap)
 
     Plot density against x.
 
-    >>> plonk.particle_plot(snap=snap, x='x', y='density')
+    >>> plonk.plot(snap=snap, x='x', y='density')
 
     Color particles by density in xy-plane.
 
-    >>> plonk.particle_plot(
-    ...     snap=snap, x='x', y='y', c='density'
-    ... )
+    >>> plonk.plot(snap=snap, x='x', y='y', c='density')
 
     Set units for the plot.
 
-    >>> units = {
-    ...     'x': 'au', 'y': 'au', 'cunit': 'g/cm^3',
-    ... }
+    >>> units = {'x': 'au', 'y': 'au', 'cunit': 'g/cm^3'}
 
-    >>> plonk.particle_plot(
-    ...     snap=snap, x='x', y='y', c='density', units=units
-    ... )
+    >>> plonk.plot(snap=snap, x='x', y='y', c='density', units=units)
     """
     if ax is None:
         fig, ax = plt.subplots()

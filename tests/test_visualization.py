@@ -8,9 +8,9 @@ TEST_FILE = pathlib.Path(__file__).parent / 'stubdata/phantom_00000.h5'
 
 
 def test_initialization():
-    """Test plot function."""
+    """Test image plot function."""
     snap = plonk.load_snap(TEST_FILE)
-    plonk.plot(
+    plonk.image(
         snap=snap,
         quantity='density',
         x='x',
