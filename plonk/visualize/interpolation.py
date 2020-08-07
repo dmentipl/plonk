@@ -12,7 +12,7 @@ import numpy as np
 from numpy import ndarray
 
 from ..snap.utils import get_array_in_code_units
-from .splash import interpolate_cross_section, interpolate_projection
+from .splash import interpolate_slice, interpolate_projection
 
 if TYPE_CHECKING:
     from ..snap.snap import SnapLike
@@ -49,8 +49,7 @@ def interpolate(
         The interpolation type. Default is 'projection'.
 
         - 'projection' : 2d interpolation via projection to xy-plane
-        - 'cross_section' : 3d interpolation via cross-section in
-          z-direction
+        - 'slice' : 3d interpolation via cross-section in z-direction
     z_slice
         The z-coordinate value of the cross-section slice. Default
         is 0.0.
@@ -83,11 +82,11 @@ def interpolate(
     m = get_array_in_code_units(snap, 'mass')
 
     if interp == 'projection':
-        cross_section = None
-    elif interp == 'cross_section':
+        _z_slice = None
+    elif interp == 'slice':
         if z_slice is None:
             z_slice = 0.0
-        cross_section = z_slice
+        _z_slice = z_slice
 
     if _quantity.ndim == 1:
         interpolated_data = scalar_interpolation(
@@ -99,7 +98,7 @@ def interpolate(
             smoothing_length=h,
             particle_mass=m,
             hfact=snap.properties['smoothing_length_factor'],
-            cross_section=cross_section,
+            z_slice=_z_slice,
             **kwargs,
         )
 
@@ -114,7 +113,7 @@ def interpolate(
             smoothing_length=h,
             particle_mass=m,
             hfact=snap.properties['smoothing_length_factor'],
-            cross_section=cross_section,
+            z_slice=_z_slice,
             **kwargs,
         )
 
@@ -135,7 +134,7 @@ def scalar_interpolation(
     particle_mass: ndarray,
     hfact: float,
     number_of_pixels: Tuple[float, float] = (512, 512),
-    cross_section: float = None,
+    z_slice: float = None,
     density_weighted: bool = None,
 ) -> ndarray:
     """Interpolate scalar quantity to a pixel grid.
@@ -162,7 +161,7 @@ def scalar_interpolation(
     number_of_pixels
         The pixel grid to interpolate the scalar quantity to, as
         (npixx, npixy).
-    cross_section
+    z_slice
         Cross section slice position as a z-value. If None, cross
         section interpolation is turned off. Default is off.
     density_weighted
@@ -184,7 +183,7 @@ def scalar_interpolation(
         particle_mass=particle_mass,
         hfact=hfact,
         number_of_pixels=number_of_pixels,
-        cross_section=cross_section,
+        z_slice=z_slice,
         density_weighted=density_weighted,
     )
 
@@ -201,7 +200,7 @@ def vector_interpolation(
     particle_mass: ndarray,
     hfact: float,
     number_of_pixels: Tuple[float, float] = (512, 512),
-    cross_section: float = None,
+    z_slice: float = None,
     density_weighted: bool = None,
 ) -> ndarray:
     """Interpolate scalar quantity to a pixel grid.
@@ -230,7 +229,7 @@ def vector_interpolation(
     number_of_pixels
         The pixel grid to interpolate the scalar quantity to, as
         (npixx, npixy).
-    cross_section
+    z_slice
         Cross section slice position as a z-value. If None, cross
         section interpolation is turned off. Default is off.
     density_weighted
@@ -252,7 +251,7 @@ def vector_interpolation(
         particle_mass=particle_mass,
         hfact=hfact,
         number_of_pixels=number_of_pixels,
-        cross_section=cross_section,
+        z_slice=z_slice,
         density_weighted=density_weighted,
     )
     vecsmoothy = _interpolate(
@@ -265,7 +264,7 @@ def vector_interpolation(
         particle_mass=particle_mass,
         hfact=hfact,
         number_of_pixels=number_of_pixels,
-        cross_section=cross_section,
+        z_slice=z_slice,
         density_weighted=density_weighted,
     )
     return np.stack((np.array(vecsmoothx), np.array(vecsmoothy)))
@@ -282,14 +281,14 @@ def _interpolate(
     particle_mass: ndarray,
     hfact: float,
     number_of_pixels: Tuple[float, float],
-    cross_section: float = None,
+    z_slice: float = None,
     density_weighted: bool = None,
 ) -> ndarray:
-    if cross_section is None:
-        do_cross_section = False
+    if z_slice is None:
+        do_slice = False
     else:
-        do_cross_section = True
-        zslice = cross_section
+        do_slice = True
+        zslice = z_slice
         if z_coordinate is None:
             raise ValueError('Cross section interpolation requires z_coordinate')
     normalise = False
@@ -310,8 +309,8 @@ def _interpolate(
     else:
         weight = hfact ** -3 * np.ones(smoothing_length.shape)
 
-    if do_cross_section:
-        interpolated_data = interpolate_cross_section(
+    if do_slice:
+        interpolated_data = interpolate_slice(
             x=x_coordinate,
             y=y_coordinate,
             z=z_coordinate,

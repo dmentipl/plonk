@@ -71,7 +71,7 @@ Plot deviation from Keplerian velocity around planet.
         gas.plot(
             quantity='delta_keplerian',
             extent=extent,
-            interp='cross_section',
+            interp='slice',
             z_slice=z_slice,
             vmin=-velocity_max,
             vmax=velocity_max,

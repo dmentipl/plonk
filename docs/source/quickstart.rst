@@ -249,7 +249,7 @@ Produce a cross-section image plot of density.
     ...     quantity='density',
     ...     x='x',
     ...     y='z',
-    ...     interp='cross_section',
+    ...     interp='slice',
     ...     cmap='gist_heat',
     ...     units={'extent': 'au'},
     ... )

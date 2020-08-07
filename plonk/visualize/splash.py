@@ -283,7 +283,7 @@ def interpolate_projection(
 
 
 @numba.njit
-def interpolate_cross_section(
+def interpolate_slice(
     x: ndarray,
     y: ndarray,
     z: ndarray,

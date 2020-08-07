@@ -62,8 +62,7 @@ def image(
         The interpolation type. Default is 'projection'.
 
         - 'projection' : 2d interpolation via projection to xy-plane
-        - 'cross_section' : 3d interpolation via cross-section in
-          z-direction
+        - 'slice' : 3d interpolation via cross-section in z-direction
     z_slice
         The z-coordinate value of the cross-section slice. Can be a
         float or quantity with units of length. Default is 0.0.
@@ -173,8 +172,7 @@ def quiver(
         The interpolation type. Default is 'projection'.
 
         - 'projection' : 2d interpolation via projection to xy-plane
-        - 'cross_section' : 3d interpolation via cross-section in
-          z-direction
+        - 'slice' : 3d interpolation via cross-section in z-direction
     z_slice
         The z-coordinate value of the cross-section slice. Can be a
         float or quantity with units of length. Default is 0.0.
@@ -283,7 +281,7 @@ def _interpolated_plot(
         )
     else:
         logger.warning('extent has no units, assuming code units')
-    if interp == 'cross_section':
+    if interp == 'slice':
         if z_slice is None:
             z_slice = 0 * plonk_units('cm')
         if isinstance(z_slice, Quantity):
@@ -357,7 +355,7 @@ def _interpolated_plot(
 
         if interp == 'projection':
             qunit = _units['quantity'] * _units['projection']
-        elif interp == 'cross_section':
+        elif interp == 'slice':
             qunit = _units['quantity']
         if np.allclose(qunit.magnitude, 1.0):
             qunit = qunit.units
@@ -603,7 +601,7 @@ def _convert_units_for_interpolation(
         data = (interpolated_data * quantity_unit * snap.units['length']).to(
             proj_unit.units
         ).magnitude / proj_unit.magnitude
-    elif interp == 'cross_section':
+    elif interp == 'slice':
         data = (interpolated_data * quantity_unit).to(
             units['quantity'].units
         ).magnitude / units['quantity'].magnitude
@@ -619,7 +617,7 @@ def _convert_units_for_interpolation(
 def _convert_units_for_cmap(vm, name, units, interp):
     if interp == 'projection':
         quantity_unit = units['quantity'] * units['projection']
-    elif interp == 'cross_section':
+    elif interp == 'slice':
         quantity_unit = units['quantity']
     if vm is not None:
         if isinstance(vm, Quantity):
