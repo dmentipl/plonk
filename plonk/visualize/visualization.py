@@ -72,7 +72,7 @@ def plot(
 
         - 'projection' : 2d interpolation via projection to xy-plane
         - 'cross_section' : 3d interpolation via cross-section in
-            z-direction
+          z-direction
     z_slice
         The z-coordinate value of the cross-section slice. Can be a
         float or quantity with units of length. Default is 0.0.
@@ -360,8 +360,12 @@ def particle_plot(
         **kwargs,
     }
     if c is None and s is None:
-        for subsnap in snap.subsnaps_as_list():
-            _particle_plot(snap=subsnap, **_kwargs)
+        try:
+            for subsnap in snap.subsnaps_as_list():
+                _particle_plot(snap=subsnap, **_kwargs)
+        except AttributeError:
+            # Sinks do not have subsnaps
+            _particle_plot(snap=snap, **_kwargs)
     else:
         _particle_plot(snap=snap, **_kwargs)
 
@@ -420,17 +424,20 @@ def _particle_plot(
     if _s is not None:
         _s = _s.to(_units['s']).magnitude
 
-    h: ndarray = snap['smoothing_length'].m
-    mask = h > 0
-
-    _x = _x[mask]
-    _y = _y[mask]
-    if _c is not None:
-        _c = _c[mask]
-    if _s is not None:
-        _s = _s[mask]
-        _s = 100 * _s / _s.max()
-        _s = _s.magnitude
+    try:
+        # ignore accreted particles
+        h: ndarray = snap['smoothing_length'].m
+        mask = h > 0
+        _x = _x[mask]
+        _y = _y[mask]
+        if _c is not None:
+            _c = _c[mask]
+        if _s is not None:
+            _s = _s[mask]
+            _s = 100 * _s / _s.max()
+    except ValueError:
+        # sink particles do not have smoothing length
+        pass
 
     show_colorbar = _kwargs.pop('show_colorbar', _c is not None)
 

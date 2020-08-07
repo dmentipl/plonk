@@ -89,7 +89,7 @@ Load a single snapshot and access sink arrays.
 
     >>> snap = plonk.load_snap('disc_00030.h5')
 
-    >>> snap.available_sink_arrays()
+    >>> snap.sinks.available_arrays()
     ('accretion_radius',
      'last_injection_time',
      'mass',

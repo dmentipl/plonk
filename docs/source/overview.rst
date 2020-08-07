@@ -174,7 +174,7 @@ particles. They are available as an attribute.
 
 .. code-block:: pycon
 
-    >>> snap.available_sink_arrays()
+    >>> snap.sinks.available_arrays()
     ('accretion_radius',
      'last_injection_time',
      'mass',

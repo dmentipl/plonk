@@ -26,22 +26,6 @@ from ..utils.kernels import kernel_names, kernel_radius
 from ..utils.math import norm
 
 
-class _SinkUtility:
-    def __init__(self, fn):
-        self.fn = fn
-
-    def __getitem__(self, inp):
-        return self.fn(inp, sinks=True)
-
-    def __repr__(self):
-        """Dunder repr method."""
-        return self.__str__()
-
-    def __str__(self):
-        """Dunder str method."""
-        return f'<plonk.snap sinks>'
-
-
 class Snap:
     """Smoothed particle hydrodynamics Snap object.
 
@@ -295,16 +279,16 @@ class Snap:
         else:
             loaded = self.loaded_arrays()
             registered = list(sorted(self._array_registry.keys()))
-            if all:
-                for arr in self._vector_arrays:
-                    if arr in registered:
-                        registered += [f'{arr}_x', f'{arr}_y', f'{arr}_z', f'{arr}_mag']
-                for arr in self._dust_arrays:
-                    if arr in registered:
-                        registered += [
-                            f'{arr}_{n:03}' for n in range(1, self.num_dust_species + 1)
-                        ]
-                        registered.append(f'{arr}_tot')
+        if all:
+            for arr in self._vector_arrays:
+                if arr in registered:
+                    registered += [f'{arr}_x', f'{arr}_y', f'{arr}_z', f'{arr}_mag']
+            for arr in self._dust_arrays:
+                if arr in registered:
+                    registered += [
+                        f'{arr}_{n:03}' for n in range(1, self.num_dust_species + 1)
+                    ]
+                    registered.append(f'{arr}_tot')
 
         if aliases:
             extra = tuple(
@@ -337,20 +321,6 @@ class Snap:
         """
         return self._available_arrays(sinks=False, all=all, aliases=aliases)
 
-    def available_sink_arrays(self, aliases: bool = False):
-        """Return a tuple of available sink arrays.
-
-        Parameters
-        ----------
-        aliases
-            If True, return array aliases. Default is False.
-
-        Returns
-        -------
-        A tuple of names of available arrays.
-        """
-        return self._available_arrays(sinks=True, aliases=aliases)
-
     @property
     def properties(self):
         """Snap properties."""
@@ -359,7 +329,7 @@ class Snap:
     @property
     def sinks(self):
         """Sink particle arrays."""
-        return _SinkUtility(self._getitem)
+        return _Sinks(self)
 
     @property
     def num_particles(self):
@@ -1089,7 +1059,7 @@ class Snap:
 
     def _ipython_key_completions_(self):
         """Tab completion for IPython __getitem__ method."""
-        return self.available_arrays()
+        return self.available_arrays(all=True)
 
     def __len__(self):
         """Length as number of particles."""
@@ -1169,6 +1139,57 @@ class SubSnap(Snap):
 
 
 SnapLike = Union[Snap, SubSnap]
+
+
+class _Sinks:
+    def __init__(self, base: Snap):
+        self.base = base
+        self._getitem = base._getitem_from_str
+
+    def available_arrays(self, all: bool = False, aliases: bool = False):
+        """Return a tuple of available sink arrays.
+
+        Parameters
+        ----------
+        all
+            TODO. Default is False
+        aliases
+            If True, return array aliases. Default is False.
+
+        Returns
+        -------
+        A tuple of names of available arrays.
+        """
+        return self.base._available_arrays(sinks=True, all=all, aliases=aliases)
+
+    def __setitem__(self, name: str, item: Quantity):
+        if not isinstance(item, Quantity):
+            raise ValueError('"item" must be an array with units, i.e. a Pint Quantity')
+        if item.shape[0] != len(self):
+            raise ValueError('Length of array does not match particle number')
+        self.base._sinks[name] = item
+
+    def __getitem__(self, inp):
+        if not isinstance(inp, str):
+            raise ValueError('Must pass in string to __getitem__')
+        return self._getitem(inp, sinks=True)
+
+    def __len__(self):
+        return len(self.base._sink_registry['mass'](self.base))
+
+    def __repr__(self):
+        """Dunder repr method."""
+        return self.__str__()
+
+    def __str__(self):
+        """Dunder str method."""
+        return f'<plonk.Snap.Sinks "{self.base.file_path.name}">'
+
+    def _ipython_key_completions_(self):
+        """Tab completion for IPython __getitem__ method."""
+        return self.available_arrays(all=True)
+
+    plot = visualize.particle_plot
 
 
 def _str_is_int(string):
