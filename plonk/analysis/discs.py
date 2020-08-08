@@ -32,7 +32,7 @@ def normal(snap: Snap, ignore_accreted: bool = True) -> ndarray:
     return L / np.linalg.norm(L)
 
 
-def rotate_to_face_on(snap: Snap, ignore_accreted: bool = True) -> Snap:
+def rotate_face_on(snap: Snap, ignore_accreted: bool = True) -> Snap:
     """Rotate disc to face-on.
 
     Parameters
@@ -51,3 +51,26 @@ def rotate_to_face_on(snap: Snap, ignore_accreted: bool = True) -> Snap:
     axis = (-x, y, 0)
     angle = np.arctan(np.sqrt(x ** 2 + y ** 2) / z)
     return snap.rotate(axis=axis, angle=angle)
+
+
+def rotate_edge_on(snap: Snap, ignore_accreted: bool = True) -> Snap:
+    """Rotate disc to edge-on.
+
+    Parameters
+    ----------
+    snap
+        The Snap object.
+    ignore_accreted : optional
+        Ignore accreted particles. Default is True.
+
+    Returns
+    -------
+    Snap
+        The rotated Snap.
+    """
+    x, y, z = normal(snap=snap, ignore_accreted=ignore_accreted)
+    axis = (-x, y, 0)
+    angle = np.arctan(np.sqrt(x ** 2 + y ** 2) / z)
+    snap.rotate(axis=axis, angle=angle)
+    snap.rotate(axis=(1, 0, 0), angle=np.pi / 2)
+    return snap
