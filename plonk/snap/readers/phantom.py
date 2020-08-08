@@ -169,6 +169,9 @@ def _populate_particle_array_registry(
 
     array_registry = dict()
 
+    # Each particle gets an id
+    array_registry['id'] = _particle_id
+
     # Always read itype, xyz, h
     array_registry['type'] = _particle_type
     array_registry['position'] = _get_dataset('xyz', 'particles')
@@ -234,6 +237,11 @@ def _get_dataset(dataset: str, group: str) -> Callable:
         return array * unit
 
     return func
+
+
+def _particle_id(snap: Snap) -> ndarray:
+    num_particles = snap._file_pointer['header/nparttot'][()]
+    return np.arange(num_particles)
 
 
 def _particle_type(snap: Snap) -> ndarray:
