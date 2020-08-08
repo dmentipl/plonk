@@ -5,7 +5,7 @@ from .._units import units as plonk_units
 from ..snap.snap import SnapLike, SubSnap
 from .particles import radial_distance
 
-ORIGIN = (0, 0, 0) * plonk_units.au
+CENTER = (0, 0, 0) * plonk_units.au
 
 
 def box(
@@ -13,7 +13,7 @@ def box(
     xwidth: Quantity,
     ywidth: Quantity,
     zwidth: Quantity,
-    origin: Quantity = ORIGIN,
+    center: Quantity = CENTER,
 ) -> SubSnap:
     """Particles within a box.
 
@@ -27,7 +27,7 @@ def box(
         The y-width of the box.
     zwidth
         The z-width of the box.
-    origin : optional
+    center : optional
         The center of the box as a Quantity like (x, y, z) * au.
         Default is (0, 0, 0).
 
@@ -38,18 +38,18 @@ def box(
     """
     dx, dy, dz = xwidth / 2, ywidth / 2, zwidth / 2
     mask = (
-        (snap['position_x'] > origin[0] - dx)
-        & (snap['position_x'] < origin[0] + dx)
-        & (snap['position_y'] > origin[0] - dy)
-        & (snap['position_y'] < origin[0] + dy)
-        & (snap['position_z'] > origin[0] - dz)
-        & (snap['position_z'] < origin[0] + dz)
+        (snap['position_x'] > center[0] - dx)
+        & (snap['position_x'] < center[0] + dx)
+        & (snap['position_y'] > center[1] - dy)
+        & (snap['position_y'] < center[1] + dy)
+        & (snap['position_z'] > center[2] - dz)
+        & (snap['position_z'] < center[2] + dz)
     )
     return snap[mask]
 
 
 def cylinder(
-    snap: SnapLike, radius: Quantity, height: Quantity, origin: Quantity = ORIGIN
+    snap: SnapLike, radius: Quantity, height: Quantity, center: Quantity = CENTER
 ) -> SubSnap:
     """Particles within a cylinder.
 
@@ -61,7 +61,7 @@ def cylinder(
         The radius of the cylinder.
     height
         The height of the cylinder.
-    origin : optional
+    center : optional
         The center of the cylinder as a Quantity like (x, y, z) * au.
         Default is (0, 0, 0).
 
@@ -71,11 +71,11 @@ def cylinder(
         The SubSnap with particles in the box.
     """
     dh = height / 2
-    R = radial_distance(snap=snap, origin=origin, coordinates='cylindrical')
+    R = radial_distance(snap=snap, origin=center, coordinates='cylindrical')
     mask = (
         (R < radius)
-        & (snap['position_z'] < origin[2] + dh)
-        & (snap['position_z'] > origin[2] - dh)
+        & (snap['position_z'] < center[2] + dh)
+        & (snap['position_z'] > center[2] - dh)
     )
     return snap[mask]
 
@@ -85,7 +85,7 @@ def annulus(
     radius_min: Quantity,
     radius_max: Quantity,
     height: Quantity,
-    origin: Quantity = ORIGIN,
+    center: Quantity = CENTER,
 ) -> SubSnap:
     """Particles within an annulus.
 
@@ -98,9 +98,9 @@ def annulus(
     radius_max
         The outer radius of the annulus.
     height
-        The height of the cylinder.
-    origin : optional
-        The center of the cylinder as a Quantity like (x, y, z) * au.
+        The height of the annulus.
+    center : optional
+        The center of the annulus as a Quantity like (x, y, z) * au.
         Default is (0, 0, 0).
 
     Returns
@@ -109,17 +109,17 @@ def annulus(
         The SubSnap with particles in the box.
     """
     dh = height / 2
-    R = radial_distance(snap=snap, origin=origin, coordinates='cylindrical')
+    R = radial_distance(snap=snap, origin=center, coordinates='cylindrical')
     mask = (
         (R > radius_min)
         & (R < radius_max)
-        & (snap['position_z'] < origin[2] + dh)
-        & (snap['position_z'] > origin[2] - dh)
+        & (snap['position_z'] < center[2] + dh)
+        & (snap['position_z'] > center[2] - dh)
     )
     return snap[mask]
 
 
-def sphere(snap: SnapLike, radius: Quantity, origin: Quantity = ORIGIN) -> SubSnap:
+def sphere(snap: SnapLike, radius: Quantity, center: Quantity = CENTER) -> SubSnap:
     """Particles within a sphere.
 
     Parameters
@@ -128,8 +128,8 @@ def sphere(snap: SnapLike, radius: Quantity, origin: Quantity = ORIGIN) -> SubSn
         The Snap object.
     radius
         The radius of the sphere.
-    origin : optional
-        The center of the cylinder as a Quantity like (x, y, z) * au.
+    center : optional
+        The center of the sphere as a Quantity like (x, y, z) * au.
         Default is (0, 0, 0).
 
     Returns
@@ -137,7 +137,7 @@ def sphere(snap: SnapLike, radius: Quantity, origin: Quantity = ORIGIN) -> SubSn
     SubSnap
         The SubSnap with particles in the box.
     """
-    R = radial_distance(snap=snap, origin=origin, coordinates='spherical')
+    R = radial_distance(snap=snap, origin=center, coordinates='spherical')
     mask = R < radius
     return snap[mask]
 
@@ -146,7 +146,7 @@ def shell(
     snap: SnapLike,
     radius_min: Quantity,
     radius_max: Quantity,
-    origin: Quantity = ORIGIN,
+    center: Quantity = CENTER,
 ) -> SubSnap:
     """Particles within a spherical shell.
 
@@ -158,8 +158,8 @@ def shell(
         The inner radius of the shell.
     radius_max
         The outer radius of the shell.
-    origin : optional
-        The center of the cylinder as a Quantity like (x, y, z) * au.
+    center : optional
+        The center of the shell as a Quantity like (x, y, z) * au.
         Default is (0, 0, 0).
 
     Returns
@@ -167,6 +167,6 @@ def shell(
     SubSnap
         The SubSnap with particles in the box.
     """
-    R = radial_distance(snap=snap, origin=origin, coordinates='spherical')
+    R = radial_distance(snap=snap, origin=center, coordinates='spherical')
     mask = (R > radius_min) & (R < radius_max)
     return snap[mask]
