@@ -3,48 +3,6 @@
 
 import numpy as np
 
-from .._units import Quantity
-from .._units import units as plonk_units
-
-
-def str_to_units(quantity, extent, projection):
-    """Convert string to plonk units.
-
-    Parameters
-    ----------
-    quantity
-        The units string for the quantity.
-    extent
-        The units string for the plot extent.
-    projection
-        The units string for projection interpolation.
-    """
-    if isinstance(quantity, str):
-        quantity = plonk_units(quantity)
-    elif isinstance(quantity, Quantity):
-        pass
-    else:
-        raise ValueError(f'Cannot determine quantity unit')
-    if isinstance(extent, str):
-        extent = plonk_units(extent)
-    elif isinstance(extent, Quantity):
-        pass
-    else:
-        raise ValueError(f'Cannot determine extent unit')
-    if isinstance(projection, str):
-        projection = plonk_units(projection)
-    elif isinstance(projection, Quantity):
-        pass
-    else:
-        raise ValueError(f'Cannot determine projection unit')
-
-    if extent.dimensionality != plonk_units('cm').dimensionality:
-        raise ValueError('extent has incorrect dimensions')
-    if projection.dimensionality != plonk_units('cm').dimensionality:
-        raise ValueError('projection has incorrect dimensions')
-
-    return {'quantity': quantity, 'extent': extent, 'projection': projection}
-
 
 def get_extent_from_percentile(
     snap,
