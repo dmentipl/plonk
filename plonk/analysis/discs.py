@@ -68,9 +68,5 @@ def rotate_edge_on(snap: Snap, ignore_accreted: bool = True) -> Snap:
     Snap
         The rotated Snap.
     """
-    x, y, z = normal(snap=snap, ignore_accreted=ignore_accreted)
-    axis = (-x, y, 0)
-    angle = np.arctan(np.sqrt(x ** 2 + y ** 2) / z)
-    snap.rotate(axis=axis, angle=angle)
-    snap.rotate(axis=(1, 0, 0), angle=np.pi / 2)
-    return snap
+    snap = rotate_face_on(snap=snap, ignore_accreted=ignore_accreted)
+    return snap.rotate(axis=(1, 0, 0), angle=np.pi / 2)
