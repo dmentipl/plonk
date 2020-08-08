@@ -740,7 +740,10 @@ def dust_density(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
 
 
 def radial_distance(
-    snap: SnapLike, coordinates: str = 'cylindrical', ignore_accreted: bool = False
+    snap: SnapLike,
+    coordinates: str = 'cylindrical',
+    origin: Quantity = ORIGIN,
+    ignore_accreted: bool = False,
 ) -> Quantity:
     """Calculate the radial distance.
 
@@ -767,6 +770,7 @@ def radial_distance(
     else:
         pos = snap['position']
 
+    pos = pos - origin
     x, y, z = pos[:, 0], pos[:, 1], pos[:, 2]
 
     if coordinates == 'cylindrical':
