@@ -169,7 +169,7 @@ def momentum(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
 
 
 def angular_momentum(
-    snap: SnapLike, origin: Quantity = ORIGIN, ignore_accreted: bool = False,
+    snap: SnapLike, origin: Quantity = ORIGIN, ignore_accreted: bool = False
 ) -> Quantity:
     """Calculate the angular momentum.
 
@@ -204,7 +204,7 @@ def angular_momentum(
 
 
 def specific_angular_momentum(
-    snap: SnapLike, origin: Quantity = ORIGIN, ignore_accreted: bool = False,
+    snap: SnapLike, origin: Quantity = ORIGIN, ignore_accreted: bool = False
 ) -> Quantity:
     """Calculate the specific angular momentum.
 

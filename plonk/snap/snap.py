@@ -389,17 +389,17 @@ class Snap:
             self._arrays = {}
         self._cache_arrays = value
 
-    def unset(self, rotation: bool = False, translation: bool = False):
-        """Unset.
+    def unset(self, rotation: bool = True, translation: bool = True):
+        """Unset transformations.
 
-        Unset some transformations on the Snap data.
+        Unset rotation and translations transformations on the Snap.
 
         Parameters
         ----------
         rotation
-            Set to True to unset rotation. Default is False.
+            Set to True to unset rotation. Default is True.
         translation
-            Set to True to unset translation. Default is False.
+            Set to True to unset translation. Default is True.
         """
         if any((rotation, translation)):
             for arr in self.loaded_arrays():
