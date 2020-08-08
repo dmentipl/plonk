@@ -18,20 +18,22 @@ The following functions are available:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Tuple, Union
+from typing import TYPE_CHECKING
 
 import numpy as np
-from numpy import ndarray
 
 from .._units import Quantity
+from .._units import units as plonk_units
 from ..utils.math import norm
 from . import particles
 
 if TYPE_CHECKING:
     from ..snap.snap import SnapLike
 
+ORIGIN = (0, 0, 0) * plonk_units.au
 
-def center_of_mass(snap: SnapLike, ignore_accreted: bool = True) -> ndarray:
+
+def center_of_mass(snap: SnapLike, ignore_accreted: bool = True) -> Quantity:
     """Calculate the center of mass.
 
     Parameters
@@ -43,13 +45,13 @@ def center_of_mass(snap: SnapLike, ignore_accreted: bool = True) -> ndarray:
 
     Returns
     -------
-    ndarray
+    Quantity
         The center of mass as a vector (cx, cy, cz).
     """
     if ignore_accreted:
-        h: ndarray = snap['smoothing_length']
-        _mass: ndarray = snap['mass'][h > 0]
-        pos: ndarray = snap['position'][h > 0]
+        h: Quantity = snap['smoothing_length']
+        _mass: Quantity = snap['mass'][h > 0]
+        pos: Quantity = snap['position'][h > 0]
     else:
         _mass = snap['mass']
         pos = snap['position']
@@ -73,8 +75,8 @@ def mass(snap: SnapLike, ignore_accreted: bool = True) -> float:
         The total mass.
     """
     if ignore_accreted:
-        h: ndarray = snap['smoothing_length']
-        _mass: ndarray = snap['mass'][h > 0]
+        h: Quantity = snap['smoothing_length']
+        _mass: Quantity = snap['mass'][h > 0]
     else:
         _mass = snap['mass']
 
@@ -97,9 +99,9 @@ def gas_mass(snap: SnapLike, ignore_accreted: bool = True) -> float:
         The total gas mass.
     """
     if ignore_accreted:
-        h: ndarray = snap['smoothing_length']
-        _mass: ndarray = snap['mass'][h > 0]
-        dustfrac: ndarray = snap['dustfrac'][h > 0]
+        h: Quantity = snap['smoothing_length']
+        _mass: Quantity = snap['mass'][h > 0]
+        dustfrac: Quantity = snap['dustfrac'][h > 0]
     else:
         _mass = snap['mass']
         dustfrac = snap['dustfrac']
@@ -124,9 +126,9 @@ def dust_mass(snap: SnapLike, ignore_accreted: bool = True) -> float:
         The total dust mass per species.
     """
     if ignore_accreted:
-        h: ndarray = snap['smoothing_length']
-        _mass: ndarray = snap['mass'][h > 0]
-        dustfrac: ndarray = snap['dustfrac'][h > 0]
+        h: Quantity = snap['smoothing_length']
+        _mass: Quantity = snap['mass'][h > 0]
+        dustfrac: Quantity = snap['dustfrac'][h > 0]
     else:
         _mass = snap['mass']
         dustfrac = snap['dustfrac']
@@ -147,13 +149,13 @@ def accreted_mass(snap: SnapLike) -> float:
     float
         The accreted mass.
     """
-    h: ndarray = snap['smoothing_length']
-    _mass: ndarray = snap['mass'][~(h > 0)]
+    h: Quantity = snap['smoothing_length']
+    _mass: Quantity = snap['mass'][~(h > 0)]
 
     return _mass.sum()
 
 
-def momentum(snap: SnapLike, ignore_accreted: bool = True) -> ndarray:
+def momentum(snap: SnapLike, ignore_accreted: bool = True) -> Quantity:
     """Calculate the total momentum.
 
     Parameters
@@ -165,17 +167,15 @@ def momentum(snap: SnapLike, ignore_accreted: bool = True) -> ndarray:
 
     Returns
     -------
-    ndarray
+    Quantity
         The total linear momentum like (px, py, pz).
     """
     return particles.momentum(snap=snap, ignore_accreted=ignore_accreted).sum(axis=0)
 
 
 def angular_momentum(
-    snap: SnapLike,
-    origin: Union[ndarray, Tuple[float, float, float]] = (0.0, 0.0, 0.0),
-    ignore_accreted: bool = True,
-) -> ndarray:
+    snap: SnapLike, origin: Quantity = ORIGIN, ignore_accreted: bool = True,
+) -> Quantity:
     """Calculate the total angular momentum.
 
     Parameters
@@ -184,13 +184,13 @@ def angular_momentum(
         The Snap object.
     origin : optional
         The origin around which to compute the angular momentum as a
-        ndarray or tuple (x, y, z). Default is (0, 0, 0).
+        Quantity like (x, y, z) * au. Default is (0, 0, 0).
     ignore_accreted : optional
         Ignore accreted particles. Default is True.
 
     Returns
     -------
-    ndarray
+    Quantity
         The total angular momentum like (lx, ly, lz).
     """
     return particles.angular_momentum(
@@ -199,10 +199,8 @@ def angular_momentum(
 
 
 def specific_angular_momentum(
-    snap: SnapLike,
-    origin: Union[ndarray, Tuple[float, float, float]] = (0.0, 0.0, 0.0),
-    ignore_accreted: bool = True,
-) -> ndarray:
+    snap: SnapLike, origin: Quantity = ORIGIN, ignore_accreted: bool = True,
+) -> Quantity:
     """Calculate the total specific angular momentum.
 
     Parameters
@@ -211,13 +209,13 @@ def specific_angular_momentum(
         The Snap object.
     origin : optional
         The origin around which to compute the angular momentum as a
-        ndarray or tuple (x, y, z). Default is (0, 0, 0).
+        Quantity like (x, y, z) * au. Default is (0, 0, 0).
     ignore_accreted : optional
         Ignore accreted particles. Default is True.
 
     Returns
     -------
-    ndarray
+    Quantity
         The total specific angular momentum on the particles like
         (hx, hy, hz).
     """
