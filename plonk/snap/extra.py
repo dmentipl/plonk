@@ -36,9 +36,7 @@ def extra_quantities(snap):
         @snap.add_array(rotatable=rotatable, dust=dust)
         def angular_momentum(snap) -> ndarray:
             """Angular momentum."""
-            origin = (
-                snap.translation if snap.translation is not None else ORIGIN
-            )
+            origin = snap.translation if snap.translation is not None else ORIGIN
             return particles.angular_momentum(snap=snap, origin=origin)
 
     if _add_array(snap, 'specific_angular_momentum'):
@@ -48,9 +46,7 @@ def extra_quantities(snap):
         @snap.add_array(rotatable=rotatable, dust=dust)
         def specific_angular_momentum(snap) -> ndarray:
             """Specific angular momentum."""
-            origin = (
-                snap.translation if snap.translation is not None else ORIGIN
-            )
+            origin = snap.translation if snap.translation is not None else ORIGIN
             return particles.specific_angular_momentum(snap=snap, origin=origin)
 
     if _add_array(snap, 'kinetic_energy'):
@@ -84,9 +80,7 @@ def extra_quantities(snap):
                     'To get Keplerian frequency, first set the gravitational parameter\n'
                     'via snap.set_gravitational_parameter.'
                 )
-            origin = (
-                snap.translation if snap.translation is not None else ORIGIN
-            )
+            origin = snap.translation if snap.translation is not None else ORIGIN
             return particles.keplerian_frequency(
                 snap=snap,
                 gravitational_parameter=gravitational_parameter,
@@ -106,9 +100,7 @@ def extra_quantities(snap):
                     'To get semi-major axis, first set the gravitational parameter\n'
                     'via snap.set_gravitational_parameter.'
                 )
-            origin = (
-                snap.translation if snap.translation is not None else ORIGIN
-            )
+            origin = snap.translation if snap.translation is not None else ORIGIN
             return particles.semi_major_axis(
                 snap=snap,
                 gravitational_parameter=gravitational_parameter,
@@ -128,9 +120,7 @@ def extra_quantities(snap):
                     'To get eccentricity, first set the gravitational parameter\n'
                     'via snap.set_gravitational_parameter.'
                 )
-            origin = (
-                snap.translation if snap.translation is not None else ORIGIN
-            )
+            origin = snap.translation if snap.translation is not None else ORIGIN
             return particles.eccentricity(
                 snap=snap,
                 gravitational_parameter=gravitational_parameter,
@@ -285,9 +275,7 @@ def extra_quantities(snap):
                     'To get eccentricity, first set the gravitational parameter\n'
                     'via snap.set_gravitational_parameter.'
                 )
-            origin = (
-                snap.translation if snap.translation is not None else ORIGIN
-            )
+            origin = snap.translation if snap.translation is not None else ORIGIN
             return particles.stokes_number(
                 snap=snap,
                 gravitational_parameter=gravitational_parameter,
