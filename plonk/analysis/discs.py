@@ -10,7 +10,7 @@ from .total import angular_momentum, center_of_mass
 ORIGIN = (0, 0, 0) * plonk_units.au
 
 
-def normal(snap: SnapLike, ignore_accreted: bool = True) -> ndarray:
+def normal(snap: Snap, ignore_accreted: bool = True) -> ndarray:
     """Calculate unit normal to disc.
 
     Parameters
