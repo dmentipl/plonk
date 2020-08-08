@@ -12,7 +12,7 @@ import numpy as np
 from numpy import ndarray
 
 from ..snap.utils import get_array_in_code_units
-from .splash import interpolate_slice, interpolate_projection
+from .splash import interpolate_projection, interpolate_slice
 
 if TYPE_CHECKING:
     from ..snap.snap import SnapLike

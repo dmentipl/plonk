@@ -5,10 +5,10 @@ import numpy as np
 from plonk.visualize.interpolation import scalar_interpolation, vector_interpolation
 
 from .stubdata.interpolation_arrays import (
-    scalar_slice,
     scalar_projection,
-    vector_slice,
+    scalar_slice,
     vector_projection,
+    vector_slice,
 )
 
 N = 10
