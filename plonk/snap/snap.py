@@ -416,15 +416,26 @@ class Snap:
 
         return self
 
-    def rotate(self, rotation: Union[ndarray, Rotation]) -> Snap:
+    def rotate(
+        self,
+        rotation: Rotation = None,
+        axis: Union[ndarray, List, Tuple[float, float, float]] = None,
+        angle: float = None,
+    ) -> Snap:
         """Rotate snapshot.
+
+        The rotation can be defined by a scipy Rotation object, or a
+        combination of a vector, specifying a rotation axis, and an
+        angle, specifying the rotation in radians.
 
         Parameters
         ----------
         rotation
-            The rotation as a scipy.spatial.transform.Rotation object
-            or ndarray that can be converted to a Rotation object via
-            Rotation.from_rotvec.
+            The rotation as a scipy.spatial.transform.Rotation object.
+        axis
+            An array specifying a rotation axis, like (x, y, z).
+        angle
+            A float specifying the rotation in radians.
 
         Returns
         -------
@@ -436,20 +447,26 @@ class Snap:
         --------
         Rotate a Snap by π/3 around [1, 1, 0].
 
-        >>> rot = np.array([1, 1, 0])
-        >>> rot = rot * np.pi / 3 * np.linalg.norm(rot)
-        >>> snap.rotate(rot)
+        >>> axis = (1, 1, 0)
+        >>> angle = np.pi / 3
+        >>> snap.rotate(axis=axis, angle=angle)
         """
         logger.debug(f'Rotating snapshot: {self.file_path.name}')
-        if isinstance(rotation, (list, tuple, ndarray)):
-            rotation = Rotation.from_rotvec(rotation)
+        if rotation is not None:
+            if axis is not None or angle is not None:
+                logger.warning('ignoring axis and angle as rotation is passed in')
+            _rotation = rotation
+        else:
+            _rotation = axis / norm(axis) * angle
+        if isinstance(_rotation, (list, tuple, ndarray)):
+            _rotation = Rotation.from_rotvec(_rotation)
         for arr in self._vector_arrays:
             if arr in self.loaded_arrays():
                 array_m, array_u = self._arrays[arr].magnitude, self._arrays[arr].units
-                self._arrays[arr] = rotation.apply(array_m) * array_u
+                self._arrays[arr] = _rotation.apply(array_m) * array_u
             if arr in self.loaded_arrays(sinks=True):
                 array_m, array_u = self._sinks[arr].magnitude, self._sinks[arr].units
-                self._sinks[arr] = rotation.apply(array_m) * array_u
+                self._sinks[arr] = _rotation.apply(array_m) * array_u
         for arr in self._vector_component_arrays:
             if arr in self.loaded_arrays():
                 del self._arrays[arr]
@@ -457,9 +474,9 @@ class Snap:
                 del self._sinks[arr]
 
         if self.rotation is None:
-            self.rotation = rotation
+            self.rotation = _rotation
         else:
-            rot = rotation * self.rotation
+            rot = _rotation * self.rotation
             self.rotation = rot
 
         return self
