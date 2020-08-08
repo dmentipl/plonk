@@ -8,10 +8,13 @@ from typing import Callable, Dict, List, Union
 
 import h5py
 import numpy as np
-from numpy import ndarray
 
 from ..._logging import logger
-from ..._units import generate_units_array_dictionary, generate_units_dictionary
+from ..._units import (
+    Quantity,
+    generate_units_array_dictionary,
+    generate_units_dictionary,
+)
 from ..._units import units as plonk_units
 from ..extra import extra_quantities
 from ..snap import Snap
@@ -169,6 +172,9 @@ def _populate_particle_array_registry(
 
     array_registry = dict()
 
+    # Each particle gets an id
+    array_registry['id'] = _particle_id
+
     # Always read itype, xyz, h
     array_registry['type'] = _particle_type
     array_registry['position'] = _get_dataset('xyz', 'particles')
@@ -222,7 +228,7 @@ def _populate_sink_array_registry(name_map: Dict[str, str]):
 
 
 def _get_dataset(dataset: str, group: str) -> Callable:
-    def func(snap: Snap) -> ndarray:
+    def func(snap: Snap) -> Quantity:
         array = snap._file_pointer[f'{group}/{dataset}'][()]
         try:
             unit = snap._array_units[_particle_array_name_map[dataset]]
@@ -236,7 +242,12 @@ def _get_dataset(dataset: str, group: str) -> Callable:
     return func
 
 
-def _particle_type(snap: Snap) -> ndarray:
+def _particle_id(snap: Snap) -> Quantity:
+    num_particles = snap._file_pointer['header/nparttot'][()]
+    return np.arange(num_particles) * plonk_units('dimensionless')
+
+
+def _particle_type(snap: Snap) -> Quantity:
     # Type        | Phantom                               | Plonk
     # ----------- | ------------------------------------- | -----
     # Gas         |                                     1 | 1
@@ -262,7 +273,7 @@ def _particle_type(snap: Snap) -> ndarray:
     return np.array(particle_type.magnitude, dtype=int) * plonk_units('dimensionless')
 
 
-def _sub_type(snap: Snap) -> ndarray:
+def _sub_type(snap: Snap) -> Quantity:
     #           | Types
     #           | Gas | Dust | Boundary
     # Sub-types |     |      |
@@ -292,10 +303,10 @@ def _sub_type(snap: Snap) -> ndarray:
     except KeyError:
         if np.any(particle_type >= idust + ndustlarge):
             logger.error('Cannot determine dust boundary particles')
-    return sub_type
+    return sub_type * plonk_units('dimensionless')
 
 
-def _mass(snap: Snap) -> ndarray:
+def _mass(snap: Snap) -> Quantity:
     massoftype = snap._file_pointer['header/massoftype'][()]
     particle_type = np.array(
         np.abs(_get_dataset('itype', 'particles')(snap)).magnitude, dtype=int
@@ -303,7 +314,7 @@ def _mass(snap: Snap) -> ndarray:
     return massoftype[particle_type - 1] * snap._array_units['mass']
 
 
-def _density(snap: Snap) -> ndarray:
+def _density(snap: Snap) -> Quantity:
     m = (_mass(snap) / snap._array_units['mass']).magnitude
     h = (
         _get_dataset('h', 'particles')(snap) / snap._array_units['smoothing_length']
@@ -313,7 +324,7 @@ def _density(snap: Snap) -> ndarray:
     return rho * snap._array_units['density']
 
 
-def _pressure(snap: Snap) -> ndarray:
+def _pressure(snap: Snap) -> Quantity:
     ieos = snap._file_pointer['header/ieos'][()]
     K = 2 / 3 * snap._file_pointer['header/RK2'][()]
     gamma = snap.properties['adiabatic_index']
@@ -349,7 +360,7 @@ def _pressure(snap: Snap) -> ndarray:
     raise ValueError('Unknown equation of state')
 
 
-def _sound_speed(snap: Snap) -> ndarray:
+def _sound_speed(snap: Snap) -> Quantity:
     ieos = snap._file_pointer['header/ieos'][()]
     gamma = snap.properties['adiabatic_index']
     rho = _density(snap)
@@ -361,19 +372,19 @@ def _sound_speed(snap: Snap) -> ndarray:
     raise ValueError('Unknown equation of state')
 
 
-def _stopping_time(snap: Snap) -> ndarray:
+def _stopping_time(snap: Snap) -> Quantity:
     stopping_time = _get_dataset('tstop', 'particles')(snap)
     stopping_time[stopping_time == _bignumber] = np.inf * snap.units['time']
     return stopping_time
 
 
-def _dust_fraction(snap: Snap) -> ndarray:
+def _dust_fraction(snap: Snap) -> Quantity:
     if snap.properties['dust_method'] != 'dust/gas mixture':
         raise ValueError('Dust fraction only available for "dust/gas mixture"')
     return _get_dataset('dustfrac', 'particles')(snap)
 
 
-def _dust_to_gas_ratio(snap: Snap) -> ndarray:
+def _dust_to_gas_ratio(snap: Snap) -> Quantity:
     if snap.properties['dust_method'] != 'dust as separate sets of particles':
         raise ValueError(
             'Dust fraction only available for "dust as separate sets of particles"'

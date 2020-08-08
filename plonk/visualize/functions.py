@@ -1,53 +1,75 @@
 """Functions for visualization."""
 
+from __future__ import annotations
 
+from typing import TYPE_CHECKING, Any, List
+
+import matplotlib.pyplot as plt
 import numpy as np
 
 from .._units import Quantity
-from .._units import units as plonk_units
+
+if TYPE_CHECKING:
+    from ..snap.snap import SnapLike
 
 
-def str_to_units(quantity, extent, projection):
-    """Convert string to plonk units.
+def plot_smoothing_length(
+    snap: SnapLike,
+    indices: List[int],
+    fac: float = 2.0,
+    units: Quantity = None,
+    x: str = 'x',
+    y: str = 'y',
+    ax: Any = None,
+    **kwargs
+) -> Any:
+    """Plot smoothing length around particle.
 
     Parameters
     ----------
-    quantity
-        The units string for the quantity.
-    extent
-        The units string for the plot extent.
-    projection
-        The units string for projection interpolation.
+    snap
+        The Snap object.
+    indices
+        The particle indices.
+    fac
+        Set the circle to be a multiple "fac" of the smoothing length.
+    units
+        The distance units.
+    ax
+        The matplotlib Axes to plot on.
+    x
+        The "x" coordinate.
+    y
+        The "y" coordinate.
+    **kwargs
+        Keyword arguments to pass to plt.Circle.
+
+    Returns
+    -------
+    circles
+        A list of matplotlib circles.
     """
-    if isinstance(quantity, str):
-        quantity = plonk_units(quantity)
-    elif isinstance(quantity, Quantity):
-        pass
-    else:
-        raise ValueError(f'Cannot determine quantity unit')
-    if isinstance(extent, str):
-        extent = plonk_units(extent)
-    elif isinstance(extent, Quantity):
-        pass
-    else:
-        raise ValueError(f'Cannot determine extent unit')
-    if isinstance(projection, str):
-        projection = plonk_units(projection)
-    elif isinstance(projection, Quantity):
-        pass
-    else:
-        raise ValueError(f'Cannot determine projection unit')
-
-    if extent.dimensionality != plonk_units('cm').dimensionality:
-        raise ValueError('extent has incorrect dimensions')
-    if projection.dimensionality != plonk_units('cm').dimensionality:
-        raise ValueError('projection has incorrect dimensions')
-
-    return {'quantity': quantity, 'extent': extent, 'projection': projection}
+    if ax is None:
+        fig, ax = plt.subplots()
+    if units is None:
+        units = snap[x].units
+    circles = list()
+    for index in indices:
+        px: Quantity = snap[x][index]
+        py: Quantity = snap[y][index]
+        h: Quantity = snap['smoothing_length'][index]
+        px = px.to(units).magnitude
+        py = py.to(units).magnitude
+        h = h.to(units).magnitude
+        pos = (px, py)
+        circles.append(plt.Circle(pos, fac * h, **kwargs))
+    for c in circles:
+        ax.add_artist(c)
+    return circles
 
 
 def get_extent_from_percentile(
-    snap,
+    snap: SnapLike,
     x: str,
     y: str,
     percentile: float = 99,
@@ -59,10 +81,12 @@ def get_extent_from_percentile(
 
     Parameters
     ----------
+    snap
+        The Snap object.
     x
         The "x" coordinate.
     y
-        The "x" coordinate.
+        The "y" coordinate.
     percentile : optional
         The percentile used in the calculation. Default is 99.
     x_center_on : optional
