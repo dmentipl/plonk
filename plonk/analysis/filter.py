@@ -140,3 +140,33 @@ def sphere(snap: SnapLike, radius: Quantity, origin: Quantity = ORIGIN) -> SubSn
     R = radial_distance(snap=snap, origin=origin, coordinates='spherical')
     mask = R < radius
     return snap[mask]
+
+
+def shell(
+    snap: SnapLike,
+    radius_min: Quantity,
+    radius_max: Quantity,
+    origin: Quantity = ORIGIN,
+) -> SubSnap:
+    """Particles within a spherical shell.
+
+    Parameters
+    ----------
+    snap
+        The Snap object.
+    radius_min
+        The inner radius of the shell.
+    radius_max
+        The outer radius of the shell.
+    origin : optional
+        The center of the cylinder as a Quantity like (x, y, z) * au.
+        Default is (0, 0, 0).
+
+    Returns
+    -------
+    SubSnap
+        The SubSnap with particles in the box.
+    """
+    R = radial_distance(snap=snap, origin=origin, coordinates='spherical')
+    mask = (R > radius_min) & (R < radius_max)
+    return snap[mask]
