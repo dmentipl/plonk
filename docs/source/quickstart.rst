@@ -271,7 +271,7 @@ The different colours refer to different particle types.
 
     >>> snap = plonk.load_snap('disc_00030.h5')
 
-    >>> plonk.particle_plot(snap=snap, x='z', y='h', alpha=0.1)
+    >>> snap.plot(x='z', y='h', alpha=0.1)
 
 .. image:: _static/particle_plot.png
 
@@ -283,8 +283,8 @@ Plot particles with color representing density.
 
     >>> snap = plonk.load_snap('disc_00030.h5')
 
-    >>> ax = plonk.particle_plot(
-    ...     snap=snap, x='x', y='z', c='density', units={'x': 'au', 'y': 'au'},
+    >>> ax = snap.plot(
+    ...     x='x', y='z', c='density', units={'x': 'au', 'y': 'au'},
     ... )
     >>> ax.set_xlim(-50, 50)
     >>> ax.set_ylim(-20, 20)
