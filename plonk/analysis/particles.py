@@ -28,16 +28,18 @@ The following functions are available:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Tuple, Union
+from typing import TYPE_CHECKING
 
 import numpy as np
-from numpy import ndarray
 
+from .._units import Quantity
 from .._units import units as plonk_units
 from ..utils.math import cross, norm
 
 if TYPE_CHECKING:
     from ..snap.snap import SnapLike
+
+ORIGIN = (0, 0, 0) * plonk_units.au
 
 array_units = {
     'angular_momentum': 'angular_momentum',
@@ -140,7 +142,7 @@ array_dust = {
 }
 
 
-def momentum(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
+def momentum(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
     """Calculate the momentum.
 
     Parameters
@@ -152,13 +154,13 @@ def momentum(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
 
     Returns
     -------
-    ndarray
+    Quantity
         The linear momentum on the particles.
     """
     if ignore_accreted:
-        h: ndarray = snap['smoothing_length']
-        mass: ndarray = snap['mass'][h > 0]
-        vel: ndarray = snap['velocity'][h > 0]
+        h: Quantity = snap['smoothing_length']
+        mass: Quantity = snap['mass'][h > 0]
+        vel: Quantity = snap['velocity'][h > 0]
     else:
         mass = snap['mass']
         vel = snap['velocity']
@@ -167,10 +169,8 @@ def momentum(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
 
 
 def angular_momentum(
-    snap: SnapLike,
-    origin: Union[ndarray, Tuple[float, float, float]] = (0.0, 0.0, 0.0),
-    ignore_accreted: bool = False,
-) -> ndarray:
+    snap: SnapLike, origin: Quantity = ORIGIN, ignore_accreted: bool = False,
+) -> Quantity:
     """Calculate the angular momentum.
 
     Parameters
@@ -179,36 +179,33 @@ def angular_momentum(
         The Snap object.
     origin : optional
         The origin around which to compute the angular momentum as a
-        ndarray or tuple (x, y, z). Default is (0, 0, 0).
+        Quantity like (x, y, z) * au. Default is (0, 0, 0).
     ignore_accreted : optional
         Ignore accreted particles. Default is False.
 
     Returns
     -------
-    ndarray
+    Quantity
         The angular momentum on the particles.
     """
     if ignore_accreted:
-        h: ndarray = snap['smoothing_length']
-        mass: ndarray = snap['mass'][h > 0]
-        pos: ndarray = snap['position'][h > 0]
-        vel: ndarray = snap['velocity'][h > 0]
+        h: Quantity = snap['smoothing_length']
+        mass: Quantity = snap['mass'][h > 0]
+        pos: Quantity = snap['position'][h > 0]
+        vel: Quantity = snap['velocity'][h > 0]
     else:
         mass = snap['mass']
         pos = snap['position']
         vel = snap['velocity']
 
-    origin = np.array(origin)
     pos = pos - origin
 
     return mass[:, np.newaxis] * cross(pos, vel)
 
 
 def specific_angular_momentum(
-    snap: SnapLike,
-    origin: Union[ndarray, Tuple[float, float, float]] = (0.0, 0.0, 0.0),
-    ignore_accreted: bool = False,
-) -> ndarray:
+    snap: SnapLike, origin: Quantity = ORIGIN, ignore_accreted: bool = False,
+) -> Quantity:
     """Calculate the specific angular momentum.
 
     Parameters
@@ -217,30 +214,29 @@ def specific_angular_momentum(
         The Snap object.
     origin : optional
         The origin around which to compute the angular momentum as a
-        ndarray or tuple (x, y, z). Default is (0, 0, 0).
+        Quantity like (x, y, z) * au. Default is (0, 0, 0).
     ignore_accreted : optional
         Ignore accreted particles. Default is False.
 
     Returns
     -------
-    ndarray
+    Quantity
         The specific angular momentum on the particles.
     """
     if ignore_accreted:
-        h: ndarray = snap['smoothing_length']
-        pos: ndarray = snap['position'][h > 0]
-        vel: ndarray = snap['velocity'][h > 0]
+        h: Quantity = snap['smoothing_length']
+        pos: Quantity = snap['position'][h > 0]
+        vel: Quantity = snap['velocity'][h > 0]
     else:
         pos = snap['position']
         vel = snap['velocity']
 
-    origin = np.array(origin)
     pos = pos - origin
 
     return cross(pos, vel)
 
 
-def kinetic_energy(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
+def kinetic_energy(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
     """Calculate the kinetic energy.
 
     Parameters
@@ -252,13 +248,13 @@ def kinetic_energy(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
 
     Returns
     -------
-    ndarray
+    Quantity
         The kinetic energy on the particles.
     """
     if ignore_accreted:
-        h: ndarray = snap['smoothing_length']
-        mass: ndarray = snap['mass'][h > 0]
-        vel: ndarray = snap['velocity'][h > 0]
+        h: Quantity = snap['smoothing_length']
+        mass: Quantity = snap['mass'][h > 0]
+        vel: Quantity = snap['velocity'][h > 0]
     else:
         mass = snap['mass']
         vel = snap['velocity']
@@ -266,7 +262,7 @@ def kinetic_energy(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
     return 1 / 2 * mass * norm(vel, axis=1) ** 2
 
 
-def specific_kinetic_energy(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
+def specific_kinetic_energy(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
     """Calculate the specific kinetic energy.
 
     Parameters
@@ -278,12 +274,12 @@ def specific_kinetic_energy(snap: SnapLike, ignore_accreted: bool = False) -> nd
 
     Returns
     -------
-    ndarray
+    Quantity
         The specific kinetic energy on the particles.
     """
     if ignore_accreted:
-        h: ndarray = snap['smoothing_length']
-        vel: ndarray = snap['velocity'][h > 0]
+        h: Quantity = snap['smoothing_length']
+        vel: Quantity = snap['velocity'][h > 0]
     else:
         vel = snap['velocity']
 
@@ -292,10 +288,10 @@ def specific_kinetic_energy(snap: SnapLike, ignore_accreted: bool = False) -> nd
 
 def keplerian_frequency(
     snap: SnapLike,
-    gravitational_parameter: Any,
-    origin: Union[ndarray, Tuple[float, float, float]] = (0.0, 0.0, 0.0),
+    gravitational_parameter: Quantity,
+    origin: Quantity = ORIGIN,
     ignore_accreted: bool = False,
-) -> ndarray:
+) -> Quantity:
     """Calculate the Keplerian orbital frequency.
 
     The Keplerian orbital frequency of particles around a mass specified
@@ -309,23 +305,22 @@ def keplerian_frequency(
     gravitational_parameter
         The gravitational parameter (mu = G M) as a Pint quantity.
     origin : optional
-        The origin around which to compute the angular momentum as a
-        ndarray or tuple (x, y, z). Default is (0, 0, 0).
+        The origin around which to compute the Keplerian frequency as a
+        Quantity like (x, y, z) * au. Default is (0, 0, 0).
     ignore_accreted : optional
         Ignore accreted particles. Default is False.
 
     Returns
     -------
-    ndarray
+    Quantity
         The Keplerian frequency on the particles.
     """
     if ignore_accreted:
-        h: ndarray = snap['smoothing_length']
-        pos: ndarray = snap['position'][h > 0]
+        h: Quantity = snap['smoothing_length']
+        pos: Quantity = snap['position'][h > 0]
     else:
         pos = snap['position']
 
-    origin = np.array(origin)
     pos = pos - origin
 
     mu = gravitational_parameter
@@ -336,10 +331,10 @@ def keplerian_frequency(
 
 def stokes_number(
     snap: SnapLike,
-    gravitational_parameter: Any,
-    origin: Union[ndarray, Tuple[float, float, float]] = (0.0, 0.0, 0.0),
+    gravitational_parameter: Quantity,
+    origin: Quantity = ORIGIN,
     ignore_accreted: bool = False,
-) -> ndarray:
+) -> Quantity:
     """Calculate the Stokes number.
 
     Parameters
@@ -349,25 +344,24 @@ def stokes_number(
     gravitational_parameter
         The gravitational parameter (mu = G M) as a Pint quantity.
     origin : optional
-        The origin around which to compute the angular momentum as a
-        ndarray or tuple (x, y, z). Default is (0, 0, 0).
+        The origin around which to compute the Stokes number as a
+        Quantity like (x, y, z) * au. Default is (0, 0, 0).
     ignore_accreted : optional
         Ignore accreted particles. Default is False.
 
     Returns
     -------
-    ndarray
+    Quantity
         The Stokes number on the particles.
     """
     if ignore_accreted:
-        h: ndarray = snap['smoothing_length']
-        pos: ndarray = snap['position'][h > 0]
-        t_s: ndarray = snap['stopping_time'][h > 0]
+        h: Quantity = snap['smoothing_length']
+        pos: Quantity = snap['position'][h > 0]
+        t_s: Quantity = snap['stopping_time'][h > 0]
     else:
         pos = snap['position']
         t_s = snap['stopping_time']
 
-    origin = np.array(origin)
     pos = pos - origin
 
     mu = gravitational_parameter
@@ -381,10 +375,10 @@ def stokes_number(
 
 def semi_major_axis(
     snap: SnapLike,
-    gravitational_parameter: Any,
-    origin: Union[ndarray, Tuple[float, float, float]] = (0.0, 0.0, 0.0),
+    gravitational_parameter: Quantity,
+    origin: Quantity = ORIGIN,
     ignore_accreted: bool = False,
-) -> ndarray:
+) -> Quantity:
     """Calculate the semi-major axis.
 
     The semi-major axis of particles around a mass specified by
@@ -398,25 +392,24 @@ def semi_major_axis(
     gravitational_parameter
         The gravitational parameter (mu = G M) as a Pint quantity.
     origin : optional
-        The origin around which to compute the angular momentum as a
-        ndarray or tuple (x, y, z). Default is (0, 0, 0).
+        The origin around which to compute the semi-major axis as a
+        Quantity like (x, y, z) * au. Default is (0, 0, 0).
     ignore_accreted : optional
         Ignore accreted particles. Default is False.
 
     Returns
     -------
-    ndarray
+    Quantity
         The semi-major axis on the particles.
     """
     if ignore_accreted:
-        h: ndarray = snap['smoothing_length']
-        pos: ndarray = snap['position'][h > 0]
-        vel: ndarray = snap['velocity'][h > 0]
+        h: Quantity = snap['smoothing_length']
+        pos: Quantity = snap['position'][h > 0]
+        vel: Quantity = snap['velocity'][h > 0]
     else:
         pos = snap['position']
         vel = snap['velocity']
 
-    origin = np.array(origin)
     pos = pos - origin
 
     mu = gravitational_parameter
@@ -439,10 +432,10 @@ def semi_major_axis(
 
 def eccentricity(
     snap: SnapLike,
-    gravitational_parameter: Any,
-    origin: Union[ndarray, Tuple[float, float, float]] = (0.0, 0.0, 0.0),
+    gravitational_parameter: Quantity,
+    origin: Quantity = ORIGIN,
     ignore_accreted: bool = False,
-) -> ndarray:
+) -> Quantity:
     """Calculate the eccentricity.
 
     The eccentricity of particles around a mass specified by
@@ -456,25 +449,24 @@ def eccentricity(
     gravitational_parameter
         The gravitational parameter (mu = G M) as a Pint quantity.
     origin : optional
-        The origin around which to compute the angular momentum as a
-        ndarray or tuple (x, y, z). Default is (0, 0, 0).
+        The origin around which to compute the eccentricity as a
+        Quantity like (x, y, z) * au. Default is (0, 0, 0).
     ignore_accreted : optional
         Ignore accreted particles. Default is False.
 
     Returns
     -------
-    ndarray
+    Quantity
         The eccentricity on the particles.
     """
     if ignore_accreted:
-        h: ndarray = snap['smoothing_length']
-        pos: ndarray = snap['position'][h > 0]
-        vel: ndarray = snap['velocity'][h > 0]
+        h: Quantity = snap['smoothing_length']
+        pos: Quantity = snap['position'][h > 0]
+        vel: Quantity = snap['velocity'][h > 0]
     else:
         pos = snap['position']
         vel = snap['velocity']
 
-    origin = np.array(origin)
     pos = pos - origin
 
     mu = gravitational_parameter
@@ -492,7 +484,7 @@ def eccentricity(
     return np.sqrt(1 + 2 * term)
 
 
-def inclination(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
+def inclination(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
     """Calculate the inclination.
 
     The inclination is calculated by taking the angle between the
@@ -508,14 +500,14 @@ def inclination(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
 
     Returns
     -------
-    ndarray
+    Quantity
         The inclination on the particles.
     """
     if ignore_accreted:
-        h: ndarray = snap['smoothing_length']
-        mass: ndarray = snap['mass'][h > 0]
-        pos: ndarray = snap['position'][h > 0]
-        vel: ndarray = snap['velocity'][h > 0]
+        h: Quantity = snap['smoothing_length']
+        mass: Quantity = snap['mass'][h > 0]
+        pos: Quantity = snap['position'][h > 0]
+        vel: Quantity = snap['velocity'][h > 0]
     else:
         mass = snap['mass']
         pos = snap['position']
@@ -531,7 +523,7 @@ def inclination(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
     )
 
 
-def gas_fraction(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
+def gas_fraction(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
     """Calculate the gas fraction.
 
     For dust/gas mixtures this is from the dust fraction.
@@ -545,11 +537,11 @@ def gas_fraction(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
 
     Returns
     -------
-    ndarray
+    Quantity
         The gas fraction on the particles.
     """
     if snap.properties['dust_method'] == 'dust/gas mixture':
-        _dust_fraction: ndarray = snap['dust_fraction']
+        _dust_fraction: Quantity = snap['dust_fraction']
         _gas_fraction = 1 - _dust_fraction.sum(axis=1)
 
     elif snap.properties['dust_method'] == 'dust as separate sets of particles':
@@ -561,12 +553,12 @@ def gas_fraction(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
         _gas_fraction = np.ones(len(snap))
 
     if ignore_accreted:
-        h: ndarray = snap['smoothing_length']
+        h: Quantity = snap['smoothing_length']
         return _gas_fraction[h > 0]
     return _gas_fraction
 
 
-def gas_mass(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
+def gas_mass(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
     """Calculate the gas mass.
 
     For dust/gas mixtures this is from the dust fraction.
@@ -580,11 +572,11 @@ def gas_mass(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
 
     Returns
     -------
-    ndarray
+    Quantity
         The gas mass on the particles.
     """
     if snap.properties['dust_method'] == 'dust/gas mixture':
-        _dust_fraction: ndarray = snap['dust_fraction']
+        _dust_fraction: Quantity = snap['dust_fraction']
         _gas_fraction = 1 - _dust_fraction.sum(axis=1)
 
     elif snap.properties['dust_method'] == 'dust as separate sets of particles':
@@ -592,14 +584,14 @@ def gas_mass(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
         _gas_fraction = np.zeros(len(snap))
         _gas_fraction[particle_type == snap.particle_type['gas']] = 1
 
-    mass: ndarray = snap['mass']
+    mass: Quantity = snap['mass']
     if ignore_accreted:
-        h: ndarray = snap['smoothing_length']
+        h: Quantity = snap['smoothing_length']
         return (mass * _gas_fraction)[h > 0]
     return mass * _gas_fraction
 
 
-def gas_density(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
+def gas_density(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
     """Calculate the gas density.
 
     For dust/gas mixtures this is from the dust fraction.
@@ -613,11 +605,11 @@ def gas_density(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
 
     Returns
     -------
-    ndarray
+    Quantity
         The gas density on the particles.
     """
     if snap.properties['dust_method'] == 'dust/gas mixture':
-        _dust_fraction: ndarray = snap['dust_fraction']
+        _dust_fraction: Quantity = snap['dust_fraction']
         _gas_fraction = 1 - _dust_fraction.sum(axis=1)
 
     elif snap.properties['dust_method'] == 'dust as separate sets of particles':
@@ -625,14 +617,14 @@ def gas_density(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
         _gas_fraction = np.zeros(len(snap))
         _gas_fraction[particle_type == snap.particle_type['gas']] = 1
 
-    density: ndarray = snap['density']
+    density: Quantity = snap['density']
     if ignore_accreted:
-        h: ndarray = snap['smoothing_length']
+        h: Quantity = snap['smoothing_length']
         return (density * _gas_fraction)[h > 0]
     return density * _gas_fraction
 
 
-def dust_fraction(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
+def dust_fraction(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
     """Calculate the dust fraction.
 
     For dust/gas mixtures this exists already.
@@ -646,11 +638,11 @@ def dust_fraction(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
 
     Returns
     -------
-    ndarray
+    Quantity
         The gas fraction on the particles.
     """
     if snap.properties['dust_method'] == 'dust/gas mixture':
-        _dust_fraction: ndarray = snap['dust_fraction']
+        _dust_fraction: Quantity = snap['dust_fraction']
 
     elif snap.properties['dust_method'] == 'dust as separate sets of particles':
         n_dust = len(snap.properties.get('grain_size', []))
@@ -664,12 +656,12 @@ def dust_fraction(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
         raise ValueError('No dust available')
 
     if ignore_accreted:
-        h: ndarray = snap['smoothing_length']
+        h: Quantity = snap['smoothing_length']
         return _dust_fraction[h > 0]
     return _dust_fraction
 
 
-def dust_mass(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
+def dust_mass(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
     """Calculate the dust mass per species.
 
     For dust/gas mixtures this is from the dust fraction.
@@ -683,11 +675,11 @@ def dust_mass(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
 
     Returns
     -------
-    ndarray
+    Quantity
         The dust mass per species on the particles.
     """
     if snap.properties['dust_method'] == 'dust/gas mixture':
-        _dust_fraction: ndarray = snap['dust_fraction']
+        _dust_fraction: Quantity = snap['dust_fraction']
 
     elif snap.properties['dust_method'] == 'dust as separate sets of particles':
         n_dust = len(snap.properties.get('grain_size', []))
@@ -700,15 +692,15 @@ def dust_mass(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
     else:
         raise ValueError('No dust available')
 
-    mass: ndarray = snap['mass']
+    mass: Quantity = snap['mass']
     if ignore_accreted:
-        h: ndarray = snap['smoothing_length']
+        h: Quantity = snap['smoothing_length']
         _dust_mass = mass[:, np.newaxis] * _dust_fraction
         return _dust_mass[h > 0]
     return mass[:, np.newaxis] * _dust_fraction
 
 
-def dust_density(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
+def dust_density(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
     """Calculate the dust density per species.
 
     For dust/gas mixtures this is from the dust fraction.
@@ -722,11 +714,11 @@ def dust_density(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
 
     Returns
     -------
-    ndarray
+    Quantity
         The dust density per species on the particles.
     """
     if snap.properties['dust_method'] == 'dust/gas mixture':
-        _dust_fraction: ndarray = snap['dust_fraction']
+        _dust_fraction: Quantity = snap['dust_fraction']
 
     elif snap.properties['dust_method'] == 'dust as separate sets of particles':
         n_dust = len(snap.properties.get('grain_size', []))
@@ -739,9 +731,9 @@ def dust_density(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
     else:
         raise ValueError('No dust available')
 
-    density: ndarray = snap['density']
+    density: Quantity = snap['density']
     if ignore_accreted:
-        h: ndarray = snap['smoothing_length']
+        h: Quantity = snap['smoothing_length']
         _dust_mass = density[:, np.newaxis] * _dust_fraction
         return _dust_mass[h > 0]
     return density[:, np.newaxis] * _dust_fraction
@@ -749,7 +741,7 @@ def dust_density(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
 
 def radial_distance(
     snap: SnapLike, coordinates: str = 'cylindrical', ignore_accreted: bool = False
-) -> ndarray:
+) -> Quantity:
     """Calculate the radial distance.
 
     Can compute the radial distance in cylindrical and spherical
@@ -766,12 +758,12 @@ def radial_distance(
 
     Returns
     -------
-    ndarray
+    Quantity
         The radial distance on the particles.
     """
     if ignore_accreted:
-        h: ndarray = snap['smoothing_length']
-        pos: ndarray = snap['position'][h > 0]
+        h: Quantity = snap['smoothing_length']
+        pos: Quantity = snap['position'][h > 0]
     else:
         pos = snap['position']
 
@@ -784,7 +776,7 @@ def radial_distance(
     raise ValueError('Cannot determine coordinates')
 
 
-def azimuthal_angle(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
+def azimuthal_angle(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
     """Calculate the azimuthal angle.
 
     Parameters
@@ -796,12 +788,12 @@ def azimuthal_angle(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
 
     Returns
     -------
-    ndarray
+    Quantity
         The azimuthal angle on the particles.
     """
     if ignore_accreted:
-        h: ndarray = snap['smoothing_length']
-        pos: ndarray = snap['position'][h > 0]
+        h: Quantity = snap['smoothing_length']
+        pos: Quantity = snap['position'][h > 0]
     else:
         pos = snap['position']
 
@@ -809,7 +801,7 @@ def azimuthal_angle(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
     return np.arctan2(y, x)
 
 
-def polar_angle(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
+def polar_angle(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
     """Calculate the polar angle.
 
     Parameters
@@ -821,12 +813,12 @@ def polar_angle(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
 
     Returns
     -------
-    ndarray
+    Quantity
         The azimuthal angle on the particles.
     """
     if ignore_accreted:
-        h: ndarray = snap['smoothing_length']
-        pos: ndarray = snap['position'][h > 0]
+        h: Quantity = snap['smoothing_length']
+        pos: Quantity = snap['position'][h > 0]
     else:
         pos = snap['position']
 
@@ -837,7 +829,7 @@ def polar_angle(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
 
 def radial_velocity(
     snap: SnapLike, coordinates: str = 'cylindrical', ignore_accreted: bool = False
-) -> ndarray:
+) -> Quantity:
     """Calculate the radial velocity.
 
     Can compute the radial velocity in cylindrical and spherical
@@ -854,13 +846,13 @@ def radial_velocity(
 
     Returns
     -------
-    ndarray
+    Quantity
         The radial velocity on the particles.
     """
     if ignore_accreted:
-        h: ndarray = snap['smoothing_length']
-        pos: ndarray = snap['position'][h > 0]
-        vel: ndarray = snap['velocity'][h > 0]
+        h: Quantity = snap['smoothing_length']
+        pos: Quantity = snap['position'][h > 0]
+        vel: Quantity = snap['velocity'][h > 0]
     else:
         pos = snap['position']
         vel = snap['velocity']
@@ -878,7 +870,7 @@ def radial_velocity(
     return vr
 
 
-def angular_velocity(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
+def angular_velocity(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
     """Calculate the angular velocity.
 
     Parameters
@@ -890,13 +882,13 @@ def angular_velocity(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
 
     Returns
     -------
-    ndarray
+    Quantity
         The angular velocity on the particles.
     """
     if ignore_accreted:
-        h: ndarray = snap['smoothing_length']
-        pos: ndarray = snap['position'][h > 0]
-        vel: ndarray = snap['velocity'][h > 0]
+        h: Quantity = snap['smoothing_length']
+        pos: Quantity = snap['position'][h > 0]
+        vel: Quantity = snap['velocity'][h > 0]
     else:
         pos = snap['position']
         vel = snap['velocity']
@@ -911,7 +903,7 @@ def angular_velocity(snap: SnapLike, ignore_accreted: bool = False) -> ndarray:
 
 def temperature(
     snap: SnapLike, molecular_weight: float = 2.381, ignore_accreted: bool = False
-) -> ndarray:
+) -> Quantity:
     """Calculate the gas temperature.
 
     Parameters
@@ -926,12 +918,12 @@ def temperature(
 
     Returns
     -------
-    ndarray
+    Quantity
         The gas temperature on the particles.
     """
     if ignore_accreted:
-        h: ndarray = snap['smoothing_length']
-        cs: ndarray = snap['sound_speed'][h > 0]
+        h: Quantity = snap['smoothing_length']
+        cs: Quantity = snap['sound_speed'][h > 0]
     else:
         cs = snap['sound_speed']
 
