@@ -28,7 +28,7 @@ Calculate the Roche sphere radius given two sink particles.
 >>> Roche = sinks.Roche_sphere(m1, m2, separation)
 """
 
-from . import particles, sinks, total
+from . import discs, filter, particles, sinks, total
 from .profile import Profile, load_profile
 
-__all__ = ['Profile', 'load_profile', 'particles', 'sinks', 'total']
+__all__ = ['Profile', 'discs', 'filter', 'load_profile', 'particles', 'sinks', 'total']
