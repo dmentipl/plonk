@@ -11,7 +11,9 @@ from typing import TYPE_CHECKING, Tuple
 import numpy as np
 from numpy import ndarray
 
+from .._logging import logger
 from ..snap.utils import get_array_in_code_units
+from ..utils.geometry import distance_from_plane
 from .splash import interpolate_projection, interpolate_slice
 
 if TYPE_CHECKING:
@@ -27,7 +29,8 @@ def interpolate(
     x: str = 'x',
     y: str = 'y',
     interp: 'str',
-    z_slice: float = None,
+    slice_normal: Tuple[float, float, float] = None,
+    slice_offset: float = None,
     extent: Extent,
     **kwargs,
 ) -> ndarray:
@@ -49,10 +52,12 @@ def interpolate(
         The interpolation type. Default is 'projection'.
 
         - 'projection' : 2d interpolation via projection to xy-plane
-        - 'slice' : 3d interpolation via cross-section in z-direction
-    z_slice
-        The z-coordinate value of the cross-section slice. Default
-        is 0.0.
+        - 'slice' : 3d interpolation via cross-section slice.
+    slice_normal
+        The normal vector to the plane in which to take the
+        cross-section slice as an array (x, y, z).
+    slice_offset
+        The offset of the cross-section slice. Default is 0.0.
     extent
         The xy extent of the image as (xmin, xmax, ymin, ymax).
     **kwargs
@@ -82,23 +87,28 @@ def interpolate(
     m = get_array_in_code_units(snap, 'mass')
 
     if interp == 'projection':
-        _z_slice = None
+        dist_from_slice = None
+        if slice_normal is not None:
+            logger.warning('ignoring slice_normal for projection')
+        if slice_offset is not None:
+            logger.warning('ignoring slice_offset for projection')
     elif interp == 'slice':
-        if z_slice is None:
-            z_slice = 0.0
-        _z_slice = z_slice
+        if slice_offset is None:
+            slice_offset = 0.0
+        if slice_normal is None:
+            slice_normal = np.array([0, 0, 1])
+        dist_from_slice = distance_from_plane(x, y, z, slice_normal, slice_offset)
 
     if _quantity.ndim == 1:
         interpolated_data = scalar_interpolation(
             quantity=_quantity,
             x_coordinate=x,
             y_coordinate=y,
-            z_coordinate=z,
+            dist_from_slice=dist_from_slice,
             extent=extent,
             smoothing_length=h,
             particle_mass=m,
             hfact=snap.properties['smoothing_length_factor'],
-            z_slice=_z_slice,
             **kwargs,
         )
 
@@ -108,12 +118,11 @@ def interpolate(
             quantity_y=_quantity[:, 1],
             x_coordinate=x,
             y_coordinate=y,
-            z_coordinate=z,
+            dist_from_slice=dist_from_slice,
             extent=extent,
             smoothing_length=h,
             particle_mass=m,
             hfact=snap.properties['smoothing_length_factor'],
-            z_slice=_z_slice,
             **kwargs,
         )
 
@@ -128,13 +137,12 @@ def scalar_interpolation(
     quantity: ndarray,
     x_coordinate: ndarray,
     y_coordinate: ndarray,
-    z_coordinate: ndarray = None,
+    dist_from_slice: ndarray = None,
     extent: Extent,
     smoothing_length: ndarray,
     particle_mass: ndarray,
     hfact: float,
     number_of_pixels: Tuple[float, float] = (512, 512),
-    z_slice: float = None,
     density_weighted: bool = None,
 ) -> ndarray:
     """Interpolate scalar quantity to a pixel grid.
@@ -147,9 +155,9 @@ def scalar_interpolation(
         Particle coordinate for x-axis in interpolation.
     y_coordinate
         Particle coordinate for y-axis in interpolation.
-    z_coordinate
-        Particle coordinate for z-axis. Only required for cross section
-        interpolation.
+    dist_from_slice
+        The distance from the cross section slice. Only required for
+        cross section interpolation.
     extent
         The range in the x- and y-direction as (xmin, xmax, ymin, ymax).
     smoothing_length
@@ -161,9 +169,6 @@ def scalar_interpolation(
     number_of_pixels
         The pixel grid to interpolate the scalar quantity to, as
         (npixx, npixy).
-    z_slice
-        Cross section slice position as a z-value. If None, cross
-        section interpolation is turned off. Default is off.
     density_weighted
         Use density weighted interpolation. Default is off.
 
@@ -177,13 +182,12 @@ def scalar_interpolation(
         quantity=quantity,
         x_coordinate=x_coordinate,
         y_coordinate=y_coordinate,
-        z_coordinate=z_coordinate,
+        dist_from_slice=dist_from_slice,
         extent=extent,
         smoothing_length=smoothing_length,
         particle_mass=particle_mass,
         hfact=hfact,
         number_of_pixels=number_of_pixels,
-        z_slice=z_slice,
         density_weighted=density_weighted,
     )
 
@@ -194,13 +198,12 @@ def vector_interpolation(
     quantity_y: ndarray,
     x_coordinate: ndarray,
     y_coordinate: ndarray,
-    z_coordinate: ndarray = None,
+    dist_from_slice: ndarray = None,
     extent: Extent,
     smoothing_length: ndarray,
     particle_mass: ndarray,
     hfact: float,
     number_of_pixels: Tuple[float, float] = (512, 512),
-    z_slice: float = None,
     density_weighted: bool = None,
 ) -> ndarray:
     """Interpolate scalar quantity to a pixel grid.
@@ -215,9 +218,9 @@ def vector_interpolation(
         Particle coordinate for x-axis in interpolation.
     y_coordinate
         Particle coordinate for y-axis in interpolation.
-    z_coordinate
-        Particle coordinate for z-axis. Only required for cross section
-        interpolation.
+    dist_from_slice
+        The distance from the cross section slice. Only required for
+        cross section interpolation.
     extent
         The range in the x- and y-direction as (xmin, xmax, ymin, ymax).
     smoothing_length
@@ -229,9 +232,6 @@ def vector_interpolation(
     number_of_pixels
         The pixel grid to interpolate the scalar quantity to, as
         (npixx, npixy).
-    z_slice
-        Cross section slice position as a z-value. If None, cross
-        section interpolation is turned off. Default is off.
     density_weighted
         Use density weighted interpolation. Default is off.
 
@@ -245,26 +245,24 @@ def vector_interpolation(
         quantity=quantity_x,
         x_coordinate=x_coordinate,
         y_coordinate=y_coordinate,
-        z_coordinate=z_coordinate,
+        dist_from_slice=dist_from_slice,
         extent=extent,
         smoothing_length=smoothing_length,
         particle_mass=particle_mass,
         hfact=hfact,
         number_of_pixels=number_of_pixels,
-        z_slice=z_slice,
         density_weighted=density_weighted,
     )
     vecsmoothy = _interpolate(
         quantity=quantity_y,
         x_coordinate=x_coordinate,
         y_coordinate=y_coordinate,
-        z_coordinate=z_coordinate,
+        dist_from_slice=dist_from_slice,
         extent=extent,
         smoothing_length=smoothing_length,
         particle_mass=particle_mass,
         hfact=hfact,
         number_of_pixels=number_of_pixels,
-        z_slice=z_slice,
         density_weighted=density_weighted,
     )
     return np.stack((np.array(vecsmoothx), np.array(vecsmoothy)))
@@ -275,22 +273,18 @@ def _interpolate(
     quantity: ndarray,
     x_coordinate: ndarray,
     y_coordinate: ndarray,
-    z_coordinate: ndarray = None,
+    dist_from_slice: ndarray = None,
     extent: Extent,
     smoothing_length: ndarray,
     particle_mass: ndarray,
     hfact: float,
     number_of_pixels: Tuple[float, float],
-    z_slice: float = None,
     density_weighted: bool = None,
 ) -> ndarray:
-    if z_slice is None:
+    if dist_from_slice is None:
         do_slice = False
     else:
         do_slice = True
-        zslice = z_slice
-        if z_coordinate is None:
-            raise ValueError('Cross section interpolation requires z_coordinate')
     normalise = False
     if density_weighted is None:
         density_weighted = False
@@ -313,7 +307,7 @@ def _interpolate(
         interpolated_data = interpolate_slice(
             x=x_coordinate,
             y=y_coordinate,
-            z=z_coordinate,
+            dslice=dist_from_slice,
             hh=smoothing_length,
             weight=weight,
             dat=quantity,
@@ -321,7 +315,6 @@ def _interpolate(
             npart=npart,
             xmin=xmin,
             ymin=ymin,
-            zslice=zslice,
             npixx=npixx,
             npixy=npixy,
             pixwidthx=pixwidthx,

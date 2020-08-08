@@ -286,7 +286,7 @@ def interpolate_projection(
 def interpolate_slice(
     x: ndarray,
     y: ndarray,
-    z: ndarray,
+    dslice: ndarray,
     hh: ndarray,
     weight: ndarray,
     dat: ndarray,
@@ -294,7 +294,6 @@ def interpolate_slice(
     npart: int,
     xmin: float,
     ymin: float,
-    zslice: float,
     npixx: int,
     npixy: int,
     pixwidthx: float,
@@ -309,8 +308,8 @@ def interpolate_slice(
         The particle x positions.
     y
         The particle y positions.
-    z
-        The particle z positions.
+    dslice
+        The distance from the cross section slice.
     hh
         The particle smoothing length.
     weight
@@ -360,8 +359,7 @@ def interpolate_slice(
         radkern = RADKERNEL * hi
 
         # For each particle, work out distance from the cross section slice
-        dz = zslice - z[idx]
-        dz2 = dz ** 2 * hi21
+        dz2 = dslice[idx] ** 2 * hi21
 
         # If this is < 2h then add the particle's contribution to the pixels
         # otherwise skip all this and start on the next particle

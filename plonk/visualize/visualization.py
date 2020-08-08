@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from copy import copy
-from typing import TYPE_CHECKING, Any, Dict, Union
+from typing import TYPE_CHECKING, Any, Dict, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -34,7 +34,8 @@ def image(
     x: str = 'x',
     y: str = 'y',
     interp: str = 'projection',
-    z_slice: Union[Quantity, float] = None,
+    slice_normal: Tuple[float, float, float] = None,
+    slice_offset: Union[Quantity, float] = None,
     extent: Extent = (-1, -1, -1, -1),
     units: Dict[str, str] = None,
     ax: Any = None,
@@ -62,10 +63,13 @@ def image(
         The interpolation type. Default is 'projection'.
 
         - 'projection' : 2d interpolation via projection to xy-plane
-        - 'slice' : 3d interpolation via cross-section in z-direction
-    z_slice
-        The z-coordinate value of the cross-section slice. Can be a
-        float or quantity with units of length. Default is 0.0.
+        - 'slice' : 3d interpolation via cross-section slice.
+    slice_normal
+        The normal vector to the plane in which to take the
+        cross-section slice as a tuple (x, y, z). Default is
+        (0, 0, 1).
+    slice_offset
+        The offset of the cross-section slice. Default is 0.0.
     extent
         The range in the x and y-coord as (xmin, xmax, ymin, ymax)
         where xmin, etc. can be floats or quantities with units of
@@ -129,7 +133,8 @@ def image(
         y=y,
         kind='image',
         interp=interp,
-        z_slice=z_slice,
+        slice_normal=slice_normal,
+        slice_offset=slice_offset,
         extent=extent,
         units=units,
         ax=ax,
@@ -145,7 +150,8 @@ def vector(
     x: str = 'x',
     y: str = 'y',
     interp: str = 'projection',
-    z_slice: Union[Quantity, float] = None,
+    slice_normal: Tuple[float, float, float] = None,
+    slice_offset: Union[Quantity, float] = None,
     extent: Extent = (-1, -1, -1, -1),
     units: Dict[str, str] = None,
     ax: Any = None,
@@ -172,10 +178,13 @@ def vector(
         The interpolation type. Default is 'projection'.
 
         - 'projection' : 2d interpolation via projection to xy-plane
-        - 'slice' : 3d interpolation via cross-section in z-direction
-    z_slice
-        The z-coordinate value of the cross-section slice. Can be a
-        float or quantity with units of length. Default is 0.0.
+        - 'slice' : 3d interpolation via cross-section slice.
+    slice_normal
+        The normal vector to the plane in which to take the
+        cross-section slice as a tuple (x, y, z). Default is
+        (0, 0, 1).
+    slice_offset
+        The offset of the cross-section slice. Default is 0.0.
     extent
         The range in the x and y-coord as (xmin, xmax, ymin, ymax)
         where xmin, etc. can be floats or quantities with units of
@@ -239,7 +248,8 @@ def vector(
         y=y,
         kind='quiver',
         interp=interp,
-        z_slice=z_slice,
+        slice_normal=slice_normal,
+        slice_offset=slice_offset,
         extent=extent,
         units=units,
         ax=ax,
@@ -255,7 +265,8 @@ def _interpolated_plot(
     y: str = 'y',
     kind: str = None,
     interp: str = 'projection',
-    z_slice: Union[Quantity, float] = None,
+    slice_normal: Tuple[float, float, float] = None,
+    slice_offset: Union[Quantity, float] = None,
     extent: Extent = (-1, -1, -1, -1),
     units: Dict[str, str] = None,
     ax: Any = None,
@@ -265,6 +276,8 @@ def _interpolated_plot(
     logger.debug(f'Visualizing "{quantity}" on snap: {snap.file_path.name}')
     _kwargs = copy(kwargs)
 
+    if interp not in ('projection', 'slice'):
+        raise ValueError('interp must be "projection" or "slice"')
     if ax is None:
         fig, ax = plt.subplots()
     else:
@@ -282,12 +295,16 @@ def _interpolated_plot(
     else:
         logger.warning('extent has no units, assuming code units')
     if interp == 'slice':
-        if z_slice is None:
-            z_slice = 0 * plonk_units('cm')
-        if isinstance(z_slice, Quantity):
-            z_slice = (z_slice / snap.units['length']).to_base_units().magnitude
+        if slice_normal is None:
+            slice_normal = (0, 0, 1)
+        if slice_offset is None:
+            slice_offset = 0 * plonk_units('cm')
+        if isinstance(slice_offset, Quantity):
+            slice_offset = (
+                (slice_offset / snap.units['length']).to_base_units().magnitude
+            )
         else:
-            logger.warning('z_slice has no units, assuming code units')
+            logger.warning('slice_offset has no units, assuming code units')
     if units is None:
         _units = {
             'quantity': 1 * snap[quantity].units,
@@ -312,7 +329,8 @@ def _interpolated_plot(
         x=x,
         y=y,
         interp=interp,
-        z_slice=z_slice,
+        slice_normal=slice_normal,
+        slice_offset=slice_offset,
         extent=extent,
         **__kwargs,
     )
