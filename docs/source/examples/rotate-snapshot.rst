@@ -22,7 +22,7 @@ Rotate a snapshot and plot column density.
     snap.rotate(rotation)
 
     # Plot
-    snap.plot(quantity='density', cmap='gist_heat', units={'extent': 'au'})
+    snap.image(quantity='density', cmap='gist_heat', units={'extent': 'au'})
     plt.show()
 
 .. figure:: ../_static/rotate.png

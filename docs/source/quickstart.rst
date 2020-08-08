@@ -208,7 +208,7 @@ Produce a projection image plot of density.
 
     >>> snap = plonk.load_snap('disc_00030.h5')
 
-    >>> snap.plot(quantity='density')
+    >>> snap.image(quantity='density')
 
 .. image:: _static/density.png
 
@@ -222,7 +222,7 @@ Set plot extent, colormap, colorbar range, and axis units.
 
     >>> au = plonk.units('au')
 
-    >>> snap.plot(
+    >>> snap.image(
     ...     quantity='density',
     ...     extent=(20, 120, -50, 50) * au,
     ...     units={'extent': 'au'},
@@ -245,7 +245,7 @@ Produce a cross-section image plot of density.
 
     >>> snap = plonk.load_snap('disc_00030.h5')
 
-    >>> snap.plot(
+    >>> snap.image(
     ...     quantity='density',
     ...     x='x',
     ...     y='z',
