@@ -1075,7 +1075,7 @@ class Snap:
 
     image = visualize.image
     plot = visualize.plot
-    quiver = visualize.quiver
+    vector = visualize.vector
 
 
 class SubSnap(Snap):

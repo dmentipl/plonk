@@ -138,7 +138,7 @@ def image(
     )
 
 
-def quiver(
+def vector(
     snap: SnapLike,
     quantity: str,
     *,
@@ -151,7 +151,7 @@ def quiver(
     ax: Any = None,
     **kwargs,
 ) -> Any:
-    """Visualize vector SPH data as a quiver plot.
+    """Visualize vector SPH data as a vector plot.
 
     Visualize scalar smoothed particle hydrodynamics data by
     interpolation to a pixel grid of arrows.
@@ -201,7 +201,7 @@ def quiver(
     Additional parameters passed as keyword arguments will be
     passed to lower level functions as required.
 
-    See below for additional parameters for interpolation, quiver
+    See below for additional parameters for interpolation, vector
     properties, etc. All other keyword arguments are passed to the
     appropriate matplotlib function.
 
@@ -222,15 +222,15 @@ def quiver(
 
     Examples
     --------
-    Quiver plot of velocity in xy-plane.
+    Vector plot of velocity in xy-plane.
 
-    >>> plonk.quiver(snap=snap, quantity='velocity')
+    >>> plonk.vector(snap=snap, quantity='velocity')
 
     Set units for the plot.
 
     >>> units = {'quantity': 'km/s', 'extent': 'au'}
 
-    >>> plonk.quiver(snap=snap, quantity='velocity', units=units)
+    >>> plonk.vector(snap=snap, quantity='velocity', units=units)
     """
     return _interpolated_plot(
         snap=snap,
