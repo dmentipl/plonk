@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from copy import copy
-from typing import TYPE_CHECKING, Any, Dict, Union
+from typing import TYPE_CHECKING, Any, Dict, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -35,6 +35,7 @@ def plot(
     y: str = 'y',
     kind: str = None,
     interp: str = 'projection',
+    slice_normal: Tuple[float, float, float] = None,
     z_slice: Union[Quantity, float] = None,
     extent: Extent = (-1, -1, -1, -1),
     units: Dict[str, str] = None,
@@ -73,6 +74,10 @@ def plot(
         - 'projection' : 2d interpolation via projection to xy-plane
         - 'cross_section' : 3d interpolation via cross-section in
           z-direction
+    slice_normal
+        The normal vector to the plane in which to take the
+        cross-section slice as a tuple (x, y, z). Default is
+        (0, 0, 1).
     z_slice
         The z-coordinate value of the cross-section slice. Can be a
         float or quantity with units of length. Default is 0.0.
@@ -164,6 +169,8 @@ def plot(
     else:
         logger.warning('extent has no units, assuming code units')
     if interp == 'cross_section':
+        if slice_normal is None:
+            slice_normal = (0, 0, 1)
         if z_slice is None:
             z_slice = 0 * plonk_units('cm')
         if isinstance(z_slice, Quantity):
@@ -194,6 +201,7 @@ def plot(
         x=x,
         y=y,
         interp=interp,
+        slice_normal=slice_normal,
         z_slice=z_slice,
         extent=extent,
         **__kwargs,
