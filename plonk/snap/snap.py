@@ -344,7 +344,7 @@ class Snap:
         if self._num_particles_of_type == -1:
             int_to_name = {idx: name for name, idx in self.particle_type.items()}
             d = {}
-            for idx, num in enumerate(np.bincount(self['type'])):
+            for idx, num in enumerate(np.bincount(self['type'].magnitude)):
                 if num > 0:
                     if idx == self.particle_type['dust']:
                         # Dust particle sub-type skips zero: 1, 2, 3 ...

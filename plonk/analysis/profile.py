@@ -286,22 +286,17 @@ class Profile:
         else:
             aggregation = self.aggregation
             array_name = name
-        try:
-            array: ndarray = self.snap[array_name]
-            if array.ndim == 1:
-                self._profiles[name] = self.particles_to_binned_quantity(
-                    aggregation, array
-                )
-                return self._profiles[name]
-            raise ValueError(
-                'Requested profile has array dimension > 1.\nTo access x-, y-, or '
-                'z-components, or magnitude of vector quantities,\ntry, for '
-                'example, prof["velocity_x"] or prof["momentum_mag"].\nTo '
-                'access dust profiles, try, for example, prof["stopping_time_001"] '
-                'or\nprof["dust_mass_tot"].'
-            )
-        except ValueError:
-            logger.error('Profile unavailable.')
+        array: ndarray = self.snap[array_name]
+        if array.ndim == 1:
+            self._profiles[name] = self.particles_to_binned_quantity(aggregation, array)
+            return self._profiles[name]
+        raise ValueError(
+            'Requested profile has array dimension > 1.\nTo access x-, y-, or '
+            'z-components, or magnitude of vector quantities,\ntry, for '
+            'example, prof["velocity_x"] or prof["momentum_mag"].\nTo '
+            'access dust profiles, try, for example, prof["stopping_time_001"] '
+            'or\nprof["dust_mass_tot"].'
+        )
 
     def __getitem__(self, name: str) -> ndarray:
         """Return the profile of a given kind."""
@@ -353,7 +348,7 @@ class Profile:
         """Return a listing of available profiles."""
         loaded = list(self.loaded_profiles())
         available = list(self._profile_functions.keys())
-        snap_arrays = list(self.snap.available_arrays())
+        snap_arrays = _1d_arrays(list(self.snap.available_arrays(all=True)))
         return tuple(sorted(set(loaded + available + snap_arrays)))
 
     def plot(
@@ -639,7 +634,7 @@ def _generate_profiles(n_dust: int = 0):
         return (
             prof['sound_speed']
             * prof['keplerian_frequency']
-            / (np.pi * G * prof['density'])
+            / (np.pi * G * prof['surface_density'])
         )
 
     if n_dust > 0:
@@ -721,3 +716,13 @@ def _check_spacing(spacing: str) -> str:
     if spacing.lower() in ('log', 'logarithm', 'logarithmic'):
         return 'log'
     raise ValueError('Cannot determine spacing')
+
+
+def _1d_arrays(arrays: list) -> list:
+    _arrays = list()
+    for array in arrays:
+        if (array + '_x' in arrays) or (array + '_001' in arrays):
+            pass
+        else:
+            _arrays.append(array)
+    return _arrays
