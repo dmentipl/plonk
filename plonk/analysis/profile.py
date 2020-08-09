@@ -198,18 +198,6 @@ class Profile:
             return np.sqrt(pos[:, 0] ** 2 + pos[:, 1] ** 2 + pos[:, 2] ** 2)
         raise ValueError('Unknown ndim: cannot calculate x array')
 
-    def _set_range_code_units(self, cmin: float, cmax: float) -> Tuple[float, float]:
-        if cmin is None:
-            rmin = self._x.min()
-        else:
-            rmin = cmin
-        if cmax is None:
-            rmax = np.percentile(self._x, 99, axis=0)
-        else:
-            rmax = cmax
-
-        return rmin, rmax
-
     def _set_range(self, cmin: Any, cmax: Any) -> Tuple[float, float]:
         if cmin is None:
             rmin = self._x.min()
