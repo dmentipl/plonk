@@ -52,14 +52,14 @@ If you make changes to Plonk that you would like to contribute, you need to test
 
 ```bash
 python -m pytest
-python -m mypy --ignore-missing-imports plonk tests
+python -m mypy --ignore-missing-imports .
 ```
 
 To check the code formatting do the following
 
 ```bash
 python -m isort --check-only .
-python -m black --check --skip-string-normalization plonk tests
+python -m black --check --skip-string-normalization .
 ```
 
 If any of these commands fail then there is either a test failure, or you need to reformat the code in line with the chosen code style for Plonk. (See below.)
@@ -90,7 +90,7 @@ To format your changes run the following from the main repository directory:
 
 ```bash
 python -m isort .
-python -m black --skip-string-normalization plonk tests
+python -m black --skip-string-normalization .
 ```
 
 ### Commit messages

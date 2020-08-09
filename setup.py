@@ -6,10 +6,14 @@ import re
 
 from setuptools import find_packages, setup
 
-__version__ = re.search(
+match = re.search(
     r'__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
     io.open('plonk/__init__.py', encoding='utf_8_sig').read(),
-).group(1)
+)
+if match is not None:
+    __version__ = match.group(1)
+else:
+    raise ValueError('Cannot determine version')
 
 install_requires = [
     'h5py',

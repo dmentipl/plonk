@@ -26,8 +26,8 @@ install:
 script:
   - python -m coverage run -m pytest
   - python -m isort --check-only .
-  - python -m black --check --skip-string-normalization plonk tests
-  - python -m mypy --ignore-missing-imports plonk tests
+  - python -m black --check --skip-string-normalization .
+  - python -m mypy --ignore-missing-imports .
 
 after_success:
   - python -m coveralls
