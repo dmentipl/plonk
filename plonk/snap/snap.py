@@ -349,12 +349,14 @@ class Snap:
                     if idx == self.particle_type['dust']:
                         # Dust particle sub-type skips zero: 1, 2, 3 ...
                         d['dust'] = list(
-                            np.bincount(self[self['type'] == idx]['sub_type'])[1:]
+                            np.bincount(
+                                self[self['type'] == idx]['sub_type'].magnitude
+                            )[1:]
                         )
                     elif idx == self.particle_type['boundary']:
                         # Boundary particle sub-type: 0 (gas), 1, 2, 3... (dust)
                         d['boundary'] = list(
-                            np.bincount(self[self['type'] == idx]['sub_type'])
+                            np.bincount(self[self['type'] == idx]['sub_type'.magnitude])
                         )
                     else:
                         d[int_to_name[idx]] = num
