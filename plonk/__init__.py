@@ -63,7 +63,7 @@ from .visualize.multi import plot_snaps
 from .visualize.visualization import image, plot, vector
 
 # Canonical version number
-__version__ = '0.6.0'
+__version__ = '0.6.1'
 
 # Initialize logger
 _logger_init(__version__)

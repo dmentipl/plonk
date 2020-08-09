@@ -10,6 +10,7 @@ radii in a disc.
     import matplotlib.pyplot as plt
     import numpy as np
     import plonk
+    from plonk import analysis
 
     au = plonk.units('au')
 
@@ -38,7 +39,7 @@ radii in a disc.
     for R in radius:
 
         # Generate an annulus SubSnap
-        subsnap = annulus(
+        subsnap = analysis.filters.annulus(
             snap=snap,
             radius_min=R - dR,
             radius_max=R + dR,

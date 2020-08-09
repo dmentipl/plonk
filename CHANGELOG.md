@@ -15,6 +15,32 @@ Types of changes:
 
 ## [Unreleased]
 
+## [0.6.1] - 2020-08-09
+
+### Added
+
+- Snap.sinks attribute has more features.
+- Cross section interpolation in a non-xy plane specified by a normal vector to the plane.
+- Snap.rotate can be set by an axis vector and angle as opposed to a scipy Rotation object.
+- discs module to analysis.
+- filters module to analysis to set SubSnaps easily.
+- 'id' array on Snap to help track particles.
+- Function to plot the smoothing length as a circle.
+- Profile method to generate a function from a profile to help create particle filters, for example.
+- Simulation method to create a particle array over the whole simulation.
+
+### Changed
+
+- Snap.available_arrays does not reference sink particles; see Snap.sinks.available_arrays.
+- Profile.plot units are now consistent with visualize functions.
+- Dust profiles in Profile are now distinguished by whether they are mixture (dust/gas) particles or dust-only particles.
+
+### Fixed
+
+- Setting origin in extra quantities.
+- All analysis functions have better physical units support.
+- Bug in Snap.num_particles_of_type.
+
 ## [0.6.0] - 2020-08-05
 
 ### Added
