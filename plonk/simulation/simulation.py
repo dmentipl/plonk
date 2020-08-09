@@ -160,6 +160,42 @@ class Simulation:
 
         return self._sink_quantities
 
+    def to_array(self, quantity: str, indices: List[int] = None) -> Quantity:
+        """Generate an array of a quantity over all snapshots.
+
+        Warning: this can be very memory intensive and slow.
+
+        Parameters
+        ----------
+        quantity
+            The quantity as a string, e.g. 'position'.
+        indices
+            You can select a subset of particles by indices
+            corresponding to snap['id'].
+
+        Returns
+        -------
+        An array with units.
+
+        Examples
+        --------
+        Get the position of every particle during the whole simulation.
+
+        >>> pos = sim.to_array(quantity='position')
+        >>> pos.shape
+            (31, 1100000, 3)
+        """
+        q = list()
+        units = self.snaps[0][quantity].units
+        for snap in self.snaps:
+            if indices is None:
+                array: Quantity = snap[quantity]
+            else:
+                array = snap[quantity][indices]
+            q.append(array.magnitude)
+        q *= units
+        return q
+
     def _generate_snap_objects(self):
         """Generate Snap objects."""
         snaps = list()

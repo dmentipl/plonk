@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 from numpy import ndarray
 from pandas import DataFrame
+from scipy.interpolate import interp1d
 
 from .._logging import logger
 from .._units import Quantity
@@ -92,7 +93,7 @@ class Profile:
 
     Alternatively use the profile_property decorator.
 
-    >>> @Profile.profile_property
+    >>> @prof.profile_property
     ... def mass(prof):
     ...     M = prof.snap['mass']
     ...     return prof.particles_to_binned_quantity('sum', M)
@@ -171,8 +172,10 @@ class Profile:
             self._x.magnitude, self.bin_edges.magnitude
         )[0]
 
-        n_dust = len(self.snap.properties.get('grain_size', []))
-        _generate_profiles(n_dust)
+        num_mixture_dust_species = self.snap.num_dust_species - len(
+            self.snap.num_particles_of_type['dust']
+        )
+        _generate_profiles(num_mixture_dust_species)
 
     def _setup_particle_mask(self, ignore_accreted: bool) -> ndarray:
         if ignore_accreted is False:
@@ -196,18 +199,6 @@ class Profile:
         if self.ndim == 3:
             return np.sqrt(pos[:, 0] ** 2 + pos[:, 1] ** 2 + pos[:, 2] ** 2)
         raise ValueError('Unknown ndim: cannot calculate x array')
-
-    def _set_range_code_units(self, cmin: float, cmax: float) -> Tuple[float, float]:
-        if cmin is None:
-            rmin = self._x.min()
-        else:
-            rmin = cmin
-        if cmax is None:
-            rmax = np.percentile(self._x, 99, axis=0)
-        else:
-            rmax = cmax
-
-        return rmin, rmax
 
     def _set_range(self, cmin: Any, cmax: Any) -> Tuple[float, float]:
         if cmin is None:
@@ -287,8 +278,8 @@ class Profile:
 
         if name in self._profiles:
             return self._profiles[name]
-        if name in Profile._profile_functions:
-            self._profiles[name] = Profile._profile_functions[name](self)
+        if name in self._profile_functions:
+            self._profiles[name] = self._profile_functions[name](self)
             return self._profiles[name]
 
         if name_suffix in _aggregations:
@@ -299,20 +290,19 @@ class Profile:
             array_name = name
         try:
             array: ndarray = self.snap[array_name]
-            if array.ndim == 1:
-                self._profiles[name] = self.particles_to_binned_quantity(
-                    aggregation, array
-                )
-                return self._profiles[name]
-            raise ValueError(
-                'Requested profile has array dimension > 1.\nTo access x-, y-, or '
-                'z-components, or magnitude of vector quantities,\ntry, for '
-                'example, prof["velocity_x"] or prof["momentum_magnitude"].\nTo '
-                'access dust profiles, try, for example, prof["stopping_time_001"] '
-                'or\nprof["dust_mass_sum"].'
-            )
-        except ValueError:
-            logger.error('Profile unavailable.')
+        except ValueError as e:
+            logger.error(e)
+            raise ValueError(f'array "{array_name}" not available on snap')
+        if array.ndim == 1:
+            self._profiles[name] = self.particles_to_binned_quantity(aggregation, array)
+            return self._profiles[name]
+        raise ValueError(
+            'Requested profile has array dimension > 1.\nTo access x-, y-, or '
+            'z-components, or magnitude of vector quantities,\ntry, for '
+            'example, prof["velocity_x"] or prof["momentum_mag"].\nTo '
+            'access dust profiles, try, for example, prof["stopping_time_001"] '
+            'or\nprof["dust_mass_tot"].'
+        )
 
     def __getitem__(self, name: str) -> ndarray:
         """Return the profile of a given kind."""
@@ -364,15 +354,14 @@ class Profile:
         """Return a listing of available profiles."""
         loaded = list(self.loaded_profiles())
         available = list(self._profile_functions.keys())
-        snap_arrays = list(self.snap.available_arrays())
+        snap_arrays = _1d_arrays(list(self.snap.available_arrays(all=True)))
         return tuple(sorted(set(loaded + available + snap_arrays)))
 
     def plot(
         self,
         x: str,
         y: Union[str, List[str]],
-        x_unit: str = None,
-        y_unit: Union[str, List[str]] = None,
+        units: Dict[str, Union[str, List[str]]] = None,
         std_dev_shading: bool = False,
         ax: Any = None,
         **kwargs,
@@ -386,10 +375,11 @@ class Profile:
         y
             The y axis to plot. Can be string or multiple as a list of
             strings.
-        x_unit : optional
-            The x axis quantity unit as a string.
-        y_unit : optional
-            The y axis quantity unit as a string or list of strings.
+        units : optional
+            The units of the plot as a dictionary with keys 'x' and 'y'.
+            The values are strings representing units, e.g. 'g/cm^3'.
+            The 'y' value can be a list corresponding to each y value
+            plotted.
         std_dev_shading : optional
             Add shading for standard deviation of profile.
         ax : optional
@@ -405,9 +395,14 @@ class Profile:
         if isinstance(y, str):
             y = [y]
 
+        if units is None:
+            x_unit, y_unit = None, None
+        else:
+            x_unit = units.get('x')
+            y_unit = units.get('y')
         if y_unit is not None:
             if isinstance(y_unit, str):
-                y_unit = [y_unit]
+                y_unit = [y_unit for _ in range(len(y))]
             if len(y) != len(y_unit):
                 raise ValueError('Length of y does not match length of y_unit')
 
@@ -462,6 +457,43 @@ class Profile:
         ax.legend()
 
         return ax
+
+    def to_function(self, profile, **kwargs):
+        """Create function via interpolation.
+
+        The function is of the coordinate of the profile, e.g.
+        'radius', and returns values of the selected profile, e.g.
+        'scale_height'. The function is generated from the
+        scipy.interpolate function interp1d.
+
+        Parameters
+        ----------
+        profile
+            The profile function to create as a string, e.g.
+            'scale_height'.
+
+        Returns
+        -------
+        The function.
+
+        Examples
+        --------
+        Select all particles within a scale height in a disc.
+
+        >>> scale_height = prof.to_function('scale_height')
+        >>> subsnap = snap[np.abs(snap['z']) < scale_height(snap['R'])]
+        """
+        coord = self.bin_centers
+        prof = self[profile]
+
+        def fn(x):
+            nonlocal coord, prof
+            _coord = coord.to(x.units).magnitude
+            _prof = prof.magnitude
+            y = interp1d(_coord, _prof, fill_value='extrapolate', **kwargs)(x.magnitude)
+            return y * self[profile].units
+
+        return fn
 
     def to_dataframe(
         self, columns: List[str] = None, units: List[str] = None
@@ -558,7 +590,7 @@ class Profile:
         return binned_quantity
 
 
-def _generate_profiles(n_dust: int = 0):
+def _generate_profiles(num_mixture_dust_species: int = 0):
     @Profile.profile_property
     def mass(prof) -> ndarray:
         """Mass profile."""
@@ -608,10 +640,10 @@ def _generate_profiles(n_dust: int = 0):
         return (
             prof['sound_speed']
             * prof['keplerian_frequency']
-            / (np.pi * G * prof['density'])
+            / (np.pi * G * prof['surface_density'])
         )
 
-    if n_dust > 0:
+    if num_mixture_dust_species > 0:
 
         @Profile.profile_property
         def gas_mass(prof) -> ndarray:
@@ -627,7 +659,7 @@ def _generate_profiles(n_dust: int = 0):
             """
             return prof['gas_mass'] / prof['size']
 
-        for idx in range(n_dust):
+        for idx in range(num_mixture_dust_species):
 
             def dust_mass(idx, prof) -> ndarray:
                 """Dust mass profile."""
@@ -690,3 +722,13 @@ def _check_spacing(spacing: str) -> str:
     if spacing.lower() in ('log', 'logarithm', 'logarithmic'):
         return 'log'
     raise ValueError('Cannot determine spacing')
+
+
+def _1d_arrays(arrays: list) -> list:
+    _arrays = list()
+    for array in arrays:
+        if (array + '_x' in arrays) or (array + '_001' in arrays):
+            pass
+        else:
+            _arrays.append(array)
+    return _arrays

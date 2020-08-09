@@ -467,7 +467,7 @@ def plot(
 
     Set units for the plot.
 
-    >>> units = {'x': 'au', 'y': 'au', 'cunit': 'g/cm^3'}
+    >>> units = {'x': 'au', 'y': 'au', 'c': 'g/cm^3'}
 
     >>> plonk.plot(snap=snap, x='x', y='y', c='density', units=units)
     """
