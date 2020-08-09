@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 from numpy import ndarray
 from pandas import DataFrame
+from scipy.interpolate import interp1d
 
 from .._logging import logger
 from .._units import Quantity
@@ -462,6 +463,43 @@ class Profile:
         ax.legend()
 
         return ax
+
+    def to_function(self, profile, **kwargs):
+        """Create function via interpolation.
+
+        The function is of the coordinate of the profile, e.g.
+        'radius', and returns values of the selected profile, e.g.
+        'scale_height'. The function is generated from the
+        scipy.interpolate function interp1d.
+
+        Parameters
+        ----------
+        profile
+            The profile function to create as a string, e.g.
+            'scale_height'.
+
+        Returns
+        -------
+        The function.
+
+        Examples
+        --------
+        Select all particles within a scale height in a disc.
+
+        >>> scale_height = prof.to_function('scale_height')
+        >>> subsnap = snap[np.abs(snap['z']) < scale_height(snap['R'])]
+        """
+        coord = self.bin_centers
+        prof = self[profile]
+
+        def fn(x):
+            nonlocal coord, prof
+            _coord = coord.to(x.units).magnitude
+            _prof = prof.magnitude
+            y = interp1d(_coord, _prof, fill_value='extrapolate', **kwargs)(x.magnitude)
+            return y * self[profile].units
+
+        return fn
 
     def to_dataframe(
         self, columns: List[str] = None, units: List[str] = None
