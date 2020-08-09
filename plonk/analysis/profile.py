@@ -296,9 +296,9 @@ class Profile:
             raise ValueError(
                 'Requested profile has array dimension > 1.\nTo access x-, y-, or '
                 'z-components, or magnitude of vector quantities,\ntry, for '
-                'example, prof["velocity_x"] or prof["momentum_magnitude"].\nTo '
+                'example, prof["velocity_x"] or prof["momentum_mag"].\nTo '
                 'access dust profiles, try, for example, prof["stopping_time_001"] '
-                'or\nprof["dust_mass_sum"].'
+                'or\nprof["dust_mass_tot"].'
             )
         except ValueError:
             logger.error('Profile unavailable.')
