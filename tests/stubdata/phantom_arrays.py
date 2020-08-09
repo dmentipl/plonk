@@ -1,6 +1,4 @@
-"""
-Stub data for Phantom Arrays object.
-"""
+"""Stub data for Phantom Arrays object."""
 
 import numpy as np
 

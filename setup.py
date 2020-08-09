@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+"""Plonk setup.py."""
 
 import setuptools
 

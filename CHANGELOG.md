@@ -15,6 +15,11 @@ Types of changes:
 
 ## [Unreleased]
 
+### Changed
+
+- Use setup.cfg for setuptools, and pyproject.toml (and setup.cfg) for config of tools.
+- Version is set in setup.cfg and imported into plonk via importlib_metadata.
+
 ## [0.6.1] - 2020-08-09
 
 ### Added
