@@ -372,8 +372,7 @@ class Profile:
         self,
         x: str,
         y: Union[str, List[str]],
-        x_unit: str = None,
-        y_unit: Union[str, List[str]] = None,
+        units: Dict[str, Union[str, List[str]]] = None,
         std_dev_shading: bool = False,
         ax: Any = None,
         **kwargs,
@@ -387,10 +386,11 @@ class Profile:
         y
             The y axis to plot. Can be string or multiple as a list of
             strings.
-        x_unit : optional
-            The x axis quantity unit as a string.
-        y_unit : optional
-            The y axis quantity unit as a string or list of strings.
+        units : optional
+            The units of the plot as a dictionary with keys 'x' and 'y'.
+            The values are strings representing units, e.g. 'g/cm^3'.
+            The 'y' value can be a list corresponding to each y value
+            plotted.
         std_dev_shading : optional
             Add shading for standard deviation of profile.
         ax : optional
@@ -406,9 +406,14 @@ class Profile:
         if isinstance(y, str):
             y = [y]
 
+        if units is None:
+            x_unit, y_unit = None, None
+        else:
+            x_unit = units.get('x')
+            y_unit = units.get('y')
         if y_unit is not None:
             if isinstance(y_unit, str):
-                y_unit = [y_unit]
+                y_unit = [y_unit for _ in range(len(y))]
             if len(y) != len(y_unit):
                 raise ValueError('Length of y does not match length of y_unit')
 
