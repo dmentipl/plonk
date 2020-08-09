@@ -93,7 +93,7 @@ class Profile:
 
     Alternatively use the profile_property decorator.
 
-    >>> @Profile.profile_property
+    >>> @prof.profile_property
     ... def mass(prof):
     ...     M = prof.snap['mass']
     ...     return prof.particles_to_binned_quantity('sum', M)
@@ -278,8 +278,8 @@ class Profile:
 
         if name in self._profiles:
             return self._profiles[name]
-        if name in Profile._profile_functions:
-            self._profiles[name] = Profile._profile_functions[name](self)
+        if name in self._profile_functions:
+            self._profiles[name] = self._profile_functions[name](self)
             return self._profiles[name]
 
         if name_suffix in _aggregations:
@@ -288,7 +288,11 @@ class Profile:
         else:
             aggregation = self.aggregation
             array_name = name
-        array: ndarray = self.snap[array_name]
+        try:
+            array: ndarray = self.snap[array_name]
+        except ValueError as e:
+            logger.error(e)
+            raise ValueError(f'array "{array_name}" not available on snap')
         if array.ndim == 1:
             self._profiles[name] = self.particles_to_binned_quantity(aggregation, array)
             return self._profiles[name]
