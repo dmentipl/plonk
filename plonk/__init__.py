@@ -50,6 +50,8 @@ See https://plonk.readthedocs.io/ for documentation. The source code is
 available at https://github.com/dmentipl/plonk.
 """
 
+import importlib_metadata
+
 from ._logging import logger_init as _logger_init
 from ._units import units
 from .analysis.profile import Profile, load_profile
@@ -62,8 +64,6 @@ from .visualize.interpolation import interpolate
 from .visualize.multi import plot_snaps
 from .visualize.visualization import particle_plot, plot
 
-# Canonical version number
-__version__ = '0.6.1'
+__version__ = importlib_metadata.version('plonk')
 
-# Initialize logger
 _logger_init(__version__)

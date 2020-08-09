@@ -24,10 +24,10 @@ install:
   - pip install -e .
 
 script:
-  - python -m coverage run -m pytest
-  - python -m isort --check-only .
-  - python -m black --check --skip-string-normalization .
-  - python -m mypy --ignore-missing-imports .
+  - python -m coverage run
+  - python -m isort --check .
+  - python -m black --check .
+  - python -m mypy .
 
 after_success:
   - python -m coveralls
