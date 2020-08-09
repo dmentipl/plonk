@@ -15,6 +15,8 @@ Types of changes:
 
 ## [Unreleased]
 
+## [0.6.1] - 2020-08-09
+
 ### Added
 
 - Snap.sinks attribute has more features.
