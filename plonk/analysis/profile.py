@@ -172,8 +172,10 @@ class Profile:
             self._x.magnitude, self.bin_edges.magnitude
         )[0]
 
-        n_dust = len(self.snap.properties.get('grain_size', []))
-        _generate_profiles(n_dust)
+        num_mixture_dust_species = self.snap.num_dust_species - len(
+            self.snap.num_particles_of_type['dust']
+        )
+        _generate_profiles(num_mixture_dust_species)
 
     def _setup_particle_mask(self, ignore_accreted: bool) -> ndarray:
         if ignore_accreted is False:
@@ -584,7 +586,7 @@ class Profile:
         return binned_quantity
 
 
-def _generate_profiles(n_dust: int = 0):
+def _generate_profiles(num_mixture_dust_species: int = 0):
     @Profile.profile_property
     def mass(prof) -> ndarray:
         """Mass profile."""
@@ -637,7 +639,7 @@ def _generate_profiles(n_dust: int = 0):
             / (np.pi * G * prof['surface_density'])
         )
 
-    if n_dust > 0:
+    if num_mixture_dust_species > 0:
 
         @Profile.profile_property
         def gas_mass(prof) -> ndarray:
@@ -653,7 +655,7 @@ def _generate_profiles(n_dust: int = 0):
             """
             return prof['gas_mass'] / prof['size']
 
-        for idx in range(n_dust):
+        for idx in range(num_mixture_dust_species):
 
             def dust_mass(idx, prof) -> ndarray:
                 """Dust mass profile."""
