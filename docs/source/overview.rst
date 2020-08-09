@@ -103,6 +103,7 @@ arrays are stored on file, while others are computed as required.
      'density',
      'dust_to_gas_ratio',
      'eccentricity',
+     'id',
      'inclination',
      'keplerian_frequency',
      'kinetic_energy',
@@ -322,13 +323,14 @@ maxiumum. In addition, we set the extent, i.e. the x- and y-limits.
 
 .. code-block:: pycon
 
-    >>> au = plonk.units('au')
+    >>> au = plonk.units['au']
+    >>> g_cm_2 = plonk.units['g/cm^2']
     >>> snap.plot(
     ...     quantity='density',
     ...     extent=(20, 120, -50, 50) * au,
     ...     cmap='gist_heat',
-    ...     vmin=0.1,
-    ...     vmax=0.2,
+    ...     vmin=0.1 * g_cm_2,
+    ...     vmax=0.2 * g_cm_2,
     ... )
 
 .. figure:: _static/density_zoom.png
@@ -412,6 +414,7 @@ To see all available arrays on the :py:class:`Snap` object:
      'density',
      'dust_to_gas_ratio',
      'eccentricity',
+     'id',
      'inclination',
      'keplerian_frequency',
      'kinetic_energy',
@@ -511,33 +514,64 @@ To see what profiles are loaded and what are available use the
     ('number', 'radius', 'size')
 
     >>> prof.available_profiles()
-    ('angular_momentum_phi',
+    ('angular_momentum_mag',
+     'angular_momentum_phi',
      'angular_momentum_theta',
+     'angular_momentum_x',
+     'angular_momentum_y',
+     'angular_momentum_z',
+     'angular_velocity',
      'aspect_ratio',
+     'azimuthal_angle',
      'density',
-     'dust_mass_001',
-     'dust_surface_density_001',
-     'dust_to_gas_ratio',
-     'gas_mass',
-     'gas_surface_density',
+     'dust_to_gas_ratio_001',
+     'dust_to_gas_ratio_tot',
+     'eccentricity',
+     'id',
+     'inclination',
+     'keplerian_frequency',
+     'kinetic_energy',
      'mass',
+     'momentum_mag',
+     'momentum_x',
+     'momentum_y',
+     'momentum_z',
      'number',
-     'position',
+     'polar_angle',
+     'position_mag',
+     'position_x',
+     'position_y',
+     'position_z',
      'pressure',
      'radius',
+     'radius_cylindrical',
+     'radius_spherical',
      'scale_height',
+     'semi_major_axis',
      'size',
      'smoothing_length',
      'sound_speed',
-     'stopping_time',
+     'specific_angular_momentum_mag',
+     'specific_angular_momentum_x',
+     'specific_angular_momentum_y',
+     'specific_angular_momentum_z',
+     'stokes_number_001',
+     'stokes_number_tot',
+     'stopping_time_001',
+     'stopping_time_tot',
      'sub_type',
      'surface_density',
+     'temperature',
      'timestep',
      'toomre_Q',
      'type',
-     'velocity',
-     'velocity_divergence')
-
+     'velocity_divergence',
+     'velocity_mag',
+     'velocity_radial_cylindrical',
+     'velocity_radial_spherical',
+     'velocity_x',
+     'velocity_y',
+     'velocity_z')
 
 To load a profile, simply call it.
 
@@ -606,8 +640,8 @@ We can also plot the profiles.
 
     >>> with plt.style.context('seaborn'):
     ...     fig, axs = plt.subplots(ncols=2, figsize=(12, 5))
-    ...     prof.plot('radius', 'surface_density', x_unit='au', y_unit='g/cm^2', ax=axs[0])
-    ...     prof.plot('radius', 'scale_height', x_unit='au', y_unit='au', ax=axs[1])
+    ...     prof.plot('radius', 'surface_density', units={'x': 'au', 'y': 'g/cm^2'}, ax=axs[0])
+    ...     prof.plot('radius', 'scale_height', units={'x': 'au', 'y': 'au'}, ax=axs[1])
 
 .. figure:: _static/profile.png
 

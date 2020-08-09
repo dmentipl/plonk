@@ -27,6 +27,7 @@ Load a single snapshot and see what arrays are available.
      'density',
      'dust_to_gas_ratio',
      'eccentricity',
+     'id',
      'inclination',
      'keplerian_frequency',
      'kinetic_energy',
@@ -220,15 +221,16 @@ Set plot extent, colormap, colorbar range, and axis units.
 
     >>> snap = plonk.load_snap('disc_00030.h5')
 
-    >>> au = plonk.units('au')
+    >>> au = plonk.units['au']
+    >>> g_cm_2 = plonk.units['g/cm^2']
 
     >>> snap.plot(
     ...     quantity='density',
     ...     extent=(20, 120, -50, 50) * au,
     ...     units={'extent': 'au'},
     ...     cmap='gist_heat',
-    ...     vmin=0.1,
-    ...     vmax=0.2,
+    ...     vmin=0.1 * g_cm_2,
+    ...     vmax=0.2 * g_cm_2,
     ... )
 
 .. image:: _static/density2.png
@@ -351,32 +353,64 @@ Create a radial profile.
     >>> prof = plonk.load_profile(snap)
 
     >>> prof.available_profiles()
-    ('angular_momentum_phi',
+    ('angular_momentum_mag',
+     'angular_momentum_phi',
      'angular_momentum_theta',
+     'angular_momentum_x',
+     'angular_momentum_y',
+     'angular_momentum_z',
+     'angular_velocity',
      'aspect_ratio',
+     'azimuthal_angle',
      'density',
-     'dust_mass_001',
-     'dust_surface_density_001',
-     'dust_to_gas_ratio',
-     'gas_mass',
-     'gas_surface_density',
+     'dust_to_gas_ratio_001',
+     'dust_to_gas_ratio_tot',
+     'eccentricity',
+     'id',
+     'inclination',
+     'keplerian_frequency',
+     'kinetic_energy',
      'mass',
+     'momentum_mag',
+     'momentum_x',
+     'momentum_y',
+     'momentum_z',
      'number',
-     'position',
+     'polar_angle',
+     'position_mag',
+     'position_x',
+     'position_y',
+     'position_z',
      'pressure',
      'radius',
+     'radius_cylindrical',
+     'radius_spherical',
      'scale_height',
+     'semi_major_axis',
      'size',
      'smoothing_length',
      'sound_speed',
-     'stopping_time',
+     'specific_angular_momentum_mag',
+     'specific_angular_momentum_x',
+     'specific_angular_momentum_y',
+     'specific_angular_momentum_z',
+     'stokes_number_001',
+     'stokes_number_tot',
+     'stopping_time_001',
+     'stopping_time_tot',
      'sub_type',
      'surface_density',
+     'temperature',
      'timestep',
      'toomre_Q',
      'type',
-     'velocity',
-     'velocity_divergence')
+     'velocity_divergence',
+     'velocity_mag',
+     'velocity_radial_cylindrical',
+     'velocity_radial_spherical',
+     'velocity_x',
+     'velocity_y',
+     'velocity_z')
 
     >>> prof['surface_density']
     array([0.01271039, 0.02865819, 0.04067127, 0.05149332, 0.06517471,
@@ -425,11 +459,12 @@ radius.
 
     >>> import matplotlib.pyplot as plt
     >>> import plonk
+    >>> from plonk.analysis.filters import annulus
 
     >>> snap = plonk.load_snap('disc_00030.h5')
 
     >>> au = plonk.units('au')
-    >>> subsnap = snap[(snap['R'] > 50*au) & (snap['R'] < 55*au)]
+    >>> subsnap = annulus(snap=snap, radius_min=50*au, radius_max=55*au, height=100*au)
 
     >>> prof = plonk.load_profile(
     ...     subsnap,
@@ -440,7 +475,7 @@ radius.
     ... )
 
     >>> with plt.style.context('seaborn'):
-    ...     ax = prof.plot('radius', 'density', x_unit='au')
+    ...     ax = prof.plot('z', 'density', units={'x': 'au'})
     ...     ax.set_ylabel(r'Density [g/cm${}^3$]')
     ...     ax.legend().remove()
 
