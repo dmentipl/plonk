@@ -17,13 +17,10 @@ import os
 import re
 import sys
 
+import importlib_metadata
+
 sys.path.insert(0, os.path.abspath('../..'))
-
-__version__ = re.search(
-    r'__version__\s*=\s*[\'"]([^\'"]*)[\'"]',  # It excludes inline comment too
-    io.open('../../plonk/__init__.py', encoding='utf_8_sig').read(),
-).group(1)
-
+__version__ = importlib_metadata.version('plonk')
 
 # -- Project information -----------------------------------------------------
 
