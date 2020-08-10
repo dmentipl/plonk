@@ -1,4 +1,4 @@
-"""Filter particles."""
+"""Filter particles to produce SubSnaps."""
 
 from .._units import Quantity
 from .._units import units as plonk_units

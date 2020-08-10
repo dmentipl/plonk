@@ -1,7 +1,7 @@
-"""The analysis sub-package.
+"""Analysis of SPH data.
 
-It contains Plonk implementations of typical smoothed particle
-hydrodynamics post-simulation analysis tasks.
+The analysis sub-package contains Plonk implementations of typical
+smoothed particle hydrodynamics post-simulation analysis tasks.
 
 Examples
 --------

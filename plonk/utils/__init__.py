@@ -1,1 +1,1 @@
-"""The utils sub-package."""
+"""Utilities."""
