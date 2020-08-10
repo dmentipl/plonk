@@ -171,9 +171,11 @@ class Profile:
             self._x.magnitude, self.bin_edges.magnitude
         )[0]
 
-        num_mixture_dust_species = self.snap.num_dust_species - len(
-            self.snap.num_particles_of_type['dust']
-        )
+        try:
+            num_separate_dust = self.snap.num_particles_of_type['dust']
+        except KeyError:
+            num_separate_dust = 0
+        num_mixture_dust_species = self.snap.num_dust_species - num_separate_dust
         _generate_profiles(num_mixture_dust_species)
 
     def _setup_particle_mask(self, ignore_accreted: bool) -> ndarray:
