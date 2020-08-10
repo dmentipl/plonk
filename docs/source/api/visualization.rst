@@ -9,4 +9,4 @@ Visualize smoothed particle hydrodynamics data.
     visualization/plots
     visualization/animations
     visualization/interpolation
-    visualization/utility
+    visualization/utils

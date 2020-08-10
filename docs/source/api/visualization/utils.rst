@@ -1,6 +1,6 @@
-~~~~~~~
-Utility
-~~~~~~~
+~~~~~
+Utils
+~~~~~
 
 The following are utility functions for visualization.
 
