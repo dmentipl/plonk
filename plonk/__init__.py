@@ -67,3 +67,21 @@ from .visualize.visualization import particle_plot, plot
 __version__ = importlib_metadata.version('plonk')
 
 _logger_init(__version__)
+
+__all__ = [
+    'Profile',
+    'Simulation',
+    'Snap',
+    'animation',
+    'animation_particles',
+    'animation_profiles',
+    'interpolate',
+    'load_ev',
+    'load_profile',
+    'load_sim',
+    'load_snap',
+    'particle_plot',
+    'plot',
+    'plot_snaps',
+    'units',
+]
