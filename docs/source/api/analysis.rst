@@ -2,41 +2,14 @@
 Analysis
 --------
 
-.. automodule:: plonk.analysis
+Smoothed particle hydrodynamics analysis tools.
 
-~~~~~~~
-Profile
-~~~~~~~
+.. toctree::
 
-The :py:class:`Profile` class provides methods for generating profiles from the
-particle data.
-
-.. autoclass:: plonk.Profile
-.. autofunction:: plonk.load_profile
-
-~~~~~~~~~~~~~~~~~~~
-Particle quantities
-~~~~~~~~~~~~~~~~~~~
-
-.. automodule:: plonk.analysis.particles
-
-~~~~~~~~~~~~~~~
-Sink quantities
-~~~~~~~~~~~~~~~
-
-.. automodule:: plonk.analysis.sinks
-
-~~~~~~~~~~~~~~~~~
-Global quantities
-~~~~~~~~~~~~~~~~~
-
-.. automodule:: plonk.analysis.total
-
-~~~~~~~~~~~~~
-SPH summation
-~~~~~~~~~~~~~
-
-This section contains functions to perform SPH summation and derivatives.
-
-.. autofunction:: plonk.utils.sph.derivative
-.. autofunction:: plonk.utils.sph.summation
+    analysis/profile
+    analysis/particles
+    analysis/total
+    analysis/sinks
+    analysis/discs
+    analysis/filters
+    analysis/sph

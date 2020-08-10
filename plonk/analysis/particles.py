@@ -1,30 +1,4 @@
-"""Calculate quantities on the particles.
-
-The following functions are available:
-
-- angular_momentum
-- angular_velocity
-- azimuthal_angle
-- dust_density
-- dust_fraction
-- dust_mass
-- eccentricity
-- gas_density
-- gas_fraction
-- gas_mass
-- inclination
-- keplerian_frequency
-- kinetic_energy
-- momentum
-- polar_angle
-- radial_distance
-- radial_velocity
-- semi_major_axis
-- specific_angular_momentum
-- specific_kinetic_energy
-- stokes_number
-- temperature
-"""
+"""Calculate extra quantities on the particles."""
 
 from __future__ import annotations
 

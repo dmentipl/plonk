@@ -1,20 +1,4 @@
-"""Calculate quantities on the sinks.
-
-The following functions are available:
-
-- kinetic_energy
-- gravitational_potential_energy
-- specific_orbital_energy
-- specific_angular_momentum
-- specific_angular_momentum
-- eccentricity
-- semi_major_axis
-- inclination
-- orbital_period
-- mean_motion
-- Roche_sphere
-- Hill_radius
-"""
+"""Calculate extra quantities on the sinks."""
 
 import numpy as np
 

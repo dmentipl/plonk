@@ -1,4 +1,4 @@
-"""The simulation sub-package.
+"""SPH simulation data.
 
 It contains Plonk the implementation of smoothed particle hydrodynamics
 combined simulation data. This includes snapshots and time series data.

@@ -1,7 +1,6 @@
-"""Profiles.
+"""Profiles to reduce data to 1-dimension."""
 
-Heavily inspired by pynbody (https://pynbody.github.io/).
-"""
+# Heavily inspired by pynbody (https://pynbody.github.io/).
 
 from __future__ import annotations
 
