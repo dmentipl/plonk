@@ -1,5 +1,4 @@
 h5py
-importlib_metadata
 matplotlib
 numba
 numpy
