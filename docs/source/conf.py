@@ -12,26 +12,28 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import io
+import configparser
 import os
-import re
 import sys
 
 import importlib_metadata
 
 sys.path.insert(0, os.path.abspath('../..'))
-__version__ = importlib_metadata.version('plonk')
 
 # -- Project information -----------------------------------------------------
 
-project = 'Plonk'
-copyright = '2020, Daniel Mentiplay'
-author = 'Daniel Mentiplay'
+setup_cfg = configparser.ConfigParser()
+setup_cfg.read('../../setup.cfg')
+project = setup_cfg['metadata']['name']
+author = setup_cfg['metadata']['author']
+_version = setup_cfg['metadata']['version']
+
+copyright = f'2020, {author}'
 
 # The short X.Y version
-version = __version__.split(':')[0]
+version = _version.split(':')[0]
 # The full version, including alpha/beta/rc tags
-release = __version__
+release = _version
 
 
 # -- General configuration ---------------------------------------------------
