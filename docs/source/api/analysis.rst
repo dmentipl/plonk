@@ -38,5 +38,5 @@ SPH summation
 
 This section contains functions to perform SPH summation and derivatives.
 
-.. autofunction:: plonk.utils.sph.derivative
-.. autofunction:: plonk.utils.sph.summation
+.. autofunction:: plonk.analysis.sph.derivative
+.. autofunction:: plonk.analysis.sph.summation

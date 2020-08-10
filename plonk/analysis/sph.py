@@ -10,7 +10,7 @@ from numba.typed import List
 from numpy import ndarray
 
 from .._logging import logger
-from .kernels import (
+from ..utils.kernels import (
     kernel_cubic,
     kernel_gradient_cubic,
     kernel_gradient_quintic,
