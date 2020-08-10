@@ -13,7 +13,7 @@ channels:
 dependencies:
   - python>=3.6
   - black
-  - coverage
+  - coverage[toml]
   - coveralls
   - doc8
   - flake8

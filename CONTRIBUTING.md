@@ -52,14 +52,14 @@ If you make changes to Plonk that you would like to contribute, you need to test
 
 ```bash
 python -m pytest
-python -m mypy --ignore-missing-imports .
+python -m mypy .
 ```
 
 To check the code formatting do the following
 
 ```bash
-python -m isort --check-only .
-python -m black --check --skip-string-normalization .
+python -m isort --check .
+python -m black --check .
 ```
 
 If any of these commands fail then there is either a test failure, or you need to reformat the code in line with the chosen code style for Plonk. (See below.)
@@ -69,7 +69,7 @@ After you have committed and pushed your changes to your forked repository you c
 To check the [code coverage](https://en.wikipedia.org/wiki/Code_coverage) do the following
 
 ```bash
-python -m coverage run -m pytest
+python -m coverage run
 python -m coverage html
 ```
 
@@ -90,7 +90,7 @@ To format your changes run the following from the main repository directory:
 
 ```bash
 python -m isort .
-python -m black --skip-string-normalization .
+python -m black .
 ```
 
 ### Commit messages
@@ -136,7 +136,7 @@ The documentation is not comprehensive. Documentation of use cases is encouraged
 
 ### Testing
 
-We welcome contributions to the testing framework. To see where test coverage is lacking run `python -m coverage run -m pytest && python -m coverage html` and then open `htmlcov/index.html` in a web browser.
+We welcome contributions to the testing framework. To see where test coverage is lacking run `python -m coverage run && python -m coverage html` and then open `htmlcov/index.html` in a web browser.
 
 Coming up with ideas of what to test is useful.
 
