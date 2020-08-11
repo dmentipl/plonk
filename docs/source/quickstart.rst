@@ -446,7 +446,7 @@ Plot a radial profile.
     >>> prof = plonk.load_profile(snap)
 
     >>> with plt.style.context('seaborn'):
-    ...     ax = prof.plot('radius', 'scale_height', x_unit='au', y_unit='au')
+    ...     ax = prof.plot('radius', 'scale_height', units={'x': 'au', 'y':'au'})
     ...     ax.set_ylabel('Scale height [au]')
     ...     ax.legend().remove()
 

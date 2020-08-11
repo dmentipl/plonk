@@ -107,7 +107,7 @@ class Profile:
     Plot a quantity on the profile with units.
 
     >>> prof.plot(
-    ...     'radius', 'surface_density', x_unit='au', y_unit='g/cm^2'
+    ...     'radius', 'surface_density', unit={'x': 'au', 'y'='g/cm^2'}
     ... )
     """
 
