@@ -160,7 +160,7 @@ New releases and PyPI and Conda packages
 
 ### Make a release
 
-First, increase the version number in `__init__.py`, and update the `CHANGELOG.md` adding a heading like `[v0.3.1] - yyyy-mm-dd` under "Unreleased" heading. Then commit the change with a message like "Bump version to v0.3.1".
+First, increase the version number in `setup.cfg`, and update the `CHANGELOG.md` adding a heading like `[v0.3.1] - yyyy-mm-dd` under "Unreleased" heading. Then commit the change with a message like "Bump version to v0.3.1".
 
 Then, make a new release on GitHub at <https://github.com/dmentipl/plonk/releases>. The title and tag should both be like "v0.3.1" which corresponds to the Plonk version number. Copy in the changes from the `CHANGELOG.md`. This creates a git tag for the commit, and generates a GitHub release with downloadable source as a tar.gz file.
 
