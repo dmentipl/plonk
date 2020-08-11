@@ -172,7 +172,7 @@ class Profile:
         )[0]
 
         try:
-            num_separate_dust = self.snap.num_particles_of_type['dust']
+            num_separate_dust = len(self.snap.num_particles_of_type['dust'])
         except KeyError:
             num_separate_dust = 0
         num_mixture_dust_species = self.snap.num_dust_species - num_separate_dust
