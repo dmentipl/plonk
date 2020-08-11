@@ -14,7 +14,7 @@ from numpy import ndarray
 from .._logging import logger
 from ..snap.utils import get_array_in_code_units
 from ..utils.geometry import distance_from_plane
-from .splash import interpolate_cross_section, interpolate_projection
+from .splash import interpolate_projection, interpolate_slice
 
 if TYPE_CHECKING:
     from ..snap.snap import SnapLike
@@ -30,7 +30,7 @@ def interpolate(
     y: str = 'y',
     interp: 'str',
     slice_normal: Tuple[float, float, float] = None,
-    z_slice: float = None,
+    slice_offset: float = None,
     extent: Extent,
     **kwargs,
 ) -> ndarray:
@@ -52,14 +52,12 @@ def interpolate(
         The interpolation type. Default is 'projection'.
 
         - 'projection' : 2d interpolation via projection to xy-plane
-        - 'cross_section' : 3d interpolation via cross-section in
-          z-direction
+        - 'slice' : 3d interpolation via cross-section slice.
     slice_normal
         The normal vector to the plane in which to take the
         cross-section slice as an array (x, y, z).
-    z_slice
-        The z-coordinate value of the cross-section slice. Default
-        is 0.0.
+    slice_offset
+        The offset of the cross-section slice. Default is 0.0.
     extent
         The xy extent of the image as (xmin, xmax, ymin, ymax).
     **kwargs
@@ -92,14 +90,14 @@ def interpolate(
         dist_from_slice = None
         if slice_normal is not None:
             logger.warning('ignoring slice_normal for projection')
-        if z_slice is not None:
-            logger.warning('ignoring z_slice for projection')
-    elif interp == 'cross_section':
-        if z_slice is None:
-            z_slice = 0.0
+        if slice_offset is not None:
+            logger.warning('ignoring slice_offset for projection')
+    elif interp == 'slice':
+        if slice_offset is None:
+            slice_offset = 0.0
         if slice_normal is None:
             slice_normal = np.array([0, 0, 1])
-        dist_from_slice = distance_from_plane(x, y, z, slice_normal, z_slice)
+        dist_from_slice = distance_from_plane(x, y, z, slice_normal, slice_offset)
 
     if _quantity.ndim == 1:
         interpolated_data = scalar_interpolation(
@@ -171,9 +169,6 @@ def scalar_interpolation(
     number_of_pixels
         The pixel grid to interpolate the scalar quantity to, as
         (npixx, npixy).
-    cross_section
-        Cross section slice position as a z-value. If None, cross
-        section interpolation is turned off. Default is off.
     density_weighted
         Use density weighted interpolation. Default is off.
 
@@ -237,9 +232,6 @@ def vector_interpolation(
     number_of_pixels
         The pixel grid to interpolate the scalar quantity to, as
         (npixx, npixy).
-    cross_section
-        Cross section slice position as a z-value. If None, cross
-        section interpolation is turned off. Default is off.
     density_weighted
         Use density weighted interpolation. Default is off.
 
@@ -290,9 +282,9 @@ def _interpolate(
     density_weighted: bool = None,
 ) -> ndarray:
     if dist_from_slice is None:
-        do_cross_section = False
+        do_slice = False
     else:
-        do_cross_section = True
+        do_slice = True
     normalise = False
     if density_weighted is None:
         density_weighted = False
@@ -311,8 +303,8 @@ def _interpolate(
     else:
         weight = hfact ** -3 * np.ones(smoothing_length.shape)
 
-    if do_cross_section:
-        interpolated_data = interpolate_cross_section(
+    if do_slice:
+        interpolated_data = interpolate_slice(
             x=x_coordinate,
             y=y_coordinate,
             dslice=dist_from_slice,

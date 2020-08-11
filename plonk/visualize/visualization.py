@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import warnings
 from copy import copy
 from typing import TYPE_CHECKING, Any, Dict, Sequence, Tuple, Union
 
@@ -29,27 +28,25 @@ _kind_to_function = {
 }
 
 
-def plot(
+def image(
     snap: SnapLike,
     quantity: str,
     *,
     x: str = 'x',
     y: str = 'y',
-    kind: str = None,
     interp: str = 'projection',
     slice_normal: Tuple[float, float, float] = None,
-    z_slice: Union[Quantity, float] = None,
+    slice_offset: Union[Quantity, float] = None,
     extent: Quantity = None,
     units: Dict[str, str] = None,
     ax: Any = None,
     colorbar_kwargs={},
     **kwargs,
 ) -> Any:
-    """Visualize smoothed particle hydrodynamics data.
+    """Visualize scalar SPH data as an image.
 
-    Visualize SPH data by interpolation to a pixel grid. Including:
-    an image or a contour plot for scalar data, a quiver (arrow)
-    plot or stream plot for vector data.
+    Visualize scalar smoothed particle hydrodynamics data by
+    interpolation to a pixel grid.
 
     Parameters
     ----------
@@ -63,26 +60,17 @@ def plot(
     y
         The y-coordinate for the visualization. Must be a string to
         pass to Snap. Default is 'y'.
-    kind
-        The type of plot.
-
-        - 'image' : image plot (default for scalar quantities)
-        - 'contour' : contour plot (scalar quantity)
-        - 'quiver' : quiver plot (default for vector quantities)
-        - 'streamplot' : stream plot (vector quantity)
     interp
         The interpolation type. Default is 'projection'.
 
         - 'projection' : 2d interpolation via projection to xy-plane
-        - 'cross_section' : 3d interpolation via cross-section in
-          z-direction
+        - 'slice' : 3d interpolation via cross-section slice.
     slice_normal
         The normal vector to the plane in which to take the
         cross-section slice as a tuple (x, y, z). Default is
         (0, 0, 1).
-    z_slice
-        The z-coordinate value of the cross-section slice. Can be a
-        float or quantity with units of length. Default is 0.0.
+    slice_offset
+        The offset of the cross-section slice. Default is 0.0.
     extent
         The range in the x and y-coord as (xmin, xmax, ymin, ymax)
         where xmin, etc. can be floats or quantities with units of
@@ -113,8 +101,8 @@ def plot(
     to imshow can be passed this way.
 
     See below for additional parameters for interpolation,
-    colorbars, quiver plots, etc. All other keyword arguments are
-    passed to the appropriate matplotlib function.
+    colorbars, etc. All other keyword arguments are passed to the
+    appropriate matplotlib function.
 
     Other Parameters
     ----------------
@@ -126,6 +114,114 @@ def plot(
         Default is False.
     show_colorbar : bool
         Whether or not to display a colorbar. Default is True.
+
+    Examples
+    --------
+    Show an image of the surface density in xy-plane.
+
+    >>> plonk.image(snap=snap, quantity='density')
+
+    Set units for the plot.
+
+    >>> units = {'quantity': 'g/cm^3', 'extent': 'au'}
+    >>> plonk.image(snap=snap, quantity='density', units=units)
+    """
+    return _interpolation_plot(
+        snap=snap,
+        quantity=quantity,
+        x=x,
+        y=y,
+        kind='image',
+        interp=interp,
+        slice_normal=slice_normal,
+        slice_offset=slice_offset,
+        extent=extent,
+        units=units,
+        ax=ax,
+        colorbar_kwargs=colorbar_kwargs,
+        **kwargs,
+    )
+
+
+def vector(
+    snap: SnapLike,
+    quantity: str,
+    *,
+    x: str = 'x',
+    y: str = 'y',
+    interp: str = 'projection',
+    slice_normal: Tuple[float, float, float] = None,
+    slice_offset: Union[Quantity, float] = None,
+    extent: Quantity = None,
+    units: Dict[str, str] = None,
+    ax: Any = None,
+    **kwargs,
+) -> Any:
+    """Visualize vector SPH data as a vector plot.
+
+    Visualize scalar smoothed particle hydrodynamics data by
+    interpolation to a pixel grid of arrows.
+
+    Parameters
+    ----------
+    snap
+        The Snap (or SubSnap) object to visualize.
+    quantity
+        The quantity to visualize. Must be a string to pass to Snap.
+    x
+        The x-coordinate for the visualization. Must be a string to
+        pass to Snap. Default is 'x'.
+    y
+        The y-coordinate for the visualization. Must be a string to
+        pass to Snap. Default is 'y'.
+    interp
+        The interpolation type. Default is 'projection'.
+
+        - 'projection' : 2d interpolation via projection to xy-plane
+        - 'slice' : 3d interpolation via cross-section slice.
+    slice_normal
+        The normal vector to the plane in which to take the
+        cross-section slice as a tuple (x, y, z). Default is
+        (0, 0, 1).
+    slice_offset
+        The offset of the cross-section slice. Default is 0.0.
+    extent
+        The range in the x and y-coord as (xmin, xmax, ymin, ymax)
+        where xmin, etc. can be floats or quantities with units of
+        length. The default is to set the extent to a box of size such
+        that 99% of particles are contained within.
+    units
+        The units of the plot as a dictionary with keys 'quantity',
+        'extent', 'projection'. The values are strings representing
+        units, e.g. 'g/cm^3'.
+    ax
+        A matplotlib Axes handle.
+    **kwargs
+        Additional keyword arguments to pass to interpolation and
+        matplotlib functions.
+
+    Returns
+    -------
+    ax
+        The matplotlib Axes object.
+
+    Notes
+    -----
+    Additional parameters passed as keyword arguments will be
+    passed to lower level functions as required.
+
+    See below for additional parameters for interpolation, vector
+    properties, etc. All other keyword arguments are passed to the
+    appropriate matplotlib function.
+
+    Other Parameters
+    ----------------
+    number_of_pixels : tuple
+        The number of pixels to interpolate particle quantities
+        to as a tuple (nx, ny). Default is (512, 512).
+    density_weighted : bool
+        Whether to density weight the interpolation or not.
+        Default is False.
     number_of_arrows : tuple
         The number of arrows to display by sub-sampling the
         interpolated data. Default is (25, 25).
@@ -135,29 +231,52 @@ def plot(
 
     Examples
     --------
-    Show an image of the surface density in xy-plane.
+    Vector plot of velocity in xy-plane.
 
-    >>> plonk.plot(snap=snap, quantity='density')
-
-    Quiver plot of velocity in xy-plane.
-
-    >>> plonk.plot(snap=snap, quantity='velocity')
+    >>> plonk.vector(snap=snap, quantity='velocity')
 
     Set units for the plot.
 
-    >>> units = {
-    ...     'quantity': 'g/cm^3', 'extent': 'au', 'projection': 'cm',
-    ... }
-
-    >>> plonk.plot(snap=snap, quantity='density', units=units)
+    >>> units = {'quantity': 'km/s', 'extent': 'au'}
+    >>> plonk.vector(snap=snap, quantity='velocity', units=units)
     """
-    warnings.warn(
-        'In Plonk v0.7.0, plonk.plot will be a particle plot. To make images or'
-        'vector plots use plonk.image or plonk.vector.',
-        DeprecationWarning,
+    return _interpolation_plot(
+        snap=snap,
+        quantity=quantity,
+        x=x,
+        y=y,
+        kind='quiver',
+        interp=interp,
+        slice_normal=slice_normal,
+        slice_offset=slice_offset,
+        extent=extent,
+        units=units,
+        ax=ax,
+        **kwargs,
     )
+
+
+def _interpolation_plot(
+    snap: SnapLike,
+    quantity: str,
+    *,
+    x: str = 'x',
+    y: str = 'y',
+    kind: str = None,
+    interp: str = 'projection',
+    slice_normal: Tuple[float, float, float] = None,
+    slice_offset: Union[Quantity, float] = None,
+    extent: Quantity = None,
+    units: Dict[str, str] = None,
+    ax: Any = None,
+    colorbar_kwargs={},
+    **kwargs,
+) -> Any:
     logger.debug(f'Visualizing "{quantity}" on snap: {snap.file_path.name}')
     _kwargs = copy(kwargs)
+
+    if interp not in ('projection', 'slice'):
+        raise ValueError('interp must be "projection" or "slice"')
 
     if kind is None:
         q: Quantity = snap[quantity]
@@ -181,21 +300,21 @@ def plot(
     }
     for key in interp_kwargs:
         _kwargs.pop(key)
-    _data, _extent, _units = _plot_data(
+    _data, _extent, _units = _interpolated_data(
         snap=snap,
         quantity=quantity,
         x=x,
         y=y,
         interp=interp,
         slice_normal=slice_normal,
-        z_slice=z_slice,
+        slice_offset=slice_offset,
         extent=extent,
         units=units,
         **interp_kwargs,
     )
 
     # Make the actual plot
-    _plot_plot(
+    _interpolated_plot(
         interpolated_data=_data,
         extent=_extent,
         names={'quantity': quantity, 'x': x, 'y': y},
@@ -211,8 +330,8 @@ def plot(
     return ax
 
 
-def _plot_data(
-    snap, quantity, x, y, interp, slice_normal, z_slice, extent, units, **kwargs
+def _interpolated_data(
+    snap, quantity, x, y, interp, slice_normal, slice_offset, extent, units, **kwargs
 ):
     if extent is None:
         _extent = get_extent_from_percentile(snap=snap, x=x, y=y)
@@ -228,15 +347,17 @@ def _plot_data(
     else:
         __extent = _extent
         logger.warning('extent has no units, assuming code units')
-    if interp == 'cross_section':
+    if interp == 'slice':
         if slice_normal is None:
             slice_normal = (0, 0, 1)
-        if z_slice is None:
-            z_slice = 0 * plonk_units('cm')
-        if isinstance(z_slice, Quantity):
-            z_slice = (z_slice / snap.units['length']).to_base_units().magnitude
+        if slice_offset is None:
+            slice_offset = 0 * plonk_units('cm')
+        if isinstance(slice_offset, Quantity):
+            slice_offset = (
+                (slice_offset / snap.units['length']).to_base_units().magnitude
+            )
         else:
-            logger.warning('z_slice has no units, assuming code units')
+            logger.warning('slice_offset has no units, assuming code units')
     if units is None:
         _units = {
             'quantity': 1 * snap[quantity].units,
@@ -257,7 +378,7 @@ def _plot_data(
         y=y,
         interp=interp,
         slice_normal=slice_normal,
-        z_slice=z_slice,
+        slice_offset=slice_offset,
         extent=__extent,
         **kwargs,
     )
@@ -274,7 +395,7 @@ def _plot_data(
     return interpolated_data, ___extent, _units
 
 
-def _plot_plot(
+def _interpolated_plot(
     interpolated_data,
     extent,
     names,
@@ -327,14 +448,14 @@ def _plot_plot(
 
         if interp == 'projection':
             qunit = units['quantity'] * units['projection']
-        elif interp == 'cross_section':
+        elif interp == 'slice':
             qunit = units['quantity']
         if np.allclose(qunit.magnitude, 1.0):
             qunit = qunit.units
         cbar.set_label(f'{names["quantity"]} [{qunit:~P}]')
 
 
-def particle_plot(
+def plot(
     snap: SnapLike,
     *,
     x: str = 'x',
@@ -348,10 +469,10 @@ def particle_plot(
     colorbar_kwargs={},
     **kwargs,
 ) -> Any:
-    """Particle plots.
+    """Visualize SPH data as a particle plot.
 
     Visualize SPH data by plotting the particles, or a subset of
-    the particles.
+    the particles, possibly with marker colors and different sizes.
 
     Parameters
     ----------
@@ -394,30 +515,21 @@ def particle_plot(
     --------
     Show the particles in xy-plane.
 
-    >>> plonk.particle_plot(snap=snap)
+    >>> plonk.plot(snap=snap)
 
     Plot density against x.
 
-    >>> plonk.particle_plot(snap=snap, x='x', y='density')
+    >>> plonk.plot(snap=snap, x='x', y='density')
 
     Color particles by density in xy-plane.
 
-    >>> plonk.particle_plot(
-    ...     snap=snap, x='x', y='y', c='density'
-    ... )
+    >>> plonk.plot(snap=snap, x='x', y='y', c='density')
 
     Set units for the plot.
 
     >>> units = {'x': 'au', 'y': 'au', 'c': 'g/cm^3'}
-
-    >>> plonk.particle_plot(
-    ...     snap=snap, x='x', y='y', c='density', units=units
-    ... )
+    >>> plonk.plot(snap=snap, x='x', y='y', c='density', units=units)
     """
-    warnings.warn(
-        'In Plonk v0.7.0, plonk.particle_plot will removed in favor of plonk.plot.',
-        DeprecationWarning,
-    )
     logger.debug(f'Plotting particles "{x}" vs "{y}"" on snap: {snap.file_path.name}')
     _kwargs = copy(kwargs)
 
@@ -439,10 +551,10 @@ def particle_plot(
         subsnaps = [snap]
 
     for subsnap in subsnaps:
-        _x, _y, _c, _s, _units = _particle_plot_data(
+        _x, _y, _c, _s, _units = _plot_data(
             snap=subsnap, x=x, y=y, c=c, s=s, units=units
         )
-        _particle_plot_plot(
+        _plot_plot(
             x=_x,
             y=_y,
             c=_c,
@@ -460,7 +572,7 @@ def particle_plot(
     return ax
 
 
-def _particle_plot_data(snap, x, y, c, s, units):
+def _plot_data(snap, x, y, c, s, units):
     _x: Quantity = snap[x]
     _y: Quantity = snap[y]
     _c: Quantity = snap[c] if c is not None else None
@@ -516,7 +628,7 @@ def _particle_plot_data(snap, x, y, c, s, units):
     return _x, _y, _c, _s, _units
 
 
-def _particle_plot_plot(
+def _plot_plot(
     x, y, c, s, units, names, xscale, yscale, fig, ax, colorbar_kwargs, **kwargs
 ):
     show_colorbar = kwargs.pop('show_colorbar', c is not None)
@@ -578,7 +690,7 @@ def _convert_units_for_interpolation(
         data = (interpolated_data * quantity_unit * snap.units['length']).to(
             proj_unit.units
         ).magnitude / proj_unit.magnitude
-    elif interp == 'cross_section':
+    elif interp == 'slice':
         data = (interpolated_data * quantity_unit).to(
             units['quantity'].units
         ).magnitude / units['quantity'].magnitude
@@ -594,7 +706,7 @@ def _convert_units_for_interpolation(
 def _convert_units_for_cmap(vm, name, units, interp):
     if interp == 'projection':
         quantity_unit = units['quantity'] * units['projection']
-    elif interp == 'cross_section':
+    elif interp == 'slice':
         quantity_unit = units['quantity']
     if vm is not None:
         if isinstance(vm, Quantity):

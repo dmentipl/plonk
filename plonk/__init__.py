@@ -61,8 +61,8 @@ from .snap.readers import load_snap
 from .snap.snap import Snap
 from .visualize.animation import animation, animation_particles, animation_profiles
 from .visualize.interpolation import interpolate
-from .visualize.multi import plot_snaps
-from .visualize.visualization import particle_plot, plot
+from .visualize.simulation import visualize_sim
+from .visualize.visualization import image, plot, vector
 
 __version__ = importlib_metadata.version('plonk')
 
@@ -75,13 +75,14 @@ __all__ = [
     'animation',
     'animation_particles',
     'animation_profiles',
+    'image',
     'interpolate',
     'load_ev',
     'load_profile',
     'load_sim',
     'load_snap',
-    'particle_plot',
     'plot',
-    'plot_snaps',
     'units',
+    'vector',
+    'visualize_sim',
 ]

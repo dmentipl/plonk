@@ -7,17 +7,18 @@ simulations using kernel density estimation based interpolation.
 from .animation import animation, animation_particles, animation_profiles
 from .functions import get_extent_from_percentile, plot_smoothing_length
 from .interpolation import interpolate
-from .multi import plot_snaps
-from .visualization import particle_plot, plot
+from .simulation import visualize_sim
+from .visualization import image, plot, vector
 
 __all__ = [
     'animation',
     'animation_particles',
     'animation_profiles',
     'get_extent_from_percentile',
+    'image',
     'plot_smoothing_length',
     'interpolate',
-    'particle_plot',
     'plot',
-    'plot_snaps',
+    'vector',
+    'visualize_sim',
 ]

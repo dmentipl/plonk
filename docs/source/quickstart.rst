@@ -209,7 +209,7 @@ Produce a projection image plot of density.
 
     >>> snap = plonk.load_snap('disc_00030.h5')
 
-    >>> snap.plot(quantity='density')
+    >>> snap.image(quantity='density')
 
 .. image:: _static/density.png
 
@@ -224,7 +224,7 @@ Set plot extent, colormap, colorbar range, and axis units.
     >>> au = plonk.units['au']
     >>> g_cm_2 = plonk.units['g/cm^2']
 
-    >>> snap.plot(
+    >>> snap.image(
     ...     quantity='density',
     ...     extent=(20, 120, -50, 50) * au,
     ...     units={'extent': 'au'},
@@ -247,11 +247,11 @@ Produce a cross-section image plot of density.
 
     >>> snap = plonk.load_snap('disc_00030.h5')
 
-    >>> snap.plot(
+    >>> snap.image(
     ...     quantity='density',
     ...     x='x',
     ...     y='z',
-    ...     interp='cross_section',
+    ...     interp='slice',
     ...     cmap='gist_heat',
     ...     units={'extent': 'au'},
     ... )
@@ -273,7 +273,7 @@ The different colours refer to different particle types.
 
     >>> snap = plonk.load_snap('disc_00030.h5')
 
-    >>> plonk.particle_plot(snap=snap, x='z', y='h', alpha=0.1)
+    >>> snap.plot(x='z', y='h', alpha=0.1)
 
 .. image:: _static/particle_plot.png
 
@@ -285,8 +285,8 @@ Plot particles with color representing density.
 
     >>> snap = plonk.load_snap('disc_00030.h5')
 
-    >>> ax = plonk.particle_plot(
-    ...     snap=snap, x='x', y='z', c='density', units={'x': 'au', 'y': 'au'},
+    >>> ax = snap.plot(
+    ...     x='x', y='z', c='density', units={'x': 'au', 'y': 'au'},
     ... )
     >>> ax.set_xlim(-50, 50)
     >>> ax.set_ylim(-20, 20)
@@ -446,7 +446,7 @@ Plot a radial profile.
     >>> prof = plonk.load_profile(snap)
 
     >>> with plt.style.context('seaborn'):
-    ...     ax = prof.plot('radius', 'scale_height', x_unit='au', y_unit='au')
+    ...     ax = prof.plot('radius', 'scale_height', units={'x': 'au', 'y':'au'})
     ...     ax.set_ylabel('Scale height [au]')
     ...     ax.legend().remove()
 

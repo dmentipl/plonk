@@ -1092,8 +1092,9 @@ class Snap:
         """Dunder str method."""
         return f'<plonk.Snap "{self.file_path.name}">'
 
+    image = visualize.image
     plot = visualize.plot
-    particle_plot = visualize.particle_plot
+    vector = visualize.vector
 
 
 class SubSnap(Snap):
@@ -1208,7 +1209,7 @@ class _Sinks:
         """Tab completion for IPython __getitem__ method."""
         return self.available_arrays(all=True)
 
-    plot = visualize.particle_plot
+    plot = visualize.plot
 
 
 def _str_is_int(string):

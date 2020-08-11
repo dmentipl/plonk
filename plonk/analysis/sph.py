@@ -213,7 +213,7 @@ def summation(
                             f'Finding neighbours for chunk: {idx}...', flush=True
                         )
                     else:
-                        logger.info(f'Finding neighbours...', flush=True)
+                        logger.info('Finding neighbours...', flush=True)
                 _neighbours = snap.get_many_neighbours(indices)
                 neighbours = List()
                 for neigh in _neighbours:
@@ -225,7 +225,7 @@ def summation(
                             f'Summing over neighbours for chunk: {idx}...', flush=True
                         )
                     else:
-                        logger.info(f'Summing over neighbours...', flush=True)
+                        logger.info('Summing over neighbours...', flush=True)
 
                 result[indices] = compute_function(
                     indices=indices,

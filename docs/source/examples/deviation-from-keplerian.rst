@@ -67,12 +67,12 @@ Plot deviation from Keplerian velocity around planet.
     gas = snap['gas']
 
     # Loop over z-slices
-    for z_slice, ax in zip(z_slices, grid):
+    for slice_offset, ax in zip(z_slices, grid):
         gas.plot(
             quantity='delta_keplerian',
             extent=extent,
-            interp='cross_section',
-            z_slice=z_slice,
+            interp='slice',
+            slice_offset=slice_offset,
             vmin=-velocity_max,
             vmax=velocity_max,
             units={'extent': 'au', 'quantity': 'km/s'},

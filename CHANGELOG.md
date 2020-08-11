@@ -15,6 +15,17 @@ Types of changes:
 
 ## [Unreleased]
 
+### Added
+
+- Added plonk.image to make image plots (with interpolation and then matplotlib imshow).
+- Added plonk.vector to make vector plots (with interpolation and then matplotlib quiver).
+
+### Changed
+
+- Removed plonk.particle_plot in favor of plonk.plot.
+- Changed plonk.plot to produce particle plots
+- Renamed MultiVisualization and plot_snaps to VisualizeSimulation and visualize_sim.
+
 ## [0.6.2] - 2020-08-11
 
 ### Changed

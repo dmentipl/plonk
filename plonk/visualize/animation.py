@@ -17,7 +17,7 @@ except ImportError:
 from .._logging import logger
 from .._units import Quantity
 from .._units import units as plonk_units
-from .visualization import _particle_plot_data, _plot_data, particle_plot, plot
+from . import visualization as viz
 
 if TYPE_CHECKING:
     from ..analysis.profile import Profile
@@ -72,7 +72,7 @@ def animation(
         Figure.
     adaptive_colorbar : optional
         If True, adapt colorbar range during animation. If False, the
-        colorbar range is fixed by the initial plot. Default is False.
+        colorbar range is fixed by the initial image. Default is False.
     text : optional
         List of strings to display per snap.
     text_kwargs : optional
@@ -82,7 +82,7 @@ def animation(
     save_kwargs : optional
         Keyword arguments to pass to matplotlib Animation.save.
     **kwargs
-        Arguments to pass to visualize.plot.
+        Arguments to pass to visualize.image.
 
     Returns
     -------
@@ -151,15 +151,8 @@ def animation(
         axs = axs.flatten()
         images = list()
         for quantity, x, y, extent, ax in zip(quantities, xs, ys, extents, axs):
-            plot(
-                snap=snaps[0],
-                quantity=quantity,
-                x=x,
-                y=y,
-                units=units,
-                extent=extent,
-                ax=ax,
-                **kwargs,
+            snaps[0].image(
+                quantity=quantity, x=x, y=y, units=units, extent=extent, ax=ax, **kwargs
             )
             images += ax.images
     else:
@@ -184,16 +177,16 @@ def animation(
         interp_kwargs = {k: v for k, v in kwargs.items() if k in _interp_kwargs}
         interp = kwargs.get('interp', 'projection')
         slice_normal = kwargs.get('slice_normal')
-        z_slice = kwargs.get('z_slice')
+        slice_offset = kwargs.get('slice_offset')
         for quantity, x, y, extent, image in zip(quantities, xs, ys, extents, images):
-            interp_data, _extent, _units = _plot_data(
+            interp_data, _extent, _units = viz._interpolated_data(
                 snap=snap,
                 quantity=quantity,
                 x=x,
                 y=y,
                 interp=interp,
                 slice_normal=slice_normal,
-                z_slice=z_slice,
+                slice_offset=slice_offset,
                 extent=extent,
                 units=units,
                 **interp_kwargs,
@@ -410,7 +403,7 @@ def animation_particles(
     save_kwargs : optional
         Keyword arguments to pass to matplotlib Animation.save.
     **kwargs
-        Arguments to pass to visualize.particle_plot.
+        Arguments to pass to visualize.plot.
 
     Returns
     -------
@@ -454,7 +447,7 @@ def animation_particles(
         fig, ax = plt.subplots()
         for yidx, y in enumerate(ys):
             __units = {'x': units_str['x'], 'y': units_str['y'][yidx]}
-            particle_plot(snap=snaps[0], x=x, y=y, ax=ax, units=__units, **kwargs)
+            snaps[0].plot(x=x, y=y, ax=ax, units=__units, **kwargs)
         lines = ax.lines
         if text is not None:
             texts = [
@@ -485,7 +478,7 @@ def animation_particles(
             for line, subsnap in zip(
                 lines[yidx * len(subsnaps) : (yidx + 1) * len(subsnaps)], subsnaps
             ):
-                _x, _y, _, _, _ = _particle_plot_data(
+                _x, _y, _, _, _ = viz._plot_data(
                     snap=subsnap, x=x, y=y, c=None, s=None, units=__units
                 )
                 line.set_data(_x, _y)

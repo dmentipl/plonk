@@ -11,11 +11,11 @@ Plot cross section at z=0.
 
     snap = plonk.load_snap('disc_00030.h5')
 
-    snap.plot(
+    snap.image(
         quantity='density',
         x='x',
         y='z',
-        interp='cross_section',
+        interp='slice',
         cmap='gist_heat',
         units={'extent': 'au'},
     )
