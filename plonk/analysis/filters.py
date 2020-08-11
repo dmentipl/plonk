@@ -68,7 +68,7 @@ def cylinder(
     Returns
     -------
     SubSnap
-        The SubSnap with particles in the box.
+        The SubSnap with particles in the cylinder.
     """
     dh = height / 2
     R = radial_distance(snap=snap, origin=center, coordinates='cylindrical')
@@ -106,7 +106,7 @@ def annulus(
     Returns
     -------
     SubSnap
-        The SubSnap with particles in the box.
+        The SubSnap with particles in the annulus.
     """
     dh = height / 2
     R = radial_distance(snap=snap, origin=center, coordinates='cylindrical')
@@ -135,7 +135,7 @@ def sphere(snap: SnapLike, radius: Quantity, center: Quantity = CENTER) -> SubSn
     Returns
     -------
     SubSnap
-        The SubSnap with particles in the box.
+        The SubSnap with particles in the sphere.
     """
     R = radial_distance(snap=snap, origin=center, coordinates='spherical')
     mask = R < radius
@@ -165,7 +165,7 @@ def shell(
     Returns
     -------
     SubSnap
-        The SubSnap with particles in the box.
+        The SubSnap with particles in the shell.
     """
     R = radial_distance(snap=snap, origin=center, coordinates='spherical')
     mask = (R > radius_min) & (R < radius_max)

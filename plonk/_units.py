@@ -1,6 +1,12 @@
 """Units."""
 
+import warnings
+
 import pint
+
+warnings.warn(
+    'In Plonk v0.7.0 default units will change from cgs to SI.', DeprecationWarning,
+)
 
 units = pint.UnitRegistry(system='cgs')
 Quantity = units.Quantity

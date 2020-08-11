@@ -13,12 +13,11 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import configparser
-import os
 import sys
+from pathlib import Path
 
-import importlib_metadata
-
-sys.path.insert(0, os.path.abspath('../..'))
+path = (Path(__file__) / '../../..').resolve()
+sys.path.insert(0, str(path))
 
 # -- Project information -----------------------------------------------------
 
