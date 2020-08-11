@@ -15,6 +15,8 @@ Types of changes:
 
 ## [Unreleased]
 
+## [0.6.2] - 2020-08-11
+
 ### Changed
 
 - Use setup.cfg for setuptools, and pyproject.toml (and setup.cfg) for config of tools.
