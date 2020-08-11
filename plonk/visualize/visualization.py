@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import warnings
 from copy import copy
 from typing import TYPE_CHECKING, Any, Dict, Sequence, Tuple, Union
 
@@ -150,6 +151,11 @@ def plot(
 
     >>> plonk.plot(snap=snap, quantity='density', units=units)
     """
+    warnings.warn(
+        'In Plonk v0.7.0, plonk.plot will be a particle plot. To make images or'
+        'vector plots use plonk.image or plonk.vector.',
+        DeprecationWarning,
+    )
     logger.debug(f'Visualizing "{quantity}" on snap: {snap.file_path.name}')
     _kwargs = copy(kwargs)
 
@@ -408,6 +414,10 @@ def particle_plot(
     ...     snap=snap, x='x', y='y', c='density', units=units
     ... )
     """
+    warnings.warn(
+        'In Plonk v0.7.0, plonk.particle_plot will removed in favor of plonk.plot.',
+        DeprecationWarning,
+    )
     logger.debug(f'Plotting particles "{x}" vs "{y}"" on snap: {snap.file_path.name}')
     _kwargs = copy(kwargs)
 
