@@ -25,6 +25,7 @@ Types of changes:
 - Removed plonk.particle_plot in favor of plonk.plot.
 - Changed plonk.plot to produce particle plots
 - Renamed MultiVisualization and plot_snaps to VisualizeSimulation and visualize_sim.
+- Changed units system from cgs to SI.
 
 ## [0.6.2] - 2020-08-11
 
