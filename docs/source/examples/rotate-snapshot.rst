@@ -27,7 +27,7 @@ plane.
 
     # Plot cross-section in the disc plane
     slice_normal = analysis.discs.normal(snap=snap)
-    snap.plot(
+    snap.image(
         quantity='density',
         interp='slice',
         slice_normal=slice_normal,
