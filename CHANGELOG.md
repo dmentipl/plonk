@@ -19,6 +19,20 @@ Types of changes:
 
 - Use setup.cfg for setuptools, and pyproject.toml (and setup.cfg) for config of tools.
 - Version is set in setup.cfg and imported into plonk via importlib_metadata.
+- Changed API documentation.
+- Moved sph module from utils sub-package to analysis.
+
+### Deprecated
+
+- plonk.particle_plot will be removed.
+- plonk.plot will change from image plots to particle plots, and plonk.image and plonk.vector will be added to replace plonk.plot.
+- Default units will change from cgs to SI.
+
+### Fixed
+
+- Fixed bug in Profile with getting number of mixture dust species.
+- Fixed bugs in animation functions (due to making physical units on by default).
+- Fixed issues with colorbar size matching height of plots.
 
 ## [0.6.1] - 2020-08-09
 
