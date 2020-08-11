@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Dict, Sequence, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ndarray
 
 from .._logging import logger
@@ -294,17 +295,6 @@ def _plot_plot(
         interpolated_data=interpolated_data, extent=extent, ax=ax, **kwargs,
     )
 
-    if show_colorbar:
-        cbar = fig.colorbar(plot_object, ax=ax, **colorbar_kwargs)
-
-        if interp == 'projection':
-            qunit = units['quantity'] * units['projection']
-        elif interp == 'cross_section':
-            qunit = units['quantity']
-        if np.allclose(qunit.magnitude, 1.0):
-            qunit = qunit.units
-        cbar.set_label(f'{names["quantity"]} [{qunit:~P}]')
-
     ax.set_xlim(*extent[:2])
     ax.set_ylim(*extent[2:])
 
@@ -317,6 +307,25 @@ def _plot_plot(
     ratio = (extent[1] - extent[0]) / (extent[3] - extent[2])
     if not max(ratio, 1 / ratio) > 10.0:
         ax.set_aspect('equal')
+
+    if show_colorbar:
+        divider = make_axes_locatable(ax)
+        _kwargs = copy(colorbar_kwargs)
+        position = _kwargs.pop('position', 'right')
+        size = _kwargs.pop('size', '5%')
+        pad = _kwargs.pop('pad', '2%')
+        if position in ('top', 'bottom'):
+            _kwargs.update({'orientation': 'horizontal'})
+        cax = divider.append_axes(position=position, size=size, pad=pad)
+        cbar = fig.colorbar(plot_object, cax, **_kwargs)
+
+        if interp == 'projection':
+            qunit = units['quantity'] * units['projection']
+        elif interp == 'cross_section':
+            qunit = units['quantity']
+        if np.allclose(qunit.magnitude, 1.0):
+            qunit = qunit.units
+        cbar.set_label(f'{names["quantity"]} [{qunit:~P}]')
 
 
 def particle_plot(
@@ -504,15 +513,8 @@ def _particle_plot_plot(
 
     if s is None and c is None:
         plots.plot(x=x, y=y, ax=ax, **kwargs)
-
     else:
         plot_object = plots.scatter(x=x, y=y, c=c, s=s, ax=ax, **kwargs)
-        if show_colorbar:
-            cbar = fig.colorbar(plot_object, ax=ax, **colorbar_kwargs)
-            cunit = units['c']
-            if np.allclose(cunit.magnitude, 1.0):
-                cunit = cunit.units
-            cbar.set_label(f'{names["c"]} [{cunit:~P}]')
 
     if xscale is not None:
         ax.set_xscale(xscale)
@@ -530,6 +532,22 @@ def _particle_plot_plot(
         yunit = yunit.units
     ax.set_xlabel(f'{names["x"]} [{xunit:~P}]')
     ax.set_ylabel(f'{names["y"]} [{yunit:~P}]')
+
+    if show_colorbar:
+        divider = make_axes_locatable(ax)
+        _kwargs = copy(colorbar_kwargs)
+        position = _kwargs.pop('position', 'right')
+        size = _kwargs.pop('size', '5%')
+        pad = _kwargs.pop('pad', '2%')
+        if position in ('top', 'bottom'):
+            _kwargs.update({'orientation': 'horizontal'})
+        cax = divider.append_axes(position=position, size=size, pad=pad)
+        cbar = fig.colorbar(plot_object, cax, **_kwargs)
+
+        cunit = units['c']
+        if np.allclose(cunit.magnitude, 1.0):
+            cunit = cunit.units
+        cbar.set_label(f'{names["c"]} [{cunit:~P}]')
 
 
 def _convert_units_for_interpolation(
