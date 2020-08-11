@@ -68,7 +68,7 @@ Plot deviation from Keplerian velocity around planet.
 
     # Loop over z-slices
     for slice_offset, ax in zip(z_slices, grid):
-        gas.plot(
+        gas.image(
             quantity='delta_keplerian',
             extent=extent,
             interp='slice',
@@ -81,7 +81,7 @@ Plot deviation from Keplerian velocity around planet.
             ax=ax,
         )
         # Plot planet marker
-        ax.plot(px, py, 'o', color='gray')
+        ax.plot(px.to('au').m, py.to('au').m, 'o', color='gray')
 
     # Add colorbar
     cbar = grid.cbar_axes[0].colorbar(ax.images[0])
