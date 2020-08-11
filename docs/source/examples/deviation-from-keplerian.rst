@@ -72,7 +72,7 @@ Plot deviation from Keplerian velocity around planet.
             quantity='delta_keplerian',
             extent=extent,
             interp='slice',
-            z_slice=z_slice,
+            slice_offset=z_slice,
             vmin=-velocity_max,
             vmax=velocity_max,
             units={'extent': 'au', 'quantity': 'km/s'},
