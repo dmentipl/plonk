@@ -116,9 +116,9 @@ def generate_snap_from_file(filename: Union[str, Path]) -> Snap:
 
 def _header_to_properties(header: dict):
 
-    length = header['udist'] * plonk_units('cm')
-    time = header['utime'] * plonk_units('s')
-    mass = header['umass'] * plonk_units('g')
+    length = (header['udist'] * plonk_units('cm')).to_base_units()
+    time = (header['utime'] * plonk_units('s')).to_base_units()
+    mass = (header['umass'] * plonk_units('g')).to_base_units()
     magnetic_field = (
         header['umagfd']
         * plonk_units('g ** (1/2) / cm ** (1/2) / s')

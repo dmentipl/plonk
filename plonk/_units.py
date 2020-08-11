@@ -1,22 +1,16 @@
 """Units."""
 
-import warnings
-
 import pint
 
-warnings.warn(
-    'In Plonk v0.7.0 default units will change from cgs to SI.', DeprecationWarning,
-)
-
-units = pint.UnitRegistry(system='cgs')
+units = pint.UnitRegistry()
 Quantity = units.Quantity
 
 # Add units
-units.define('solar_mass = 1.9891e33 g')
-units.define('solar_radius = 6.959500e10 cm')
-units.define('earth_mass = 5.979e27 g')
-units.define('earth_radius = 6.371315e8 cm')
-units.define('jupiter_mass = 1.89813e30 g')
+units.define('solar_mass = 1.9891e30 kg')
+units.define('solar_radius = 6.959500e8 m')
+units.define('earth_mass = 5.979e24 kg')
+units.define('earth_radius = 6.371315e6 m')
+units.define('jupiter_mass = 1.89813e27 kg')
 
 # Array names with corresponding units as a string
 array_units_str = {
