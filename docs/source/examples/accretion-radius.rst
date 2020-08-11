@@ -1,6 +1,6 @@
----------------------
-Plot accretion radius
----------------------
+----------------
+Accretion radius
+----------------
 
 Plot the accretion radius on the sink particles.
 
