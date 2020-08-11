@@ -26,8 +26,10 @@ std_array_values = {
 
 properties = {
     'adiabatic_index': 1.0,
-    'grain_density': np.array([3.0]),
-    'grain_size': np.array([1.0]),
+    'dust_method': 'dust as separate sets of particles',
+    'equation_of_state': 'locally isothermal disc',
+    'grain_density': np.array([3000.0]),
+    'grain_size': np.array([0.01]),
     'smoothing_length_factor': 1.0,
     'time': 0.0,
 }

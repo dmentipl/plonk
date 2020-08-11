@@ -29,7 +29,7 @@ def test_plot_with_kwargs():
 def test_image_projection():
     """Test image projection."""
     snap = plonk.load_snap(TEST_FILE)
-    plonk.image(snap=snap, quantity='density')
+    plonk.image(snap=snap, quantity='density', number_of_pixels=(32, 32))
 
 
 def test_image_projection_with_kwargs():
@@ -44,14 +44,22 @@ def test_image_projection_with_kwargs():
         extent=(-150, 150, -150, 150) * AU,
         norm='linear',
         cmap='gist_heat',
-        number_of_pixels=(512, 512),
+        number_of_pixels=(32, 32),
     )
+
+
+def test_image_on_snap():
+    """Test image projection as method on Snap."""
+    snap = plonk.load_snap(TEST_FILE)
+    snap.image(quantity='density', number_of_pixels=(32, 32))
 
 
 def test_image_slice():
     """Test image slice."""
     snap = plonk.load_snap(TEST_FILE)
-    plonk.image(snap=snap, quantity='density', interp='slice')
+    plonk.image(
+        snap=snap, quantity='density', interp='slice', number_of_pixels=(32, 32)
+    )
 
 
 def test_image_slice_with_kwargs():
@@ -67,5 +75,5 @@ def test_image_slice_with_kwargs():
         extent=(-150, 150, -150, 150) * AU,
         norm='linear',
         cmap='gist_heat',
-        number_of_pixels=(512, 512),
+        number_of_pixels=(32, 32),
     )

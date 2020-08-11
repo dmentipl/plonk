@@ -238,20 +238,13 @@ class Snap:
 
         return _add_array
 
-    def loaded_arrays(self, sinks: bool = False):
+    def loaded_arrays(self):
         """Return a tuple of loaded arrays.
-
-        Parameters
-        ----------
-        sinks
-            If True, return loaded sink arrays.
 
         Returns
         -------
-        A tuple of names of loaded arrays.
+        A tuple of names of loaded particle arrays.
         """
-        if sinks:
-            return tuple(sorted(self._sinks.keys()))
         return tuple(sorted(self._arrays.keys()))
 
     def _available_arrays(
@@ -274,7 +267,7 @@ class Snap:
         A tuple of names of available arrays.
         """
         if sinks:
-            loaded = self.loaded_arrays(sinks)
+            loaded = self.sinks.loaded_arrays()
             registered = list(self._sink_registry.keys())
         else:
             loaded = self.loaded_arrays()
@@ -406,7 +399,7 @@ class Snap:
         if any((rotation, translation)):
             for arr in self.loaded_arrays():
                 del self._arrays[arr]
-            for arr in self.loaded_arrays(sinks=True):
+            for arr in self.sinks.loaded_arrays():
                 del self._sinks[arr]
         else:
             raise ValueError('Select something to unset')
@@ -466,13 +459,13 @@ class Snap:
             if arr in self.loaded_arrays():
                 array_m, array_u = self._arrays[arr].magnitude, self._arrays[arr].units
                 self._arrays[arr] = _rotation.apply(array_m) * array_u
-            if arr in self.loaded_arrays(sinks=True):
+            if arr in self.sinks.loaded_arrays():
                 array_m, array_u = self._sinks[arr].magnitude, self._sinks[arr].units
                 self._sinks[arr] = _rotation.apply(array_m) * array_u
         for arr in self._vector_component_arrays:
             if arr in self.loaded_arrays():
                 del self._arrays[arr]
-            if arr in self.loaded_arrays(sinks=True):
+            if arr in self.sinks.loaded_arrays():
                 del self._sinks[arr]
 
         if self.rotation is None:
@@ -522,7 +515,7 @@ class Snap:
                 translation *= plonk_units(unit)
         if 'position' in self.loaded_arrays():
             self._arrays['position'] += translation
-        if 'position' in self.loaded_arrays(sinks=True):
+        if 'position' in self.sinks.loaded_arrays():
             self._sinks['position'] += translation
 
         if self.translation is None:
@@ -1181,6 +1174,15 @@ class _Sinks:
         A tuple of names of available arrays.
         """
         return self.base._available_arrays(sinks=True, all=all, aliases=aliases)
+
+    def loaded_arrays(self):
+        """Return a tuple of loaded arrays.
+
+        Returns
+        -------
+        A tuple of names of loaded sink arrays.
+        """
+        return tuple(sorted(self.base._sinks.keys()))
 
     def __setitem__(self, name: str, item: Quantity):
         if not isinstance(item, Quantity):

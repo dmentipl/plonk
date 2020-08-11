@@ -9,7 +9,6 @@ import numpy as np
 from matplotlib.collections import PatchCollection
 from matplotlib.patches import Circle
 
-
 from .._units import Quantity
 
 if TYPE_CHECKING:
