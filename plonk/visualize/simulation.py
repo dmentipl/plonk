@@ -9,9 +9,12 @@ import numpy as np
 from numpy import ndarray
 
 from .._logging import logger
+from .visualization import image, plot, vector
 
 if TYPE_CHECKING:
     from ..simulation.simulation import Simulation
+
+KINDS = {'image': image, 'particle': plot, 'vector': vector}
 
 
 class VisualizeSimulation:
@@ -21,30 +24,34 @@ class VisualizeSimulation:
     ----------
     sim
         The Simulation object.
+    kind
+        A string in 'image', 'particle', or 'vector' which indicates the
+        plot kind.
+    **kwargs
+        Keyword arguments to pass to the plot method.
     """
 
-    def __init__(self, sim: Simulation):
+    def __init__(self, sim: Simulation, kind: str, **kwargs):
+        if kind not in KINDS:
+            raise ValueError(f'kind must be one of {KINDS.keys()}')
+
         self.sim = sim
-        self.options: Dict[str, Any] = {}
+        self.kwargs: Dict[str, Any] = kwargs
         self.ax: Any = None
         self.snaps = sim.snaps
 
         self._particle_ids: ndarray = None
-        self._kind = ''
+        self._kind = kind
         self._len = -1
         self._where = 0
         self._no_new_arrays = True
+
+        self._plotting_function(kind=self.kind, idx=0)
 
     @property
     def kind(self):
         """Plot kind."""
         return self._kind
-
-    @kind.setter
-    def kind(self, value: str):
-        if value not in ('image', 'particle', 'vector'):
-            raise ValueError('kind must be one of ("image", "particle", "vector")')
-        self._kind = value
 
     @property
     def particle_ids(self):
@@ -64,9 +71,9 @@ class VisualizeSimulation:
 
     @no_new_arrays.setter
     def no_new_arrays(self, value):
-        for snap in self.snaps:
-            snap._no_new_arrays = value
-        self._no_new_arrays = value
+        if isinstance(value, bool):
+            self._no_new_arrays = value
+        raise ValueError('no_new_arrays must be True or False')
 
     def _plotting_function(self, kind: str, idx: int):
         if self.ax is None:
@@ -82,21 +89,12 @@ class VisualizeSimulation:
         snap = self.snaps[idx]
         loaded = set(snap.loaded_arrays())
 
-        if kind == 'image':
-            snap.image(ax=self.ax, **self.options)
-        elif kind == 'particle':
-            snap.plot(ax=self.ax, **self.options)
-        elif kind == 'vector':
-            snap.vector(ax=self.ax, **self.options)
+        KINDS[kind](snap=snap, ax=self.ax, **self.kwargs)  # type: ignore
 
         new_arrays = set(snap.loaded_arrays()).symmetric_difference(loaded)
         if self._no_new_arrays:
             for array in new_arrays:
                 del snap[array]
-
-    def start(self):
-        """Start visualization."""
-        self._plotting_function(kind=self.kind, idx=0)
 
     def next(self, number: int = 1):
         """Visualize next snap."""
@@ -159,13 +157,9 @@ def visualize_sim(sim: Simulation, kind: str, **kwargs) -> VisualizeSimulation:
 
     Examples
     --------
-    Initialize object passing in plotting parameters.
+    Visualize a simulation by density projection images.
 
-    >>> viz = visualize_sim(
-    ...     sim=sim,
-    ...     kind='image',
-    ...     quantity='density',
-    ... )
+    >>> viz = visualize_sim(sim=sim, kind='image', quantity='density')
 
     Go forwards and backwards through snaps.
 
@@ -177,9 +171,4 @@ def visualize_sim(sim: Simulation, kind: str, **kwargs) -> VisualizeSimulation:
     >>> viz.goto(10)
     >>> viz.next(5)
     """
-    viz = VisualizeSimulation(sim=sim)
-    viz.kind = kind
-    viz.options = kwargs
-    viz.start()
-
-    return viz
+    return VisualizeSimulation(sim=sim, kind=kind, **kwargs)
