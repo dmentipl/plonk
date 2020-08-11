@@ -29,7 +29,7 @@ plane.
     slice_normal = analysis.discs.normal(snap=snap)
     snap.plot(
         quantity='density',
-        interp='cross_section',
+        interp='slice',
         slice_normal=slice_normal,
         cmap='gist_heat',
         units={'extent': 'au'},

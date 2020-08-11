@@ -450,7 +450,7 @@ def _interpolated_plot(
 
         if interp == 'projection':
             qunit = units['quantity'] * units['projection']
-        elif interp == 'cross_section':
+        elif interp == 'slice':
             qunit = units['quantity']
         if np.allclose(qunit.magnitude, 1.0):
             qunit = qunit.units
