@@ -124,7 +124,6 @@ def image(
     Set units for the plot.
 
     >>> units = {'quantity': 'g/cm^3', 'extent': 'au'}
-
     >>> plonk.image(snap=snap, quantity='density', units=units)
     """
     return _interpolation_plot(
@@ -239,7 +238,6 @@ def vector(
     Set units for the plot.
 
     >>> units = {'quantity': 'km/s', 'extent': 'au'}
-
     >>> plonk.vector(snap=snap, quantity='velocity', units=units)
     """
     return _interpolation_plot(
@@ -530,7 +528,6 @@ def plot(
     Set units for the plot.
 
     >>> units = {'x': 'au', 'y': 'au', 'c': 'g/cm^3'}
-
     >>> plonk.plot(snap=snap, x='x', y='y', c='density', units=units)
     """
     logger.debug(f'Plotting particles "{x}" vs "{y}"" on snap: {snap.file_path.name}')
