@@ -4,6 +4,7 @@ import pathlib
 
 import numpy as np
 import pytest
+from scipy.spatial.transform import Rotation
 
 import plonk
 from plonk.snap.utils import get_array_in_code_units
@@ -93,8 +94,8 @@ def test_read_properties_from_phantom():
     snap.close_file()
 
 
-def test_arrays_on_snap():
-    """Testing seeing available arrays on Snap."""
+def test_available_loaded_arrays():
+    """Testing seeing available/loaded arrays on Snap."""
     snap = plonk.load_snap(TEST_FILE)
 
     assert snap.available_arrays() == AVAILABLE_ARRAYS
@@ -114,19 +115,35 @@ def test_arrays_on_snap():
     snap.close_file()
 
 
+def test_array_code_unit():
+    """Testing getting array code unit."""
+    snap = plonk.load_snap(TEST_FILE)
+
+    position_unit = 149600000000.0 * plonk.units['meter']
+    assert snap.get_array_code_unit('position') == position_unit
+
+    snap.close_file()
+
+
 def test_rotate_snap():
     """Testing rotating Snap."""
     snap = plonk.load_snap(TEST_FILE)
 
     snap['position']
+    snap.sinks['position']
     snap.rotate(axis=(1, 2, 3), angle=np.pi)
     snap.rotate(axis=(1, 2, 3), angle=-np.pi)
+    _check_arrays(snap)
+
+    snap.rotate(axis=(1, 2, 3), angle=np.pi)
     snap.unset()
     _check_arrays(snap)
 
-    snap['position']
-    snap.rotate(axis=(1, 2, 3), angle=np.pi)
-    snap.unset()
+    rot = np.array([1, 2, 3])
+    rot = rot / np.linalg.norm(rot)
+    rot *= np.pi
+    rotation = Rotation.from_rotvec(rot)
+    snap.rotate(rotation=rotation)
     _check_arrays(snap)
 
     snap.close_file()
@@ -137,13 +154,23 @@ def test_translate_snap():
     snap = plonk.load_snap(TEST_FILE)
 
     snap['position']
+    snap.sinks['position']
     snap.translate(translation=(100, 200, 300), unit='au')
     snap.translate(translation=(-100, -200, -300), unit='au')
     _check_arrays(snap)
 
-    snap['position']
     snap.translate(translation=(100, 200, 300), unit='au')
     snap.unset()
+    _check_arrays(snap)
+
+    with pytest.raises(ValueError):
+        snap.translate(translation=(100, 200, 300))
+
+    with pytest.raises(ValueError):
+        snap.translate(translation=(100, 200))
+
+    snap.translate(translation=(100, 200, 300) * plonk.units['au'], unit='au')
+    snap.translate(translation=(-100, -200, -300) * plonk.units['au'], unit='au')
     _check_arrays(snap)
 
     snap.close_file()

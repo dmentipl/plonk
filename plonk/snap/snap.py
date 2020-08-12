@@ -786,7 +786,7 @@ class Snap:
                 'via snap.set_kernel.'
             )
         r_kern = kernel_radius[kernel]
-        logger.info('Finding neighbours... may take some time...', end='', flush=True)
+        logger.info('Finding neighbours... may take some time...')
 
         neighbours = np.zeros(len(self), dtype=object)
         for key, tree in self.tree.items():
@@ -823,7 +823,7 @@ class Snap:
             elif self['type'][idx] == self.particle_type['bulge']:
                 _neighbours[idx] = ind['bulge'][neigh]
 
-        logger.info(' Done!', flush=True)
+        logger.info('Finding neighbours... Done!')
 
         return _neighbours
 

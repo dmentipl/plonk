@@ -2,6 +2,8 @@
 
 import pathlib
 
+import pytest
+
 import plonk
 
 TEST_FILE = pathlib.Path(__file__).parent / 'stubdata/phantom_00000.h5'
@@ -19,6 +21,10 @@ with open(NEIGHBOURS_FILE) as fp:
 def test_get_neighbours():
     """Testing getting particle neighbours."""
     snap = plonk.load_snap(TEST_FILE)
+
+    with pytest.raises(ValueError):
+        snap.set_kernel('kernel_does_not_exist')
+
     snap.set_kernel('cubic')
 
     neigh = snap.get_neighbours(0)
