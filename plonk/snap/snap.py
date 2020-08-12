@@ -314,6 +314,29 @@ class Snap:
         """
         return self._available_arrays(sinks=False, all=all, aliases=aliases)
 
+    def bulk_load(self, arrays: List[str] = None):
+        """Load arrays into memory in bulk.
+
+        Parameters
+        ----------
+        arrays
+            A list of arrays to load as strings. If None, then load all
+            available arrays.
+        """
+        if arrays is None:
+            _arrays = self.available_arrays()
+        else:
+            _arrays = arrays
+        if _arrays is None:
+            logger.warning('No arrays specified')
+        for array in _arrays:
+            try:
+                self[array]
+            except ValueError as e:
+                logger.warning(f'Cannot load {array}\n{e}')
+
+        return self
+
     @property
     def properties(self):
         """Snap properties."""
