@@ -29,6 +29,26 @@ class VisualizeSimulation:
         plot kind.
     **kwargs
         Keyword arguments to pass to the plot method.
+
+    Examples
+    --------
+    Visualize a simulation by density projection images.
+
+    >>> viz = visualize_sim(sim=sim, kind='image', quantity='density')
+
+    Alternatively.
+
+    >>> sim.visualize(kind='image', quantity='density')
+
+    Go forwards and backwards through snaps.
+
+    >>> viz.next()
+    >>> viz.prev()
+
+    Go to a particular snap, or skip ahead.
+
+    >>> viz.goto(10)
+    >>> viz.next(5)
     """
 
     def __init__(self, sim: Simulation, kind: str, **kwargs):
@@ -160,6 +180,10 @@ def visualize_sim(sim: Simulation, kind: str, **kwargs) -> VisualizeSimulation:
     Visualize a simulation by density projection images.
 
     >>> viz = visualize_sim(sim=sim, kind='image', quantity='density')
+
+    Alternatively.
+
+    >>> sim.visualize(kind='image', quantity='density')
 
     Go forwards and backwards through snaps.
 

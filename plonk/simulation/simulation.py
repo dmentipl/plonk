@@ -18,6 +18,7 @@ from .._logging import logger
 from .._units import Quantity
 from ..snap.readers import load_snap
 from .evolution import load_ev
+from ..visualize.simulation import visualize_sim
 
 if TYPE_CHECKING:
     from ..snap.snap import Snap
@@ -335,6 +336,8 @@ class Simulation:
             f'<plonk.Simulation: "{self.prefix}", '
             f'directory="{self.paths["directory"].name}">'
         )
+
+    visualize = visualize_sim
 
 
 def load_sim(
