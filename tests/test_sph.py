@@ -5,6 +5,7 @@ import pathlib
 import pytest
 
 import plonk
+from plonk import analysis
 
 TEST_FILE = pathlib.Path(__file__).parent / 'stubdata/phantom_00000.h5'
 NEIGHBOURS_FILE = pathlib.Path(__file__).parent / 'stubdata/neighbours.csv'
@@ -34,5 +35,16 @@ def test_get_neighbours():
     neigh = snap.get_many_neighbours([0, 1001])
     for n, N in zip(neigh, NEIGHBOURS):
         assert set(n) == set(N)
+
+    snap.close_file()
+
+
+def test_sph_derivative():
+    """Test SPH derivative."""
+    snap = plonk.load_snap(TEST_FILE)
+
+    d = analysis.sph.derivative(
+        snap=snap, derivative='div', quantity='velocity', kernel='cubic',
+    )
 
     snap.close_file()

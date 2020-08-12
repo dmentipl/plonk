@@ -712,7 +712,7 @@ class Snap:
             )
         r_kern = kernel_radius[kernel]
         int_to_str_type = {val: key for key, val in self.particle_type.items()}
-        particle_type = int_to_str_type[self['type'][idx]]
+        particle_type = int_to_str_type[self['type'][idx].magnitude]
         tree = self.tree[particle_type]
         if particle_type == 'dust':
             sub_type = self['sub_type'][idx]
@@ -749,17 +749,18 @@ class Snap:
             )
         r_kern = kernel_radius[kernel]
         int_to_str_type = {val: key for key, val in self.particle_type.items()}
-        particle_type = int_to_str_type[self['type'][indices[0]]]
+        ptype = int(self['type'].magnitude[indices[0]])
+        particle_type = int_to_str_type[ptype]
         tree = self.tree[particle_type]
         if particle_type == 'dust':
-            sub_type = self['sub_type'][indices[0]]
+            sub_type = self['sub_type'][indices[0]].magnitude - 1
             tree = tree[sub_type]
         if particle_type == 'boundary':
-            sub_type = self['sub_type'][indices[0]]
+            sub_type = self['sub_type'][indices[0]].magnitude - 1
             tree = tree[sub_type]
         neighbours = tree.query_ball_point(
-            self['position'][indices],
-            r_kern * self['smoothing_length'][indices],
+            self['position'][indices].magnitude,
+            r_kern * self['smoothing_length'][indices].magnitude,
             n_jobs=-1,
         )
         return neighbours

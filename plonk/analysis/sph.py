@@ -7,9 +7,9 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, Tuple
 import numba
 import numpy as np
 from numba.typed import List
-from numpy import ndarray
 
 from .._logging import logger
+from .._units import Quantity
 from ..utils.kernels import (
     kernel_cubic,
     kernel_gradient_cubic,
@@ -30,7 +30,7 @@ def derivative(
     kernel: str = 'cubic',
     chunk_size: int = None,
     verbose: bool = False,
-) -> ndarray:
+) -> Quantity:
     """Calculate derivatives of quantities.
 
     Calculate derivatives such as grad, div, curl on any particle
@@ -58,24 +58,21 @@ def derivative(
 
     Returns
     -------
-    ndarray
+    Quantity
         The derivative of the quantity.
     """
-    end = '\n' if verbose else ''
-    logger.info(
-        f'Calculating {derivative}... may take some time...', end=end, flush=True
-    )
+    logger.info(f'Calculating {derivative}... may take some time...')
 
     if derivative not in ('grad', 'div', 'curl'):
         raise ValueError('derivative must be in ("grad", "div", "curl")')
 
-    density = snap['density']
-    quantity_array: ndarray = snap[quantity]
+    density: Quantity = snap['density']
+    quantity_array: Quantity = snap[quantity]
 
     compute_function = _compute_derivative
     compute_function_kwargs = {
-        'density': density,
-        'quantity_array': quantity_array,
+        'density': density.magnitude,
+        'quantity_array': quantity_array.magnitude,
     }
 
     if derivative == 'grad':
@@ -114,10 +111,7 @@ def derivative(
         verbose=verbose,
     )
 
-    if verbose:
-        logger.info('Done!', flush=True)
-    else:
-        logger.info(' Done!', flush=True)
+    logger.info(f'Calculating {derivative}... Done!')
 
     if derivative == 'div':
         return np.squeeze(result)
@@ -132,7 +126,7 @@ def summation(
     kernel: str = 'cubic',
     chunk_size: int = None,
     verbose: bool = False,
-) -> ndarray:
+) -> Quantity:
     """Calculate SPH sums.
 
     Parameters
@@ -158,7 +152,7 @@ def summation(
 
     Returns
     -------
-    ndarray
+    Quantity
         The result of the SPH summation.
     """
     if kernel not in ('cubic', 'quintic', 'Wendland C4'):
@@ -175,22 +169,25 @@ def summation(
 
     snap.set_kernel(kernel)
 
-    position = snap['position']
-    smoothing_length = snap['smoothing_length']
-    mass = snap['mass']
+    position: Quantity = snap['position']
+    smoothing_length: Quantity = snap['smoothing_length']
+    mass: Quantity = snap['mass']
+
+    _position = position.magnitude
+    _smoothing_length = smoothing_length.magnitude
+    _mass = mass.magnitude
 
     result = np.zeros(result_shape)
 
     for particle_type in snap.particle_type:
         if verbose:
-            logger.info(
-                f'Summing over {particle_type} particles...', flush=True,
-            )
+            logger.info(f'Summing over {particle_type} particles...')
 
-        if particle_type == 'dust':
-            _indices = snap.particle_indices(particle_type)
+        ind = snap.particle_indices(particle_type)
+        if isinstance(ind, list):
+            _indices = ind
         else:
-            _indices = [snap.particle_indices(particle_type)]
+            _indices = [ind]
 
         for type_indices in _indices:
             if len(type_indices) == 0:
@@ -203,17 +200,15 @@ def summation(
                 array_chunks = [type_indices]
 
             if verbose and n_chunks > 1:
-                logger.info(f'Number of chunks: {n_chunks}', flush=True)
-                logger.info(f'Chunk size: {chunk_size}', flush=True)
+                logger.info(f'Number of chunks: {n_chunks}')
+                logger.info(f'Chunk size: {chunk_size}')
 
             for idx, indices in enumerate(array_chunks):
                 if verbose:
                     if n_chunks > 1:
-                        logger.info(
-                            f'Finding neighbours for chunk: {idx}...', flush=True
-                        )
+                        logger.info(f'Finding neighbours for chunk: {idx}...')
                     else:
-                        logger.info('Finding neighbours...', flush=True)
+                        logger.info('Finding neighbours...')
                 _neighbours = snap.get_many_neighbours(indices)
                 neighbours = List()
                 for neigh in _neighbours:
@@ -221,19 +216,17 @@ def summation(
 
                 if verbose:
                     if n_chunks > 1:
-                        logger.info(
-                            f'Summing over neighbours for chunk: {idx}...', flush=True
-                        )
+                        logger.info(f'Summing over neighbours for chunk: {idx}...')
                     else:
-                        logger.info('Summing over neighbours...', flush=True)
+                        logger.info('Summing over neighbours...')
 
                 result[indices] = compute_function(
                     indices=indices,
                     neighbours=neighbours,
                     type_indices=type_indices,
-                    position=position,
-                    smoothing_length=smoothing_length,
-                    mass=mass,
+                    position=_position,
+                    smoothing_length=_smoothing_length,
+                    mass=_mass,
                     kernel_function=kernel_function,
                     kernel_gradient_function=kernel_gradient_function,
                     verbose=verbose,

@@ -2,6 +2,7 @@
 
 import pathlib
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -33,7 +34,7 @@ def test_load_profile():
     snap.close_file()
 
 
-def test_profile_data():
+def test_check_data():
     """Test Profile data accuracy."""
     snap = plonk.load_snap(TEST_FILE)
     prof = plonk.load_profile(snap)
@@ -55,10 +56,28 @@ def test_profile_data():
     snap.close_file()
 
 
+def test_set_data():
+    """Test setting array on Profile."""
+    snap = plonk.load_snap(TEST_FILE)
+
+    prof = plonk.load_profile(snap=snap)
+    prof['array'] = np.arange(len(prof))
+    with pytest.raises(ValueError):
+        prof['array'] = np.arange(len(prof) - 1)
+    with pytest.raises(ValueError):
+        prof['array'] = 1.0
+
+    snap.close_file()
+
+
 def test_profile_plot():
     """Test loading Profile."""
     snap = plonk.load_snap(TEST_FILE)
 
     prof = plonk.load_profile(snap=snap)
-    prof.plot(x='radius', y='density')
+    prof.plot(x='radius', y='surface_density')
+    prof.plot(
+        x='radius', y='density', units={'x': 'au', 'y': 'g/cm^3'}, std_dev_shading=True,
+    )
+
     snap.close_file()
