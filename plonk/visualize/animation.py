@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import pathlib
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Union
 
@@ -102,7 +101,7 @@ def animation(
     ...     save_kwargs={'fps': 10, 'dpi': 300},
     ... )
     """
-    filepath = pathlib.Path(filename)
+    filepath = Path(filename)
     if filepath.suffix != '.mp4':
         raise ValueError('filename should end in ".mp4"')
 
@@ -281,7 +280,7 @@ def animation_profiles(
     ...     save_kwargs={'fps': 10, 'dpi': 300},
     ... )
     """
-    filepath = pathlib.Path(filename)
+    filepath = Path(filename)
     if filepath.suffix != '.mp4':
         raise ValueError('filename should end in ".mp4"')
 
@@ -423,7 +422,7 @@ def animation_particles(
     ...     save_kwargs={'fps': 10, 'dpi': 300},
     ... )
     """
-    filepath = pathlib.Path(filename)
+    filepath = Path(filename)
     if filepath.suffix != '.mp4':
         raise ValueError('filename should end in ".mp4"')
 

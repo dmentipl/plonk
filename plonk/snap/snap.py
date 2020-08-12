@@ -327,8 +327,6 @@ class Snap:
             _arrays = self.available_arrays()
         else:
             _arrays = arrays
-        if _arrays is None:
-            logger.warning('No arrays specified')
         for array in _arrays:
             try:
                 self[array]
@@ -738,13 +736,15 @@ class Snap:
         particle_type = int_to_str_type[self['type'][idx].magnitude]
         tree = self.tree[particle_type]
         if particle_type == 'dust':
-            sub_type = self['sub_type'][idx]
+            sub_type = self['sub_type'][idx].magnitude - 1
             tree = tree[sub_type]
         if particle_type == 'boundary':
-            sub_type = self['sub_type'][idx]
+            sub_type = self['sub_type'][idx].magnitude - 1
             tree = tree[sub_type]
         neighbours = tree.query_ball_point(
-            self['position'][idx], r_kern * self['smoothing_length'][idx], n_jobs=-1,
+            self['position'][idx].magnitude,
+            r_kern * self['smoothing_length'][idx].magnitude,
+            n_jobs=-1,
         )
         return neighbours
 

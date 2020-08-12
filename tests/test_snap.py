@@ -1,6 +1,6 @@
 """Testing Snap."""
 
-import pathlib
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -16,7 +16,7 @@ from .stubdata.phantom_snapshot import (
     std_array_values,
 )
 
-TEST_FILE = pathlib.Path(__file__).parent / 'stubdata/phantom_00000.h5'
+TEST_FILE = Path(__file__).parent / 'stubdata/phantom_00000.h5'
 AVAILABLE_ARRAYS = (
     'angular_momentum',
     'angular_velocity',
@@ -54,7 +54,7 @@ AVAILABLE_ARRAYS = (
 
 def test_load_phantom_snap():
     """Testing reading Phantom HDF5 snapshots."""
-    # Read from pathlib.Path
+    # Read from Path
     snap = plonk.load_snap(TEST_FILE)
     snap.close_file()
     # Read from str
@@ -130,6 +130,7 @@ def test_rotate_snap():
     snap = plonk.load_snap(TEST_FILE)
 
     snap['position']
+    snap['radius_cylindrical']
     snap.sinks['position']
     snap.rotate(axis=(1, 2, 3), angle=np.pi)
     snap.rotate(axis=(1, 2, 3), angle=-np.pi)
@@ -221,6 +222,34 @@ def test_set_array():
     sink_array = np.arange(len(snap.sinks)) * plonk.units['dimensionless']
     snap.sinks['array'] = sink_array
     np.testing.assert_allclose(snap.sinks['array'].m, sink_array.m)
+
+    snap.close_file()
+
+
+def test_bulk_load():
+    """Testing bulk loading arrays."""
+    snap = plonk.load_snap(TEST_FILE)
+    snap.bulk_load()
+
+    snap.close_file()
+
+
+def test_read_write_extra():
+    """Testing read write extra arrays."""
+    snap = plonk.load_snap(TEST_FILE)
+
+    filename = Path('tmp.h5')
+
+    arr = np.arange(len(snap)) * plonk.units['dimensionless']
+    snap['my_array'] = arr
+    snap.write_extra_arrays(arrays=['my_array'], filename=filename)
+    snap = None
+
+    snap = plonk.load_snap(TEST_FILE)
+    snap.read_extra_arrays(filename=filename)
+    np.allclose(snap['my_array'], arr)
+
+    filename.unlink()
 
     snap.close_file()
 

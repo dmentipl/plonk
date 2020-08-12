@@ -1,6 +1,6 @@
 """Testing evolution files."""
 
-import pathlib
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -9,12 +9,12 @@ import plonk
 
 from .stubdata.phantom_evolution import mean_values
 
-TEST_FILE = pathlib.Path(__file__).parent / 'stubdata/phantom01.ev'
+TEST_FILE = Path(__file__).parent / 'stubdata/phantom01.ev'
 
 
 def test_read_evolution():
     """Test reading Phantom evolution files."""
-    # Read from pathlib.Path
+    # Read from Path
     plonk.load_ev(TEST_FILE)
 
     # Read from str

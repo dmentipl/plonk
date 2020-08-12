@@ -1,10 +1,10 @@
 """Data to test interpolation functions."""
 
-import pathlib
+from pathlib import Path
 
 import numpy as np
 
-DIR = pathlib.Path(__file__).parent
+DIR = Path(__file__).parent
 
 scalar_projection = np.loadtxt(DIR / 'scalar_projection.csv')
 scalar_slice = np.loadtxt(DIR / 'scalar_slice.csv')

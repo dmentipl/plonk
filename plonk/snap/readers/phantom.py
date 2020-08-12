@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import pathlib
 from pathlib import Path
 from typing import Callable, Dict, List, Union
 
@@ -78,7 +77,7 @@ def generate_snap_from_file(filename: Union[str, Path]) -> Snap:
         A Snap object.
     """
     logger.debug(f'Loading Phantom snapshot: {filename}')
-    file_path = pathlib.Path(filename).expanduser()
+    file_path = Path(filename).expanduser()
     if not file_path.is_file():
         raise FileNotFoundError('Cannot find snapshot file')
     file_handle = h5py.File(file_path, mode='r')

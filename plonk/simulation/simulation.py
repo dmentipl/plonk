@@ -90,18 +90,12 @@ class Simulation:
             The SPH code used to produce the simulation data. Default
             is 'Phantom'.
         """
-        if not isinstance(prefix, str):
-            raise TypeError('prefix must be str')
-
         if data_source not in _data_sources:
             raise ValueError(f'Data source not available: try {_data_sources}')
         self.data_source = data_source
 
         if directory is None:
             directory = '.'
-        else:
-            if not isinstance(directory, (str, Path)):
-                raise TypeError('directory must be str or pathlib.Path')
 
         logger.debug(f'Loading {data_source} simulation: {prefix} at {directory}')
         self.prefix = prefix
