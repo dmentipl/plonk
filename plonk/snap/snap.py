@@ -894,7 +894,7 @@ class Snap:
         f.close()
 
     def to_dataframe(
-        self, columns: Union[Tuple[str, ...], List[str]] = None
+        self, columns: Union[Tuple[str, ...], List[str]] = None, units: List[str] = None
     ) -> DataFrame:
         """Convert Snap to DataFrame.
 
@@ -902,6 +902,11 @@ class Snap:
         ----------
         columns : optional
             A list of columns to add to the data frame. Default is
+            None.
+        units : optional
+            A list of units corresponding to columns add to the data
+            frame. Units must be strings, and must be base units. I.e.
+            'cm' not '10 cm'. If None, use default, i.e. cgs. Default is
             None.
 
         Returns
@@ -912,14 +917,39 @@ class Snap:
         if columns is None:
             columns = self.loaded_arrays()
         cols = list(columns)
-        for col in cols:
-            arr = self[col]
-            arr = cast(ndarray, arr)
-            if arr.ndim == 2:
-                for idx in range(arr.shape[1]):
-                    d[f'{col}.{idx+1}'] = arr[:, idx]
-            else:
-                d[col] = arr
+        if units is None:
+            _units = list()
+            for column in cols:
+                try:
+                    _units.append(self[column].units)
+                except AttributeError:
+                    _units.append(plonk_units['dimensionless'])
+        else:
+            _units = list()
+            for unit in units:
+                u = plonk_units(unit)
+                if np.allclose(u.m, 1.0):
+                    _units.append(u.units)
+                else:
+                    raise ValueError(
+                        'Units must be strings, and must be base units. '
+                        'I.e. "cm" not "10 cm".'
+                    )
+        if len(_units) != len(cols):
+            raise ValueError('units and columns must have same length')
+        for column, unit in zip(cols, _units):
+            name = column
+            array: Quantity = self[column]
+            try:
+                suffix = f' [{unit:~}]'
+                array = array.to(unit).magnitude
+            except AttributeError:
+                suffix = ''
+            if array.ndim == 1:
+                d[name + suffix] = array
+            if array.ndim == 2:
+                for idx in range(array.shape[1]):
+                    d[f'{name}.{idx+1}' + suffix] = array[:, idx]
         return pd.DataFrame(d)
 
     def _get_family_subsnap(self, name: str):
