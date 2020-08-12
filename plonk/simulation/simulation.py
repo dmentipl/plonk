@@ -18,7 +18,7 @@ from .._logging import logger
 from .._units import Quantity
 from ..snap.readers import load_snap
 from ..visualize.simulation import visualize_sim
-from .evolution import load_ev, evolution_units
+from .evolution import evolution_units, load_ev
 
 if TYPE_CHECKING:
     from ..snap.snap import Snap
@@ -52,8 +52,8 @@ class Simulation:
 
     Accessing the global quantity and sink time series data.
 
-    >>> sim.global_quantities
-    >>> sim.sink_quantities
+    >>> sim.time_series['global']
+    >>> sim.time_series['sinks']
     """
 
     def __init__(self):
@@ -65,8 +65,7 @@ class Simulation:
         self._snaps: List[Snap] = None
         self._properties: Dict[str, Any] = None
         self._units: Dict[str, Any] = None
-        self._global_quantities: DataFrame = None
-        self._sink_quantities: List[DataFrame] = None
+        self._time_series: Dict[str, Union[DataFrame, List[DataFrame]]] = None
 
         self._snap_file_extension = ''
         self._len = -1
@@ -116,8 +115,8 @@ class Simulation:
         self._snap_file_extension = self._get_snap_file_extension()
 
         self.paths['snaps'] = self._get_snap_files()
-        self.paths['global_quantities'] = self._get_global_ev_files()
-        self.paths['sink_quantities'] = self._get_sink_ev_files()
+        self.paths['time_series_global'] = self._get_global_ev_files()
+        self.paths['time_series_sinks'] = self._get_sink_ev_files()
 
         return self
 
@@ -146,20 +145,12 @@ class Simulation:
         return self._units
 
     @property
-    def global_quantities(self) -> DataFrame:
-        """Global quantity time series data."""
-        if self._global_quantities is None:
-            self._generate_global_quantities()
+    def time_series(self) -> DataFrame:
+        """Time series data."""
+        if self._time_series is None:
+            self._generate_time_series()
 
-        return self._global_quantities
-
-    @property
-    def sink_quantities(self) -> List[DataFrame]:
-        """Sink time series data."""
-        if self._sink_quantities is None:
-            self._generate_sink_quantities()
-
-        return self._sink_quantities
+        return self._time_series
 
     def to_array(self, quantity: str, indices: List[int] = None) -> Quantity:
         """Generate an array of a quantity over all snapshots.
@@ -239,17 +230,15 @@ class Simulation:
                     u[key] = '__inconsistent__'
         self._units = u
 
-    def _generate_global_quantities(self):
-        """Generate global quantity time series objects."""
-        self._global_quantities = None
-        if self.paths['global_quantities']:
-            self._global_quantities = load_ev(self.paths['global_quantities'])
-
-    def _generate_sink_quantities(self):
-        """Generate sink quantity time series objects."""
-        self._sink_quantities = [
-            load_ev(files) for files in self.paths['sink_quantities']
-        ]
+    def _generate_time_series(self):
+        """Generate time series data."""
+        self._time_series = dict()
+        if self.paths['time_series_global']:
+            self._time_series['global'] = load_ev(self.paths['time_series_global'])
+        if self.paths['time_series_sinks']:
+            self._time_series['sinks'] = [
+                load_ev(files) for files in self.paths['time_series_sinks']
+            ]
 
     def _get_global_ev_files(self, glob: str = None) -> List[Path]:
         """Get global ev files."""
@@ -280,21 +269,25 @@ class Simulation:
 
         return sinks
 
-    def set_units_on_ev(self):
-        """Set physical units on evolution data."""
+    def set_units_on_time_series(self):
+        """Set physical units on time series data."""
         units = evolution_units(self)
-        _apply_units_to_dataframe(self.global_quantities, units)
-        for ev in self.sink_quantities:
-            _apply_units_to_dataframe(ev, units)
+        if 'global' in self.time_series:
+            _apply_units_to_dataframe(self.time_series['global'], units)
+        if 'sinks' in self.time_series:
+            for ev in self.time_series['sinks']:
+                _apply_units_to_dataframe(ev, units)
 
         return self
 
-    def unset_units_on_ev(self):
-        """Un-set physical units on evolution data."""
+    def unset_units_on_time_series(self):
+        """Un-set physical units on time series data."""
         units = evolution_units(self)
-        _un_apply_units_to_dataframe(self.global_quantities, units)
-        for ev in self.sink_quantities:
-            _un_apply_units_to_dataframe(ev, units)
+        if 'global' in self.time_series:
+            _un_apply_units_to_dataframe(self.time_series['global'], units)
+        if 'sinks' in self.time_series:
+            for ev in self.time_series['sinks']:
+                _un_apply_units_to_dataframe(ev, units)
 
         return self
 
@@ -378,7 +371,7 @@ def load_sim(
     return (
         Simulation()
         .load_sim(prefix=prefix, directory=directory, data_source=data_source)
-        .set_units_on_ev()
+        .set_units_on_time_series()
     )
 
 

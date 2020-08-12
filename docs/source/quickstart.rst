@@ -187,10 +187,10 @@ Load a simulation, and access snapshots and other data.
      <plonk.Snap "disc_00029.h5">,
      <plonk.Snap "disc_00030.h5">]
 
-    >>> sim.global_quantities
+    >>> sim.time_series['global']
     # Output is a pandas DataFrame
 
-    >>> sim.sink_quantities
+    >>> sim.time_series['sinks']
     # Output is a list of pandas DataFrames
 
 -------------

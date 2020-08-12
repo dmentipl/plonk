@@ -224,9 +224,8 @@ the first five snapshots with the following.
      <plonk.Snap "disc_00003.h5">,
      <plonk.Snap "disc_00004.h5">]
 
-The :py:class:`Simulation` class has attributes :py:attr:`global_quantities` and
-:py:attr:`sink_quantities` which are pandas DataFrames discussed in the next
-section.
+The :py:class:`Simulation` class has an attribute :py:attr:`time_series` which
+contains time series data as pandas DataFrames discussed in the next section.
 
 ~~~~~~~~~
 Evolution

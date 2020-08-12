@@ -21,7 +21,7 @@ Plot mass accretion and accretion rate onto sink particles.
     fig, ax = plt.subplots(ncols=1, nrows=2, figsize=(12, 10))
 
     # Loop over sinks and plot
-    for idx, sink in enumerate(sim.sink_quantities):
+    for idx, sink in enumerate(sim.time_series['sinks']):
         sink['accretion_rate'] = np.gradient(sink['mass_accreted'], sink['time'])
         time = (sink['time'].to_numpy() * sim.units['time']).to('year').m
         mass_accreted = (

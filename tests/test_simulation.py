@@ -14,4 +14,4 @@ def test_init_simulation():
     assert len(snaps) == 1
     assert len(snaps[0]) == 2000
 
-    assert sim.paths['global_quantities'][0].name == 'phantom01.ev'
+    assert sim.paths['time_series_global'][0].name == 'phantom01.ev'
