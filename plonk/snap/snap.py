@@ -706,9 +706,11 @@ class Snap:
                 elif isinstance(ind, list):
                     self._tree[key] = list()
                     for _ind in ind:
-                        self._tree[key].append(cKDTree(self['position'][_ind]))
+                        self._tree[key].append(
+                            cKDTree(self['position'][_ind].magnitude)
+                        )
                 else:
-                    self._tree[key] = cKDTree(self['position'][ind])
+                    self._tree[key] = cKDTree(self['position'][ind].magnitude)
         return self._tree
 
     def get_neighbours(self, idx):
@@ -819,14 +821,14 @@ class Snap:
                 continue
             if isinstance(ind, list):
                 for idx, _ind in enumerate(ind):
-                    h = self['smoothing_length'][_ind]
-                    pos = self['position'][_ind]
+                    h = self['smoothing_length'][_ind].magnitude
+                    pos = self['position'][_ind].magnitude
                     neighbours[_ind] = self.tree[key][idx].query_ball_point(
                         pos, r_kern * h, n_jobs=-1
                     )
             else:
-                h = self['smoothing_length'][ind]
-                pos = self['position'][ind]
+                h = self['smoothing_length'][ind].magnitude
+                pos = self['position'][ind].magnitude
                 neighbours[ind] = self.tree[key].query_ball_point(
                     pos, r_kern * h, n_jobs=-1
                 )
@@ -837,9 +839,13 @@ class Snap:
             if self['type'][idx] == self.particle_type['gas']:
                 _neighbours[idx] = ind['gas'][neigh]
             elif self['type'][idx] == self.particle_type['dust']:
-                _neighbours[idx] = ind['dust'][self['sub_type'][idx] - 1][neigh]
+                _neighbours[idx] = ind['dust'][self['sub_type'][idx].magnitude - 1][
+                    neigh
+                ]
             elif self['type'][idx] == self.particle_type['boundary']:
-                _neighbours[idx] = ind['boundary'][self['sub_type'][idx] - 1][neigh]
+                _neighbours[idx] = ind['boundary'][self['sub_type'][idx].magnitude - 1][
+                    neigh
+                ]
             elif self['type'][idx] == self.particle_type['star']:
                 _neighbours[idx] = ind['star'][neigh]
             elif self['type'][idx] == self.particle_type['darkmatter']:
