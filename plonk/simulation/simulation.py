@@ -18,7 +18,7 @@ from .._logging import logger
 from .._units import Quantity
 from ..snap.readers import load_snap
 from ..visualize.simulation import visualize_sim
-from .evolution import load_ev
+from .evolution import load_ev, evolution_units
 
 if TYPE_CHECKING:
     from ..snap.snap import Snap
@@ -280,6 +280,24 @@ class Simulation:
 
         return sinks
 
+    def set_units_on_ev(self):
+        """Set physical units on evolution data."""
+        units = evolution_units(self)
+        _apply_units_to_dataframe(self.global_quantities, units)
+        for ev in self.sink_quantities:
+            _apply_units_to_dataframe(ev, units)
+
+        return self
+
+    def unset_units_on_ev(self):
+        """Un-set physical units on evolution data."""
+        units = evolution_units(self)
+        _un_apply_units_to_dataframe(self.global_quantities, units)
+        for ev in self.sink_quantities:
+            _un_apply_units_to_dataframe(ev, units)
+
+        return self
+
     def _get_snap_files(self, glob: str = None) -> List[Path]:
         """Get snapshot files."""
         if glob is None:
@@ -357,6 +375,33 @@ def load_sim(
         The SPH code used to produce the simulation data. Default
         is 'Phantom'.
     """
-    return Simulation().load_sim(
-        prefix=prefix, directory=directory, data_source=data_source
+    return (
+        Simulation()
+        .load_sim(prefix=prefix, directory=directory, data_source=data_source)
+        .set_units_on_ev()
     )
+
+
+def _apply_units_to_dataframe(dataframe, units):
+    keys = list()
+    for key, val in units.items():
+        if key in dataframe:
+            keys.append(key)
+            dataframe[key] = (dataframe[key].to_numpy() * units[key]).magnitude
+    mapper = {key: f'{key} [{units[key].units:~}]' for key in keys}
+    dataframe.rename(columns=mapper, inplace=True)
+    return dataframe
+
+
+def _un_apply_units_to_dataframe(dataframe, units):
+    keys = list()
+    for key, val in units.items():
+        key_unit = f'{key} [{units[key].units:~}]'
+        if key_unit in dataframe:
+            keys.append(key)
+            dataframe[key_unit] = (
+                dataframe[key_unit].to_numpy() / units[key]
+            ).magnitude
+    mapper = {f'{key} [{units[key].units:~}]': key for key in keys}
+    dataframe.rename(columns=mapper, inplace=True)
+    return dataframe

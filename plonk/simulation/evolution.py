@@ -6,12 +6,18 @@ track averaged quantities that are more frequently output than snapshot
 files.
 """
 
+from __future__ import annotations
+
 from pathlib import Path
-from typing import List, Tuple, Union
+from typing import TYPE_CHECKING, List, Tuple, Union
 
 from pandas import DataFrame
 
 from ._phantom_evolution import load_data_from_file as load_data_from_file_phantom
+from ._phantom_evolution import evolution_units as evolution_units_phantom
+
+if TYPE_CHECKING:
+    from .simulation import Simulation
 
 
 def load_ev(
@@ -54,4 +60,11 @@ def load_ev(
     """
     if data_source == 'Phantom':
         return load_data_from_file_phantom(filenames)
+    raise ValueError('Cannot determine code used to produce evolution data')
+
+
+def evolution_units(sim: Simulation, data_source: str = 'Phantom'):
+    """TODO"""
+    if data_source == 'Phantom':
+        return evolution_units_phantom(sim)
     raise ValueError('Cannot determine code used to produce evolution data')

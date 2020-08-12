@@ -1,13 +1,85 @@
 """Read Phantom evolution files."""
 
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Dict, List, Tuple, Union
+from typing import TYPE_CHECKING, Dict, List, Tuple, Union
 
 import numpy as np
 import pandas as pd
 from pandas import DataFrame
 
-NAME_MAP = {
+from .._units import generate_units_dictionary
+
+if TYPE_CHECKING:
+    from .simulation import Simulation
+
+
+UNITS = {
+    'alpha_viscosity_numerical': 'dimensionless',
+    'angular_momentum': 'angular_momentum',
+    'boundary_density_average': 'density',
+    'boundary_density_max': 'density',
+    'bulge_density_average': 'density',
+    'bulge_density_max': 'density',
+    'center_of_mass_x': 'length',
+    'center_of_mass_y': 'length',
+    'center_of_mass_z': 'length',
+    'dark_matter_density_average': 'density',
+    'dark_matter_density_max': 'density',
+    'density_average': 'density',
+    'density_max': 'density',
+    'dust_density_average': 'density',
+    'dust_density_max': 'density',
+    'dust_gas_ratio': 'dimensionless',
+    'energy_kinetic': 'energy',
+    'energy_magnetic': 'energy',
+    'energy_potential': 'energy',
+    'energy_rotational_total': 'energy',
+    'energy_rotational_x': 'energy',
+    'energy_rotational_y': 'energy',
+    'energy_rotational_z': 'energy',
+    'energy_thermal': 'energy',
+    'energy_total': 'energy',
+    'entropy': 'entropy',
+    'force_x': 'force',
+    'force_y': 'force',
+    'force_z': 'force',
+    'gas_density_average': 'density',
+    'gas_density_max': 'density',
+    'mach_number_rms': 'dimensionless',
+    'magnetic_field_average': 'magnetic_field',
+    'magnetic_field_divergence_average': 'magnetic_field',
+    'magnetic_field_divergence_max': 'magnetic_field',
+    'magnetic_field_max': 'magnetic_field',
+    'magnetic_field_min': 'magnetic_field',
+    'mass_accreted': 'mass',
+    'momentum': 'momentum',
+    'plasma_beta_average': 'dimensionless',
+    'plasma_beta_max': 'dimensionless',
+    'plasma_beta_min': 'dimensionless',
+    'position_x': 'length',
+    'position_y': 'length',
+    'position_z': 'length',
+    'sink_sink_force_x': 'force',
+    'sink_sink_force_y': 'force',
+    'sink_sink_force_z': 'force',
+    'spin_x': 'angular_momentum',
+    'spin_y': 'angular_momentum',
+    'spin_z': 'angular_momentum',
+    'star_density_average': 'density',
+    'star_density_max': 'density',
+    'stopping_time': 'time',
+    'time': 'time',
+    'timestep': 'time',
+    'timestep_max': 'time',
+    'velocity_rms': 'velocity',
+    'velocity_x': 'velocity',
+    'velocity_y': 'velocity',
+    'velocity_z': 'velocity',
+}
+
+NAME = {
     'time': 'time',
     'ekin': 'energy_kinetic',
     'etherm': 'energy_thermal',
@@ -71,7 +143,9 @@ NAME_MAP = {
     'fssz': 'sink_sink_force_z',
 }
 
-NAME_MAP.update({f'DustMass{idx:03}': f'dust_mass_{idx:03}' for idx in range(100)})
+
+NAME.update({f'DustMass{idx:03}': f'dust_mass_{idx:03}' for idx in range(100)})
+UNITS.update({f'dust_mass_{idx:03}': 'mass' for idx in range(100)})
 
 
 def load_data_from_file(
@@ -91,11 +165,20 @@ def load_data_from_file(
         _file_paths.append(path.resolve())
     file_paths = tuple(_file_paths)
 
-    _check_file_consistency(file_paths, NAME_MAP)
-    columns = _get_columns(file_paths[0], NAME_MAP)
+    _check_file_consistency(file_paths, NAME)
+    columns = _get_columns(file_paths[0], NAME)
     dataframe = _get_data(columns, file_paths)
 
     return dataframe
+
+
+def evolution_units(sim: Simulation):
+    """TODO"""
+    sim_units = generate_units_dictionary(**sim.units)
+    units = dict()
+    for key, val in UNITS.items():
+        units[key] = sim_units[val]
+    return units
 
 
 def _get_data(columns: Tuple[str, ...], file_paths: Tuple[Path, ...]) -> DataFrame:
