@@ -85,18 +85,19 @@ def generate_units_dictionary(length, mass, time, magnetic_field):
     _units['length'] = length
     _units['time'] = time
     _units['mass'] = mass
-    _units['magnetic_field'] = magnetic_field
-    _units['frequency'] = 1 / time
+    _units['magnetic_field'] = magnetic_field.to('tesla')
+    _units['frequency'] = (1 / time).to('hertz')
     _units['velocity'] = length / time
     _units['momentum'] = mass * length / time
     _units['angular_momentum'] = mass * length ** 2 / time
     _units['specific_angular_momentum'] = length ** 2 / time
     _units['density'] = mass / length ** 3
     _units['acceleration'] = length / time ** 2
-    _units['force'] = mass * length / time ** 2
-    _units['energy'] = mass * length ** 2 / time ** 2
-    _units['specific_energy'] = length ** 2 / time ** 2
-    _units['pressure'] = mass / time ** 2 / length
-    _units['temperature'] = units.kelvin
+    _units['force'] = (mass * length / time ** 2).to('newton')
+    _units['energy'] = (mass * length ** 2 / time ** 2).to('joule')
+    _units['specific_energy'] = (length ** 2 / time ** 2).to('joule/kg')
+    _units['pressure'] = (mass / time ** 2 / length).to('pascal')
+    _units['temperature'] = 1.0 * units.kelvin
+    _units['entropy'] = (mass * length ** 2 / time ** 2).to('joule') / units.kelvin
 
     return _units
