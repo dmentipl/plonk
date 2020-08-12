@@ -13,7 +13,7 @@ def is_documented_by(original):
 
 def time_string(
     snap, unit: str, unit_str: str = None, float_format: str = '.0f',
-):
+) -> str:
     """Generate time stamp string.
 
     Parameters
@@ -44,3 +44,38 @@ def time_string(
     if unit_str is None:
         unit_str = unit
     return f't = {time:{float_format}} {unit_str}'
+
+
+def pretty_array_name(s: str) -> str:
+    """Prettify an array name string.
+
+    Parameters
+    ----------
+    s
+        The string.
+
+    Returns
+    -------
+    str
+    """
+    NUM_DUST_MAX = 100
+
+    for v in ['x', 'y', 'z', 'R', 'r', 'phi', 'theta']:
+        if s.endswith(f'_{v}'):
+            s = _rreplace(s, f'_{v}', f' ({v})', 1)
+    for v in [f'{n:03}' for n in range(NUM_DUST_MAX)]:
+        if s.endswith(f'_{v}'):
+            s = _rreplace(s, f'_{v}', f' ({v})', 1)
+    if s.endswith('_tot'):
+        s = _rreplace(s, '_tot', ' (total)', 1)
+    if s.endswith('_mag'):
+        s = _rreplace(s, '_mag', ' (magnitude)', 1)
+    if len(s) > 1:
+        s = s.capitalize()
+    return s.replace('_', ' ')
+
+
+def _rreplace(s, old, new, occurrence):
+    # From https://stackoverflow.com/a/2556252/12951362
+    li = s.rsplit(old, occurrence)
+    return new.join(li)
