@@ -17,8 +17,8 @@ from pandas import DataFrame
 from .._logging import logger
 from .._units import Quantity
 from ..snap.readers import load_snap
-from .evolution import load_ev
 from ..visualize.simulation import visualize_sim
+from .evolution import load_ev
 
 if TYPE_CHECKING:
     from ..snap.snap import Snap
