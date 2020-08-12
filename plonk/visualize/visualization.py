@@ -121,6 +121,10 @@ def image(
 
     >>> plonk.image(snap=snap, quantity='density')
 
+    Alternatively.
+
+    >>> snap.image(quantity='density')
+
     Set units for the plot.
 
     >>> units = {'quantity': 'g/cm^3', 'extent': 'au'}
@@ -235,6 +239,10 @@ def vector(
 
     >>> plonk.vector(snap=snap, quantity='velocity')
 
+    Alternatively.
+
+    >>> snap.vector(quantity='velocity')
+
     Set units for the plot.
 
     >>> units = {'quantity': 'km/s', 'extent': 'au'}
@@ -278,14 +286,18 @@ def _interpolation_plot(
     if interp not in ('projection', 'slice'):
         raise ValueError('interp must be "projection" or "slice"')
 
+    q: Quantity = snap[quantity]
     if kind is None:
-        q: Quantity = snap[quantity]
         if q.ndim == 1:
             kind = 'image'
         elif q.ndim == 2:
             kind = 'quiver'
     if kind not in ('image', 'contour', 'quiver', 'streamplot'):
         raise ValueError('Cannot determine plot type')
+    if kind in ('image', 'contour') and not q.ndim == 1:
+        raise ValueError('image and contour plots must be of 1-dimensional quantities')
+    if kind in ('quiver', 'streamplot') and quantity not in snap._vector_arrays:
+        raise ValueError('quiver and stream plots must be of vector quantities')
 
     if ax is None:
         fig, ax = plt.subplots()
@@ -516,6 +528,10 @@ def plot(
     Show the particles in xy-plane.
 
     >>> plonk.plot(snap=snap)
+
+    Alternatively.
+
+    >>> snap.plot()
 
     Plot density against x.
 
