@@ -56,3 +56,18 @@ def test_simulation_visualization():
     viz = sim.visualize(kind='particle', x='x', y='y')
     viz.next()
     viz.prev()
+
+
+def test_to_array():
+    """Testing to_array method."""
+    dir_path = Path(__file__).parent / 'stubdata'
+    sim = plonk.load_sim(prefix='phantom', directory=dir_path)
+    sim.to_array(quantity='density', indices=[0, 1, 2])
+
+
+def test_set_units_time_series():
+    """Test set/unset units time series."""
+    dir_path = Path(__file__).parent / 'stubdata'
+    sim = plonk.load_sim(prefix='phantom', directory=dir_path)
+    sim.unset_units_on_time_series()
+    sim.set_units_on_time_series()
