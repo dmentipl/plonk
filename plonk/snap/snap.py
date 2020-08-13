@@ -370,7 +370,7 @@ class Snap:
                     elif idx == self.particle_type['boundary']:
                         # Boundary particle sub-type: 0 (gas), 1, 2, 3... (dust)
                         d['boundary'] = list(
-                            np.bincount(self[self['type'] == idx]['sub_type'.magnitude])
+                            np.bincount(self[self['type'] == idx]['sub_type'].magnitude)
                         )
                     else:
                         d[int_to_name[idx]] = num
@@ -532,8 +532,7 @@ class Snap:
                 raise ValueError(
                     'translation must have units, or you must specify units argument'
                 )
-            else:
-                translation *= plonk_units(unit)
+            translation *= plonk_units(unit)
         if 'position' in self.loaded_arrays():
             self._arrays['position'] += translation
         if 'position' in self.sinks.loaded_arrays():
