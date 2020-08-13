@@ -298,6 +298,21 @@ def test_read_write_extra():
     snap.close_file()
 
 
+def test_plot_as_methods():
+    """Testing plot methods."""
+    snap = plonk.load_snap(TEST_FILE)
+
+    snap.image('density', number_of_pixels=(16, 16))
+    snap.plot()
+
+    sinks = snap.sinks
+    sinks.plot()
+
+    subsnap = snap['gas']
+    subsnap.image('density', number_of_pixels=(16, 16))
+    subsnap.plot()
+
+
 def _check_arrays(snap):
     for array in mean_array_values.keys():
         np.testing.assert_allclose(

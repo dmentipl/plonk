@@ -343,7 +343,7 @@ class Snap:
     @property
     def sinks(self):
         """Sink particle arrays."""
-        return _Sinks(self)
+        return Sinks(self)
 
     @property
     def num_particles(self):
@@ -1030,14 +1030,31 @@ class Snap:
 class SubSnap(Snap):
     """A Snap subset of particles.
 
-    The sub-snap is generated via an index array.
+    A SubSnap can be generated from a Snap via an index array, a
+    particle mask, or a string. SubSnaps can be used like a Snap,
+    including: accessing arrays, plotting, finding neighbours, etc.
 
     Parameters
     ----------
     base
-        The base snapshot.
+        The base Snap.
     indices
-        A (N,) array of particle indices to include in the sub-snap.
+        A (N,) array of particle indices to include in the SubSnap.
+
+    Examples
+    --------
+    Generate a SubSnap of the gas particles on a Snap.
+
+    >>> subsnap = snap['gas']
+
+    Generate a SubSnap of particles with a mask.
+
+    >>> subsnap = snap[snap['x'] > 0]
+
+    Generate a SubSnap of particles from indices.
+
+    >>> subsnap = snap[:100]
+    >>> subsnap = snap[[0, 9, 99]]
     """
 
     def __init__(self, base: Snap, indices: ndarray):
@@ -1082,7 +1099,7 @@ class SubSnap(Snap):
 
     def __str__(self):
         """Dunder str method."""
-        return self.base.__str__().replace('Snap', 'SubSnap')
+        return f'<plonk.SubSnap "{self.file_path.name}">'
 
     def _get_array(self, name: str, sinks: bool = False) -> ndarray:
         return self.base._get_array(name, sinks)[self.indices]
@@ -1091,10 +1108,23 @@ class SubSnap(Snap):
 SnapLike = Union[Snap, SubSnap]
 
 
-class _Sinks:
+class Sinks:
+    """The sinks subset on a Snap.
+
+    A Sinks object is generated from a Snap.
+
+    Parameters
+    ----------
+    base
+        The base Snap.
+    """
+
     def __init__(self, base: Snap):
         self.base = base
         self._getitem = base._getitem_from_str
+
+        # Attributes same as Snap
+        self.file_path = self.base.file_path
 
     def available_arrays(self, all: bool = False, aliases: bool = False):
         """Return a tuple of available sink arrays.
@@ -1122,6 +1152,7 @@ class _Sinks:
         return tuple(sorted(self.base._sinks.keys()))
 
     def __setitem__(self, name: str, item: Quantity):
+        """Set an array."""
         if not isinstance(item, Quantity):
             raise ValueError('"item" must be an array with units, i.e. a Pint Quantity')
         if item.shape[0] != len(self):
@@ -1129,6 +1160,7 @@ class _Sinks:
         self.base._sinks[name] = item
 
     def __getitem__(self, inp):
+        """Return an array or subset."""
         if not isinstance(inp, str):
             raise ValueError('Must pass in string to __getitem__')
         return self._getitem(inp, sinks=True)
