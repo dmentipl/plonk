@@ -9,10 +9,10 @@ file.
 .. autoclass:: plonk.Snap
     :members:
 
-.. autoclass:: plonk.snap.SubSnap
+.. autoclass:: plonk.SubSnap
     :members:
 
-.. autoclass:: plonk.snap.snap._Sinks
+.. autoclass:: plonk.Sinks
     :members:
 
 .. autofunction:: plonk.load_snap

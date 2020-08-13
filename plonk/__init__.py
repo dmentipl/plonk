@@ -23,9 +23,13 @@ Classes
 Profile
     Represents a profile through the snapshot in Cartesian, cylindrical
     or spherical coordinates.
+Sinks
+    Represents sinks in a snapshot file.
 Snap
     Represents a smoothed particle hydrodynamics snapshot file,
     containing particles, sinks, and file header information.
+SubSnap
+    Represents a subset of particles in a snapshot file.
 Simulation
     Represents an entire smoothed particle hydrodynamics simulation.
     It contains a list of Snap objects, and time series data as pandas
@@ -58,7 +62,7 @@ from .analysis.profile import Profile, load_profile
 from .simulation.evolution import load_ev
 from .simulation.simulation import Simulation, load_sim
 from .snap.readers import load_snap
-from .snap.snap import Snap
+from .snap.snap import Sinks, Snap, SnapLike, SubSnap
 from .visualize.animation import animation, animation_particles, animation_profiles
 from .visualize.interpolation import interpolate
 from .visualize.simulation import visualize_sim
@@ -71,7 +75,10 @@ _logger_init(__version__)
 __all__ = [
     'Profile',
     'Simulation',
+    'Sinks',
     'Snap',
+    'SnapLike',
+    'SubSnap',
     'animation',
     'animation_particles',
     'animation_profiles',
