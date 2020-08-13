@@ -193,8 +193,18 @@ def test_subsnap():
 
     gas = snap['gas']
     assert len(gas) == 1000
+
     subsnap = snap[0:100]
     assert len(subsnap) == 100
+
+    subsnap = snap[[0, 1, 2]]
+    assert len(subsnap) == 3
+
+    subsnap = snap[(0, 1, 2)]
+    assert len(subsnap) == 3
+
+    subsnap = snap[0]
+    assert len(subsnap) == 1
 
     snap.close_file()
 

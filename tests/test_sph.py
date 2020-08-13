@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 import plonk
@@ -28,13 +29,11 @@ def test_get_neighbours():
 
     snap.set_kernel('cubic')
 
-    neigh = snap.get_neighbours(0)
-    print(neigh)
-    assert set(neigh) == set(NEIGHBOURS[0])
-
-    neigh = snap.get_many_neighbours([0, 1001])
-    for n, N in zip(neigh, NEIGHBOURS):
-        assert set(n) == set(N)
+    subsnap = snap['gas']
+    indices = np.arange(len(subsnap))
+    neigh = subsnap.neighbours(indices)
+    for idxi, idxj in enumerate(indices):
+        assert set(neigh[idxi]) == set(NEIGHBOURS[idxj])
 
     snap.close_file()
 

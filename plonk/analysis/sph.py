@@ -33,6 +33,8 @@ def derivative(
 ) -> Quantity:
     """Calculate derivatives of quantities.
 
+    WARNING: This function is experimental.
+
     Calculate derivatives such as grad, div, curl on any particle
     quantity using the SPH kernel gradient.
 
@@ -61,6 +63,7 @@ def derivative(
     Quantity
         The derivative of the quantity.
     """
+    logger.warning('sph.derivative is experimental')
     logger.info(f'Calculating {derivative}... may take some time...')
 
     if derivative not in ('grad', 'div', 'curl'):
@@ -129,6 +132,8 @@ def summation(
 ) -> Quantity:
     """Calculate SPH sums.
 
+    WARNING: This function is experimental.
+
     Parameters
     ----------
     snap
@@ -155,6 +160,7 @@ def summation(
     Quantity
         The result of the SPH summation.
     """
+    logger.warning('sph.summation is experimental')
     if kernel not in ('cubic', 'quintic', 'Wendland C4'):
         raise ValueError('Kernel must be in ("cubic", "quintic", "Wendland C4")')
     if kernel == 'cubic':
@@ -209,7 +215,7 @@ def summation(
                         logger.info(f'Finding neighbours for chunk: {idx}...')
                     else:
                         logger.info('Finding neighbours...')
-                _neighbours = snap.get_many_neighbours(indices)
+                _neighbours = snap[indices].neighbours(np.arange(len(indices)))
                 neighbours = List()
                 for neigh in _neighbours:
                     neighbours.append(np.array(neigh))
