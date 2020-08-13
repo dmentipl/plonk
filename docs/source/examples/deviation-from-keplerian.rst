@@ -14,7 +14,8 @@ Plot deviation from Keplerian velocity around planet.
     au = plonk.units('au')
     km_s = plonk.units('km/s')
 
-    # Index of planet sink particle
+    # Index of sink particles
+    star_index = 0
     planet_index = 1
 
     # Altitudes for slices
@@ -29,16 +30,16 @@ Plot deviation from Keplerian velocity around planet.
     # Load data
     snap = plonk.load_snap('disc_00030.h5')
 
-    # Get planet position
-    planet_position = snap.sinks['position'][planet_index]
-    px, py = planet_position[0], planet_position[1]
+    # Star and planet
+    star = snap.sinks[star_index]
+    planet = snap.sinks[planet_index]
 
     # Set window around planet for plot
     extent = (
-        px - window_width / 2,
-        px + window_width / 2,
-        py - window_width / 2,
-        py + window_width / 2,
+        planet['x'] - window_width / 2,
+        planet['x'] + window_width / 2,
+        planet['y'] - window_width / 2,
+        planet['y'] + window_width / 2,
     )
 
 
@@ -46,7 +47,7 @@ Plot deviation from Keplerian velocity around planet.
     def delta_keplerian(snap):
         """Deviation from Keplerian velocity."""
         G = (1 * plonk.units.gravitational_constant).to_base_units()
-        M_star = snap.sinks['mass'][0]
+        M_star = star['mass']
         v_k = np.sqrt(G * M_star / snap['R'] ** 3)
         return (snap['v_phi'] - v_k) * snap['R']
 
@@ -81,7 +82,7 @@ Plot deviation from Keplerian velocity around planet.
             ax=ax,
         )
         # Plot planet marker
-        ax.plot(px.to('au').m, py.to('au').m, 'o', color='gray')
+        ax.plot(planet['x'].to('au').m, planet['y'].to('au').m, 'o', color='gray')
 
     # Add colorbar
     cbar = grid.cbar_axes[0].colorbar(ax.images[0])

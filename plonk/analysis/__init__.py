@@ -20,12 +20,10 @@ Calculate the total angular momentum over all particles.
 
 Calculate the Roche sphere radius given two sink particles.
 
->>> m1 = snap.sinks['mass'][0]
->>> m2 = snap.sinks['mass'][1]
->>> separation = np.linalg.norm(
-        snap.sinks['position'][0] - snap.sinks['position'][1]
-    )
->>> Roche = sinks.Roche_sphere(m1, m2, separation)
+>>> s1 = snap.sinks[0]
+>>> s2 = snap.sinks[1]
+>>> separation = plonk.utils.math.norm(s1['position'] - s2['position'])
+>>> Roche = sinks.Roche_sphere(s1['mass'], s2['mass'], separation)
 """
 
 from . import discs, filters, particles, sinks, sph, total
