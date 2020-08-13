@@ -17,59 +17,44 @@ def test_particles():
     snap.set_gravitational_parameter(0)
     mu = snap.properties['gravitational_parameter']
 
-    ignore = False
-    analysis.particles.angular_momentum(snap=snap, ignore_accreted=ignore)
-    analysis.particles.angular_velocity(snap=snap, ignore_accreted=ignore)
-    analysis.particles.azimuthal_angle(snap=snap, ignore_accreted=ignore)
-    analysis.particles.eccentricity(
-        snap=snap, gravitational_parameter=mu, ignore_accreted=ignore
-    )
-    analysis.particles.inclination(snap=snap, ignore_accreted=ignore)
-    analysis.particles.keplerian_frequency(
-        snap=snap, gravitational_parameter=mu, ignore_accreted=ignore
-    )
-    analysis.particles.kinetic_energy(snap=snap, ignore_accreted=ignore)
-    analysis.particles.momentum(snap=snap, ignore_accreted=ignore)
-    analysis.particles.polar_angle(snap=snap, ignore_accreted=ignore)
-    analysis.particles.radial_distance(snap=snap, ignore_accreted=ignore)
-    analysis.particles.radial_velocity(snap=snap, ignore_accreted=ignore)
-    analysis.particles.semi_major_axis(
-        snap=snap, gravitational_parameter=mu, ignore_accreted=ignore
-    )
-    analysis.particles.specific_angular_momentum(snap=snap, ignore_accreted=ignore)
-    analysis.particles.specific_kinetic_energy(snap=snap, ignore_accreted=ignore)
-    analysis.particles.stokes_number(
-        snap=snap, gravitational_parameter=mu, ignore_accreted=ignore
-    )
-    analysis.particles.temperature(snap=snap, ignore_accreted=ignore)
-
-    ignore = True
-    analysis.particles.angular_momentum(snap=snap, ignore_accreted=ignore)
-    analysis.particles.angular_velocity(snap=snap, ignore_accreted=ignore)
-    analysis.particles.azimuthal_angle(snap=snap, ignore_accreted=ignore)
-    analysis.particles.eccentricity(
-        snap=snap, gravitational_parameter=mu, ignore_accreted=ignore
-    )
-    analysis.particles.inclination(snap=snap, ignore_accreted=ignore)
-    analysis.particles.keplerian_frequency(
-        snap=snap, gravitational_parameter=mu, ignore_accreted=ignore
-    )
-    analysis.particles.kinetic_energy(snap=snap, ignore_accreted=ignore)
-    analysis.particles.momentum(snap=snap, ignore_accreted=ignore)
-    analysis.particles.polar_angle(snap=snap, ignore_accreted=ignore)
-    analysis.particles.radial_distance(snap=snap, ignore_accreted=ignore)
-    analysis.particles.radial_velocity(snap=snap, ignore_accreted=ignore)
-    analysis.particles.semi_major_axis(
-        snap=snap, gravitational_parameter=mu, ignore_accreted=ignore
-    )
-    analysis.particles.specific_angular_momentum(snap=snap, ignore_accreted=ignore)
-    analysis.particles.specific_kinetic_energy(snap=snap, ignore_accreted=ignore)
-    analysis.particles.stokes_number(
-        snap=snap, gravitational_parameter=mu, ignore_accreted=ignore
-    )
-    analysis.particles.temperature(snap=snap, ignore_accreted=ignore)
+    _test_particles(snap=snap, ignore=False, mu=mu)
+    _test_particles(snap=snap, ignore=True, mu=mu)
 
     snap.close_file()
+
+
+def _test_particles(snap, ignore, mu):
+
+    analysis.particles.angular_momentum(snap=snap, ignore_accreted=ignore)
+    analysis.particles.angular_velocity(snap=snap, ignore_accreted=ignore)
+    analysis.particles.azimuthal_angle(snap=snap, ignore_accreted=ignore)
+    analysis.particles.dust_density(snap=snap, ignore_accreted=ignore)
+    analysis.particles.dust_fraction(snap=snap, ignore_accreted=ignore)
+    analysis.particles.dust_mass(snap=snap, ignore_accreted=ignore)
+    analysis.particles.gas_density(snap=snap, ignore_accreted=ignore)
+    analysis.particles.gas_fraction(snap=snap, ignore_accreted=ignore)
+    analysis.particles.gas_mass(snap=snap, ignore_accreted=ignore)
+    analysis.particles.eccentricity(
+        snap=snap, gravitational_parameter=mu, ignore_accreted=ignore
+    )
+    analysis.particles.inclination(snap=snap, ignore_accreted=ignore)
+    analysis.particles.keplerian_frequency(
+        snap=snap, gravitational_parameter=mu, ignore_accreted=ignore
+    )
+    analysis.particles.kinetic_energy(snap=snap, ignore_accreted=ignore)
+    analysis.particles.momentum(snap=snap, ignore_accreted=ignore)
+    analysis.particles.polar_angle(snap=snap, ignore_accreted=ignore)
+    analysis.particles.radial_distance(snap=snap, ignore_accreted=ignore)
+    analysis.particles.radial_velocity(snap=snap, ignore_accreted=ignore)
+    analysis.particles.semi_major_axis(
+        snap=snap, gravitational_parameter=mu, ignore_accreted=ignore
+    )
+    analysis.particles.specific_angular_momentum(snap=snap, ignore_accreted=ignore)
+    analysis.particles.specific_kinetic_energy(snap=snap, ignore_accreted=ignore)
+    analysis.particles.stokes_number(
+        snap=snap, gravitational_parameter=mu, ignore_accreted=ignore
+    )
+    analysis.particles.temperature(snap=snap, ignore_accreted=ignore)
 
 
 def test_total():

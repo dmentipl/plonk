@@ -38,6 +38,7 @@ def test_check_data():
     """Test Profile data accuracy."""
     snap = plonk.load_snap(TEST_FILE)
     prof = plonk.load_profile(snap)
+
     columns = [
         'density',
         'mass',
@@ -48,9 +49,11 @@ def test_check_data():
         'smoothing_length',
         'sound_speed',
     ]
+
+    df = prof.to_dataframe(columns=columns)
+
     units = ['g/cm^3', 'g', '', 'au', 'au', 'au^2', 'au', 'km/s']
     df = prof.to_dataframe(columns=columns, units=units)
-
     pd.testing.assert_frame_equal(df, pd.read_csv(CSV_FILE, index_col=0))
 
     snap.close_file()
@@ -80,4 +83,14 @@ def test_profile_plot():
         x='radius', y='density', units={'x': 'au', 'y': 'g/cm^3'}, std_dev_shading=True,
     )
 
+    snap.close_file()
+
+
+def test_to_function():
+    """Test to_function."""
+    snap = plonk.load_snap(TEST_FILE)
+    prof = plonk.load_profile(snap=snap)
+
+    fn = prof.to_function(profile='scale_height')
+    assert np.allclose(fn(prof['radius']), prof['scale_height'])
     snap.close_file()

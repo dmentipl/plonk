@@ -250,17 +250,6 @@ class Profile:
             raise ValueError('Cannot determine spacing to setup bins')
         return bin_edges
 
-    def _bin_edges_code_units(self):
-        if self.spacing == 'linear':
-            bin_edges = np.linspace(self.range[0], self.range[1], self.n_bins + 1)
-        elif self.spacing == 'log':
-            bin_edges = np.logspace(
-                np.log10(self.range[0]), np.log10(self.range[1]), self.n_bins + 1
-            )
-        else:
-            raise ValueError('Cannot determine spacing to setup bins')
-        return bin_edges
-
     def _set_particle_bin_indicies(self) -> List[ndarray]:
         sortind = self._particle_bin.argsort()
         sort_pind = self._particle_bin[sortind]

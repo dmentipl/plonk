@@ -16,4 +16,5 @@ line_length = 88
 disable = """bad-continuation,
           bad-whitespace,
           invalid-name,
+          logging-fstring-interpolation
           """
