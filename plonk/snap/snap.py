@@ -1192,7 +1192,7 @@ class Sinks:
     def __getitem__(self, inp):
         """Return an array or subset."""
         if isinstance(inp, str):
-            return self._getitem_from_str(inp, sinks=True)[self.indices]
+            return np.squeeze(self._getitem_from_str(inp, sinks=True)[self.indices])[()]
         ind = _input_indices_array(inp=inp, max_slice=len(self))
         if ind is not None:
             return Sinks(self.base, ind)
