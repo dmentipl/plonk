@@ -671,7 +671,7 @@ class Snap:
         """
         G = plonk_units.newtonian_constant_of_gravitation
         if isinstance(sink_idx, (int, list)):
-            M = self.sinks['mass'][sink_idx]
+            M = self.sinks[sink_idx]['mass']
         else:
             raise ValueError('Cannot determine gravitational parameter')
         G = (G * M).to_base_units()
