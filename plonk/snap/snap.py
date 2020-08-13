@@ -42,6 +42,10 @@ class Snap:
 
     Examples
     --------
+    Use load_snap to generate a Snap object.
+
+    >>> snap = plonk.load_snap('file_name.h5')
+
     To access arrays on the particles.
 
     >>> snap['position']
@@ -953,7 +957,7 @@ class Snap:
             return self._getitem_from_str(inp, sinks)
         if sinks:
             raise ValueError('Cannot return sinks as SubSnap')
-        ind = _indices_to_array(inp=inp, max_slice=len(self))
+        ind = _input_indices_array(inp=inp, max_slice=len(self))
         if ind is not None:
             return SubSnap(self, ind)
         raise ValueError('Cannot determine item to return')
@@ -1027,7 +1031,12 @@ class SubSnap(Snap):
 
     Examples
     --------
-    Generate a SubSnap of the gas particles on a Snap.
+    Generate a SubSnap directly.
+
+    >>> subsnap = SubSnap(snap=snap, indices=[0, 1, 2, 3])
+
+    You can generate a SubSnap from a Snap object. For example, generate
+    a SubSnap of the gas particles on a Snap.
 
     >>> subsnap = snap['gas']
 
@@ -1041,13 +1050,18 @@ class SubSnap(Snap):
     >>> subsnap = snap[[0, 9, 99]]
     """
 
-    def __init__(self, base: Snap, indices: ndarray):
+    def __init__(self, base: Snap, indices: Union[ndarray, slice, list, int, tuple]):
         super().__init__()
 
-        # Attributes different to Snap
         self.base = base
-        self._indices = indices
-        self._num_particles = len(indices)
+
+        ind = _input_indices_array(inp=indices, max_slice=len(base))
+        if ind is None:
+            raise ValueError('SubSnap has no particles')
+        self._indices = ind
+
+        # Attributes different to Snap
+        self._num_particles = len(self._indices)
         self._num_particles_of_type = -1
         self._num_dust_species = -1
         self._tree = None
@@ -1103,17 +1117,36 @@ class Sinks:
         The base Snap.
     indices : optional
         Indices to specify a subset of sink particles.
+
+    Examples
+    --------
+    Generate a Sinks object directly.
+
+    >>> sinks = Sinks(snap=snap)
+
+    Generate a Sinks object from a Snap object.
+
+    >>> sinks = snap.sinks
+
+    Choose a subset of sink particles.
+
+    >>> sinks = snap.sinks[[0, 1]]
+    >>> star = snap.sinks[0]
+    >>> planets = snap.sinks[1:4]
     """
 
-    def __init__(self, base: Snap, indices: Union[int, ndarray, List[int]] = None):
+    def __init__(
+        self, base: Snap, indices: Union[ndarray, slice, list, int, tuple] = None
+    ):
         self.base = base
         self._getitem_from_str = base._getitem_from_str
+
         if indices is None:
-            self._indices = np.arange(base.num_sinks)
-        else:
-            if isinstance(indices, int):
-                indices = [indices]
-            self._indices = np.array(indices)
+            indices = np.arange(base.num_sinks)
+        ind = _input_indices_array(inp=indices, max_slice=base.num_sinks)
+        if ind is None:
+            raise ValueError('Sinks has no particles')
+        self._indices = ind
 
         # Attributes same as Snap
         self.file_path = self.base.file_path
@@ -1122,12 +1155,6 @@ class Sinks:
     def indices(self):
         """Sink particle indices."""
         return self._indices
-
-    @indices.setter
-    def indices(self, val: Union[int, ndarray, List[int]]):
-        if isinstance(val, int):
-            val = [val]
-        self._indices = val
 
     def available_arrays(self, all: bool = False, aliases: bool = False):
         """Return a tuple of available sink arrays.
@@ -1166,14 +1193,14 @@ class Sinks:
         """Return an array or subset."""
         if isinstance(inp, str):
             return self._getitem_from_str(inp, sinks=True)[self.indices]
-        ind = _indices_to_array(inp=inp, max_slice=len(self))
+        ind = _input_indices_array(inp=inp, max_slice=len(self))
         if ind is not None:
             return Sinks(self.base, ind)
         raise ValueError('Cannot determine item to return')
 
     def __len__(self):
         """Length as number of particles."""
-        return len(self.base._sink_registry['mass'](self.base))
+        return len(self.indices)
 
     def __repr__(self):
         """Dunder repr method."""
@@ -1198,7 +1225,8 @@ def _str_is_int(string):
         return False
 
 
-def _indices_to_array(inp: Union[ndarray, slice, list, int, tuple], max_slice: int):
+def _input_indices_array(inp: Union[ndarray, slice, list, int, tuple], max_slice: int):
+    """Take array, slice, int, list, tuple and return indices array."""
     if isinstance(inp, ndarray):
         if np.issubdtype(np.bool, inp.dtype):
             return np.flatnonzero(inp)
