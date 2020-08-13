@@ -65,7 +65,7 @@ def cartesian_to_polar(
     if transform is None:
         logger.error(
             'cartesian_to_polar requires skimage (scikit-image) which is unavailable\n'
-            'try pip install skimage --or-- conda install skimage'
+            'try pip install scikit-image --or-- conda install scikit-image'
         )
     data, extent = interpolated_data_cartesian, extent_cartesian
 
