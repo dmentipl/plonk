@@ -349,7 +349,7 @@ class Snap:
     def num_particles(self):
         """Return number of particles."""
         if self._num_particles == -1:
-            self._num_particles = len(self._array_registry['type'](self))
+            self._num_particles = len(self['type'])
         return self._num_particles
 
     @property
