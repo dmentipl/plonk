@@ -953,26 +953,10 @@ class Snap:
             return self._getitem_from_str(inp, sinks)
         if sinks:
             raise ValueError('Cannot return sinks as SubSnap')
-        if isinstance(inp, ndarray):
-            if np.issubdtype(np.bool, inp.dtype):
-                return SubSnap(self, np.flatnonzero(inp))
-            if np.issubdtype(np.int, inp.dtype):
-                return SubSnap(self, inp)
-        if isinstance(inp, (list, tuple)):
-            if isinstance(inp[0], int):
-                return SubSnap(self, np.array(inp))
-        if isinstance(inp, int):
-            return SubSnap(self, np.array([inp]))
-        if isinstance(inp, slice):
-            i1, i2, step = inp.start, inp.stop, inp.step
-            if i1 is None:
-                i1 = 0
-            if i2 is None:
-                i2 = len(self)
-            if step is not None:
-                return SubSnap(self, np.arange(i1, i2, step))
-            return SubSnap(self, np.arange(i1, i2))
-        raise ValueError('Cannot determine item to return.')
+        ind = _indices_to_array(inp=inp, max_slice=len(self))
+        if ind is not None:
+            return SubSnap(self, ind)
+        raise ValueError('Cannot determine item to return')
 
     def __getitem__(
         self, inp: Union[str, ndarray, int, slice]
@@ -1109,7 +1093,7 @@ SnapLike = Union[Snap, SubSnap]
 
 
 class Sinks:
-    """The sinks subset on a Snap.
+    """Sink particles in a Snap.
 
     A Sinks object is generated from a Snap.
 
@@ -1117,14 +1101,33 @@ class Sinks:
     ----------
     base
         The base Snap.
+    indices : optional
+        Indices to specify a subset of sink particles.
     """
 
-    def __init__(self, base: Snap):
+    def __init__(self, base: Snap, indices: Union[int, ndarray, List[int]] = None):
         self.base = base
-        self._getitem = base._getitem_from_str
+        self._getitem_from_str = base._getitem_from_str
+        if indices is None:
+            self._indices = np.arange(base.num_sinks)
+        else:
+            if isinstance(indices, int):
+                indices = [indices]
+            self._indices = np.array(indices)
 
         # Attributes same as Snap
         self.file_path = self.base.file_path
+
+    @property
+    def indices(self):
+        """Sink particle indices."""
+        return self._indices
+
+    @indices.setter
+    def indices(self, val: Union[int, ndarray, List[int]]):
+        if isinstance(val, int):
+            val = [val]
+        self._indices = val
 
     def available_arrays(self, all: bool = False, aliases: bool = False):
         """Return a tuple of available sink arrays.
@@ -1161,11 +1164,15 @@ class Sinks:
 
     def __getitem__(self, inp):
         """Return an array or subset."""
-        if not isinstance(inp, str):
-            raise ValueError('Must pass in string to __getitem__')
-        return self._getitem(inp, sinks=True)
+        if isinstance(inp, str):
+            return self._getitem_from_str(inp, sinks=True)[self.indices]
+        ind = _indices_to_array(inp=inp, max_slice=len(self))
+        if ind is not None:
+            return Sinks(self.base, ind)
+        raise ValueError('Cannot determine item to return')
 
     def __len__(self):
+        """Length as number of particles."""
         return len(self.base._sink_registry['mass'](self.base))
 
     def __repr__(self):
@@ -1174,7 +1181,7 @@ class Sinks:
 
     def __str__(self):
         """Dunder str method."""
-        return f'<plonk.Snap.Sinks "{self.base.file_path.name}">'
+        return f'<plonk.Sinks "{self.base.file_path.name}">'
 
     def _ipython_key_completions_(self):
         """Tab completion for IPython __getitem__ method."""
@@ -1189,3 +1196,26 @@ def _str_is_int(string):
         return True
     except ValueError:
         return False
+
+
+def _indices_to_array(inp: Union[ndarray, slice, list, int, tuple], max_slice: int):
+    if isinstance(inp, ndarray):
+        if np.issubdtype(np.bool, inp.dtype):
+            return np.flatnonzero(inp)
+        if np.issubdtype(np.int, inp.dtype):
+            return inp
+    if isinstance(inp, (list, tuple)):
+        if isinstance(inp[0], int):
+            return np.array(inp)
+    if isinstance(inp, int):
+        return np.array([inp])
+    if isinstance(inp, slice):
+        i1, i2, step = inp.start, inp.stop, inp.step
+        if i1 is None:
+            i1 = 0
+        if i2 is None:
+            i2 = max_slice
+        if step is not None:
+            return np.arange(i1, i2, step)
+        return np.arange(i1, i2)
+    return None
