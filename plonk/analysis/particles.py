@@ -623,8 +623,8 @@ def dust_fraction(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
         sub_type = snap['sub_type']
         type_mask = snap['type'] == snap.particle_type['dust']
         _dust_fraction = np.zeros((len(snap), n_dust))
-        for idx in range(1, n_dust + 1):
-            _dust_fraction[type_mask & (sub_type == idx), idx] = 1
+        for idx in range(n_dust):
+            _dust_fraction[type_mask & (sub_type == idx + 1), idx] = 1
 
     else:
         raise ValueError('No dust available')
@@ -660,8 +660,8 @@ def dust_mass(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
         sub_type = snap['sub_type']
         type_mask = snap['type'] == snap.particle_type['dust']
         _dust_fraction = np.zeros((len(snap), n_dust))
-        for idx in range(1, n_dust + 1):
-            _dust_fraction[type_mask & (sub_type == idx), idx] = 1
+        for idx in range(n_dust):
+            _dust_fraction[type_mask & (sub_type == idx + 1), idx] = 1
 
     else:
         raise ValueError('No dust available')
@@ -699,8 +699,8 @@ def dust_density(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
         sub_type = snap['sub_type']
         type_mask = snap['type'] == snap.particle_type['dust']
         _dust_fraction = np.zeros((len(snap), n_dust))
-        for idx in range(1, n_dust + 1):
-            _dust_fraction[type_mask & (sub_type == idx), idx] = 1
+        for idx in range(n_dust):
+            _dust_fraction[type_mask & (sub_type == idx + 1), idx] = 1
 
     else:
         raise ValueError('No dust available')

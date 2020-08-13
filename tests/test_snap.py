@@ -65,6 +65,31 @@ def test_load_phantom_snap():
         plonk.load_snap('does_not_exist.h5')
 
 
+def test_get_item():
+    """Testing getting items from Snap."""
+    snap = plonk.load_snap(TEST_FILE)
+
+    position = snap['position']
+    assert position.shape == (2000, 3)
+
+    subsnap = snap['gas']
+    assert type(subsnap) == plonk.snap.snap.SubSnap
+
+    subsnap = snap[:10]
+    assert type(subsnap) == plonk.snap.snap.SubSnap
+    assert len(subsnap) == 10
+
+    subsnap = snap[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]]
+    assert type(subsnap) == plonk.snap.snap.SubSnap
+    assert len(subsnap) == 10
+
+    subsnap = snap[(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)]
+    assert type(subsnap) == plonk.snap.snap.SubSnap
+    assert len(subsnap) == 10
+
+    snap.close_file()
+
+
 def test_read_particle_arrays_from_phantom():
     """Testing reading Phantom HDF5 snapshot particle arrays."""
     snap = plonk.load_snap(TEST_FILE)
@@ -121,6 +146,12 @@ def test_array_code_unit():
 
     position_unit = 149600000000.0 * plonk.units['meter']
     assert snap.get_array_code_unit('position') == position_unit
+
+    for arr in ['position', 'position_x', 'x']:
+        snap.get_array_code_unit(arr)
+
+    with pytest.raises(ValueError):
+        snap.get_array_code_unit('does_not_exist')
 
     snap.close_file()
 
@@ -183,6 +214,9 @@ def test_write_to_dataframe():
 
     columns = ['position', 'density', 'smoothing_length']
     snap.to_dataframe(columns=columns)
+
+    columns = ['position', 'density', 'smoothing_length']
+    snap.to_dataframe(columns=columns, units=['au', 'g/cm^3', 'au'])
 
     snap.close_file()
 

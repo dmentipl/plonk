@@ -744,7 +744,9 @@ class Snap:
             filename = f'{self.file_path.stem}_extra.h5'
         f = h5py.File(filename, mode='w')
         for array in arrays:
-            arr: ndarray = self[array]
+            arr_with_units: Quantity = self[array]
+            units = self.get_array_code_unit(array)
+            arr = (arr_with_units / units).magnitude
             dset = f.create_dataset(
                 array, arr.shape, dtype=arr.dtype, compression='gzip',
             )
