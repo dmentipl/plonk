@@ -40,6 +40,7 @@ def image(
     extent: Quantity = None,
     units: Dict[str, str] = None,
     ax: Any = None,
+    ax_kwargs={},
     colorbar_kwargs={},
     **kwargs,
 ) -> Any:
@@ -85,8 +86,10 @@ def image(
         interpolation plots.
     ax
         A matplotlib Axes handle.
+    ax_kwargs
+        Keyword arguments to pass to matplotlib Axes.
     colorbar_kwargs
-        Keyword arguments to pass to matplotlib colorbar functions.
+        Keyword arguments to pass to matplotlib Colorbar.
     **kwargs
         Additional keyword arguments to pass to interpolation and
         matplotlib functions.
@@ -149,6 +152,7 @@ def image(
         extent=extent,
         units=units,
         ax=ax,
+        ax_kwargs=ax_kwargs,
         colorbar_kwargs=colorbar_kwargs,
         **kwargs,
     )
@@ -166,6 +170,7 @@ def vector(
     extent: Quantity = None,
     units: Dict[str, str] = None,
     ax: Any = None,
+    ax_kwargs={},
     **kwargs,
 ) -> Any:
     """Visualize vector SPH data as a vector plot.
@@ -210,6 +215,8 @@ def vector(
         interpolation plots.
     ax
         A matplotlib Axes handle.
+    ax_kwargs
+        Keyword arguments to pass to matplotlib Axes.
     **kwargs
         Additional keyword arguments to pass to interpolation and
         matplotlib functions.
@@ -274,6 +281,7 @@ def vector(
         extent=extent,
         units=units,
         ax=ax,
+        ax_kwargs=ax_kwargs,
         **kwargs,
     )
 
@@ -291,6 +299,7 @@ def _interpolation_plot(
     extent: Quantity = None,
     units: Dict[str, str] = None,
     ax: Any = None,
+    ax_kwargs={},
     colorbar_kwargs={},
     **kwargs,
 ) -> Any:
@@ -349,6 +358,7 @@ def _interpolation_plot(
         units=_units,
         ax=ax,
         fig=fig,
+        ax_kwargs=ax_kwargs,
         colorbar_kwargs=colorbar_kwargs,
         **_kwargs,
     )
@@ -357,7 +367,7 @@ def _interpolation_plot(
 
 
 def _interpolated_data(
-    snap, quantity, x, y, interp, slice_normal, slice_offset, extent, units, **kwargs
+    snap, quantity, x, y, interp, slice_normal, slice_offset, extent, units, **kwargs,
 ):
     if extent is None:
         _extent = get_extent_from_percentile(snap=snap, x=x, y=y)
@@ -434,6 +444,7 @@ def _interpolated_plot(
     units,
     ax,
     fig,
+    ax_kwargs,
     colorbar_kwargs,
     **kwargs,
 ):
@@ -465,6 +476,8 @@ def _interpolated_plot(
     if not max(ratio, 1 / ratio) > 10.0:
         ax.set_aspect('equal')
 
+    ax.set(**ax_kwargs)
+
     if show_colorbar:
         divider = make_axes_locatable(ax)
         _kwargs = copy(colorbar_kwargs)
@@ -493,9 +506,8 @@ def plot(
     c: str = None,
     s: str = None,
     units: Dict[str, str] = None,
-    xscale: str = None,
-    yscale: str = None,
     ax: Any = None,
+    ax_kwargs={},
     colorbar_kwargs={},
     **kwargs,
 ) -> Any:
@@ -525,14 +537,12 @@ def plot(
         quantities such as 'position', 'density', 'velocity', and so on.
         The values are strings representing units, e.g. 'g/cm^3' for
         density.
-    xscale
-        The xscale to pass to the matplotlib Axes method set_xscale.
-    yscale
-        The yscale to pass to the matplotlib Axes method set_yscale.
     ax
         A matplotlib Axes handle.
+    ax_kwargs
+        Keyword arguments to pass to matplotlib Axes.
     colorbar_kwargs
-        Keyword arguments to pass to matplotlib colorbar functions.
+        Keyword arguments to pass to matplotlib Colorbar.
     **kwargs
         Additional keyword arguments to pass to matplotlib
         functions.
@@ -596,10 +606,9 @@ def plot(
             s=_s,
             units=_units,
             names={'x': x, 'y': y, 'c': c, 's': s},
-            xscale=xscale,
-            yscale=yscale,
             fig=fig,
             ax=ax,
+            ax_kwargs=ax_kwargs,
             colorbar_kwargs=colorbar_kwargs,
             **_kwargs,
         )
@@ -664,7 +673,7 @@ def _plot_data(snap, x, y, c, s, units):
 
 
 def _plot_plot(
-    x, y, c, s, units, names, xscale, yscale, fig, ax, colorbar_kwargs, **kwargs
+    x, y, c, s, units, names, fig, ax, ax_kwargs, colorbar_kwargs, **kwargs,
 ):
     show_colorbar = kwargs.pop('show_colorbar', c is not None)
 
@@ -672,11 +681,6 @@ def _plot_plot(
         plots.plot(x=x, y=y, ax=ax, **kwargs)
     else:
         plot_object = plots.scatter(x=x, y=y, c=c, s=s, ax=ax, **kwargs)
-
-    if xscale is not None:
-        ax.set_xscale(xscale)
-    if yscale is not None:
-        ax.set_yscale(yscale)
 
     ratio = (x.max() - x.min()) / (y.max() - y.min())
     if not max(ratio, 1 / ratio) > 10.0:
@@ -689,6 +693,8 @@ def _plot_plot(
         yunit = yunit.units
     ax.set_xlabel(f'{names["x"]} [{xunit:~P}]')
     ax.set_ylabel(f'{names["y"]} [{yunit:~P}]')
+
+    ax.set(**ax_kwargs)
 
     if show_colorbar:
         divider = make_axes_locatable(ax)
