@@ -14,7 +14,6 @@ except ImportError:
     tqdm = None
 
 from .._logging import logger
-from .._units import Quantity
 from .._units import units as plonk_units
 from . import visualization as viz
 
@@ -29,13 +28,9 @@ def animation(
     *,
     filename: Union[str, Path],
     snaps: List[SnapLike],
-    quantity: Union[str, List[str]],
-    x: Union[str, List[str]] = 'x',
-    y: Union[str, List[str]] = 'y',
-    units: Dict[str, str] = None,
-    extent: Union[Quantity, List[Quantity]] = None,
+    quantity: str,
     fig: Any = None,
-    adaptive_colorbar: bool = False,
+    adaptive_colorbar: bool = True,
     text: List[str] = None,
     text_kwargs: Dict[str, Any] = {},
     func_animation_kwargs: Dict[str, Any] = {},
@@ -51,27 +46,13 @@ def animation(
     snaps
         A list of Snap objects to animate.
     quantity
-        The quantity, or quantities, to visualize. Must be a string, or
-        list of strings, to pass to Snap.
-    x
-        The x-axis as a string to pass to Snap. Can be a list of strings
-        if multiple quantities are animated.
-    y
-        The y-axis as a string to pass to Snap. Can be a list of strings
-        if multiple quantities are animated.
-    units
-        The units of the plot as a dictionary with keys 'quantity',
-        'extent', 'projection'. The values are strings representing
-        units, e.g. 'g/cm^3'.
-    extent
-        The extent as a tuple (xmin, xmax, ymin, ymax). Can be a list
-        of tuples if multiple quantities are animated.
+        The quantity to visualize. Must be a string to pass to Snap.
     fig : optional
         A matplotlib Figure object to animate. If None, generate a new
         Figure.
     adaptive_colorbar : optional
         If True, adapt colorbar range during animation. If False, the
-        colorbar range is fixed by the initial image. Default is False.
+        colorbar range is fixed by the initial image. Default is True.
     text : optional
         List of strings to display per snap.
     text_kwargs : optional
@@ -97,7 +78,6 @@ def animation(
     ...     snaps=snaps,
     ...     quantity='density',
     ...     units={'position': 'au', 'density': 'g/cm^3'},
-    ...     adaptive_colorbar=False,
     ...     save_kwargs={'fps': 10, 'dpi': 300},
     ... )
     """
@@ -105,57 +85,13 @@ def animation(
     if filepath.suffix != '.mp4':
         raise ValueError('filename should end in ".mp4"')
 
-    if isinstance(quantity, list):
-        quantities = quantity
-    elif isinstance(quantity, str):
-        quantities = [quantity]
-    else:
-        raise ValueError('Cannot determine quantity')
-    if isinstance(x, list):
-        xs = x
-    elif isinstance(x, str):
-        xs = [x]
-    else:
-        raise ValueError('Cannot determine x')
-    if isinstance(y, list):
-        ys = y
-    elif isinstance(y, str):
-        ys = [y]
-    else:
-        raise ValueError('Cannot determine y')
-    if isinstance(extent, list):
-        extents = extent
-    elif isinstance(extent, tuple):
-        extents = [extent]
-    elif extent is None:
-        extents = [None for _ in quantities]
-    else:
-        raise ValueError('Cannot determine extent')
-    if len(quantities) > 1:
-        if len(xs) == 1:
-            xs = [xs[0] for _ in range(len(quantities))]
-        if len(ys) == 1:
-            ys = [ys[0] for _ in range(len(quantities))]
-        if len(extents) == 1:
-            extents = [extents[0] for _ in range(len(quantities))]
-    if len(xs) != len(quantities):
-        raise ValueError('x must have same length as quantity or be a single value')
-    if len(ys) != len(quantities):
-        raise ValueError('y must have same length as quantity or be a single value')
-    if len(extents) != len(quantities):
-        raise ValueError('extent have same length as quantity or be a single value')
-
     if fig is None:
-        fig, axs = plt.subplots(ncols=len(quantities), squeeze=False)
-        axs = axs.flatten()
-        images = list()
-        for quantity, x, y, extent, ax in zip(quantities, xs, ys, extents, axs):
-            snaps[0].image(
-                quantity=quantity, x=x, y=y, units=units, extent=extent, ax=ax, **kwargs
-            )
-            images += ax.images
+        ax = snaps[0].image(quantity=quantity, **kwargs)
+        fig = ax.figure
+        image = ax.images[0]
     else:
-        images = [image for ax in fig.axes for image in ax.images]
+        ax = fig.axes[0]
+        image = ax.images[0]
 
     if text is not None:
         _text = ax.text(
@@ -169,38 +105,42 @@ def animation(
             'progress bar not available\ntry pip install tqdm --or-- conda install tqdm'
         )
 
+    x = kwargs.get('x', 'x')
+    y = kwargs.get('y', 'y')
+    interp = kwargs.get('interp', 'projection')
+    slice_normal = kwargs.get('slice_normal')
+    slice_offset = kwargs.get('slice_offset')
+    extent = kwargs.get('extent')
+    units = kwargs.get('units')
+    interp_kwargs = {k: v for k, v in kwargs.items() if k in _interp_kwargs}
+
     def animate(idx):
         if tqdm is not None:
             pbar.update(n=1)
         snap = snaps[idx]
-        interp_kwargs = {k: v for k, v in kwargs.items() if k in _interp_kwargs}
-        interp = kwargs.get('interp', 'projection')
-        slice_normal = kwargs.get('slice_normal')
-        slice_offset = kwargs.get('slice_offset')
-        for quantity, x, y, extent, image in zip(quantities, xs, ys, extents, images):
-            interp_data, _extent, _units = viz._interpolated_data(
-                snap=snap,
-                quantity=quantity,
-                x=x,
-                y=y,
-                interp=interp,
-                slice_normal=slice_normal,
-                slice_offset=slice_offset,
-                extent=extent,
-                units=units,
-                **interp_kwargs,
-            )
-            image.set_data(interp_data)
-            image.set_extent(_extent)
-            image.axes.set_xlim(_extent[:2])
-            image.axes.set_ylim(_extent[2:])
-            if adaptive_colorbar:
-                vmin = kwargs.get('vmin', interp_data.min())
-                vmax = kwargs.get('vmax', interp_data.max())
-                image.set_clim(vmin, vmax)
+        interp_data, _extent, _units = viz._interpolated_data(
+            snap=snap,
+            quantity=quantity,
+            x=x,
+            y=y,
+            interp=interp,
+            slice_normal=slice_normal,
+            slice_offset=slice_offset,
+            extent=extent,
+            units=units,
+            **interp_kwargs,
+        )
+        image.set_data(interp_data)
+        image.set_extent(_extent)
+        image.axes.set_xlim(_extent[:2])
+        image.axes.set_ylim(_extent[2:])
+        if adaptive_colorbar:
+            vmin = kwargs.get('vmin', interp_data.min())
+            vmax = kwargs.get('vmax', interp_data.max())
+            image.set_clim(vmin, vmax)
         if text is not None:
             _text.set_text(text[idx])
-        return images
+        return [image]
 
     anim = _animation.FuncAnimation(
         fig, animate, frames=len(snaps), **func_animation_kwargs
@@ -219,7 +159,6 @@ def animation_profiles(
     profiles: List[Profile],
     x: str,
     y: Union[str, List[str]],
-    units: Dict[str, Any] = None,
     fig: Any = None,
     adaptive_limits: bool = True,
     text: List[str] = None,
@@ -241,9 +180,6 @@ def animation_profiles(
     y
         The quantity for the y-axis, or list of quantities. Must be a
         string (or list of strings) to pass to Snap.
-    units
-        The units of the plot as a dictionary with keys 'x', 'y'.
-        The values are strings representing units, e.g. 'g/cm^3'.
     fig : optional
         A matplotlib Figure object to animate. If None, generate a new
         Figure.
@@ -259,7 +195,7 @@ def animation_profiles(
     save_kwargs : optional
         Keyword arguments to pass to matplotlib Animation.save.
     **kwargs
-        Arguments to pass to plot function.
+        Arguments to pass to Profile.plot function.
 
     Returns
     -------
@@ -284,42 +220,26 @@ def animation_profiles(
     if filepath.suffix != '.mp4':
         raise ValueError('filename should end in ".mp4"')
 
-    if isinstance(y, list):
-        ys = y
-    elif isinstance(y, str):
+    if isinstance(y, str):
         ys = [y]
+    elif isinstance(y, (tuple, list)):
+        ys = y
     else:
-        raise ValueError('Cannot determine quantity')
+        raise ValueError('y must be a string or list of strings')
 
-    if units is None:
-        _units = {'x': profiles[0][x].units, 'y': [profiles[0][y].units for y in ys]}
-    else:
-        _units = units
-    if isinstance(_units['y'], str):
-        yu = _units['y']
-        _units['y'] = [yu for _ in range(len(ys))]
-    units_str = _units
-    units_val = {
-        'x': plonk_units(_units['x']),
-        'y': [plonk_units(yu) for yu in _units['y']],
-    }
-
+    prof = profiles[0]
     if fig is None:
-        fig, ax = plt.subplots()
-        for yidx, y in enumerate(ys):
-            __units = {'x': units_str['x'], 'y': units_str['y'][yidx]}
-            profiles[0].plot(x=x, y=y, units=__units, ax=ax, **kwargs)
+        ax = prof.plot(x=x, y=ys, **kwargs)
+        fig = ax.figure
         lines = ax.lines
-        if text is not None:
-            texts = [
-                ax.text(
-                    0.9, 0.9, text[0], ha='right', transform=ax.transAxes, **text_kwargs
-                )
-            ]
     else:
-        lines = [line for ax in fig.axes for line in ax.lines]
-        if text is not None:
-            texts = [text for ax in fig.axes for text in ax.texts]
+        ax = fig.axes[0]
+        lines = [line for line in ax.lines]
+
+    if text is not None:
+        _text = ax.text(
+            0.9, 0.9, text[0], ha='right', transform=ax.transAxes, **text_kwargs
+        )
 
     if tqdm is not None:
         pbar = tqdm(total=len(profiles))
@@ -328,21 +248,36 @@ def animation_profiles(
             'progress bar not available\ntry pip install tqdm --or-- conda install tqdm'
         )
 
+    units = kwargs.get('units')
+    if units is not None:
+        xunit = plonk_units(
+            units.get(prof.get_canonical_profile_name(x), str(prof[x].units))
+        )
+        yunits = [
+            plonk_units(
+                units.get(prof.get_canonical_profile_name(y), str(prof[y].units))
+            )
+            for y in ys
+        ]
+    else:
+        xunit = prof[x].units
+        yunits = [prof[y].units for y in ys]
+
     def animate(idx):
         if tqdm is not None:
             pbar.update(n=1)
+        profile = profiles[idx]
         xlim, ylim = (0, 0), (0, 0)
-        _x = (profiles[idx][x] / units_val['x']).to_base_units().magnitude
-        for yidx, (line, y) in enumerate(zip(lines, ys)):
-            _y = (profiles[idx][y] / units_val['y'][yidx]).to_base_units().magnitude
+        _x = (profile[x] / xunit).to_base_units().magnitude
+        for line, y, yunit in zip(lines, ys, yunits):
+            _y = (profile[y] / yunit).to_base_units().magnitude
             line.set_data(_x, _y)
             if adaptive_limits:
                 ax = line.axes
                 xlim, ylim = _get_range(_x, xlim), _get_range(_y, ylim)
                 ax.set(xlim=xlim, ylim=ylim)
         if text is not None:
-            for _text in texts:
-                _text.set_text(text[idx])
+            _text.set_text(text[idx])
         return lines
 
     anim = _animation.FuncAnimation(
@@ -360,9 +295,6 @@ def animation_particles(
     *,
     filename: Union[str, Path],
     snaps: List[SnapLike],
-    x: str,
-    y: Union[str, List[str]],
-    units: Dict[str, Any] = None,
     fig: Any = None,
     adaptive_limits: bool = True,
     text: List[str] = None,
@@ -379,14 +311,6 @@ def animation_particles(
         The file name to save the animation to.
     snaps
         A list of Snap objects to animate.
-    x
-        The quantity for the x-axis. Must be a string to pass to Snap.
-    y
-        The quantity for the y-axis, or list of quantities. Must be a
-        string (or list of strings) to pass to Snap.
-    units
-        The units of the plot as a dictionary with keys 'x', 'y'.
-        The values are strings representing units, e.g. 'g/cm^3'.
     fig : optional
         A matplotlib Figure object to animate. If None, generate a new
         Figure.
@@ -426,38 +350,18 @@ def animation_particles(
     if filepath.suffix != '.mp4':
         raise ValueError('filename should end in ".mp4"')
 
-    if isinstance(y, list):
-        ys = y
-    elif isinstance(y, str):
-        ys = [y]
-    else:
-        raise ValueError('Cannot determine y')
-
-    if units is None:
-        _units = {'x': snaps[0][x].units, 'y': [snaps[0][y].units for y in ys]}
-    else:
-        _units = units
-    if isinstance(_units['y'], str):
-        yu = _units['y']
-        _units['y'] = [yu for _ in range(len(ys))]
-    units_str = _units
-
     if fig is None:
-        fig, ax = plt.subplots()
-        for yidx, y in enumerate(ys):
-            __units = {'x': units_str['x'], 'y': units_str['y'][yidx]}
-            snaps[0].plot(x=x, y=y, ax=ax, units=__units, **kwargs)
+        ax = snaps[0].plot(**kwargs)
+        fig = ax.figure
         lines = ax.lines
-        if text is not None:
-            texts = [
-                ax.text(
-                    0.9, 0.9, text[0], ha='right', transform=ax.transAxes, **text_kwargs
-                )
-            ]
     else:
-        lines = [line for ax in fig.axes for line in ax.lines]
-        if text is not None:
-            texts = [text for ax in fig.axes for text in ax.texts]
+        ax = fig.axes[0]
+        lines = [line for line in ax.lines]
+
+    if text is not None:
+        _text = ax.text(
+            0.9, 0.9, text[0], ha='right', transform=ax.transAxes, **text_kwargs
+        )
 
     if tqdm is not None:
         pbar = tqdm(total=len(snaps))
@@ -466,27 +370,36 @@ def animation_particles(
             'progress bar not available\ntry pip install tqdm --or-- conda install tqdm'
         )
 
+    x = kwargs.get('x', 'x')
+    y = kwargs.get('y', 'y')
+    c = kwargs.get('c')
+    s = kwargs.get('s')
+    units = kwargs.get('units')
+
     def animate(idx):
         snap = snaps[idx]
-        subsnaps = snap.subsnaps_as_list()
         if tqdm is not None:
             pbar.update(n=1)
         xlim, ylim = (0, 0), (0, 0)
-        for yidx, y in enumerate(ys):
-            __units = {'x': units_str['x'], 'y': units_str['y'][yidx]}
-            for line, subsnap in zip(
-                lines[yidx * len(subsnaps) : (yidx + 1) * len(subsnaps)], subsnaps
-            ):
-                _x, _y, _, _, _ = viz._plot_data(
-                    snap=subsnap, x=x, y=y, c=None, s=None, units=__units
-                )
-                line.set_data(_x, _y)
-                if adaptive_limits:
-                    xlim, ylim = _get_range(_x, xlim), _get_range(_y, ylim)
-                    line.axes.set(xlim=xlim, ylim=ylim)
+
+        if c is None and s is None:
+            try:
+                subsnaps = snap.subsnaps_as_list()
+            except AttributeError:
+                subsnaps = [snap]
+        else:
+            subsnaps = [snap]
+
+        for line, subsnap in zip(lines, subsnaps):
+            _x, _y, _c, _s, _units = viz._plot_data(
+                snap=subsnap, x=x, y=y, c=c, s=s, units=units
+            )
+            line.set_data(_x, _y)
+            if adaptive_limits:
+                xlim, ylim = _get_range(_x, xlim), _get_range(_y, ylim)
+                line.axes.set(xlim=xlim, ylim=ylim)
         if text is not None:
-            for _text in texts:
-                _text.set_text(text[idx])
+            _text.set_text(text[idx])
         return lines
 
     anim = _animation.FuncAnimation(
