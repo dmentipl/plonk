@@ -57,7 +57,7 @@ available at https://github.com/dmentipl/plonk.
 import importlib_metadata
 
 from ._logging import logger_init as _logger_init
-from ._units import units
+from ._units import units, units_dict
 from .analysis.profile import Profile, load_profile
 from .simulation.evolution import load_ev
 from .simulation.simulation import Simulation, load_sim
@@ -90,6 +90,7 @@ __all__ = [
     'load_snap',
     'plot',
     'units',
+    'units_dict',
     'vector',
     'visualize_sim',
 ]

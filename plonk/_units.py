@@ -1,5 +1,7 @@
 """Units."""
 
+import copy
+
 import pint
 
 units = pint.UnitRegistry()
@@ -39,6 +41,55 @@ array_units_str = {
     'velocity': 'velocity',
     'velocity_divergence': 'frequency',
 }
+
+# Some default units
+units_default = {
+    'accretion_radius': 'm',
+    'angular_momentum': 'kg * m ** 2 / s',
+    'azimuthal_angle': 'rad',
+    'density': 'kg / m ** 3',
+    'differential_velocity': 'm / s',
+    'gravitational_potential': 'J',
+    'internal_energy': 'J / kg',
+    'keplerian_frequency': 'Hz',
+    'kinetic_energy': 'J',
+    'last_injection_time': 's',
+    'magnetic_field': 'T',
+    'mass': 'kg',
+    'mass_accreted': 'kg',
+    'momentum': 'kg * m / s',
+    'polar_angle': 'rad',
+    'position': 'm',
+    'pressure': 'Pa',
+    'projection': 'm',
+    'radius_cylindrical': 'm',
+    'radius_spherical': 'm',
+    'semi_major_axis': 'm',
+    'smoothing_length': 'm',
+    'softening_radius': 'm',
+    'sound_speed': 'm / s',
+    'specific_angular_momentum': 'm ** 2 / s',
+    'spin': 'kg * m ** 2 / s',
+    'stopping_time': 's',
+    'temperature': 'K',
+    'timestep': 's',
+    'velocity': 'm / s',
+    'velocity_divergence': 'Hz',
+    'velocity_radial_cylindrical': 'm / s',
+    'velocity_radial_spherical': 'm / s',
+}
+
+
+def units_dict():
+    """Return a dictionary of arrays with unit strings.
+
+    Like the following:
+
+        `{'density': 'kg / m ** 3', ... 'position': 'm', ... }`
+
+    This is useful for setting units for plots.
+    """
+    return copy.copy(units_default)
 
 
 def generate_units_array_dictionary(units_dictionary):
