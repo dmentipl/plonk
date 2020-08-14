@@ -22,8 +22,11 @@ plane.
     # Apply the rotation to the snapshot
     snap.rotate(axis=axis, angle=angle)
 
+    # Plot units
+    units = {'position': 'au', 'density': 'g/cm^3', 'projection': 'cm'}
+
     # Plot projection
-    snap.image(quantity='density', cmap='gist_heat', units={'extent': 'au'})
+    snap.image(quantity='density', cmap='gist_heat', units=units)
 
     # Plot cross-section in the disc plane
     slice_normal = analysis.discs.normal(snap=snap)
@@ -32,7 +35,7 @@ plane.
         interp='slice',
         slice_normal=slice_normal,
         cmap='gist_heat',
-        units={'extent': 'au'},
+        units=units,
     )
 
     plt.show()

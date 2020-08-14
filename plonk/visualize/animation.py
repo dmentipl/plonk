@@ -96,7 +96,7 @@ def animation(
     ...     filename='animation.mp4',
     ...     snaps=snaps,
     ...     quantity='density',
-    ...     units={'extent': 'au', 'quantity': 'g/cm^3'},
+    ...     units={'position': 'au', 'density': 'g/cm^3'},
     ...     adaptive_colorbar=False,
     ...     save_kwargs={'fps': 10, 'dpi': 300},
     ... )
@@ -275,7 +275,7 @@ def animation_profiles(
     ...     profiles=profiles,
     ...     x='radius',
     ...     y='surface_density',
-    ...     units={'x': 'au', 'y': 'g/cm^2'},
+    ...     units={'position': 'au', 'surface_density': 'g/cm^2'},
     ...     adaptive_limits=False,
     ...     save_kwargs={'fps': 10, 'dpi': 300},
     ... )

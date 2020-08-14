@@ -77,9 +77,12 @@ def image(
         length. The default is to set the extent to a box of size such
         that 99% of particles are contained within.
     units
-        The units of the plot as a dictionary with keys 'quantity',
-        'extent', 'projection'. The values are strings representing
-        units, e.g. 'g/cm^3'.
+        The units of the plot as a dictionary. The keys correspond to
+        quantities such as 'position', 'density', 'velocity', and so on.
+        The values are strings representing units, e.g. 'g/cm^3' for
+        density. There is a special key 'projection' that corresponds
+        to the length unit in the direction of projection for projected
+        interpolation plots.
     ax
         A matplotlib Axes handle.
     colorbar_kwargs
@@ -121,14 +124,18 @@ def image(
 
     >>> plonk.image(snap=snap, quantity='density')
 
-    Alternatively.
+    Alternatively, access the function as a method on the Snap object.
 
     >>> snap.image(quantity='density')
 
     Set units for the plot.
 
-    >>> units = {'quantity': 'g/cm^3', 'extent': 'au'}
-    >>> plonk.image(snap=snap, quantity='density', units=units)
+    >>> units = {'position': 'au', 'density': 'g/cm^3', 'projection': 'cm'}
+    >>> snap.image(quantity='density', units=units)
+
+    Show a slice image of the density in xy-plane at z=0.
+
+    >>> snap.image(quantity='density', interp='slice')
     """
     return _interpolation_plot(
         snap=snap,
@@ -195,9 +202,12 @@ def vector(
         length. The default is to set the extent to a box of size such
         that 99% of particles are contained within.
     units
-        The units of the plot as a dictionary with keys 'quantity',
-        'extent', 'projection'. The values are strings representing
-        units, e.g. 'g/cm^3'.
+        The units of the plot as a dictionary. The keys correspond to
+        quantities such as 'position', 'density', 'velocity', and so on.
+        The values are strings representing units, e.g. 'g/cm^3' for
+        density. There is a special key 'projection' that corresponds
+        to the length unit in the direction of projection for projected
+        interpolation plots.
     ax
         A matplotlib Axes handle.
     **kwargs
@@ -235,18 +245,22 @@ def vector(
 
     Examples
     --------
-    Vector plot of velocity in xy-plane.
+    Show a vector plot of velocity in xy-plane.
 
     >>> plonk.vector(snap=snap, quantity='velocity')
 
-    Alternatively.
+    Alternatively, access the function as a method on the Snap object.
 
     >>> snap.vector(quantity='velocity')
 
     Set units for the plot.
 
-    >>> units = {'quantity': 'km/s', 'extent': 'au'}
-    >>> plonk.vector(snap=snap, quantity='velocity', units=units)
+    >>> units = {'position': 'au', 'velocity': 'km/s', 'projection': 'km'}
+    >>> snap.vector(quantity='velocity', units=units)
+
+    Show a slice plot of the velocity in xy-plane at z=0.
+
+    >>> snap.vector(quantity='density', interp='slice')
     """
     return _interpolation_plot(
         snap=snap,
@@ -377,8 +391,12 @@ def _interpolated_data(
             'projection': 1 * snap['position'].units,
         }
     else:
-        qunit = 1 * plonk_units(units.get('quantity', str(snap[quantity].units)))
-        eunit = 1 * plonk_units(units.get('extent', str(snap['position'].units)))
+        qunit = 1 * plonk_units(
+            units.get(
+                snap.get_canonical_array_name(quantity), str(snap[quantity].units)
+            )
+        )
+        eunit = 1 * plonk_units(units.get('position', str(snap['position'].units)))
         punit = 1 * plonk_units(units.get('projection', str(snap['position'].units)))
         _units = {'quantity': qunit, 'extent': eunit, 'projection': punit}
 
@@ -503,9 +521,10 @@ def plot(
         The quantity to set the particle size. Must be a string to
         pass to Snap.
     units
-        The units of the plot as a dictionary with keys 'x', 'y', 'c',
-        and 's'. The values are strings representing units, e.g.
-        'g/cm^3'.
+        The units of the plot as a dictionary. The keys correspond to
+        quantities such as 'position', 'density', 'velocity', and so on.
+        The values are strings representing units, e.g. 'g/cm^3' for
+        density.
     xscale
         The xscale to pass to the matplotlib Axes method set_xscale.
     yscale
@@ -529,22 +548,22 @@ def plot(
 
     >>> plonk.plot(snap=snap)
 
-    Alternatively.
+    Alternatively, access the function as a method on the Snap object.
 
     >>> snap.plot()
 
     Plot density against x.
 
-    >>> plonk.plot(snap=snap, x='x', y='density')
+    >>> snap.plot(x='x', y='density')
 
-    Color particles by density in xy-plane.
+    Color particles by density.
 
-    >>> plonk.plot(snap=snap, x='x', y='y', c='density')
+    >>> snap.plot(x='x', y='y', c='density')
 
     Set units for the plot.
 
-    >>> units = {'x': 'au', 'y': 'au', 'c': 'g/cm^3'}
-    >>> plonk.plot(snap=snap, x='x', y='y', c='density', units=units)
+    >>> units = {'position': 'au', 'density': 'g/cm^3'}
+    >>> snap.plot(x='x', y='y', c='density', units=units)
     """
     logger.debug(f'Plotting particles "{x}" vs "{y}"" on snap: {snap.file_path.name}')
     _kwargs = copy(kwargs)
@@ -604,17 +623,17 @@ def _plot_data(snap, x, y, c, s, units):
         if s is not None:
             _units['s'] = 1 * snap[s].units
     else:
-        xunit = units.get('x', str(snap[x].units))
-        yunit = units.get('y', str(snap[y].units))
+        xunit = units.get(snap.get_canonical_array_name(x), str(snap[x].units))
+        yunit = units.get(snap.get_canonical_array_name(y), str(snap[y].units))
         _units = {
             'x': 1 * plonk_units(xunit),
             'y': 1 * plonk_units(yunit),
         }
         if c is not None:
-            cunit = units.get('c', str(snap[c].units))
+            cunit = units.get(snap.get_canonical_array_name(c), str(snap[c].units))
             _units['c'] = 1 * plonk_units(cunit)
         if s is not None:
-            sunit = units.get('s', str(snap[s].units))
+            sunit = units.get(snap.get_canonical_array_name(s), str(snap[s].units))
             _units['s'] = 1 * plonk_units(sunit)
 
     _x = _x.to(_units['x']).magnitude

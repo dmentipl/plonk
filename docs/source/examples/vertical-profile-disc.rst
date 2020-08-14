@@ -27,13 +27,13 @@ radii in a disc.
     # Vertical height
     vertical_height = 40 * au
 
-    density_unit = 'g/cm^3'
-    temperature_unit = 'K'
+    # Plot units
+    units = {'position': 'au', 'density': 'g/cm^3', 'temperature': 'K'}
 
     # Make figure and axes
     fig, axs = plt.subplots(ncols=2, figsize=(12, 5))
-    axs[0].set(xlabel='Altitude', ylabel=f'Density [{density_unit}]')
-    axs[1].set(xlabel='Altitude', ylabel=f'Temperature [{temperature_unit}]')
+    axs[0].set(xlabel='Altitude', ylabel=f'Density [{units["density"]}]')
+    axs[1].set(xlabel='Altitude', ylabel=f'Temperature [{units["temperature"]}]')
 
     # Loop over radius
     for R in radius:
@@ -60,7 +60,7 @@ radii in a disc.
         prof.plot(
             x='z',
             y='density',
-            units={'x': 'au', 'y': density_unit},
+            units=units,
             std_dev_shading=True,
             label=f'{R:~P}',
             ax=axs[0],
@@ -68,7 +68,7 @@ radii in a disc.
         prof.plot(
             x='z',
             y='temperature',
-            units={'x': 'au', 'y': temperature_unit},
+            units=units,
             std_dev_shading=True,
             label=f'{R:~P}',
             ax=axs[1],

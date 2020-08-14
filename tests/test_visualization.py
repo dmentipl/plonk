@@ -25,7 +25,7 @@ def test_plot_with_kwargs():
         x='x',
         y='y',
         c='density',
-        units={'x': 'au', 'y': 'au', 'c': 'g/cm^3'},
+        units={'position': 'au', 'density': 'g/cm^3', 'projection': 'cm'},
     )
 
     snap.close_file()
@@ -47,7 +47,7 @@ def test_image_projection_with_kwargs():
         quantity='density',
         x='x',
         y='y',
-        units={'extent': 'au', 'quantity': 'g/cm^3'},
+        units={'position': 'au', 'density': 'g/cm^3', 'projection': 'cm'},
         extent=(-150, 150, -150, 150) * AU,
         norm='linear',
         cmap='gist_heat',
@@ -84,7 +84,7 @@ def test_image_slice_with_kwargs():
         interp='slice',
         x='x',
         y='y',
-        units={'extent': 'au', 'quantity': 'g/cm^3'},
+        units={'position': 'au', 'density': 'g/cm^3', 'projection': 'cm'},
         extent=(-150, 150, -150, 150) * AU,
         norm='linear',
         cmap='gist_heat',

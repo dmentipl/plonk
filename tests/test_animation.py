@@ -16,7 +16,7 @@ def test_animation():
         filename=filename,
         snaps=snaps,
         quantity='density',
-        units={'extent': 'au', 'quantity': 'g/cm^3'},
+        units={'position': 'au', 'density': 'g/cm^3'},
         adaptive_colorbar=False,
         number_of_pixels=(32, 32),
     )
@@ -37,7 +37,7 @@ def test_animation_profiles():
         profiles=profiles,
         x='radius',
         y='surface_density',
-        units={'x': 'au', 'y': 'g/cm^2'},
+        units={'position': 'au', 'surface_density': 'g/cm^2'},
     )
     filename.unlink()
 
@@ -54,7 +54,7 @@ def test_animation_particles():
         snaps=snaps,
         x='x',
         y='density',
-        units={'x': 'au', 'y': 'g/cm^3'},
+        units={'position': 'au', 'density': 'g/cm^3'},
         adaptive_limits=False,
     )
     filename.unlink()

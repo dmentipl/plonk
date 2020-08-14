@@ -164,9 +164,10 @@ class Profile:
         self.bin_indicies = self._set_particle_bin_indicies()
 
         if ndim == 1:
-            self._profiles[coordinate] = self.bin_centers
+            self._coordinate = coordinate
         else:
-            self._profiles['radius'] = self.bin_centers
+            self._coordinate = 'radius'
+        self._profiles[self._coordinate] = self.bin_centers
         self._profiles['number'] = np.histogram(
             self._x.magnitude, self.bin_edges.magnitude
         )[0]
@@ -347,6 +348,30 @@ class Profile:
         snap_arrays = _1d_arrays(list(self.snap.available_arrays(all=True)))
         return tuple(sorted(set(loaded + available + snap_arrays)))
 
+    def get_canonical_profile_name(self, name):
+        """Get the canonical profile name from a string.
+
+        For example, 'velocity_x' returns 'velocity', 'density' returns
+        'density', 'dust_fraction_001' returns 'dust_fraction', 'x'
+        returns 'position'.
+
+        Parameters
+        ----------
+        name
+            The name as a string
+
+        Returns
+        -------
+        str
+            The canonical name.
+        """
+        try:
+            return self.snap.get_canonical_array_name(name)
+        except ValueError:
+            if name == self._coordinate:
+                return 'position'
+            return name
+
     def plot(
         self,
         x: str,
@@ -365,11 +390,11 @@ class Profile:
         y
             The y axis to plot. Can be string or multiple as a list of
             strings.
-        units : optional
-            The units of the plot as a dictionary with keys 'x' and 'y'.
-            The values are strings representing units, e.g. 'g/cm^3'.
-            The 'y' value can be a list corresponding to each y value
-            plotted.
+        units
+            The units of the plot as a dictionary. The keys correspond to
+            quantities such as 'position', 'density', 'velocity', and so on.
+            The values are strings representing units, e.g. 'g/cm^3' for
+            density.
         std_dev_shading : optional
             Add shading for standard deviation of profile.
         ax : optional
@@ -388,8 +413,11 @@ class Profile:
         if units is None:
             x_unit, y_unit = None, None
         else:
-            x_unit = units.get('x')
-            y_unit = units.get('y')
+            x_unit = units.get(self.get_canonical_profile_name(x), str(self[x].units))
+            y_unit = [
+                units.get(self.get_canonical_profile_name(_y), str(self[_y].units))
+                for _y in y
+            ]
         if y_unit is not None:
             if isinstance(y_unit, str):
                 y_unit = [y_unit for _ in range(len(y))]

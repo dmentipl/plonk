@@ -80,7 +80,10 @@ def test_profile_plot():
     prof = plonk.load_profile(snap=snap)
     prof.plot(x='radius', y='surface_density')
     prof.plot(
-        x='radius', y='density', units={'x': 'au', 'y': 'g/cm^3'}, std_dev_shading=True,
+        x='radius',
+        y='density',
+        units={'position': 'au', 'density': 'g/cm^3'},
+        std_dev_shading=True,
     )
 
     snap.close_file()

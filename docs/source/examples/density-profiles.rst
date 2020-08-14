@@ -30,10 +30,11 @@ Plot a density profile for multiple snapshots.
 
     # Plot profiles
     fig, ax = plt.subplots()
+    units = {'position': 'au', 'surface_density': 'g/cm^2'}
     for time, profile in zip(times, profiles):
         label = f'{time.m:.0f}'
         profile.plot(
-            'radius', 'surface_density', units={'x':'au'}, label=label, ax=ax
+            'radius', 'surface_density', units=units, label=label, ax=ax
         )
     ax.set_ylabel('Surface Density [g/cm${}^2$]')
     ax.legend(title='Time [yr]', loc='best')

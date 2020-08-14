@@ -227,7 +227,7 @@ Set plot extent, colormap, colorbar range, and axis units.
     >>> snap.image(
     ...     quantity='density',
     ...     extent=(20, 120, -50, 50) * au,
-    ...     units={'extent': 'au'},
+    ...     units={'position': 'au'},
     ...     cmap='gist_heat',
     ...     vmin=0.1 * g_cm_2,
     ...     vmax=0.2 * g_cm_2,
@@ -253,7 +253,7 @@ Produce a cross-section image plot of density.
     ...     y='z',
     ...     interp='slice',
     ...     cmap='gist_heat',
-    ...     units={'extent': 'au'},
+    ...     units={'position': 'au'},
     ... )
 
 .. image:: _static/cross_section.png
@@ -285,9 +285,8 @@ Plot particles with color representing density.
 
     >>> snap = plonk.load_snap('disc_00030.h5')
 
-    >>> ax = snap.plot(
-    ...     x='x', y='z', c='density', units={'x': 'au', 'y': 'au'},
-    ... )
+    >>> units={'position': 'au', 'density': 'g/cm^3'}
+    >>> ax = snap.plot(x='x', y='z', c='density', units=units)
     >>> ax.set_xlim(-50, 50)
     >>> ax.set_ylim(-20, 20)
 
@@ -445,8 +444,9 @@ Plot a radial profile.
 
     >>> prof = plonk.load_profile(snap)
 
+    >>> units = {'position': 'au', 'scale_height': 'au'}
     >>> with plt.style.context('seaborn'):
-    ...     ax = prof.plot('radius', 'scale_height', units={'x': 'au', 'y':'au'})
+    ...     ax = prof.plot('radius', 'scale_height', units=units)
     ...     ax.set_ylabel('Scale height [au]')
     ...     ax.legend().remove()
 
@@ -474,8 +474,9 @@ radius.
     ...     cmax='15 au',
     ... )
 
+    >>> units = {'position': 'au', 'density': 'g/cm^3'}
     >>> with plt.style.context('seaborn'):
-    ...     ax = prof.plot('z', 'density', units={'x': 'au'})
+    ...     ax = prof.plot('z', 'density', units=units)
     ...     ax.set_ylabel(r'Density [g/cm${}^3$]')
     ...     ax.legend().remove()
 

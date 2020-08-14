@@ -874,6 +874,47 @@ class Snap:
                 unit *= self.units[d] ** dim[f'[{d}]']
         return unit
 
+    def get_canonical_array_name(self, name: str) -> str:
+        """Get the canonical array name from a string.
+
+        For example, 'velocity_x' returns 'velocity', 'density' returns
+        'density', 'dust_fraction_001' returns 'dust_fraction', 'x'
+        returns 'position'.
+
+        Parameters
+        ----------
+        name
+            The name as a string
+
+        Returns
+        -------
+        str
+            The canonical name.
+        """
+        if name in self.available_arrays():
+            return name
+        if name in self._array_name_mapper:
+            return self._array_name_mapper[name]
+        if name in self._array_split_mapper:
+            return self._array_split_mapper[name][0]
+        if name in self._arrays:
+            return name
+
+        name_root = '_'.join(name.split('_')[:-1])
+        if name_root not in self.available_arrays():
+            raise ValueError('Unknown array')
+        name_suffix = name.split('_')[-1]
+        if name_root in self._vector_arrays:
+            if name_suffix in ('x', 'y', 'z', 'mag'):
+                return name_root
+        if name_root in self._dust_arrays:
+            if _str_is_int(name_suffix):
+                return name_root
+            if name_suffix == 'tot':
+                return name_root
+
+        raise ValueError('Unknown array')
+
     def _get_array_from_registry(self, name: str, sinks: bool = False):
         if sinks:
             array = self._sink_registry[name](self)
