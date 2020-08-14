@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 def plot_smoothing_length(
     snap: SnapLike,
     indices: List[int],
-    fac: float = 2.0,
+    fac: float = 1.0,
     units: Union[str, Quantity] = None,
     x: str = 'x',
     y: str = 'y',
