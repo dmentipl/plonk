@@ -512,6 +512,8 @@ def plot(
     c: str = None,
     s: str = None,
     units: Dict[str, str] = None,
+    xlim: Quantity = None,
+    ylim: Quantity = None,
     ax: Any = None,
     ax_kwargs={},
     colorbar_kwargs={},
@@ -543,6 +545,12 @@ def plot(
         quantities such as 'position', 'density', 'velocity', and so on.
         The values are strings representing units, e.g. 'g/cm^3' for
         density.
+    xlim
+        The range in the x-coord as (xmin, xmax) where xmin/xmax can be
+        floats or quantities with units of length.
+    ylim
+        The range in the y-coord as (ymin, ymax) where ymin/ymax can be
+        floats or quantities with units of length.
     ax
         A matplotlib Axes handle.
     ax_kwargs
@@ -611,6 +619,8 @@ def plot(
             c=_c,
             s=_s,
             units=_units,
+            xlim=xlim,
+            ylim=ylim,
             names={'x': x, 'y': y, 'c': c, 's': s},
             fig=fig,
             ax=ax,
@@ -679,7 +689,7 @@ def _plot_data(snap, x, y, c, s, units):
 
 
 def _plot_plot(
-    x, y, c, s, units, names, fig, ax, ax_kwargs, colorbar_kwargs, **kwargs,
+    x, y, c, s, units, xlim, ylim, names, fig, ax, ax_kwargs, colorbar_kwargs, **kwargs,
 ):
     show_colorbar = kwargs.pop('show_colorbar', c is not None)
 
@@ -701,6 +711,19 @@ def _plot_plot(
     ax.set_ylabel(f'{names["y"]} [{yunit:~P}]')
 
     ax.set(**ax_kwargs)
+
+    if xlim is not None:
+        if not isinstance(xlim, Quantity):
+            _xlim = xlim * xunit
+        else:
+            _xlim = xlim.to(xunit)
+        ax.set_xlim(_xlim.magnitude)
+    if ylim is not None:
+        if not isinstance(ylim, Quantity):
+            _ylim = ylim * yunit
+        else:
+            _ylim = ylim.to(yunit)
+        ax.set_ylim(_ylim.magnitude)
 
     if show_colorbar:
         divider = make_axes_locatable(ax)
