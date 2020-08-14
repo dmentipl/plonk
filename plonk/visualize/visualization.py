@@ -369,31 +369,6 @@ def _interpolation_plot(
 def _interpolated_data(
     snap, quantity, x, y, interp, slice_normal, slice_offset, extent, units, **kwargs,
 ):
-    if extent is None:
-        _extent = get_extent_from_percentile(snap=snap, x=x, y=y)
-    else:
-        _extent = extent
-    if isinstance(_extent[0], Quantity):
-        __extent = (
-            (_extent[0] / snap.units['length']).to_base_units().magnitude,
-            (_extent[1] / snap.units['length']).to_base_units().magnitude,
-            (_extent[2] / snap.units['length']).to_base_units().magnitude,
-            (_extent[3] / snap.units['length']).to_base_units().magnitude,
-        )
-    else:
-        __extent = _extent
-        logger.warning('extent has no units, assuming code units')
-    if interp == 'slice':
-        if slice_normal is None:
-            slice_normal = (0, 0, 1)
-        if slice_offset is None:
-            slice_offset = 0 * plonk_units('cm')
-        if isinstance(slice_offset, Quantity):
-            slice_offset = (
-                (slice_offset / snap.units['length']).to_base_units().magnitude
-            )
-        else:
-            logger.warning('slice_offset has no units, assuming code units')
     if units is None:
         _units = {
             'quantity': 1 * snap[quantity].units,
@@ -409,6 +384,37 @@ def _interpolated_data(
         eunit = 1 * plonk_units(units.get('position', str(snap['position'].units)))
         punit = 1 * plonk_units(units.get('projection', str(snap['position'].units)))
         _units = {'quantity': qunit, 'extent': eunit, 'projection': punit}
+
+    if extent is None:
+        _extent = get_extent_from_percentile(snap=snap, x=x, y=y)
+        _extent = np.array([e.magnitude for e in _extent]) * _extent[0].units
+    else:
+        _extent = extent
+    if not isinstance(_extent[0], Quantity):
+        _extent = (
+            _extent[0] * _units['extent'],
+            _extent[1] * _units['extent'],
+            _extent[2] * _units['extent'],
+            _extent[3] * _units['extent'],
+        )
+    __extent = (
+        (_extent[0] / snap.units['length']).to_base_units().magnitude,
+        (_extent[1] / snap.units['length']).to_base_units().magnitude,
+        (_extent[2] / snap.units['length']).to_base_units().magnitude,
+        (_extent[3] / snap.units['length']).to_base_units().magnitude,
+    )
+
+    if interp == 'slice':
+        if slice_normal is None:
+            slice_normal = (0, 0, 1)
+        if slice_offset is None:
+            slice_offset = 0 * plonk_units('cm')
+        if isinstance(slice_offset, Quantity):
+            slice_offset = (
+                (slice_offset / snap.units['length']).to_base_units().magnitude
+            )
+        else:
+            logger.warning('slice_offset has no units, assuming code units')
 
     # Interpolate in code units
     interpolated_data = interpolate(
