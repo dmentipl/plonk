@@ -76,9 +76,7 @@ class Profile:
 
     >>> prof = plonk.load_profile(snap=snap)
     >>> prof = plonk.load_profile(snap=snap, n_bins=300)
-    >>> prof = plonk.load_profile(
-    ...     snap=snap, cmin='10 au', cmax='300 au'
-    ... )
+    >>> prof = plonk.load_profile(snap=snap, cmin='10 au', cmax='300 au')
     >>> prof = plonk.load_profile(snap=snap, spacing='log')
 
     To access a profile.
@@ -100,15 +98,12 @@ class Profile:
     Plot one or many quantities on the profile.
 
     >>> prof.plot('radius', 'density')
-    >>> prof.plot(
-    ...     'radius', ['angular_momentum_x', 'angular_momentum_y'],
-    ... )
+    >>> prof.plot('radius', ['angular_momentum_x', 'angular_momentum_y'])
 
     Plot a quantity on the profile with units.
 
-    >>> prof.plot(
-    ...     'radius', 'surface_density', unit={'x': 'au', 'y'='g/cm^2'}
-    ... )
+    >>> units = {'position': 'au', 'surface_density'='g/cm^2'}
+    >>> prof.plot('radius', 'surface_density', units=units)
     """
 
     _profile_functions: Dict[str, Callable] = {}
