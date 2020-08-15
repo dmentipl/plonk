@@ -56,27 +56,38 @@ radii in a disc.
             n_bins=50,
         )
 
-        # Plot density and temperature
+        # Plot density
+        ax_kwargs = {
+            'xlabel': 'Altitude',
+            'ylabel': f'Density [{units["density"]}]',
+            'yscale': 'log',
+        }
         prof.plot(
             x='z',
             y='density',
             units=units,
             std_dev_shading=True,
             label=f'{R:~P}',
+            ax_kwargs=ax_kwargs,
             ax=axs[0],
         )
+
+        # Plot temperature
+        ax_kwargs = {
+            'xlabel': 'Altitude',
+            'ylabel': f'Temperature [{units["temperature"]}]',
+            'yscale': 'linear'
+        }
         prof.plot(
             x='z',
             y='temperature',
             units=units,
             std_dev_shading=True,
             label=f'{R:~P}',
+            ax_kwargs=ax_kwargs,
             ax=axs[1],
         )
 
-    axs[0].grid(True)
-    axs[1].grid(True)
-    axs[0].set_yscale('log')
     axs[0].legend(title='Radius', loc='upper right')
     axs[1].legend().remove()
     plt.show()

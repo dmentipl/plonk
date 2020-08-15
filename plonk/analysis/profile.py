@@ -379,6 +379,7 @@ class Profile:
         units: Dict[str, Union[str, List[str]]] = None,
         std_dev_shading: bool = False,
         ax: Any = None,
+        ax_kwargs={},
         **kwargs,
     ):
         """Plot profile.
@@ -399,6 +400,8 @@ class Profile:
             Add shading for standard deviation of profile.
         ax : optional
             A matplotlib Axes object to plot to.
+        ax_kwargs
+            Keyword arguments to pass to matplotlib Axes.
         **kwargs
             Keyword arguments to pass to Axes plot method.
 
@@ -473,6 +476,7 @@ class Profile:
                 )
 
         ax.legend()
+        ax.set(**ax_kwargs)
 
         return ax
 

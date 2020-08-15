@@ -10,8 +10,6 @@ Plot a density profile for multiple snapshots.
     import numpy as np
     import plonk
 
-    plt.style.use('ggplot')
-
     # Load simulation
     sim = plonk.load_sim(prefix='disc')
 

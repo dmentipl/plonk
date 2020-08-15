@@ -22,8 +22,7 @@ Plot the dust density profile per species.
     y = [f'dust_density_{n+1:03}' for n in range(snap.num_dust_species)]
 
     units = {'position': 'au', 'dust_density': 'g/cm^3'}
-    ax = prof.plot(x='radius', y=y, units=units)
-    ax.set_yscale('log')
+    ax = prof.plot(x='radius', y=y, units=units, ax_kwargs={'yscale': 'log'})
 
 .. figure:: ../_static/dust_profiles.png
 

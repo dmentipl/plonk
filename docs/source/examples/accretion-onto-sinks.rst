@@ -10,9 +10,6 @@ Plot mass accretion and accretion rate onto sink particles.
     import numpy as np
     import plonk
 
-    # Set Seaborn plot style
-    plt.style.use('seaborn')
-
     # Load simulation
     sim = plonk.load_sim(prefix='disc')
     sink_labels = ('Star', 'Planet')

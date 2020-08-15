@@ -17,8 +17,8 @@ Plot cross section at z=0.
         x='x',
         y='z',
         interp='slice',
-        cmap='gist_heat',
         units=units,
+        cmap='gist_heat',
     )
     plt.show()
 
