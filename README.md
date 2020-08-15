@@ -42,9 +42,9 @@ To read in a simulation with snapshot files like `disc_00000.h5`, and global qua
 
 >>> simulation = plonk.load_sim(prefix='disc')
 >>> simulation.snaps
-    [<plonk.Snap "disc_00000.h5">,
-     ...
-     <plonk.Snap "disc_00030.h5">]
+[<plonk.Snap "disc_00000.h5">,
+...
+<plonk.Snap "disc_00030.h5">]
 ```
 
 You can load individual snapshots and access the particle arrays:
@@ -52,9 +52,9 @@ You can load individual snapshots and access the particle arrays:
 ```python
 >>> snap = plonk.load_snap(filename='disc_00030.h5')
 >>> snap['position']
-    array([[-3.69505001e+12,  7.42032967e+12, -7.45096980e+11],
-           ...,
-           [ 1.21421196e+12,  2.08618956e+13,  1.12998892e+12]]) <Unit('meter')>
+array([[-3.69505001e+12,  7.42032967e+12, -7.45096980e+11],
+       ...,
+       [ 1.21421196e+12,  2.08618956e+13,  1.12998892e+12]]) <Unit('meter')>
 ```
 
 The Snap objects contain the particle arrays, lazily loaded from the HDF5 file, as well as simulation metadata properties stored as a dictionary.
@@ -65,7 +65,7 @@ To visualize the column density on a snapshot:
 
 ```python
 >>> snap.image(quantity='density')
-    <AxesSubplot:xlabel='x [m]', ylabel='y [m]'>
+<AxesSubplot:xlabel='x [m]', ylabel='y [m]'>
 ```
 
 For a more complicated example, here is the deviation from Keplerian velocity around a planet embedded in a protoplanetary disc.
@@ -80,7 +80,7 @@ Extra quantities not written to the snapshot file are available:
 
 ```python
 >>> snap['angular_momentum']
-    array([ ... ]) <Unit('kilogram * meter ** 2 / second')>
+array([ ... ]) <Unit('kilogram * meter ** 2 / second')>
 ```
 
 You can generate radial profiles on the snapshot. For example, to calculate the scale height in a disc:
@@ -89,7 +89,7 @@ You can generate radial profiles on the snapshot. For example, to calculate the 
 >>> prof = plonk.load_profile(snap)
 
 >>> prof['scale_height']
-    array([ ... ]) <Unit('meter')>
+array([ ... ]) <Unit('meter')>
 ```
 
 Physical units of array quantities and other properties allow for unit conversion:
@@ -97,16 +97,17 @@ Physical units of array quantities and other properties allow for unit conversio
 ```python
 >>> pos = snap['position'][0]
 >>> pos
-    array([-3.69505001e+12,  7.42032967e+12, -7.45096980e+11]) <Unit('meter')>
+array([-3.69505001e+12,  7.42032967e+12, -7.45096980e+11]) <Unit('meter')>
 
 >>> pos.to('au')
-    array([-24.6998837 ,  49.60184016,  -4.98066567]) <Unit('astronomical_unit')>
+array([-24.6998837 ,  49.60184016,  -4.98066567]) <Unit('astronomical_unit')>
 ```
 
 You can get a subset of particles as a SubSnap.
 
 ```python
 >>> subsnap = snap['gas']
+>>> subsnap = snap[:1000]
 >>> subsnap = snap[snap['x'] > 0]
 ```
 
