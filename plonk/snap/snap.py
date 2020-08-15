@@ -341,6 +341,27 @@ class Snap:
 
         return self
 
+    def bulk_unload(self, arrays: List[str] = None):
+        """Un-load arrays from memory in bulk.
+
+        Parameters
+        ----------
+        arrays
+            A list of arrays to load as strings. If None, then unload
+            all loaded arrays.
+        """
+        if arrays is None:
+            _arrays = self.loaded_arrays()
+        else:
+            _arrays = arrays
+        for array in _arrays:
+            try:
+                del self[array]
+            except KeyError:
+                logger.warning(f'Cannot un-load {array}')
+
+        return self
+
     @property
     def properties(self):
         """Snap properties."""
