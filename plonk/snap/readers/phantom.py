@@ -90,7 +90,7 @@ def generate_snap_from_file(filename: Union[str, Path]) -> Snap:
     header = {key: val[()] for key, val in file_handle['header'].items()}
     snap._properties, units = _header_to_properties(header)
     snap._array_units = generate_units_array_dictionary(units)
-    snap.units = {
+    snap.code_units = {
         key: units[key] for key in ['length', 'time', 'mass', 'magnetic_field']
     }
 
@@ -330,7 +330,7 @@ def _pressure(snap: Snap) -> Quantity:
     rho = _density(snap)
     if ieos == 1:
         # Globally isothermal
-        K = K * snap.units['length'] ** 2 * snap.units['time'] ** (-2)
+        K = K * snap.code_units['length'] ** 2 * snap.code_units['time'] ** (-2)
         return K * rho
     if ieos == 2:
         # Adiabatic
@@ -343,14 +343,14 @@ def _pressure(snap: Snap) -> Quantity:
         except KeyError:
             K = (
                 K
-                * snap.units['length'] ** (1 - gamma)
-                * snap.units['mass'] ** (-1 + 3 * gamma)
-                * snap.units['time'] ** (-2)
+                * snap.code_units['length'] ** (1 - gamma)
+                * snap.code_units['mass'] ** (-1 + 3 * gamma)
+                * snap.code_units['time'] ** (-2)
             )
             return K * rho ** (gamma - 1)
     if ieos == 3:
         # Vertically isothermal (for accretion disc)
-        K = K * snap.units['length'] ** 2 * snap.units['time'] ** (-2)
+        K = K * snap.code_units['length'] ** 2 * snap.code_units['time'] ** (-2)
         q = snap._file_pointer['header/qfacdisc'][()]
         pos = _get_dataset('xyz', 'particles')(snap)
         r_squared = pos[:, 0] ** 2 + pos[:, 1] ** 2 + pos[:, 2] ** 2
@@ -373,7 +373,7 @@ def _sound_speed(snap: Snap) -> Quantity:
 
 def _stopping_time(snap: Snap) -> Quantity:
     stopping_time = _get_dataset('tstop', 'particles')(snap)
-    stopping_time[stopping_time == _bignumber] = np.inf * snap.units['time']
+    stopping_time[stopping_time == _bignumber] = np.inf * snap.code_units['time']
     return stopping_time
 
 

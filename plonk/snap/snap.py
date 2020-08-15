@@ -180,7 +180,7 @@ class Snap:
 
         self.data_source = None
         self.file_path = None
-        self.units = {}
+        self.code_units = {}
         self._properties = {}
         self._array_units = {}
         self._array_registry: Dict[str, Callable] = {}
@@ -873,7 +873,7 @@ class Snap:
             dim = _arr.units.dimensionality
             unit = 1.0
             for d in ['length', 'mass', 'time']:
-                unit *= self.units[d] ** dim[f'[{d}]']
+                unit *= self.code_units[d] ** dim[f'[{d}]']
         return unit
 
     def get_canonical_array_name(self, name: str) -> str:
@@ -1112,7 +1112,7 @@ class SubSnap(Snap):
         # Attributes same as Snap
         self.data_source = self.base.data_source
         self.file_path = self.base.file_path
-        self.units = self.base.units
+        self.code_units = self.base.code_units
         self._properties = self.base._properties
         self._array_units = self.base._array_units
         self._array_registry = self.base._array_registry

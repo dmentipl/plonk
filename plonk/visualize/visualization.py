@@ -398,10 +398,10 @@ def _interpolated_data(
             _extent[3] * _units['extent'],
         )
     __extent = (
-        (_extent[0] / snap.units['length']).to_base_units().magnitude,
-        (_extent[1] / snap.units['length']).to_base_units().magnitude,
-        (_extent[2] / snap.units['length']).to_base_units().magnitude,
-        (_extent[3] / snap.units['length']).to_base_units().magnitude,
+        (_extent[0] / snap.code_units['length']).to_base_units().magnitude,
+        (_extent[1] / snap.code_units['length']).to_base_units().magnitude,
+        (_extent[2] / snap.code_units['length']).to_base_units().magnitude,
+        (_extent[3] / snap.code_units['length']).to_base_units().magnitude,
     )
 
     if interp == 'slice':
@@ -411,7 +411,7 @@ def _interpolated_data(
             slice_offset = 0 * plonk_units('cm')
         if isinstance(slice_offset, Quantity):
             slice_offset = (
-                (slice_offset / snap.units['length']).to_base_units().magnitude
+                (slice_offset / snap.code_units['length']).to_base_units().magnitude
             )
         else:
             logger.warning('slice_offset has no units, assuming code units')
@@ -757,7 +757,7 @@ def _convert_units_for_interpolation(
     quantity_unit = snap.get_array_code_unit(quantity)
     if interp == 'projection':
         proj_unit = units['quantity'] * units['projection']
-        data = (interpolated_data * quantity_unit * snap.units['length']).to(
+        data = (interpolated_data * quantity_unit * snap.code_units['length']).to(
             proj_unit.units
         ).magnitude / proj_unit.magnitude
     elif interp == 'slice':
@@ -766,7 +766,7 @@ def _convert_units_for_interpolation(
         ).magnitude / units['quantity'].magnitude
 
     new_extent = tuple(
-        (extent * snap.units['length']).to(units['extent'].units).magnitude
+        (extent * snap.code_units['length']).to(units['extent'].units).magnitude
         / units['extent'].magnitude
     )
 

@@ -216,10 +216,10 @@ class Simulation:
         self._properties = prop
 
     def _generate_units(self):
-        """Generate sim.units from snap.units."""
-        u = copy(self.snaps[0].units)
+        """Generate sim.units from snap.code_units."""
+        u = copy(self.snaps[0].code_units)
         for snap in self.snaps:
-            for key, val in snap.units.items():
+            for key, val in snap.code_units.items():
                 if u[key] != val:
                     u[key] = '__inconsistent__'
         self._units = u
