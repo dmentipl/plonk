@@ -237,7 +237,7 @@ Plot a radial profile.
     >>> ax.set_ylabel('Scale height [au]')
     >>> ax.legend().remove()
 
-.. image:: ../_static/scale_height.png
+.. image:: _static/scale_height.png
 
 Generate and plot a :class:`Profile` in the z-coordinate with a :class:`SubSnap`
 of particles by radius.
@@ -264,7 +264,7 @@ of particles by radius.
     >>> units = {'position': 'au', 'density': 'g/cm^3'}
     >>> ax = prof.plot('z', 'density', units=units)
 
-.. image:: ../_static/profile_z.png
+.. image:: _static/profile_z.png
 
 
 ~~~~~~~~~~

@@ -18,7 +18,7 @@ Produce a projection :meth:`~Snap.image` plot of density.
 
     >>> snap.image(quantity='density')
 
-.. image:: ../_static/density.png
+.. image:: _static/density.png
 
 Set plot units, extent, colormap, and colorbar range.
 
@@ -39,7 +39,7 @@ Set plot units, extent, colormap, and colorbar range.
     ...     vmax=0.2,
     ... )
 
-.. image:: ../_static/density_zoom.png
+.. image:: _static/density_zoom.png
 
 ~~~~~~~~~~~~~~~~~~
 Cross-section plot
@@ -64,7 +64,7 @@ Produce a cross-section :meth:`~Snap.image` plot of density.
     ...     cmap='gist_heat',
     ... )
 
-.. image:: ../_static/cross_section.png
+.. image:: _static/cross_section.png
 
 ~~~~~~~~~~~~~
 Particle plot
@@ -84,7 +84,7 @@ The different colours refer to different particle types.
     >>> units = {'position': 'au', 'smoothing_length': 'au'}
     >>> snap.plot(x='z', y='h', units=units, alpha=0.1)
 
-.. image:: ../_static/particle_plot.png
+.. image:: _static/particle_plot.png
 
 Plot particles with color representing density.
 
@@ -104,4 +104,4 @@ Plot particles with color representing density.
     ...     ylim=(-20, 20),
     ... )
 
-.. image:: ../_static/particle_plot2.png
+.. image:: _static/particle_plot2.png

@@ -8,6 +8,6 @@ complicated usage.
 
 .. toctree::
 
-    usage/data
-    usage/analysis
-    usage/visualization
+    usage.data
+    usage.analysis
+    usage.visualization

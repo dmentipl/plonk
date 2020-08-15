@@ -6,5 +6,5 @@ Access to smoothed particle hydrodynamics data.
 
 .. toctree::
 
-    data/snap
-    data/simulation
+    data.snap
+    data.simulation

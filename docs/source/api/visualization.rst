@@ -6,7 +6,7 @@ Visualize smoothed particle hydrodynamics data.
 
 .. toctree::
 
-    visualization/plots
-    visualization/animations
-    visualization/interpolation
-    visualization/utils
+    visualization.plots
+    visualization.animations
+    visualization.interpolation
+    visualization.utils
