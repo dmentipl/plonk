@@ -801,7 +801,8 @@ class Snap:
             _units = list()
             for column in cols:
                 try:
-                    _units.append(self[column].units)
+                    arr: Quantity = self[column]
+                    _units.append(arr.units)
                 except AttributeError:
                     _units.append(plonk_units['dimensionless'])
         else:

@@ -172,7 +172,8 @@ class Simulation:
             (31, 1100000, 3)
         """
         q = list()
-        units = self.snaps[0][quantity].units
+        arr: Quantity = self.snaps[0][quantity]
+        units = arr.units
         for snap in self.snaps:
             if indices is None:
                 array: Quantity = snap[quantity]
