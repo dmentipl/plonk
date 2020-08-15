@@ -168,7 +168,7 @@ def test_rotate_snap():
     _check_arrays(snap)
 
     snap.rotate(axis=(1, 2, 3), angle=np.pi)
-    snap.unset()
+    snap.reset()
     _check_arrays(snap)
 
     rot = np.array([1, 2, 3])
@@ -192,7 +192,7 @@ def test_translate_snap():
     _check_arrays(snap)
 
     snap.translate(translation=(100, 200, 300), unit='au')
-    snap.unset()
+    snap.reset()
     _check_arrays(snap)
 
     with pytest.raises(ValueError):

@@ -407,29 +407,32 @@ class Snap:
 
     @cache_arrays.setter
     def cache_arrays(self, value):
-        if value is False:
-            self._arrays = {}
         self._cache_arrays = value
 
-    def unset(self, rotation: bool = True, translation: bool = True):
-        """Unset transformations.
+    def reset(
+        self, arrays: bool = False, rotation: bool = True, translation: bool = True
+    ):
+        """Reset Snap.
 
-        Unset rotation and translations transformations on the Snap.
+        Reset rotation and translations transformations on the Snap to
+        initial (on-file) values. In addition, unload cached arrays.
 
         Parameters
         ----------
+        arrays
+            Set to True to unload arrays from memory. Default is False.
         rotation
-            Set to True to unset rotation. Default is True.
+            Set to True to reset rotation. Default is True.
         translation
-            Set to True to unset translation. Default is True.
+            Set to True to reset translation. Default is True.
         """
-        if any((rotation, translation)):
+        if any((arrays, rotation, translation)):
             for arr in self.loaded_arrays():
                 del self._arrays[arr]
             for arr in self.sinks.loaded_arrays():
                 del self._sinks[arr]
         else:
-            raise ValueError('Select something to unset')
+            logger.warning('Select something to reset')
 
         if rotation:
             self.rotation = None
@@ -1283,12 +1286,7 @@ def _input_indices_array(inp: Union[ndarray, slice, list, int, tuple], max_slice
     if isinstance(inp, int):
         return np.array([inp])
     if isinstance(inp, slice):
-        i1, i2, step = inp.start, inp.stop, inp.step
-        if i1 is None:
-            i1 = 0
-        if i2 is None:
-            i2 = max_slice
-        if step is not None:
-            return np.arange(i1, i2, step)
-        return np.arange(i1, i2)
+        i1 = inp.start if inp.start is not None else 0
+        i2 = inp.stop if inp.stop is not None else max_slice
+        return np.arange(i1, i2, inp.step)
     return None

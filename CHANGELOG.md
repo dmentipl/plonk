@@ -41,6 +41,8 @@ Types of changes:
 - Renamed Snap.available_arrays argument "all" to "verbose".
 - Changed Snap.units to Snap.code_units.
 - Use pretty_array_name for plots labels.
+- Rename Snap.unset to Snap.reset and allow for unloading cached arrays.
+- When setting Snap.cache_arrays to False, no longer unload currently cached arrays.
 
 ### Fixed
 
