@@ -40,6 +40,7 @@ Types of changes:
 - All plotting functions/methods use the same argument for setting units.
 - Renamed Snap.available_arrays argument "all" to "verbose".
 - Changed Snap.units to Snap.code_units.
+- Use pretty_array_name for plots labels.
 
 ### Fixed
 
