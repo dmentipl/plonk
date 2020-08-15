@@ -2,11 +2,14 @@
 Data
 ----
 
+.. currentmodule:: plonk
+
 ~~~~~~~~~~~~~
 Load snapshot
 ~~~~~~~~~~~~~
 
-Load a single snapshot and see what arrays are available.
+Load data from a single snapshot into :class:`Snap` and see what arrays are
+available with :meth:`~Snap.available_arrays`.
 
 .. code-block:: python
 
@@ -47,7 +50,7 @@ Load a single snapshot and see what arrays are available.
      'velocity_radial_cylindrical',
      'velocity_radial_spherical')
 
-Load a single snapshot and access particle arrays and properties.
+Load a single snapshot and access particle arrays and :attr:`~Snap.properties`.
 
 .. code-block:: python
 
@@ -76,7 +79,7 @@ Load a single snapshot and access particle arrays and properties.
     >>> snap.properties['time']
     61485663602.558136 <Unit('second')>
 
-Load a single snapshot and access sink arrays.
+Load a single snapshot and access sink arrays via :attr:`~Snap.sinks` attribute.
 
 .. code-block:: python
 
@@ -105,7 +108,8 @@ Load a single snapshot and access sink arrays.
 Load auxilliary files
 ~~~~~~~~~~~~~~~~~~~~~
 
-Load a Phantom `.ev` file, and see what columns are available.
+Load a Phantom `.ev` file with :func:`load_ev` and see what columns are
+available.
 
 .. code-block:: python
 
@@ -142,7 +146,9 @@ Load a Phantom `.ev` file, and see what columns are available.
 Load simulation
 ~~~~~~~~~~~~~~~
 
-Load a simulation, and access snapshots and other data.
+Load a simulation with :func:`load_sim` and access snapshots and time series
+data with :attr:`~Simulation.snaps` and :attr:`~Simulation.time_series`
+attributes.
 
 .. code-block:: python
 

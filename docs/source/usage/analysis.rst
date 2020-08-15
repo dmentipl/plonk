@@ -2,11 +2,13 @@
 Analysis
 --------
 
+.. currentmodule:: plonk
+
 ~~~~~~~~~
 Sub-snaps
 ~~~~~~~~~
 
-Access the gas and dust subsets of the particles as a SubSnap.
+Access the gas and dust subsets of the particles as a :class:`SubSnap`.
 
 .. code-block:: python
 
@@ -26,7 +28,7 @@ Access the gas and dust subsets of the particles as a SubSnap.
     >>> snap['dust'][0]['mass'].to('solar_mass')[0]
     9.99999999999999e-11 <Unit('solar_mass')>
 
-Generate a SubSnap with a boolean mask.
+Generate a :class:`SubSnap` with a boolean mask.
 
 .. code-block:: python
 
@@ -44,7 +46,7 @@ Generate a SubSnap with a boolean mask.
     >>> subsnap['x'].to('au').min()
     0.0002668455543031563 <Unit('astronomical_unit')>
 
-Generate a SubSnap of particles from lists or slices of indices.
+Generate a :class:`SubSnap` of particles from lists or slices of indices.
 
 .. code-block:: python
 
@@ -62,7 +64,7 @@ Generate a SubSnap of particles from lists or slices of indices.
 Filters
 ~~~~~~~
 
-Filters are available to generate SubSnaps from geometric shapes.
+Filters are available to generate :class:`SubSnap` from geometric shapes.
 
 .. code-block:: python
 
@@ -126,8 +128,8 @@ Calculate total (summed) quantities on a Snap.
 Profiles
 ~~~~~~~~
 
-Profiles allow for creating a 1-dimensional profile through the 3-dimensional
-data. Here we create a (cylindrical) radial profile.
+A :class:`Profile` allows for creating a 1-dimensional profile through the
+3-dimensional data. Here we create a (cylindrical) radial profile.
 
 .. code-block:: python
 
@@ -237,8 +239,8 @@ Plot a radial profile.
 
 .. image:: ../_static/scale_height.png
 
-Generate and plot a profile in the z-coordinate with a SubSnap of particles by
-radius.
+Generate and plot a :class:`Profile` in the z-coordinate with a :class:`SubSnap`
+of particles by radius.
 
 .. code-block:: python
 
@@ -269,8 +271,8 @@ radius.
 Neighbours
 ~~~~~~~~~~
 
-Find particle neighbours using k-d tree. The implementation uses the efficient
-`scipy.spatial.cKDTree`.
+Find particle neighbours using :meth:`~Snap.neighbours` via a k-d tree. The
+implementation uses the efficient `scipy.spatial.cKDTree`.
 
 .. code-block:: python
 
@@ -291,8 +293,8 @@ Find particle neighbours using k-d tree. The implementation uses the efficient
            list([2, 7825, 22380, 30099, 36164, 65962, 67630, 70636, 82278, 88742, 127335, 145738, 158511, 171438, 248893, 274204, 274313, 282427, 388144, 436499, 444614, 534555, 561393, 599283, 712841, 790972, 813445, 824461, 853507, 912956, 982408, 986423, 1046879, 1092432])],
           dtype=object)
 
-Get neighbours of one type only by first creating a SubSnap. Note that the
-returned indices are relative to type.
+Get neighbours of one type only by first creating a :class:`SubSnap`. Note that
+the returned indices are relative to type.
 
 .. code-block:: python
 

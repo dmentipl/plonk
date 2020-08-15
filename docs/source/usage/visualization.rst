@@ -2,11 +2,13 @@
 Visualization
 -------------
 
+.. currentmodule:: plonk
+
 ~~~~~~~~~~~~~~~
 Projection plot
 ~~~~~~~~~~~~~~~
 
-Produce a projection image plot of density.
+Produce a projection :meth:`~Snap.image` plot of density.
 
 .. code-block:: python
 
@@ -43,7 +45,7 @@ Set plot units, extent, colormap, and colorbar range.
 Cross-section plot
 ~~~~~~~~~~~~~~~~~~
 
-Produce a cross-section image plot of density.
+Produce a cross-section :meth:`~Snap.image` plot of density.
 
 .. code-block:: python
 
@@ -68,8 +70,8 @@ Produce a cross-section image plot of density.
 Particle plot
 ~~~~~~~~~~~~~
 
-Produce a plot of the particles with z-coordinate on the x-axis and smoothing
-length on the y-axis.
+Produce a plot of the particles using :meth:`~Snap.plot` with z-coordinate on
+the x-axis and smoothing length on the y-axis.
 
 The different colours refer to different particle types.
 

@@ -2,6 +2,8 @@
 Overview
 ========
 
+.. currentmodule:: plonk
+
 This document gives an overview of using Plonk for analysis and visualization of
 smoothed particle hydrodynamics data. For a further guide see :doc:`usage`.
 
@@ -52,12 +54,12 @@ We also import Matplotlib and NumPy, for later.
 Snapshots
 ~~~~~~~~~
 
-SPH snapshot files are represented by the :py:class:`Snap` class. This object
+SPH snapshot files are represented by the :class:`Snap` class. This object
 contains a properties dictionary, particle arrays, which are lazily loaded from
-file. Here we demonstrate instantiating a :py:class:`Snap` object, and accessing
-some properties and particle arrays.
+file. Here we demonstrate instantiating a :class:`Snap` object, and
+accessing some properties and particle arrays.
 
-First, we load the snapshot with the :py:func:`load_snap` function. You can
+First, we load the snapshot with the :func:`load_snap` function. You can
 pass a string or :class:`pathlib.Path` object to point to the location of the
 snapshot in the file system.
 
@@ -83,15 +85,15 @@ There may be a small delay as the data is read from file. After the array is
 read from file it is cached in memory, so that subsequent calls are faster.
 
 To see what arrays are loaded into memory you can use the
-:py:meth:`loaded_arrays` method.
+:meth:`~Snap.loaded_arrays` method.
 
 .. code-block:: pycon
 
     >>> snap.loaded_arrays()
     ('position',)
 
-Use :py:meth:`available_arrays` to see what arrays are available. Some of these
-arrays are stored on file, while others are computed as required.
+Use :meth:`~Snap.available_arrays` to see what arrays are available. Some of
+these arrays are stored on file, while others are computed as required.
 
 .. code-block:: pycon
 
@@ -130,7 +132,7 @@ arrays are stored on file, while others are computed as required.
 
 You can also define your own alias to access arrays. For example, if you prefer
 to use the name `'coordinate'` rather than `'position',` use the
-:py:meth:`add_alias` method to add an alias.
+:meth:`~Snap.add_alias` method to add an alias.
 
 .. code-block:: pycon
 
@@ -144,7 +146,7 @@ to use the name `'coordinate'` rather than `'position',` use the
            [ 9.53716176e+12,  9.98500386e+12,  4.93933367e+11],
            [ 1.21421196e+12,  2.08618956e+13,  1.12998892e+12]]) <Unit('meter')>
 
-The :py:class:`Snap` object has a :py:attr:`properties` attribute which is a
+The :class:`Snap` object has a :attr:`~Snap.properties` attribute which is a
 dictionary of metadata, i.e. non-array data, on the snapshot.
 
 .. code-block:: pycon
@@ -163,7 +165,7 @@ dictionary of metadata, i.e. non-array data, on the snapshot.
      'time']
 
 Units are available. We make use of the Python units library Pint. The code
-units of the data are available.
+units of the data are available as :attr:`~Snap.code_units`.
 
 .. code-block:: pycon
 
@@ -172,7 +174,7 @@ units of the data are available.
 
 
 Sink particles are handled separately from the fluid, e.g. gas or dust,
-particles. They are available as an attribute.
+particles. They are available as an attribute :attr:`~Snap.sinks`.
 
 .. code-block:: pycon
 
@@ -202,12 +204,12 @@ Simulation
 
 SPH simulation data is usually spread over multiple files of, possibly,
 different types, even though, logically, a simulation is a singular "object".
-Plonk has the :py:class:`Simulation` class to represent the complete data set.
-:py:class:`Simulation` is an aggregation of the :py:class:`Snap` and
-pandas DataFrames to represent time evolution data (see below) objects, plus
-metadata, such as the directory on the file system.
+Plonk has the :class:`Simulation` class to represent the complete data set.
+:class:`Simulation` is an aggregation of the :class:`Snap` and pandas DataFrames
+to represent time evolution data (see below) objects, plus metadata, such as the
+directory on the file system.
 
-Use the :py:func:`load_sim` function to instantiate a :py:class:`Simulation`
+Use the :func:`load_sim` function to instantiate a :class:`Simulation`
 object.
 
 .. code-block:: pycon
@@ -215,8 +217,8 @@ object.
     >>> prefix = 'disc'
     >>> sim = plonk.load_sim(prefix=prefix)
 
-Each of the snapshots are available via :py:attr:`snaps` as a list. We can get
-the first five snapshots with the following.
+Each of the snapshots are available via :attr:`~Simulation.snaps` as a list. We
+can get the first five snapshots with the following.
 
 .. code-block:: pycon
 
@@ -227,8 +229,9 @@ the first five snapshots with the following.
      <plonk.Snap "disc_00003.h5">,
      <plonk.Snap "disc_00004.h5">]
 
-The :py:class:`Simulation` class has an attribute :py:attr:`time_series` which
-contains time series data as pandas DataFrames discussed in the next section.
+The :class:`Simulation` class has an attribute :attr:`~Simulation.time_series`
+which contains time series data as pandas DataFrames discussed in the next
+section.
 
 ~~~~~~~~~
 Evolution
@@ -236,10 +239,10 @@ Evolution
 
 SPH simulation data also include auxiliary files containing globally-averaged
 quantities output more frequently than snapshot files. For example, Phantom
-writes text files with the suffix :code:`.ev`. These files are output every time
-step rather than at the frequency of the snapshot files.
+writes text files with the file extension ".ev". These files are output every
+time step rather than at the frequency of the snapshot files.
 
-We store this data in pandas DataFrames. Use :py:meth:`load_ev` to instantiate.
+We store this data in pandas DataFrames. Use :func:`load_ev` to instantiate.
 
 .. code-block:: pycon
 
@@ -247,7 +250,7 @@ We store this data in pandas DataFrames. Use :py:meth:`load_ev` to instantiate.
 
 The data may be split over several files, for example, if the simulation was run
 with multiple jobs on a computation cluster. In that case, pass in a tuple or
-list of files in chronological order to :py:func:`load_ev`, and Plonk will
+list of files in chronological order to :func:`load_ev`, and Plonk will
 concatenate the data removing any duplicated time steps.
 
 The underlying data is stored as a pandas [#f1]_ DataFrame. This allows for
@@ -299,9 +302,9 @@ does. For the technical details, see Price (2007), `PASA, 24, 3, 159
 numerical method as Splash, with the Python function compiled with Numba so it
 has the same performance as the Fortran code.
 
-You can use the :py:func:`visualize.image` function to interpolate a quantity
-to a pixel grid to show as an image. For example, in the following we produce a
-plot of column density, i.e. a projection plot.
+You can use the :meth:`~Snap.image` method to interpolate a quantity to a pixel
+grid to show as an image. For example, in the following we produce a plot of
+column density, i.e. a projection plot.
 
 .. code-block:: pycon
 
@@ -312,7 +315,7 @@ plot of column density, i.e. a projection plot.
     The total column density.
 
 This produces an image via Matplotlib. The function returns a Matplotlib
-:py:class:`AxesSubplot` object.
+:class:`AxesSubplot` object.
 
 Alternatively, you can pass keyword arguments to the matplotlib functions. For
 example, we set the units, the colormap to 'gist_heat' and set the colorbar
@@ -335,7 +338,7 @@ minimum and maxiumum. In addition, we set the extent, i.e. the x- and y-limits.
     The column density zoomed around the planet.
 
 More fine-grained control can be achieved by using the full details of
-:py:func:`visualize.image`. See the API for more details.
+:meth:`~Snap.image`. See the API for more details.
 
 --------------------
 Analysis of SPH data
@@ -350,7 +353,7 @@ example, the simulation we have been working with has dust and gas. So far we
 have been plotting the total density. We may want to visualize the dust and gas
 separately.
 
-To do this we take a :py:class:`SubSnap`. We can use the tags 'gas' and 'dust'
+To do this we take a :class:`SubSnap`. We can use the tags 'gas' and 'dust'
 to access those particles. Given that there may be sub-types of dust, using
 'dust' returns a list. In this simulation there is only one dust species.
 
@@ -401,7 +404,7 @@ lists the available raw Phantom arrays on the file.
     >>> list(snap._file_pointer['particles'])
     ['divv', 'dt', 'dustfrac', 'h', 'itype', 'tstop', 'vxyz', 'xyz']
 
-To see all available arrays on the :py:class:`Snap` object:
+To see all available arrays on the :class:`Snap` object:
 
 .. code-block:: pycon
 
@@ -451,7 +454,7 @@ Where, here, we have used the fact that Plonk knows that 'x' and 'y' refer to
 the x- and y-components of the position array.
 
 Alternatively, you can define a function for a derived array. This makes use of
-the decorator :py:meth:`add_array`.
+the decorator :meth:`~Snap.add_array`.
 
 .. code-block:: pycon
 
@@ -492,8 +495,7 @@ Generating a profile is a convenient method to reduce the dimensionality
 of the full data set. For example, we may want to see how the surface density
 and aspect ratio of the disc vary with radius.
 
-To do this we use the :py:class:`Profile` class in the :mod:`analysis`
-module.
+To do this we use the :class:`Profile` class in the :mod:`analysis` module.
 
 .. code-block:: pycon
 
@@ -504,7 +506,8 @@ module.
 
 
 To see what profiles are loaded and what are available use the
-:py:meth:`loaded_profiles` and :py:meth:`available_profiles` methods.
+:meth:`~Profile.loaded_profiles` and :meth:`~Profile.available_profiles`
+methods.
 
 .. code-block:: pycon
 
@@ -602,9 +605,9 @@ To load a profile, simply call it.
            4.35330982e+12, 4.44686164e+12, 4.47133547e+12, 4.83307604e+12,
            4.63783507e+12, 4.95119779e+12, 5.17961431e+12, 5.29308491e+12]) <Unit('meter')>
 
-You can convert the data in the :py:class:`Profile` object to a pandas DataFrame
-with the :py:meth:`to_dataframe` method. This takes all loaded profiles and puts
-them into the DataFrame with units indicated in brackets.
+You can convert the data in the :class:`Profile` object to a pandas DataFrame
+with the :meth:`~Profile.to_dataframe` method. This takes all loaded profiles
+and puts them into the DataFrame with units indicated in brackets.
 
 .. code-block:: pycon
 
