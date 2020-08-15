@@ -3,8 +3,7 @@ Overview
 ========
 
 This document gives an overview of using Plonk for analysis and visualization of
-smoothed particle hydrodynamics data. For a quickstart guide see
-:doc:`quickstart`.
+smoothed particle hydrodynamics data. For a further guide see :doc:`usage`.
 
 -----------------
 Data file formats

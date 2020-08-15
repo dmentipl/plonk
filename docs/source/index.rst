@@ -28,7 +28,7 @@ particle hydrodynamics simulation data.
 
     installation
     overview
-    quickstart
+    usage
     examples
     getting-help
     api
