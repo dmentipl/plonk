@@ -429,10 +429,8 @@ class Profile:
         if ax is None:
             _, ax = plt.subplots()
 
-        xlabel = x.capitalize().replace('_', ' ')
-        xlabel = ' '.join([xlabel, f'[{_x.units:~P}]'])
+        ax.set_xlabel(f'{x} [{_x.units:~P}]')
         _x = _x.magnitude
-        ax.set_xlabel(xlabel)
 
         for idx, yi in enumerate(y):
             _y = self[yi]
@@ -449,13 +447,12 @@ class Profile:
                     _y_mean = self[_yi + '_mean']
                 else:
                     _y_mean = _y
-            label = yi.capitalize().replace('_', ' ')
             if y_unit is not None:
                 _y = _y.to(y_unit[idx])
                 if std_dev_shading:
                     _y_std = _y_std.to(y_unit[idx])
                     _y_mean = _y_mean.to(y_unit[idx])
-            label = ' '.join([label, f'[{_y.units:~P}]'])
+            label = f'{yi} [{_y.units:~P}]'
             _y = _y.magnitude
             if std_dev_shading:
                 _y_std = _y_std.magnitude
