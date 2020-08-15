@@ -638,10 +638,9 @@ We can also plot the profiles.
 .. code-block:: pycon
 
     >>> units = {'position': 'au', 'scale_height': 'au', 'surface_density': 'g/cm^2'}
-    >>> with plt.style.context('seaborn'):
-    ...     fig, axs = plt.subplots(ncols=2, figsize=(12, 5))
-    ...     prof.plot('radius', 'surface_density', units=units, ax=axs[0])
-    ...     prof.plot('radius', 'scale_height', units=units, ax=axs[1])
+    >>> fig, axs = plt.subplots(ncols=2, figsize=(12, 5))
+    >>> prof.plot('radius', 'surface_density', units=units, ax=axs[0])
+    >>> prof.plot('radius', 'scale_height', units=units, ax=axs[1])
 
 .. figure:: _static/profile.png
 
