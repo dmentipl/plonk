@@ -92,4 +92,3 @@ radii in a disc.
 
     axs[0].legend(title='Radius', loc='upper right')
     axs[1].legend().remove()
-    plt.show()

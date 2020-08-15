@@ -65,5 +65,3 @@ Plot mass accretion and accretion rate onto sink particles.
     ax[0].set_ylabel('Mass accreted [$M_{\oplus}$]')
     ax[1].set_xlabel('Time [yr]')
     ax[1].set_ylabel('Accretion rate [$M_{\oplus}$/yr]')
-
-    plt.show()

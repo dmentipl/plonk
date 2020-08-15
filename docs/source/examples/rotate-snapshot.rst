@@ -10,7 +10,6 @@ plane.
 
 .. code-block:: python
 
-    import matplotlib.pyplot as plt
     import numpy as np
     import plonk
     from plonk import analysis
@@ -40,5 +39,3 @@ plane.
         cmap='gist_heat',
         units=units,
     )
-
-    plt.show()

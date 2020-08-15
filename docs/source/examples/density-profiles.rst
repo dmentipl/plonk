@@ -38,5 +38,3 @@ Plot a density profile for multiple snapshots.
         )
     ax.set_ylabel('Surface Density [g/cm${}^2$]')
     ax.legend(title='Time [yr]', loc='best')
-
-    plt.show()

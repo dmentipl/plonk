@@ -92,5 +92,3 @@ Plot deviation from Keplerian velocity around planet.
     # Add colorbar
     cbar = grid.cbar_axes[0].colorbar(ax.images[0])
     cbar.set_label_text(r'$\Delta v_{\phi}$ [km/s]')
-
-    plt.show()
