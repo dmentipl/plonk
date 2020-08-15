@@ -19,6 +19,13 @@ Types of changes:
 
 - Added plonk.image to make image plots (with interpolation and then matplotlib imshow).
 - Added plonk.vector to make vector plots (with interpolation and then matplotlib quiver).
+- Added plot_smoothing_length function to plot the smoothing length on particles, or accretion radius on sink particles.
+- Added pretty_array_name function to prettify array names.
+- Added visualize_sim as a method on Simulation objects.
+- Allow getting subsets of Sinks.
+- Added ax_kwargs to plotting functions for passing to ax.set.
+- Added xlim, ylim on visualize.plot.
+- Added units_dict function to return a units dictionary for passing to plotting functions.
 
 ### Changed
 
@@ -26,6 +33,17 @@ Types of changes:
 - Changed plonk.plot to produce particle plots
 - Renamed MultiVisualization and plot_snaps to VisualizeSimulation and visualize_sim.
 - Changed units system from cgs to SI.
+- Simplified animation functions by only allowing one axes per animation.
+- Changed default units to more conventional SI units, e.g. Pascal for pressure and Joule for energy.
+- Simplified tree and neighbours functions on Snap. Now there is only one tree for a Snap. If you want a tree for just, say, dust particles, then first create a SubSnap and get the tree on that.
+- Changed _Sinks into Sinks, i.e. a public class.
+- All plotting functions/methods use the same argument for setting units.
+- Renamed Snap.available_arrays argument "all" to "verbose".
+- Changed Snap.units to Snap.code_units.
+
+### Fixed
+
+- Fixed writing Snap.to_dataframe units.
 
 ## [0.6.2] - 2020-08-11
 
