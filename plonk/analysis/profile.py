@@ -345,7 +345,7 @@ class Profile:
         """Return a listing of available profiles."""
         loaded = list(self.loaded_profiles())
         available = list(self._profile_functions.keys())
-        snap_arrays = _1d_arrays(list(self.snap.available_arrays(all=True)))
+        snap_arrays = _1d_arrays(list(self.snap.available_arrays(verbose=True)))
         return tuple(sorted(set(loaded + available + snap_arrays)))
 
     def get_canonical_profile_name(self, name):

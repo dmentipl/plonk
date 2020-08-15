@@ -252,7 +252,7 @@ class Snap:
         return tuple(sorted(self._arrays.keys()))
 
     def _available_arrays(
-        self, sinks: bool = False, all: bool = False, aliases: bool = False
+        self, sinks: bool = False, verbose: bool = False, aliases: bool = False
     ):
         """Return a tuple of available arrays.
 
@@ -261,8 +261,9 @@ class Snap:
         sinks
             If True, return available sink arrays. Default is
             False.
-        all
-            TODO. Default is False
+        verbose
+            Also display suffixed arrays, e.g. 'position_x',
+            'position_y', etc. Default is False
         aliases
             If True, return array aliases. Default is False.
 
@@ -276,7 +277,7 @@ class Snap:
         else:
             loaded = self.loaded_arrays()
             registered = list(sorted(self._array_registry.keys()))
-        if all:
+        if verbose:
             for arr in self._vector_arrays:
                 if arr in registered:
                     registered += [f'{arr}_x', f'{arr}_y', f'{arr}_z', f'{arr}_mag']
@@ -302,13 +303,14 @@ class Snap:
 
         return tuple(sorted(set(loaded + tuple(registered))))
 
-    def available_arrays(self, all: bool = False, aliases: bool = False):
+    def available_arrays(self, verbose: bool = False, aliases: bool = False):
         """Return a tuple of available particle arrays.
 
         Parameters
         ----------
-        all
-            TODO. Default is False
+        verbose
+            Also display suffixed arrays, e.g. 'position_x',
+            'position_y', etc. Default is False
         aliases
             If True, return array aliases. Default is False.
 
@@ -316,7 +318,7 @@ class Snap:
         -------
         A tuple of names of available arrays.
         """
-        return self._available_arrays(sinks=False, all=all, aliases=aliases)
+        return self._available_arrays(sinks=False, verbose=verbose, aliases=aliases)
 
     def bulk_load(self, arrays: List[str] = None):
         """Load arrays into memory in bulk.
@@ -1037,7 +1039,7 @@ class Snap:
 
     def _ipython_key_completions_(self):
         """Tab completion for IPython __getitem__ method."""
-        return self.available_arrays(all=True)
+        return self.available_arrays(verbose=True)
 
     def __len__(self):
         """Length as number of particles."""
@@ -1197,13 +1199,14 @@ class Sinks:
         """Sink particle indices."""
         return self._indices
 
-    def available_arrays(self, all: bool = False, aliases: bool = False):
+    def available_arrays(self, verbose: bool = False, aliases: bool = False):
         """Return a tuple of available sink arrays.
 
         Parameters
         ----------
-        all
-            TODO. Default is False
+        verbose
+            Also display suffixed arrays, e.g. 'position_x',
+            'position_y', etc. Default is False
         aliases
             If True, return array aliases. Default is False.
 
@@ -1211,7 +1214,7 @@ class Sinks:
         -------
         A tuple of names of available arrays.
         """
-        return self.base._available_arrays(sinks=True, all=all, aliases=aliases)
+        return self.base._available_arrays(sinks=True, verbose=verbose, aliases=aliases)
 
     def loaded_arrays(self):
         """Return a tuple of loaded arrays.
@@ -1253,7 +1256,7 @@ class Sinks:
 
     def _ipython_key_completions_(self):
         """Tab completion for IPython __getitem__ method."""
-        return self.available_arrays(all=True)
+        return self.available_arrays(verbose=True)
 
     plot = visualize.plot
 
