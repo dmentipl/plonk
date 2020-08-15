@@ -1069,7 +1069,7 @@ class SubSnap(Snap):
     Parameters
     ----------
     base
-        The base Snap.
+        The base Snap or SubSnap
     indices
         A (N,) array of particle indices to include in the SubSnap.
 
@@ -1077,7 +1077,7 @@ class SubSnap(Snap):
     --------
     Generate a SubSnap directly.
 
-    >>> subsnap = SubSnap(snap=snap, indices=[0, 1, 2, 3])
+    >>> subsnap = SubSnap(base=snap, indices=[0, 1, 2, 3])
 
     You can generate a SubSnap from a Snap object. For example, generate
     a SubSnap of the gas particles on a Snap.
@@ -1166,7 +1166,7 @@ class Sinks:
     --------
     Generate a Sinks object directly.
 
-    >>> sinks = Sinks(snap=snap)
+    >>> sinks = Sinks(base=snap)
 
     Generate a Sinks object from a Snap object.
 
