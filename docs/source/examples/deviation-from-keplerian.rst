@@ -4,6 +4,8 @@ Deviation from Keplerian
 
 Plot deviation from Keplerian velocity around planet.
 
+.. figure:: ../_static/deviation_from_keplerian.png
+
 .. code-block:: python
 
     import matplotlib.pyplot as plt
@@ -92,5 +94,3 @@ Plot deviation from Keplerian velocity around planet.
     cbar.set_label_text(r'$\Delta v_{\phi}$ [km/s]')
 
     plt.show()
-
-.. figure:: ../_static/deviation_from_keplerian.png

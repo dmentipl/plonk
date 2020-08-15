@@ -4,6 +4,8 @@ Accretion radius
 
 Plot the accretion radius on the sink particles.
 
+.. figure:: ../_static/accretion_radius.png
+
 .. code-block:: python
 
     import plonk
@@ -26,5 +28,3 @@ Plot the accretion radius on the sink particles.
         alpha=0.8,
         ax=ax,
     )
-
-.. figure:: ../_static/accretion_radius.png

@@ -5,6 +5,9 @@ Rotate snapshot
 Rotate a snapshot and plot column density and density cross-section in the disc
 plane.
 
+.. figure:: ../_static/rotate.png
+.. figure:: ../_static/rotate2.png
+
 .. code-block:: python
 
     import matplotlib.pyplot as plt
@@ -39,6 +42,3 @@ plane.
     )
 
     plt.show()
-
-.. figure:: ../_static/rotate.png
-.. figure:: ../_static/rotate2.png

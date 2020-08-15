@@ -5,6 +5,8 @@ Vertical profile in a disc
 Calculate and plot the density and temperature vertical profiles at multiple
 radii in a disc.
 
+.. figure:: ../_static/vertical_profile.png
+
 .. code-block:: python
 
     import matplotlib.pyplot as plt
@@ -91,6 +93,3 @@ radii in a disc.
     axs[0].legend(title='Radius', loc='upper right')
     axs[1].legend().remove()
     plt.show()
-
-
-.. figure:: ../_static/vertical_profile.png

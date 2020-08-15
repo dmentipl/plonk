@@ -4,6 +4,8 @@ Density profiles
 
 Plot a density profile for multiple snapshots.
 
+.. figure:: ../_static/density_profile.png
+
 .. code-block:: python
 
     import matplotlib.pyplot as plt
@@ -38,5 +40,3 @@ Plot a density profile for multiple snapshots.
     ax.legend(title='Time [yr]', loc='best')
 
     plt.show()
-
-.. figure:: ../_static/density_profile.png

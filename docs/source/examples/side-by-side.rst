@@ -4,6 +4,8 @@ Side by side
 
 Plot dust and gas side-by-side.
 
+.. figure:: ../_static/dust_and_gas.png
+
 .. code-block:: python
 
     import matplotlib.pyplot as plt
@@ -22,5 +24,3 @@ Plot dust and gas side-by-side.
     gas.image(quantity='density', extent=extent, cmap='Blues_r', ax=axs[0])
     dust.image(quantity='density', extent=extent, cmap='Reds_r', ax=axs[1])
     plt.show()
-
-.. figure:: ../_static/dust_and_gas.png

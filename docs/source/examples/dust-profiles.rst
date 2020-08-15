@@ -4,6 +4,14 @@ Dust profiles
 
 Plot the dust density profile per species.
 
+.. figure:: ../_static/dust_profiles.png
+
+.. note::
+
+    The data is from a Phantom snapshot with multiple dust species using the
+    mixture (or "1-fluid") method. I.e., the particles carry a mixture of dust
+    and gas.
+
 .. code-block:: python
 
     import plonk
@@ -23,11 +31,3 @@ Plot the dust density profile per species.
 
     units = {'position': 'au', 'dust_density': 'g/cm^3'}
     ax = prof.plot(x='radius', y=y, units=units, ax_kwargs={'yscale': 'log'})
-
-.. figure:: ../_static/dust_profiles.png
-
-.. note::
-
-    The data is from a Phantom snapshot with multiple dust species using the
-    mixture (or "1-fluid") method. I.e., the particles carry a mixture of dust
-    and gas.

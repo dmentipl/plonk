@@ -4,6 +4,8 @@ Accretion onto sinks
 
 Plot mass accretion and accretion rate onto sink particles.
 
+.. figure:: ../_static/accretion.png
+
 .. code-block:: python
 
     import matplotlib.pyplot as plt
@@ -65,7 +67,3 @@ Plot mass accretion and accretion rate onto sink particles.
     ax[1].set_ylabel('Accretion rate [$M_{\oplus}$/yr]')
 
     plt.show()
-
-
-
-.. figure:: ../_static/accretion.png

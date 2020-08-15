@@ -4,6 +4,8 @@ Cross section
 
 Plot cross section at z=0.
 
+.. figure:: ../_static/cross_section.png
+
 .. code-block:: python
 
     import matplotlib.pyplot as plt
@@ -21,5 +23,3 @@ Plot cross section at z=0.
         cmap='gist_heat',
     )
     plt.show()
-
-.. figure:: ../_static/cross_section.png
