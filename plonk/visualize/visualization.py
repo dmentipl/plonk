@@ -13,6 +13,7 @@ from numpy import ndarray
 from .._logging import logger
 from .._units import Quantity
 from .._units import units as plonk_units
+from ..utils.utils import pretty_array_name
 from . import plots
 from .functions import get_extent_from_percentile
 from .interpolation import interpolate
@@ -475,8 +476,9 @@ def _interpolated_plot(
     eunit = units['extent']
     if np.allclose(eunit.magnitude, 1.0):
         eunit = eunit.units
-    ax.set_xlabel(f'{names["x"]} [{eunit:~P}]')
-    ax.set_ylabel(f'{names["y"]} [{eunit:~P}]')
+    xname, yname = pretty_array_name(names["x"]), pretty_array_name(names["y"])
+    ax.set_xlabel(f'{xname} [{eunit:~P}]')
+    ax.set_ylabel(f'{yname} [{eunit:~P}]')
 
     ratio = (extent[1] - extent[0]) / (extent[3] - extent[2])
     if not max(ratio, 1 / ratio) > 10.0:
@@ -501,7 +503,8 @@ def _interpolated_plot(
             qunit = units['quantity']
         if np.allclose(qunit.magnitude, 1.0):
             qunit = qunit.units
-        cbar.set_label(f'{names["quantity"]} [{qunit:~P}]')
+        qname = pretty_array_name(names["quantity"])
+        cbar.set_label(f'{qname} [{qunit:~P}]')
 
 
 def plot(
@@ -707,8 +710,9 @@ def _plot_plot(
         xunit = xunit.units
     if np.allclose(yunit.magnitude, 1.0):
         yunit = yunit.units
-    ax.set_xlabel(f'{names["x"]} [{xunit:~P}]')
-    ax.set_ylabel(f'{names["y"]} [{yunit:~P}]')
+    xname, yname = pretty_array_name(names["x"]), pretty_array_name(names["y"])
+    ax.set_xlabel(f'{xname} [{xunit:~P}]')
+    ax.set_ylabel(f'{yname} [{yunit:~P}]')
 
     ax.set(**ax_kwargs)
 
@@ -739,7 +743,8 @@ def _plot_plot(
         cunit = units['c']
         if np.allclose(cunit.magnitude, 1.0):
             cunit = cunit.units
-        cbar.set_label(f'{names["c"]} [{cunit:~P}]')
+        cname = pretty_array_name(names["c"])
+        cbar.set_label(f'{cname} [{cunit:~P}]')
 
 
 def _convert_units_for_interpolation(

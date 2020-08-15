@@ -19,7 +19,7 @@ from .._logging import logger
 from .._units import Quantity
 from .._units import units as plonk_units
 from ..utils.math import average
-from ..utils.utils import is_documented_by
+from ..utils.utils import is_documented_by, pretty_array_name
 
 if TYPE_CHECKING:
     from ..snap.snap import SnapLike
@@ -429,7 +429,8 @@ class Profile:
         if ax is None:
             _, ax = plt.subplots()
 
-        ax.set_xlabel(f'{x} [{_x.units:~P}]')
+        xname = pretty_array_name(x)
+        ax.set_xlabel(f'{xname} [{_x.units:~P}]')
         _x = _x.magnitude
 
         for idx, yi in enumerate(y):
@@ -452,7 +453,8 @@ class Profile:
                 if std_dev_shading:
                     _y_std = _y_std.to(y_unit[idx])
                     _y_mean = _y_mean.to(y_unit[idx])
-            label = f'{yi} [{_y.units:~P}]'
+            yname = pretty_array_name(yi)
+            label = f'{yname} [{_y.units:~P}]'
             _y = _y.magnitude
             if std_dev_shading:
                 _y_std = _y_std.magnitude
