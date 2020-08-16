@@ -24,6 +24,7 @@ from .._units import Quantity
 from .._units import units as plonk_units
 from ..utils.kernels import kernel_names, kernel_radius
 from ..utils.math import norm
+from . import context
 
 
 class Snap:
@@ -1081,6 +1082,7 @@ class Snap:
     image = visualize.image
     plot = visualize.plot
     vector = visualize.vector
+    context = context.context
 
 
 class SubSnap(Snap):

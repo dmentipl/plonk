@@ -312,6 +312,29 @@ def test_plot_as_methods():
     subsnap.image('density', number_of_pixels=(16, 16))
     subsnap.plot()
 
+    snap.close_file()
+
+
+def test_context():
+    """Testing cache context manager."""
+    snap = plonk.load_snap(TEST_FILE)
+
+    snap.cache_arrays = True
+    with snap.context(cache=False):
+        assert snap.loaded_arrays() == ()
+        with snap.context(cache=True):
+            snap.image('density', number_of_pixels=(16, 16))
+            assert snap.loaded_arrays() == (
+                'density',
+                'mass',
+                'position',
+                'smoothing_length',
+            )
+        assert snap.loaded_arrays() == ()
+    assert snap.loaded_arrays() == ()
+
+    snap.close_file()
+
 
 def _check_arrays(snap):
     for array in mean_array_values.keys():
