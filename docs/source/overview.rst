@@ -380,7 +380,7 @@ Let's plot the gas and dust side-by-side.
 .. code-block:: pycon
 
     >>> subsnaps = [gas, dust]
-    >>> extent = (-200, 200, -200, 200) * au
+    >>> extent = (-200, 200, -200, 200) * plonk.units['au']
 
     >>> fig, axs = plt.subplots(ncols=2, figsize=(14, 5))
 

@@ -194,7 +194,6 @@ class Snap:
         self._num_particles_of_type = -1
         self._num_sinks = -1
         self._num_dust_species = -1
-        self._families = {key: None for key in self.particle_type}
         self.rotation = None
         self.translation = None
         self._tree = None
@@ -578,7 +577,7 @@ class Snap:
         return self
 
     def particle_indices(
-        self, particle_type: str, squeeze_subtype: bool = False,
+        self, particle_type: str, squeeze: bool = False,
     ) -> Union[ndarray, List[ndarray]]:
         """Particle indices of a particular type.
 
@@ -586,7 +585,7 @@ class Snap:
         ----------
         particle_type
             The particle type as a string.
-        squeeze_subtype
+        squeeze
             If True return all subtypes in a single array. Default is
             False.
 
@@ -595,10 +594,10 @@ class Snap:
         ndarray or list of ndarray
             If particle has no subtypes then returns an array of
             indices of that type. Otherwise return a list of arrays of
-            indices, one for each subtype. However, if squeeze_subtype
+            indices, one for each subtype. However, if squeeze
             is True, return a single array.
         """
-        if particle_type == 'dust' and not squeeze_subtype:
+        if particle_type == 'dust' and not squeeze:
             # Dust particle sub-type skips zero: 1, 2, 3 ...
             return [
                 np.flatnonzero(
@@ -607,7 +606,7 @@ class Snap:
                 )
                 for idx in range(self.num_dust_species)
             ]
-        if particle_type == 'boundary' and not squeeze_subtype:
+        if particle_type == 'boundary' and not squeeze:
             # Boundary particle sub-type: 0 (gas), 1, 2, 3... (dust)
             return [
                 np.flatnonzero(
@@ -859,19 +858,56 @@ class Snap:
                     d[f'{name}.{idx+1}' + suffix] = array[:, idx]
         return pd.DataFrame(d)
 
-    def _get_family_subsnap(self, name: str):
-        """Get a family by name."""
-        if name in self._families:
-            if self._families[name] is None:
-                ind = self.particle_indices(name)
-                if len(ind) == 0:
-                    raise ValueError(f'No {name} particles available')
-                self._families[name] = ind
-            ind = self._families[name]
+    def family(self, name: str, squeeze: bool = False):
+        """Get a SubSnap of a particle family by name.
+
+        Parameters
+        ----------
+        name
+            A string representing the name of the family of particles,
+            e.g. 'gas'.
+        squeeze
+            Squeeze sub-types. If False and the particle family has
+            sub-types then return a list of SubSnaps of each sub-type.
+            Otherwise return a SubSnap with all particle of that type.
+
+        Returns
+        -------
+        SubSnap or List[SubSnap]
+            If the particle family has no sub-types then return a
+            SubSnap. Otherwise, if split_subtype is True, return a list
+            of SubSnaps.
+        """
+        if name in self.particle_type:
+            ind = self.particle_indices(particle_type=name, squeeze=squeeze)
             if isinstance(ind, list):
                 return [SubSnap(self, _ind) for _ind in ind]
             return SubSnap(self, ind)
         raise ValueError('Family not available')
+
+    def array(self, name: str, sinks: bool = False) -> Quantity:
+        """Get a particle (or sink) array.
+
+        Parameters
+        ----------
+        name
+            A string representing the name of the particle array.
+        sinks
+            Whether or not to reference particle or sinks arrays.
+
+        Returns
+        -------
+        Quantity
+        """
+        base_name = self.base_array_name(name)
+        suffix = self._array_suffix(name)
+        array = self._get_array(base_name, sinks)
+        if suffix == '':
+            return array
+        transform, _slice, kwargs = self._array_transform(
+            base_name=base_name, suffix=suffix
+        )
+        return transform(array, **kwargs)[_slice]
 
     def get_array_code_unit(self, arr: str) -> Any:
         """Get array code units.
@@ -903,8 +939,8 @@ class Snap:
                 unit *= self.code_units[d] ** dim[f'[{d}]']
         return unit
 
-    def get_canonical_array_name(self, name: str) -> str:
-        """Get the canonical array name from a string.
+    def base_array_name(self, name: str) -> str:
+        """Get the base array name from a string.
 
         For example, 'velocity_x' returns 'velocity', 'density' returns
         'density', 'dust_fraction_001' returns 'dust_fraction', 'x'
@@ -922,25 +958,85 @@ class Snap:
         """
         if name in self.available_arrays():
             return name
+        if name in self.sinks.available_arrays():
+            return name
         if name in self._array_name_mapper:
             return self._array_name_mapper[name]
         if name in self._array_split_mapper:
             return self._array_split_mapper[name][0]
         if name in self._arrays:
             return name
+        if name in self._sinks:
+            return name
 
         name_root = '_'.join(name.split('_')[:-1])
-        if name_root not in self.available_arrays():
+        if (
+            name_root not in self.available_arrays()
+            and name_root not in self.sinks.available_arrays()
+        ):
+            raise ValueError('Unknown array')
+        name_suffix = name.split('_')[-1]
+        if name_root in self._vector_arrays and name_suffix in ('x', 'y', 'z', 'mag'):
+            return name_root
+        if name_root in self._dust_arrays:
+            if _str_is_int(name_suffix) or name_suffix == 'tot':
+                return name_root
+
+        raise ValueError('Unknown array')
+
+    def _array_suffix(self, name: str) -> str:
+        d = {0: 'x', 1: 'y', 2: 'z'}
+        if (
+            name in self.available_arrays()
+            or name in self.sinks.available_arrays()
+            or name in self._array_name_mapper
+        ):
+            return ''
+        if name in self._array_split_mapper:
+            return d[self._array_split_mapper[name][1]]
+        if name in self._arrays:
+            return ''
+        if name in self._sinks:
+            return ''
+
+        name_root = '_'.join(name.split('_')[:-1])
+        if (
+            name_root not in self.available_arrays()
+            and name_root not in self.sinks.available_arrays()
+        ):
             raise ValueError('Unknown array')
         name_suffix = name.split('_')[-1]
         if name_root in self._vector_arrays:
             if name_suffix in ('x', 'y', 'z', 'mag'):
-                return name_root
+                return name_suffix
         if name_root in self._dust_arrays:
             if _str_is_int(name_suffix):
-                return name_root
+                return name_suffix
             if name_suffix == 'tot':
-                return name_root
+                return name_suffix
+
+        raise ValueError('Unknown array')
+
+    def _array_transform(
+        self, base_name: str, suffix: str
+    ) -> Tuple[Callable, tuple, Dict[str, Any]]:
+        def nothing(x):
+            return x
+
+        if base_name in self._vector_arrays:
+            if suffix == 'x':
+                return nothing, (..., 0), {}
+            if suffix == 'y':
+                return nothing, (..., 1), {}
+            if suffix == 'z':
+                return nothing, (..., 2), {}
+            if suffix == 'mag':
+                return norm, (), {'axis': 1}
+        if base_name in self._dust_arrays:
+            if _str_is_int(suffix):
+                return nothing, (..., int(suffix) - 1), {}
+            if suffix == 'tot':
+                return np.sum, (), {'axis': 1}
 
         raise ValueError('Unknown array')
 
@@ -958,25 +1054,12 @@ class Snap:
 
     def _get_array(self, name: str, sinks: bool = False) -> ndarray:
         """Get an array by name."""
-        index = None
-
-        if name in self._available_arrays(sinks):
-            pass
-        elif name in self._array_name_mapper.keys():
-            name = self._array_name_mapper[name]
-        elif name in self._array_split_mapper.keys():
-            name, index = self._array_split_mapper[name]
-        else:
-            raise ValueError('Array not available')
-
         if sinks:
             array_dict = self._sinks
         else:
             array_dict = self._arrays
         if name in array_dict:
-            if index is None:
-                return array_dict[name]
-            return array_dict[name][:, index]
+            return array_dict[name]
         if name in self._array_registry or name in self._sink_registry:
             array = self._get_array_from_registry(name, sinks)
             if self.cache_arrays:
@@ -984,53 +1067,20 @@ class Snap:
                     self._sinks[name] = array
                 else:
                     self._arrays[name] = array
-            if index is None:
-                return array
-            return array[:, index]
+            return array
         raise ValueError('Array not available')
-
-    def _getitem_from_str(self, inp: str, sinks: bool = False) -> ndarray:
-        """Return item from string."""
-        inp_root = '_'.join(inp.split('_')[:-1])
-        inp_suffix = inp.split('_')[-1]
-
-        if inp in self._families:
-            return self._get_family_subsnap(inp)
-        if inp in self._available_arrays(sinks):
-            return self._get_array(inp, sinks)
-        if inp in self._array_name_mapper.keys():
-            return self._get_array(inp, sinks)
-        if inp in self._array_split_mapper.keys():
-            return self._get_array(inp, sinks)
-        if inp_root in self._vector_arrays:
-            if inp_suffix == 'x':
-                return self._get_array(inp_root, sinks)[:, 0]
-            if inp_suffix == 'y':
-                return self._get_array(inp_root, sinks)[:, 1]
-            if inp_suffix == 'z':
-                return self._get_array(inp_root, sinks)[:, 2]
-            if inp_suffix == 'mag':
-                return norm(self._get_array(inp_root, sinks), axis=1)
-        if inp_root in self._dust_arrays:
-            if _str_is_int(inp_suffix):
-                return self._get_array(inp_root)[:, int(inp_suffix) - 1]
-            if inp_suffix == 'tot':
-                return self._get_array(inp_root).sum(axis=1)
-
-        raise ValueError('Cannot determine item to return.')
 
     def _getitem(
         self, inp: Union[str, ndarray, int, slice], sinks: bool = False,
     ) -> Union[ndarray, SubSnap]:
         """Return an array, or family, or subset."""
         if isinstance(inp, str):
-            return self._getitem_from_str(inp, sinks)
+            if inp in self.particle_type:
+                return self.family(name=inp)
+            return self.array(name=inp, sinks=sinks)
         if sinks:
             raise ValueError('Cannot return sinks as SubSnap')
-        ind = _input_indices_array(inp=inp, max_slice=len(self))
-        if ind is not None:
-            return SubSnap(self, ind)
-        raise ValueError('Cannot determine item to return')
+        return SubSnap(self, inp)
 
     def __getitem__(
         self, inp: Union[str, ndarray, int, slice]
@@ -1039,7 +1089,7 @@ class Snap:
         return self._getitem(inp, sinks=False)
 
     def __setitem__(self, name: str, item: ndarray):
-        """Set an array."""
+        """Set a particle array."""
         if not isinstance(item, (ndarray, Quantity)):
             raise ValueError('"item" must be ndarray or Pint Quantity')
         if item.shape[0] != len(self):
@@ -1127,7 +1177,7 @@ class SubSnap(Snap):
         self.base = base
 
         ind = _input_indices_array(inp=indices, max_slice=len(base))
-        if ind is None:
+        if len(ind) == 0:
             raise ValueError('SubSnap has no particles')
         self._indices = ind
 
@@ -1210,12 +1260,11 @@ class Sinks:
         self, base: Snap, indices: Union[ndarray, slice, list, int, tuple] = None
     ):
         self.base = base
-        self._getitem_from_str = base._getitem_from_str
 
         if indices is None:
             indices = np.arange(base.num_sinks)
         ind = _input_indices_array(inp=indices, max_slice=base.num_sinks)
-        if ind is None:
+        if len(ind) == 0:
             raise ValueError('Sinks has no particles')
         self._indices = ind
 
@@ -1264,7 +1313,7 @@ class Sinks:
     def __getitem__(self, inp):
         """Return an array or subset."""
         if isinstance(inp, str):
-            return np.squeeze(self._getitem_from_str(inp, sinks=True)[self.indices])[()]
+            return np.squeeze(self.base.array(inp, sinks=True)[self.indices])[()]
         ind = _input_indices_array(inp=inp, max_slice=len(self))
         if ind is not None:
             return Sinks(self.base, ind)
@@ -1313,4 +1362,4 @@ def _input_indices_array(inp: Union[ndarray, slice, list, int, tuple], max_slice
         i1 = inp.start if inp.start is not None else 0
         i2 = inp.stop if inp.stop is not None else max_slice
         return np.arange(i1, i2, inp.step)
-    return None
+    return []

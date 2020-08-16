@@ -378,9 +378,7 @@ def _interpolated_data(
         }
     else:
         qunit = 1 * plonk_units(
-            units.get(
-                snap.get_canonical_array_name(quantity), str(snap[quantity].units)
-            )
+            units.get(snap.base_array_name(quantity), str(snap[quantity].units))
         )
         eunit = 1 * plonk_units(units.get('position', str(snap['position'].units)))
         punit = 1 * plonk_units(units.get('projection', str(snap['position'].units)))
@@ -651,17 +649,17 @@ def _plot_data(snap, x, y, c, s, units):
         if s is not None:
             _units['s'] = 1 * snap[s].units
     else:
-        xunit = units.get(snap.get_canonical_array_name(x), str(snap[x].units))
-        yunit = units.get(snap.get_canonical_array_name(y), str(snap[y].units))
+        xunit = units.get(snap.base_array_name(x), str(snap[x].units))
+        yunit = units.get(snap.base_array_name(y), str(snap[y].units))
         _units = {
             'x': 1 * plonk_units(xunit),
             'y': 1 * plonk_units(yunit),
         }
         if c is not None:
-            cunit = units.get(snap.get_canonical_array_name(c), str(snap[c].units))
+            cunit = units.get(snap.base_array_name(c), str(snap[c].units))
             _units['c'] = 1 * plonk_units(cunit)
         if s is not None:
-            sunit = units.get(snap.get_canonical_array_name(s), str(snap[s].units))
+            sunit = units.get(snap.base_array_name(s), str(snap[s].units))
             _units['s'] = 1 * plonk_units(sunit)
 
     _x = _x.to(_units['x']).magnitude
@@ -681,7 +679,7 @@ def _plot_data(snap, x, y, c, s, units):
             _c = _c[mask]
         if _s is not None:
             _s = _s[mask]
-    except ValueError:
+    except KeyError:
         # sink particles do not have smoothing length
         pass
 

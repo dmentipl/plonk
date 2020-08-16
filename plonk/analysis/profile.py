@@ -361,7 +361,7 @@ class Profile:
             The canonical name.
         """
         try:
-            return self.snap.get_canonical_array_name(name)
+            return self.snap.base_array_name(name)
         except ValueError:
             if name == self._coordinate:
                 return 'position'
