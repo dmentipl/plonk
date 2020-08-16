@@ -235,7 +235,11 @@ def _get_dataset(dataset: str, group: str) -> Callable:
             try:
                 unit = snap._array_units[_sink_array_name_map[dataset]]
             except KeyError:
-                raise RuntimeError(f'Cannot get unit of {group}/{dataset}')
+                logger.error(
+                    f'Cannot get unit of dataset "{group}/{dataset}" - '
+                    'assuming dimensionless'
+                )
+                unit = plonk_units('dimensionless')
         return array * unit
 
     return func
