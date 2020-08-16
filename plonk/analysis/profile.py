@@ -145,7 +145,7 @@ class Profile:
         self.spacing = _check_spacing(spacing)
         self.properties: Dict[str, Any] = {}
 
-        self._profiles: Dict[str, ndarray] = {}
+        self._profiles: Dict[str, Quantity] = {}
 
         self._weights = self.snap['mass']
         self._mask = self._setup_particle_mask(ignore_accreted)
@@ -177,11 +177,11 @@ class Profile:
     def _setup_particle_mask(self, ignore_accreted: bool) -> ndarray:
         if ignore_accreted is False:
             return np.ones(len(self.snap), dtype=bool)
-        h: ndarray = self.snap['h']
+        h: Quantity = self.snap['h']
         return h > 0
 
-    def _calculate_x(self, coordinate) -> ndarray:
-        pos: ndarray = self.snap['position']
+    def _calculate_x(self, coordinate) -> Quantity:
+        pos: Quantity = self.snap['position']
         pos = pos[self._mask]
         if self.ndim == 1:
             if coordinate == 'x':
@@ -215,7 +215,7 @@ class Profile:
 
         return rmin, rmax
 
-    def _setup_bins(self) -> ndarray:
+    def _setup_bins(self) -> Quantity:
         bin_edges = self._bin_edges()
         if self.ndim == 1:
             bin_sizes = bin_edges[1:] - bin_edges[:-1]
@@ -257,7 +257,7 @@ class Profile:
             prev_index = new_index
         return binind
 
-    def _getitem(self, name: str) -> ndarray:
+    def _getitem(self, name: str) -> Quantity:
         """Return the profile of a given kind."""
         name_root = '_'.join(name.split('_')[:-1])
         name_suffix = name.split('_')[-1]
@@ -275,7 +275,7 @@ class Profile:
             aggregation = self.aggregation
             array_name = name
         try:
-            array: ndarray = self.snap[array_name]
+            array: Quantity = self.snap[array_name]
         except ValueError as e:
             logger.error(e)
             raise ValueError(f'array "{array_name}" not available on snap')
@@ -290,14 +290,14 @@ class Profile:
             'or\nprof["dust_mass_tot"].'
         )
 
-    def __getitem__(self, name: str) -> ndarray:
+    def __getitem__(self, name: str) -> Quantity:
         """Return the profile of a given kind."""
         return self._getitem(name)
 
-    def __setitem__(self, name: str, item: ndarray):
+    def __setitem__(self, name: str, item: Quantity):
         """Set the profile directly."""
-        if not isinstance(item, (ndarray, Quantity)):
-            raise ValueError('"item" must be ndarray or pint Quantity')
+        if not isinstance(item, Quantity):
+            raise ValueError('"item" must be pint Quantity')
         if item.shape[0] != self.n_bins:
             raise ValueError('Length of array does not match number of bins')
         if name in self.loaded_profiles():
@@ -564,7 +564,9 @@ class Profile:
             data[name] = array
         return pd.DataFrame(data)
 
-    def particles_to_binned_quantity(self, aggregation: str, array: ndarray) -> ndarray:
+    def particles_to_binned_quantity(
+        self, aggregation: str, array: Quantity
+    ) -> Quantity:
         """Calculate binned quantities from particles.
 
         This takes care of the bin indices and ignoring accreted
@@ -608,13 +610,13 @@ class Profile:
 
 def _generate_profiles(num_mixture_dust_species: int = 0):
     @Profile.profile_property
-    def mass(prof) -> ndarray:
+    def mass(prof) -> Quantity:
         """Mass profile."""
         M = prof.snap['mass']
         return prof.particles_to_binned_quantity('sum', M)
 
     @Profile.profile_property
-    def surface_density(prof) -> ndarray:
+    def surface_density(prof) -> Quantity:
         """Surface density profile.
 
         Units are [mass / length ** ndim], which depends on ndim of profile.
@@ -622,20 +624,20 @@ def _generate_profiles(num_mixture_dust_species: int = 0):
         return prof['mass'] / prof['size']
 
     @Profile.profile_property
-    def scale_height(prof) -> ndarray:
+    def scale_height(prof) -> Quantity:
         """Scale height profile."""
         z = prof.snap['z']
         return prof.particles_to_binned_quantity('std', z)
 
     @Profile.profile_property
-    def aspect_ratio(prof) -> ndarray:
+    def aspect_ratio(prof) -> Quantity:
         """Aspect ratio profile."""
         H = prof['scale_height']
         R = prof['radius']
         return H / R
 
     @Profile.profile_property
-    def angular_momentum_theta(prof) -> ndarray:
+    def angular_momentum_theta(prof) -> Quantity:
         """Angle between specific angular momentum and xy-plane."""
         angular_momentum_z = prof['angular_momentum_z']
         angular_momentum_magnitude = prof['angular_momentum_mag']
@@ -643,14 +645,14 @@ def _generate_profiles(num_mixture_dust_species: int = 0):
         return np.arccos(angular_momentum_z / angular_momentum_magnitude)
 
     @Profile.profile_property
-    def angular_momentum_phi(prof) -> ndarray:
+    def angular_momentum_phi(prof) -> Quantity:
         """Angle between specific angular momentum and x-axis in xy-plane."""
         angular_momentum_x = prof['angular_momentum_x']
         angular_momentum_y = prof['angular_momentum_y']
         return np.arctan2(angular_momentum_y, angular_momentum_x)
 
     @Profile.profile_property
-    def toomre_Q(prof) -> ndarray:
+    def toomre_Q(prof) -> Quantity:
         """Toomre Q parameter."""
         G = (1 * plonk_units.newtonian_constant_of_gravitation).to_base_units()
         return (
@@ -662,13 +664,13 @@ def _generate_profiles(num_mixture_dust_species: int = 0):
     if num_mixture_dust_species > 0:
 
         @Profile.profile_property
-        def gas_mass(prof) -> ndarray:
+        def gas_mass(prof) -> Quantity:
             """Gas mass profile."""
             M = prof.snap['gas_mass']
             return prof.particles_to_binned_quantity('sum', M)
 
         @Profile.profile_property
-        def gas_surface_density(prof) -> ndarray:
+        def gas_surface_density(prof) -> Quantity:
             """Gas surface density profile.
 
             Units are [mass / length ** ndim], which depends on ndim of profile.
@@ -677,12 +679,12 @@ def _generate_profiles(num_mixture_dust_species: int = 0):
 
         for idx in range(num_mixture_dust_species):
 
-            def dust_mass(idx, prof) -> ndarray:
+            def dust_mass(idx, prof) -> Quantity:
                 """Dust mass profile."""
                 M = prof.snap[f'dust_mass_{idx+1:03}']
                 return prof.particles_to_binned_quantity('sum', M)
 
-            def dust_surface_density(idx, prof) -> ndarray:
+            def dust_surface_density(idx, prof) -> Quantity:
                 """Dust surface density profile.
 
                 Units are [mass / length ** ndim], which depends on ndim of profile.

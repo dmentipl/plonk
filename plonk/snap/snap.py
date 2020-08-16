@@ -817,7 +817,7 @@ class Snap:
             filename = f'{self.file_path.stem}_extra.h5'
         f = h5py.File(filename, mode='r')
         for array in f:
-            self[array] = f[array][()]
+            self[array] = f[array][()] * plonk_units['dimensionless']
         f.close()
 
         return self
@@ -1098,8 +1098,8 @@ class Snap:
 
     def __setitem__(self, name: str, item: Quantity):
         """Set a particle array."""
-        if not isinstance(item, (ndarray, Quantity)):
-            raise ValueError('"item" must be ndarray or Pint Quantity')
+        if not isinstance(item, Quantity):
+            raise ValueError('"item" must be Pint Quantity')
         if item.shape[0] != len(self):
             raise ValueError('Length of array does not match particle number')
         if name in self.loaded_arrays():

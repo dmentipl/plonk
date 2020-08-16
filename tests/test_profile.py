@@ -64,7 +64,7 @@ def test_set_data():
     snap = plonk.load_snap(TEST_FILE)
 
     prof = plonk.load_profile(snap=snap)
-    prof['array'] = np.arange(len(prof))
+    prof['array'] = np.arange(len(prof)) * plonk.units.au
     with pytest.raises(ValueError):
         prof['array'] = np.arange(len(prof) - 1)
     with pytest.raises(ValueError):
