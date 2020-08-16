@@ -264,17 +264,18 @@ class Snap:
                 for key, val in self._array_name_mapper.items()
                 if val[0] in self.loaded_arrays() or val in self._array_registry
             )
-            _extra = list()
-            for arr in extra:
-                if self.base_array_name(arr) in self._vector_arrays:
-                    for suffix in ['x', 'y', 'z', 'mag']:
-                        _extra.append(arr + f'_{suffix}')
-                if self.base_array_name(arr) in self._dust_arrays:
-                    suffixes = [f'{n+1:03}' for n in range(self.num_dust_species)]
-                    suffixes += ['tot']
-                    for suffix in suffixes:
-                        _extra.append(arr + f'_{suffix}')
-            extra += tuple(_extra)
+            if verbose:
+                _extra = list()
+                for arr in extra:
+                    if self.base_array_name(arr) in self._vector_arrays:
+                        for suffix in ['x', 'y', 'z', 'mag']:
+                            _extra.append(arr + f'_{suffix}')
+                    if self.base_array_name(arr) in self._dust_arrays:
+                        suffixes = [f'{n+1:03}' for n in range(self.num_dust_species)]
+                        suffixes += ['tot']
+                        for suffix in suffixes:
+                            _extra.append(arr + f'_{suffix}')
+                extra += tuple(_extra)
             return tuple(sorted(set(extra), key=lambda x: x.lower()))
 
         return tuple(sorted(set(loaded + tuple(registered))))

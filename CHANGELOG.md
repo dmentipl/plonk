@@ -26,10 +26,13 @@ Types of changes:
 - Added ax_kwargs to plotting functions for passing to ax.set.
 - Added xlim, ylim on visualize.plot.
 - Added units_dict function to return a units dictionary for passing to plotting functions.
+- Added bulk load and unload functions on Snap for loading/unloading multiple arrays into/out-of memory.
+- Add context manager for caching arrays on Snap.
+- Added public methods on Snap: family for accessing particle families, and array for accessing particle arrays. These are already accessible via __getitem__ but this makes the underlying methods available.
 
 ### Changed
 
-- Removed plonk.particle_plot in favor of plonk.plot.
+- Removed plonk.particle_plot in favour of plonk.plot.
 - Changed plonk.plot to produce particle plots
 - Renamed MultiVisualization and plot_snaps to VisualizeSimulation and visualize_sim.
 - Changed units system from cgs to SI.
