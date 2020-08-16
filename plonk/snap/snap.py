@@ -334,11 +334,12 @@ class Snap:
             _arrays = self.available_arrays()
         else:
             _arrays = arrays
-        for array in _arrays:
-            try:
-                self[array]
-            except ValueError as e:
-                logger.warning(f'Cannot load {array}\n{e}')
+        with self.context(cache=True):
+            for array in _arrays:
+                try:
+                    self[array]
+                except ValueError as e:
+                    logger.warning(f'Cannot load {array}\n{e}')
 
         return self
 
