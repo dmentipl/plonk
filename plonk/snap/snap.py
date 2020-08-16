@@ -8,7 +8,7 @@ accessing a subset of particles in a Snap.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Set, Tuple, Union
+from typing import Any, Callable, Dict, List, Tuple, Union
 
 import h5py
 import numpy as np
@@ -106,38 +106,12 @@ class Snap:
         't_s': 'stopping_time',
         'u': 'internal_energy',
         'v': 'velocity',
-        'vel': 'velocity',
         'v_R': 'velocity_radial_cylindrical',
         'v_r': 'velocity_radial_spherical',
         'v_phi': 'angular_velocity',
         'velocity_R': 'radial_velocity_cylindrical',
         'velocity_r': 'radial_velocity_spherical',
         'velocity_phi': 'angular_velocity',
-        'xyz': 'position',
-    }
-
-    _array_split_mapper = {
-        'x': ('position', 0),
-        'y': ('position', 1),
-        'z': ('position', 2),
-        'v_x': ('velocity', 0),
-        'v_y': ('velocity', 1),
-        'v_z': ('velocity', 2),
-        'p_x': ('momentum', 0),
-        'p_y': ('momentum', 1),
-        'p_z': ('momentum', 2),
-        'L_x': ('angular_momentum', 0),
-        'L_y': ('angular_momentum', 1),
-        'L_z': ('angular_momentum', 2),
-        'j_x': ('specific_angular_momentum', 0),
-        'j_y': ('specific_angular_momentum', 1),
-        'j_z': ('specific_angular_momentum', 2),
-        's_x': ('spin', 0),
-        's_y': ('spin', 1),
-        's_z': ('spin', 2),
-        'B_x': ('magnetic_field', 0),
-        'B_y': ('magnetic_field', 1),
-        'B_z': ('magnetic_field', 2),
     }
 
     _vector_arrays = {
@@ -146,8 +120,6 @@ class Snap:
         'spin',
         'velocity',
     }
-
-    _vector_component_arrays: Set[str] = set()
 
     _dust_arrays = {
         'stopping_time',
@@ -206,7 +178,7 @@ class Snap:
         """Re-open access to the underlying file."""
         self._file_pointer = h5py.File(self.file_path, mode='r')
 
-    def add_array(self, rotatable: bool = None, dust: bool = False) -> Callable:
+    def add_array(self, vector: bool = False, dust: bool = False) -> Callable:
         """Decorate function to add array to Snap.
 
         This function decorates a function that returns an array. The
@@ -215,11 +187,11 @@ class Snap:
 
         Parameters
         ----------
-        rotatable
-            A bool to represent if the array should have rotations
-            applied to it, i.e. it is a vector arrray. If True the
-            rotation should be applied. If False the rotation cannot be
-            applied. If None no rotation is required. Default is None.
+        vector
+            A bool to represent if the array is a vector in space that
+            should have rotations applied to it. If True the rotation
+            should be applied. If False the rotation cannot be applied.
+            Default is False.
         dust
             A bool to represent if the array is a dust array, in that
             it has one column per dust species. Default is False.
@@ -232,10 +204,8 @@ class Snap:
 
         def _add_array(fn):
             self._array_registry[fn.__name__] = fn
-            if rotatable is True:
+            if vector is True:
                 self._vector_arrays.add(fn.__name__)
-            elif rotatable is False:
-                self._vector_component_arrays.add(fn.__name__)
             if dust is True:
                 self._dust_arrays.add(fn.__name__)
             return fn
@@ -291,14 +261,20 @@ class Snap:
         if aliases:
             extra = tuple(
                 key
-                for key, val in self._array_split_mapper.items()
-                if val[0] in self.loaded_arrays() or val[0] in self._array_registry
-            )
-            extra += tuple(
-                key
                 for key, val in self._array_name_mapper.items()
                 if val[0] in self.loaded_arrays() or val in self._array_registry
             )
+            _extra = list()
+            for arr in extra:
+                if self.base_array_name(arr) in self._vector_arrays:
+                    for suffix in ['x', 'y', 'z', 'mag']:
+                        _extra.append(arr + f'_{suffix}')
+                if self.base_array_name(arr) in self._dust_arrays:
+                    suffixes = [f'{n+1:03}' for n in range(self.num_dust_species)]
+                    suffixes += ['tot']
+                    for suffix in suffixes:
+                        _extra.append(arr + f'_{suffix}')
+            extra += tuple(_extra)
             return tuple(sorted(set(extra), key=lambda x: x.lower()))
 
         return tuple(sorted(set(loaded + tuple(registered))))
@@ -514,7 +490,7 @@ class Snap:
             if arr in self.sinks.loaded_arrays():
                 array_m, array_u = self._sinks[arr].magnitude, self._sinks[arr].units
                 self._sinks[arr] = _rotation.apply(array_m) * array_u
-        for arr in self._vector_component_arrays:
+        for arr in self._vector_arrays:
             if arr in self.loaded_arrays():
                 del self._arrays[arr]
             if arr in self.sinks.loaded_arrays():
@@ -922,17 +898,11 @@ class Snap:
         unit
             The Pint unit quantity, or the float 1.0 if no unit found.
         """
-        arr_root = '_'.join(arr.split('_')[:-1])
-        if arr in self._array_split_mapper:
-            arr = self._array_split_mapper[arr][0]
-        elif arr in self._array_name_mapper:
-            arr = self._array_name_mapper[arr]
-        elif arr_root in self._vector_arrays | self._dust_arrays:
-            arr = arr_root
+        base_name = self.base_array_name(arr)
         try:
-            unit = self._array_units[arr]
+            unit = self._array_units[base_name]
         except KeyError:
-            _arr: Quantity = self[arr]
+            _arr: Quantity = self[base_name]
             dim = _arr.units.dimensionality
             unit = 1.0
             for d in ['length', 'mass', 'time']:
@@ -962,20 +932,17 @@ class Snap:
             return name
         if name in self._array_name_mapper:
             return self._array_name_mapper[name]
-        if name in self._array_split_mapper:
-            return self._array_split_mapper[name][0]
         if name in self._arrays:
             return name
         if name in self._sinks:
             return name
 
         name_root = '_'.join(name.split('_')[:-1])
-        if (
-            name_root not in self.available_arrays()
-            and name_root not in self.sinks.available_arrays()
-        ):
-            raise ValueError('Unknown array')
         name_suffix = name.split('_')[-1]
+        if name_root == '' and name_suffix in ('x', 'y', 'z'):
+            return 'position'
+        if name_root in self._array_name_mapper:
+            return self._array_name_mapper[name_root]
         if name_root in self._vector_arrays and name_suffix in ('x', 'y', 'z', 'mag'):
             return name_root
         if name_root in self._dust_arrays:
@@ -985,27 +952,22 @@ class Snap:
         raise ValueError('Unknown array')
 
     def _array_suffix(self, name: str) -> str:
-        d = {0: 'x', 1: 'y', 2: 'z'}
         if (
             name in self.available_arrays()
             or name in self.sinks.available_arrays()
             or name in self._array_name_mapper
         ):
             return ''
-        if name in self._array_split_mapper:
-            return d[self._array_split_mapper[name][1]]
         if name in self._arrays:
             return ''
         if name in self._sinks:
             return ''
 
         name_root = '_'.join(name.split('_')[:-1])
-        if (
-            name_root not in self.available_arrays()
-            and name_root not in self.sinks.available_arrays()
-        ):
-            raise ValueError('Unknown array')
         name_suffix = name.split('_')[-1]
+        if name_root == '' and name_suffix in ('x', 'y', 'z'):
+            return name_suffix
+        name_root = self.base_array_name(name_root)
         if name_root in self._vector_arrays:
             if name_suffix in ('x', 'y', 'z', 'mag'):
                 return name_suffix
@@ -1099,11 +1061,7 @@ class Snap:
                 'Attempting to overwrite existing array. To do so, first delete the '
                 'array\nwith del snap["array"], then try again.'
             )
-        if (
-            name in self._available_arrays()
-            or name in self._array_split_mapper.keys()
-            or name in self._array_name_mapper.keys()
-        ):
+        if name in self._available_arrays() or name in self._array_name_mapper.keys():
             raise ValueError(
                 'Attempting to set array already available. '
                 'See snap.available_arrays().'

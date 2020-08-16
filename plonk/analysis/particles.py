@@ -65,7 +65,7 @@ array_requires = {
     'temperature': ('sound_speed',),
 }
 
-array_rotatable = {
+vector_arrays = {
     'angular_momentum': True,
     'angular_velocity': False,
     'azimuthal_angle': False,
@@ -90,7 +90,7 @@ array_rotatable = {
     'temperature': False,
 }
 
-array_dust = {
+dust_arrays = {
     'angular_momentum': False,
     'angular_velocity': False,
     'azimuthal_angle': False,

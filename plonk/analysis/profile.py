@@ -181,7 +181,7 @@ class Profile:
         return h > 0
 
     def _calculate_x(self, coordinate) -> ndarray:
-        pos: ndarray = self.snap['xyz']
+        pos: ndarray = self.snap['position']
         pos = pos[self._mask]
         if self.ndim == 1:
             if coordinate == 'x':
