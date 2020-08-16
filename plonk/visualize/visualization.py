@@ -757,7 +757,7 @@ def _convert_units_for_interpolation(
     required_keys = {'extent', 'projection', 'quantity'}
     if not set(units) == required_keys:
         raise ValueError(f'units dictionary requires: {required_keys}')
-    quantity_unit = snap.get_array_code_unit(quantity)
+    quantity_unit = snap.array_code_unit(quantity)
     if interp == 'projection':
         proj_unit = units['quantity'] * units['projection']
         data = (interpolated_data * quantity_unit * snap.code_units['length']).to(

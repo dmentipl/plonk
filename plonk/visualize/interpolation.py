@@ -12,7 +12,6 @@ import numpy as np
 from numpy import ndarray
 
 from .._logging import logger
-from ..snap.utils import get_array_in_code_units
 from ..utils.geometry import distance_from_plane
 from .splash import interpolate_projection, interpolate_slice
 
@@ -83,8 +82,8 @@ def interpolate(
     ... )
     """
     _quantity, x, y, z = _get_arrays_from_str(snap=snap, quantity=quantity, x=x, y=y)
-    h = get_array_in_code_units(snap, 'smoothing_length')
-    m = get_array_in_code_units(snap, 'mass')
+    h = snap.array_in_code_units('smoothing_length')
+    m = snap.array_in_code_units('mass')
 
     if interp == 'projection':
         dist_from_slice = None
@@ -353,17 +352,17 @@ def _get_arrays_from_str(*, snap, quantity, x, y):
     quantity_str, x_str, y_str = quantity, x, y
     z_str = coords.difference((x_str, y_str)).pop()
 
-    quantity = get_array_in_code_units(snap, quantity_str)
-    x = get_array_in_code_units(snap, x_str)
-    y = get_array_in_code_units(snap, y_str)
-    z = get_array_in_code_units(snap, z_str)
+    quantity = snap.array_in_code_units(quantity_str)
+    x = snap.array_in_code_units(x_str)
+    y = snap.array_in_code_units(y_str)
+    z = snap.array_in_code_units(z_str)
 
     if quantity.ndim > 2:
         raise ValueError('Cannot interpret quantity with ndim > 2')
     if quantity.ndim == 2:
         try:
-            quantity_x = get_array_in_code_units(snap, quantity_str + '_' + x_str)
-            quantity_y = get_array_in_code_units(snap, quantity_str + '_' + y_str)
+            quantity_x = snap.array_in_code_units(quantity_str + '_' + x_str)
+            quantity_y = snap.array_in_code_units(quantity_str + '_' + y_str)
             quantity = np.stack([quantity_x, quantity_y]).T
         except ValueError:
             raise ValueError(

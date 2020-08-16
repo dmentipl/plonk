@@ -17,4 +17,3 @@ file.
 
 .. autofunction:: plonk.load_snap
 .. autofunction:: plonk.snap.gravitational_constant_in_code_units
-.. autofunction:: plonk.snap.get_array_in_code_units

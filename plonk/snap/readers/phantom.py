@@ -19,9 +19,9 @@ from ..extra import extra_quantities
 from ..snap import Snap
 
 igas, iboundary, istar, idarkmatter, ibulge = 1, 3, 4, 5, 6
-_bignumber = 1e29
+bignumber = 1e29
 
-_particle_array_name_map = {
+particle_array_name_map = {
     'abundance': 'abundance',
     'alpha': 'alpha_viscosity_numerical',
     'Bxyz': 'magnetic_field',
@@ -51,7 +51,7 @@ _particle_array_name_map = {
     'xyz': 'position',
 }
 
-_sink_array_name_map = {
+sink_array_name_map = {
     'xyz': 'position',
     'vxyz': 'velocity',
     'm': 'mass',
@@ -77,53 +77,90 @@ def generate_snap_from_file(filename: Union[str, Path]) -> Snap:
         A Snap object.
     """
     logger.debug(f'Loading Phantom snapshot: {filename}')
+
+    # REQUIRED: Instantiate Snap.
+    snap = Snap()
+
+    # REQUIRED: Set snap.data_source.
+    snap.data_source = 'Phantom'
+
+    # REQUIRED: Set snap.file_path.
     file_path = Path(filename).expanduser()
     if not file_path.is_file():
         raise FileNotFoundError('Cannot find snapshot file')
-    file_handle = h5py.File(file_path, mode='r')
-
-    snap = Snap()
-    snap.data_source = 'Phantom'
     snap.file_path = file_path
+
+    # REQUIRED: Set snap._file_pointer.
+    file_handle = h5py.File(file_path, mode='r')
     snap._file_pointer = file_handle
 
+    # REQUIRED: Set snap._properties, snap.code_units, and snap._array_code_units.
     header = {key: val[()] for key, val in file_handle['header'].items()}
-    snap._properties, units = _header_to_properties(header)
-    snap._array_units = generate_units_array_dictionary(units)
+    snap._properties, units = header_to_properties(header)
+    snap._array_code_units = generate_units_array_dictionary(units)
     snap.code_units = {
-        key: units[key] for key in ['length', 'time', 'mass', 'magnetic_field']
+        key: units[key]
+        for key in ['length', 'time', 'mass', 'temperature', 'magnetic_field']
     }
 
+    # REQUIRED: Set snap._array_registry dictionary.
+    #
+    # The keys are the names of the arrays and the values are functions that return the
+    # array when called with snap as the argument.
     arrays = list(file_handle['particles'])
     ndustsmall = header['ndustsmall']
     ndustlarge = header['ndustlarge']
-    array_registry = _populate_particle_array_registry(
+    array_registry = populate_particle_array_registry(
         arrays=arrays,
-        name_map=_particle_array_name_map,
+        name_map=particle_array_name_map,
         ndustsmall=ndustsmall,
         ndustlarge=ndustlarge,
     )
     snap._array_registry.update(array_registry)
 
+    # REQUIRED (if there are sink particles): Set _sink_registry.
+    #
+    # The keys are the names of the arrays and the values are functions that return the
+    # array when called with snap as the argument.
     if header['nptmass'] > 0:
-        sink_registry = _populate_sink_array_registry(name_map=_sink_array_name_map)
+        sinks = list(file_handle['sinks'])
+        sink_registry = populate_sink_array_registry(
+            sinks=sinks, name_map=sink_array_name_map
+        )
         snap._sink_registry.update(sink_registry)
 
+    # OPTIONAL: Make extra derived quantities available.
     extra_quantities(snap)
+
+    # REQUIRED: Return Snap object.
     return snap
 
 
-def _header_to_properties(header: dict):
+def header_to_properties(header: dict):
+    """Convert Phantom header to properties and units.
 
+    Parameters
+    ----------
+    header
+        The Phantom header as a dict.
+
+    Returns
+    -------
+    prop
+        The properties as a dict.
+    units
+        The units as a dict.
+    """
     length = (header['udist'] * plonk_units('cm')).to_base_units()
     time = (header['utime'] * plonk_units('s')).to_base_units()
     mass = (header['umass'] * plonk_units('g')).to_base_units()
+    temperature = plonk_units('K')
     magnetic_field = (
         header['umagfd']
         * plonk_units('g ** (1/2) / cm ** (1/2) / s')
         * np.sqrt(plonk_units.magnetic_constant / (4 * np.pi))
     ).to_base_units()
-    units = generate_units_dictionary(length, mass, time, magnetic_field)
+    units = generate_units_dictionary(length, mass, time, temperature, magnetic_field)
 
     prop = dict()
 
@@ -162,78 +199,132 @@ def _header_to_properties(header: dict):
     return prop, units
 
 
-def _populate_particle_array_registry(
+def populate_particle_array_registry(
     arrays: List[str],
     name_map: Dict[str, str],
     ndustsmall: int = 0,
     ndustlarge: int = 0,
 ):
+    """Populate particle arrays registry.
 
+    Parameters
+    ----------
+    arrays
+        A list of particle array names as they are on file.
+    name_map
+        A dict to convert from Phantom array names to Plonk names.
+    ndustsmall
+        The number of "small" dust species. I.e. the number of mixture
+        method (1-fluid) dust species.
+    ndustlarge
+        The number of "large" dust species. I.e. the number of separate
+        sets of particles (2-fluid) dust species.
+
+    Returns
+    -------
+    Dict
+        The particle array registry.
+    """
     array_registry = dict()
 
     # Each particle gets an id
-    array_registry['id'] = _particle_id
+    array_registry['id'] = particle_id
 
     # Always read itype, xyz, h
-    array_registry['type'] = _particle_type
-    array_registry['position'] = _get_dataset('xyz', 'particles')
-    array_registry['smoothing_length'] = _get_dataset('h', 'particles')
+    array_registry['type'] = particle_type
+    array_registry['sub_type'] = sub_type
+    array_registry['position'] = get_dataset('xyz', 'particles')
+    array_registry['smoothing_length'] = get_dataset('h', 'particles')
     arrays.remove('itype')
     arrays.remove('xyz')
     arrays.remove('h')
 
     # Handle dust
     if ndustsmall > 0:
-        array_registry['dust_fraction'] = _dust_fraction
+        array_registry['dust_fraction'] = dust_fraction
         arrays.remove('dustfrac')
-
     elif ndustlarge > 0:
-        array_registry['dust_to_gas_ratio'] = _dust_to_gas_ratio
+        array_registry['dust_to_gas_ratio'] = dust_to_gas_ratio
         arrays.remove('dustfrac')
-        # Currently only dust as species has particle sub-types
-        array_registry['sub_type'] = _sub_type
-
     if ndustsmall > 0 or ndustlarge > 0 and 'tstop' in arrays:
-        array_registry['stopping_time'] = _stopping_time
+        array_registry['stopping_time'] = stopping_time
         arrays.remove('tstop')
 
     # Read arrays if available
     for name_on_file, name in name_map.items():
         if name_on_file in arrays:
-            array_registry[name] = _get_dataset(name_on_file, 'particles')
+            array_registry[name] = get_dataset(name_on_file, 'particles')
             arrays.remove(name_on_file)
 
     # Derived arrays not stored on file
-    array_registry['mass'] = _mass
-    array_registry['density'] = _density
-    array_registry['pressure'] = _pressure
-    array_registry['sound_speed'] = _sound_speed
+    array_registry['mass'] = mass
+    array_registry['density'] = density
+    array_registry['pressure'] = pressure
+    array_registry['sound_speed'] = sound_speed
 
     # Read *any* extra arrays
     for array in arrays:
-        array_registry[array] = _get_dataset(array, 'particles')
+        array_registry[array] = get_dataset(array, 'particles')
 
     return array_registry
 
 
-def _populate_sink_array_registry(name_map: Dict[str, str]):
+def populate_sink_array_registry(sinks: List[str], name_map: Dict[str, str]):
+    """Populate particle arrays registry.
 
+    Parameters
+    ----------
+    sinks
+        A list of sink array names as they are on file.
+    name_map
+        A dict to convert from Phantom array names to Plonk names.
+
+    Returns
+    -------
+    Dict
+        The sink array registry.
+    """
     sink_registry = dict()
 
+    # Read arrays if available
     for name_on_file, name in name_map.items():
-        sink_registry[name] = _get_dataset(name_on_file, 'sinks')
+        if name_on_file in sinks:
+            sink_registry[name] = get_dataset(name_on_file, 'sinks')
+            sinks.remove(name_on_file)
+
+    # Read *any* extra arrays
+    for sink in sinks:
+        sink_registry[sink] = get_dataset(sink, 'sinks')
 
     return sink_registry
 
 
-def _get_dataset(dataset: str, group: str) -> Callable:
+def get_dataset(dataset: str, group: str) -> Callable:
+    """Return a function that returns an array from file.
+
+    Parameters
+    ----------
+    dataset
+        The name of the HDF5 dataset, i.e. the array name.
+    group
+        The name of the HDF5 group. For Phantom, this is one of
+        'header', 'particles', or 'sinks'.
+
+    Returns
+    -------
+    Callable
+        The function that when called with a Snap object returns the
+        array in the dataset with appropriate units, i.e. as a Pint
+        Quantity.
+    """
+
     def func(snap: Snap) -> Quantity:
         array = snap._file_pointer[f'{group}/{dataset}'][()]
         try:
-            unit = snap._array_units[_particle_array_name_map[dataset]]
+            unit = snap._array_code_units[particle_array_name_map[dataset]]
         except KeyError:
             try:
-                unit = snap._array_units[_sink_array_name_map[dataset]]
+                unit = snap._array_code_units[sink_array_name_map[dataset]]
             except KeyError:
                 logger.error(
                     f'Cannot get unit of dataset "{group}/{dataset}" - '
@@ -245,23 +336,27 @@ def _get_dataset(dataset: str, group: str) -> Callable:
     return func
 
 
-def _particle_id(snap: Snap) -> Quantity:
+def particle_id(snap: Snap) -> Quantity:
+    """Particle id."""
     num_particles = snap._file_pointer['header/nparttot'][()]
     return np.arange(num_particles) * plonk_units('dimensionless')
 
 
-def _particle_type(snap: Snap) -> Quantity:
-    # Type        | Phantom                               | Plonk
-    # ----------- | ------------------------------------- | -----
-    # Gas         |                                     1 | 1
-    # Dust        |      idust -> idust + ndustlarge      | 2
-    # Boundary    | idustbound -> idustbound + ndustlarge | 3
-    # Star        |                                     4 | 4
-    # Dark matter |                                     5 | 5
-    # Bulge       |                                     6 | 6
+def particle_type(snap: Snap) -> Quantity:
+    """Particle type.
+
+    Type        | Phantom                               | Plonk
+    ----------- | ------------------------------------- | -----
+    Gas         |                                     1 | 1
+    Dust        |      idust -> idust + ndustlarge      | 2
+    Boundary    | idustbound -> idustbound + ndustlarge | 3
+    Star        |                                     4 | 4
+    Dark matter |                                     5 | 5
+    Bulge       |                                     6 | 6
+    """
     idust = snap._file_pointer['header/idust'][()]
     ndustlarge = snap._file_pointer['header/ndustlarge'][()]
-    particle_type = np.abs(_get_dataset('itype', 'particles')(snap))
+    particle_type = np.abs(get_dataset('itype', 'particles')(snap))
     particle_type[
         (particle_type >= idust) & (particle_type < idust + ndustlarge)
     ] = snap.particle_type['dust']
@@ -276,17 +371,20 @@ def _particle_type(snap: Snap) -> Quantity:
     return np.array(particle_type.magnitude, dtype=int) * plonk_units('dimensionless')
 
 
-def _sub_type(snap: Snap) -> Quantity:
-    #           | Types
-    #           | Gas | Dust | Boundary
-    # Sub-types |     |      |
-    # --------- | --- | ---- | --------
-    # Gas       |  0  |  n/a |  0
-    # Dust 1    | n/a |   1  |  1
-    # Dust 2    | n/a |   2  |  2
-    # Dust 3    | n/a |   3  |  3
-    # ...
-    particle_type = np.abs(_get_dataset('itype', 'particles')(snap))
+def sub_type(snap: Snap) -> Quantity:
+    """Particle sub-type.
+
+              | Types
+              | Gas | Dust | Boundary
+    Sub-types |     |      |
+    --------- | --- | ---- | --------
+    Gas       |  0  |  n/a |  0
+    Dust 1    | n/a |   1  |  1
+    Dust 2    | n/a |   2  |  2
+    Dust 3    | n/a |   3  |  3
+    ...
+    """
+    particle_type = np.abs(get_dataset('itype', 'particles')(snap))
     sub_type = np.zeros(particle_type.shape, dtype=np.int8)
     sub_type[
         (particle_type == igas)
@@ -309,29 +407,32 @@ def _sub_type(snap: Snap) -> Quantity:
     return sub_type * plonk_units('dimensionless')
 
 
-def _mass(snap: Snap) -> Quantity:
+def mass(snap: Snap) -> Quantity:
+    """Particle mass."""
     massoftype = snap._file_pointer['header/massoftype'][()]
     particle_type = np.array(
-        np.abs(_get_dataset('itype', 'particles')(snap)).magnitude, dtype=int
+        np.abs(get_dataset('itype', 'particles')(snap)).magnitude, dtype=int
     )
-    return massoftype[particle_type - 1] * snap._array_units['mass']
+    return massoftype[particle_type - 1] * snap._array_code_units['mass']
 
 
-def _density(snap: Snap) -> Quantity:
-    m = (_mass(snap) / snap._array_units['mass']).magnitude
+def density(snap: Snap) -> Quantity:
+    """Density."""
+    m = (mass(snap) / snap._array_code_units['mass']).magnitude
     h = (
-        _get_dataset('h', 'particles')(snap) / snap._array_units['smoothing_length']
+        get_dataset('h', 'particles')(snap) / snap._array_code_units['smoothing_length']
     ).magnitude
     hfact = snap.properties['smoothing_length_factor']
     rho = m * (hfact / np.abs(h)) ** 3
-    return rho * snap._array_units['density']
+    return rho * snap._array_code_units['density']
 
 
-def _pressure(snap: Snap) -> Quantity:
+def pressure(snap: Snap) -> Quantity:
+    """Pressure."""
     ieos = snap._file_pointer['header/ieos'][()]
     K = 2 / 3 * snap._file_pointer['header/RK2'][()]
     gamma = snap.properties['adiabatic_index']
-    rho = _density(snap)
+    rho = density(snap)
     if ieos == 1:
         # Globally isothermal
         K = K * snap.code_units['length'] ** 2 * snap.code_units['time'] ** (-2)
@@ -339,7 +440,7 @@ def _pressure(snap: Snap) -> Quantity:
     if ieos == 2:
         # Adiabatic
         try:
-            energy = _get_dataset('u', 'particles')(snap)
+            energy = get_dataset('u', 'particles')(snap)
             if gamma > 1.0001:
                 return (gamma - 1) * energy * rho
             else:
@@ -356,18 +457,19 @@ def _pressure(snap: Snap) -> Quantity:
         # Vertically isothermal (for accretion disc)
         K = K * snap.code_units['length'] ** 2 * snap.code_units['time'] ** (-2)
         q = snap._file_pointer['header/qfacdisc'][()]
-        pos = _get_dataset('xyz', 'particles')(snap)
+        pos = get_dataset('xyz', 'particles')(snap)
         r_squared = pos[:, 0] ** 2 + pos[:, 1] ** 2 + pos[:, 2] ** 2
-        r_squared = (r_squared / snap._array_units['position'] ** 2).magnitude
+        r_squared = (r_squared / snap._array_code_units['position'] ** 2).magnitude
         return K * rho * r_squared ** (-q)
     raise ValueError('Unknown equation of state')
 
 
-def _sound_speed(snap: Snap) -> Quantity:
+def sound_speed(snap: Snap) -> Quantity:
+    """Sound speed."""
     ieos = snap._file_pointer['header/ieos'][()]
     gamma = snap.properties['adiabatic_index']
-    rho = _density(snap)
-    P = _pressure(snap)
+    rho = density(snap)
+    P = pressure(snap)
     if ieos in (1, 3):
         return np.sqrt(P / rho)
     if ieos == 2:
@@ -375,21 +477,24 @@ def _sound_speed(snap: Snap) -> Quantity:
     raise ValueError('Unknown equation of state')
 
 
-def _stopping_time(snap: Snap) -> Quantity:
-    stopping_time = _get_dataset('tstop', 'particles')(snap)
-    stopping_time[stopping_time == _bignumber] = np.inf * snap.code_units['time']
+def stopping_time(snap: Snap) -> Quantity:
+    """Dust stopping time."""
+    stopping_time = get_dataset('tstop', 'particles')(snap)
+    stopping_time[stopping_time == bignumber] = np.inf * snap.code_units['time']
     return stopping_time
 
 
-def _dust_fraction(snap: Snap) -> Quantity:
+def dust_fraction(snap: Snap) -> Quantity:
+    """Dust fraction for mixture method (1-fluid)."""
     if snap.properties['dust_method'] != 'dust/gas mixture':
         raise ValueError('Dust fraction only available for "dust/gas mixture"')
-    return _get_dataset('dustfrac', 'particles')(snap)
+    return get_dataset('dustfrac', 'particles')(snap)
 
 
-def _dust_to_gas_ratio(snap: Snap) -> Quantity:
+def dust_to_gas_ratio(snap: Snap) -> Quantity:
+    """Dust-to-gas ratio for separate particles method (2-fluid)."""
     if snap.properties['dust_method'] != 'dust as separate sets of particles':
         raise ValueError(
             'Dust fraction only available for "dust as separate sets of particles"'
         )
-    return _get_dataset('dustfrac', 'particles')(snap)
+    return get_dataset('dustfrac', 'particles')(snap)

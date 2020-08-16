@@ -7,7 +7,6 @@ import pytest
 from scipy.spatial.transform import Rotation
 
 import plonk
-from plonk.snap.utils import get_array_in_code_units
 
 from .stubdata.phantom_snapshot import (
     array_name_map,
@@ -145,13 +144,13 @@ def test_array_code_unit():
     snap = plonk.load_snap(TEST_FILE)
 
     position_unit = 149600000000.0 * plonk.units['meter']
-    assert snap.get_array_code_unit('position') == position_unit
+    assert snap.array_code_unit('position') == position_unit
 
     for arr in ['position', 'position_x', 'x']:
-        snap.get_array_code_unit(arr)
+        snap.array_code_unit(arr)
 
     with pytest.raises(ValueError):
-        snap.get_array_code_unit('does_not_exist')
+        snap.array_code_unit('does_not_exist')
 
     snap.close_file()
 
@@ -339,12 +338,12 @@ def test_context():
 def _check_arrays(snap):
     for array in mean_array_values.keys():
         np.testing.assert_allclose(
-            get_array_in_code_units(snap, array_name_map[array]).mean(),
+            snap.array_in_code_units(array_name_map[array]).mean(),
             mean_array_values[array],
         )
 
     for array in std_array_values.keys():
         np.testing.assert_allclose(
-            get_array_in_code_units(snap, array_name_map[array]).std(),
+            snap.array_in_code_units(array_name_map[array]).std(),
             std_array_values[array],
         )

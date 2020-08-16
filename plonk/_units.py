@@ -111,7 +111,7 @@ def generate_units_array_dictionary(units_dictionary):
     return _units
 
 
-def generate_units_dictionary(length, mass, time, magnetic_field):
+def generate_units_dictionary(length, mass, time, temperature, magnetic_field):
     """Generate units dictionary.
 
     Parameters
@@ -122,6 +122,8 @@ def generate_units_dictionary(length, mass, time, magnetic_field):
         Mass unit as a Pint quantity.
     time
         Time unit as a Pint quantity.
+    temperature
+        Temperature unit as a Pint quantity.
     magnetic_field
         Magnetic field unit as a Pint quantity.
 
@@ -148,7 +150,7 @@ def generate_units_dictionary(length, mass, time, magnetic_field):
     _units['energy'] = (mass * length ** 2 / time ** 2).to('joule')
     _units['specific_energy'] = (length ** 2 / time ** 2).to('joule/kg')
     _units['pressure'] = (mass / time ** 2 / length).to('pascal')
-    _units['temperature'] = 1.0 * units.kelvin
-    _units['entropy'] = (mass * length ** 2 / time ** 2).to('joule') / units.kelvin
+    _units['temperature'] = 1.0 * temperature
+    _units['entropy'] = (mass * length ** 2 / time ** 2).to('joule') / temperature
 
     return _units

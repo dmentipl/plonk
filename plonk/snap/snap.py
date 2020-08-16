@@ -155,7 +155,7 @@ class Snap:
         self.file_path = None
         self.code_units = {}
         self._properties = {}
-        self._array_units = {}
+        self._array_code_units = {}
         self._array_registry: Dict[str, Callable] = {}
         self._sink_registry: Dict[str, Callable] = {}
         self._cache_arrays = True
@@ -790,7 +790,7 @@ class Snap:
         f = h5py.File(filename, mode='w')
         for array in arrays:
             arr_with_units: Quantity = self[array]
-            units = self.get_array_code_unit(array)
+            units = self.array_code_unit(array)
             arr = (arr_with_units / units).magnitude
             dset = f.create_dataset(
                 array, arr.shape, dtype=arr.dtype, compression='gzip',
@@ -933,7 +933,7 @@ class Snap:
         )
         return transform(array, **kwargs)[_slice]
 
-    def get_array_code_unit(self, arr: str) -> Quantity:
+    def array_code_unit(self, arr: str) -> Quantity:
         """Get array code units.
 
         Parameters
@@ -948,14 +948,31 @@ class Snap:
         """
         base_name = self.base_array_name(arr)
         try:
-            unit = self._array_units[base_name]
+            unit = self._array_code_units[base_name]
         except KeyError:
             _arr: Quantity = self[base_name]
             dim = _arr.units.dimensionality
             unit = 1.0
-            for d in ['length', 'mass', 'time']:
+            for d in self.code_units:
                 unit *= self.code_units[d] ** dim[f'[{d}]']
         return unit
+
+    def array_in_code_units(self, name: str) -> ndarray:
+        """Get array in code units.
+
+        Parameters
+        ----------
+        snap
+            The Snap or SubSnap.
+        name
+            The array name.
+
+        Returns
+        -------
+        ndarray
+            The array on the particles in code units.
+        """
+        return (self[name] / self.array_code_unit(name)).magnitude
 
     def base_array_name(self, name: str) -> str:
         """Get the base array name from a string.
@@ -1196,7 +1213,7 @@ class SubSnap(Snap):
         self.file_path = self.base.file_path
         self.code_units = self.base.code_units
         self._properties = self.base._properties
-        self._array_units = self.base._array_units
+        self._array_code_units = self.base._array_code_units
         self._array_registry = self.base._array_registry
         self._sink_registry = self.base._sink_registry
         self._cache_arrays = self.base._cache_arrays
