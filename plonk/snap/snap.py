@@ -80,7 +80,7 @@ class Snap:
     ...     return plonk.analysis.particles.radial_distance(snap)
     """
 
-    _array_name_mapper = {
+    _array_aliases = {
         'B': 'magnetic_field',
         'c_s': 'sound_speed',
         'dt': 'timestep',
@@ -147,7 +147,7 @@ class Snap:
         alias
             The alias to reference the array.
         """
-        Snap._array_name_mapper[alias] = name
+        Snap._array_aliases[alias] = name
 
     def __init__(self):
 
@@ -261,7 +261,7 @@ class Snap:
         if aliases:
             extra = tuple(
                 key
-                for key, val in self._array_name_mapper.items()
+                for key, val in self._array_aliases.items()
                 if val[0] in self.loaded_arrays() or val in self._array_registry
             )
             if verbose:
@@ -931,8 +931,8 @@ class Snap:
             return name
         if name in self.sinks.available_arrays():
             return name
-        if name in self._array_name_mapper:
-            return self._array_name_mapper[name]
+        if name in self._array_aliases:
+            return self._array_aliases[name]
         if name in self._arrays:
             return name
         if name in self._sinks:
@@ -942,8 +942,8 @@ class Snap:
         name_suffix = name.split('_')[-1]
         if name_root == '' and name_suffix in ('x', 'y', 'z'):
             return 'position'
-        if name_root in self._array_name_mapper:
-            return self._array_name_mapper[name_root]
+        if name_root in self._array_aliases:
+            return self._array_aliases[name_root]
         if name_root in self._vector_arrays and name_suffix in ('x', 'y', 'z', 'mag'):
             return name_root
         if name_root in self._dust_arrays:
@@ -956,7 +956,7 @@ class Snap:
         if (
             name in self.available_arrays()
             or name in self.sinks.available_arrays()
-            or name in self._array_name_mapper
+            or name in self._array_aliases
         ):
             return ''
         if name in self._arrays:
@@ -1062,7 +1062,7 @@ class Snap:
                 'Attempting to overwrite existing array. To do so, first delete the '
                 'array\nwith del snap["array"], then try again.'
             )
-        if name in self._available_arrays() or name in self._array_name_mapper.keys():
+        if name in self._available_arrays() or name in self._array_aliases.keys():
             raise ValueError(
                 'Attempting to set array already available. '
                 'See snap.available_arrays().'
