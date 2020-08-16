@@ -212,19 +212,20 @@ class Snap:
 
         return _add_array
 
-    def loaded_arrays(self):
-        """Return a tuple of loaded arrays.
+    def loaded_arrays(self) -> List[str]:
+        """Return a list of loaded arrays.
 
         Returns
         -------
-        A tuple of names of loaded particle arrays.
+        List
+            A list of names of loaded particle arrays.
         """
-        return tuple(sorted(self._arrays.keys()))
+        return sorted(self._arrays.keys())
 
     def _available_arrays(
         self, sinks: bool = False, verbose: bool = False, aliases: bool = False
-    ):
-        """Return a tuple of available arrays.
+    ) -> List[str]:
+        """Return a list of available arrays.
 
         Parameters
         ----------
@@ -239,14 +240,15 @@ class Snap:
 
         Returns
         -------
-        A tuple of names of available arrays.
+        List
+            A list of names of available arrays.
         """
         if sinks:
             loaded = self.sinks.loaded_arrays()
             registered = list(self._sink_registry.keys())
         else:
             loaded = self.loaded_arrays()
-            registered = list(sorted(self._array_registry.keys()))
+            registered = list(self._array_registry.keys())
         if verbose:
             for arr in self._vector_arrays:
                 if arr in registered:
@@ -259,11 +261,11 @@ class Snap:
                     registered.append(f'{arr}_tot')
 
         if aliases:
-            extra = tuple(
+            extra = [
                 key
                 for key, val in self._array_aliases.items()
                 if val[0] in self.loaded_arrays() or val in self._array_registry
-            )
+            ]
             if verbose:
                 _extra = list()
                 for arr in extra:
@@ -275,13 +277,15 @@ class Snap:
                         suffixes += ['tot']
                         for suffix in suffixes:
                             _extra.append(arr + f'_{suffix}')
-                extra += tuple(_extra)
-            return tuple(sorted(set(extra), key=lambda x: x.lower()))
+                extra += _extra
+            return sorted(set(extra), key=lambda x: x.lower())
 
-        return tuple(sorted(set(loaded + tuple(registered))))
+        return sorted(set(loaded + registered))
 
-    def available_arrays(self, verbose: bool = False, aliases: bool = False):
-        """Return a tuple of available particle arrays.
+    def available_arrays(
+        self, verbose: bool = False, aliases: bool = False
+    ) -> List[str]:
+        """Return a list of available particle arrays.
 
         Parameters
         ----------
@@ -293,11 +297,12 @@ class Snap:
 
         Returns
         -------
-        A tuple of names of available arrays.
+        List
+            A list of names of available arrays.
         """
         return self._available_arrays(sinks=False, verbose=verbose, aliases=aliases)
 
-    def bulk_load(self, arrays: List[str] = None):
+    def bulk_load(self, arrays: List[str] = None) -> Snap:
         """Load arrays into memory in bulk.
 
         Parameters
@@ -319,7 +324,7 @@ class Snap:
 
         return self
 
-    def bulk_unload(self, arrays: List[str] = None):
+    def bulk_unload(self, arrays: List[str] = None) -> Snap:
         """Un-load arrays from memory in bulk.
 
         Parameters
@@ -341,49 +346,47 @@ class Snap:
         return self
 
     @property
-    def properties(self):
+    def properties(self) -> Dict[str, Any]:
         """Snap properties."""
         return {key: self._properties[key] for key in sorted(self._properties.keys())}
 
     @property
-    def sinks(self):
+    def sinks(self) -> Sinks:
         """Sink particle arrays."""
         return Sinks(self)
 
     @property
-    def num_particles(self):
+    def num_particles(self) -> int:
         """Return number of particles."""
         if self._num_particles == -1:
             self._num_particles = len(self['type'])
         return self._num_particles
 
     @property
-    def num_particles_of_type(self):
+    def num_particles_of_type(self) -> Dict[str, Any]:
         """Return number of particles per type."""
         if self._num_particles_of_type == -1:
             int_to_name = {idx: name for name, idx in self.particle_type.items()}
             d = {}
-            for idx, num in enumerate(np.bincount(self['type'].magnitude)):
+            ptype: Quantity = self['type']
+            stype: Quantity = self['sub_type']
+            for idx, num in enumerate(np.bincount(ptype.magnitude)):
                 if num > 0:
                     if idx == self.particle_type['dust']:
                         # Dust particle sub-type skips zero: 1, 2, 3 ...
                         d['dust'] = list(
-                            np.bincount(
-                                self[self['type'] == idx]['sub_type'].magnitude
-                            )[1:]
+                            np.bincount(stype[ptype.magnitude == idx].magnitude)[1:]
                         )
                     elif idx == self.particle_type['boundary']:
                         # Boundary particle sub-type: 0 (gas), 1, 2, 3... (dust)
-                        d['boundary'] = list(
-                            np.bincount(self[self['type'] == idx]['sub_type'].magnitude)
-                        )
+                        d['boundary'] = list(np.bincount(stype[ptype == idx].magnitude))
                     else:
                         d[int_to_name[idx]] = num
             self._num_particles_of_type = d
         return self._num_particles_of_type
 
     @property
-    def num_sinks(self):
+    def num_sinks(self) -> int:
         """Return number of sinks."""
         if self._num_sinks == -1:
             try:
@@ -393,14 +396,14 @@ class Snap:
         return self._num_sinks
 
     @property
-    def num_dust_species(self):
+    def num_dust_species(self) -> int:
         """Return number of dust species."""
         if self._num_dust_species == -1:
             self._num_dust_species = len(self._properties.get('grain_size', []))
         return self._num_dust_species
 
     @property
-    def cache_arrays(self):
+    def cache_arrays(self) -> bool:
         """Cache arrays in memory for faster access."""
         return self._cache_arrays
 
@@ -410,7 +413,7 @@ class Snap:
 
     def reset(
         self, arrays: bool = False, rotation: bool = True, translation: bool = True
-    ):
+    ) -> Snap:
         """Reset Snap.
 
         Reset rotation and translations transformations on the Snap to
@@ -424,6 +427,11 @@ class Snap:
             Set to True to reset rotation. Default is True.
         translation
             Set to True to reset translation. Default is True.
+
+        Returns
+        -------
+        Snap
+            The reset Snap. Note that the reset operation is in-place.
         """
         if any((arrays, rotation, translation)):
             for arr in self.loaded_arrays():
@@ -443,7 +451,7 @@ class Snap:
     def rotate(
         self,
         rotation: Rotation = None,
-        axis: Union[ndarray, List, Tuple[float, float, float]] = None,
+        axis: Union[ndarray, List[float], Tuple[float, float, float]] = None,
         angle: float = None,
     ) -> Snap:
         """Rotate snapshot.
@@ -606,7 +614,8 @@ class Snap:
 
         Returns
         -------
-        A dict of all SubSnaps.
+        Dict
+            A dict of all SubSnaps.
         """
         if not split_subtypes:
             raise NotImplementedError('Combined sub-types not implemented yet')
@@ -635,7 +644,8 @@ class Snap:
 
         Returns
         -------
-        A list of all SubSnaps.
+        List[SubSnap]
+            A list of all SubSnaps.
         """
         if not split_subtypes:
             raise NotImplementedError('Combined sub-types not implemented yet')
@@ -647,19 +657,26 @@ class Snap:
                 subsnaps.append(val)
         return subsnaps
 
-    def set_kernel(self, kernel: str):
+    def set_kernel(self, kernel: str) -> Snap:
         """Set kernel.
 
         Parameters
         ----------
         kernel
             The kernel name as a string.
+
+        Returns
+        -------
+        Snap
+            The Snap.
         """
         if kernel not in kernel_names:
             raise ValueError(f'Kernel must be in {kernel_names}')
         self._properties['kernel'] = kernel
 
-    def set_gravitational_parameter(self, sink_idx: Union[int, List[int]]):
+        return self
+
+    def set_gravitational_parameter(self, sink_idx: Union[int, List[int]]) -> Snap:
         """Set standard gravitational parameter.
 
         Calculate the standard gravitational parameter (G M) given a
@@ -672,6 +689,11 @@ class Snap:
         ----------
         sink_idx
             The sink index or list of indices.
+
+        Returns
+        -------
+        Snap
+            The Snap.
         """
         G = plonk_units.newtonian_constant_of_gravitation
         if isinstance(sink_idx, (int, list)):
@@ -681,7 +703,9 @@ class Snap:
         G = (G * M).to_base_units()
         self._properties['gravitational_parameter'] = G
 
-    def set_molecular_weight(self, molecular_weight: float):
+        return self
+
+    def set_molecular_weight(self, molecular_weight: float) -> Snap:
         """Set molecular weight.
 
         Set the molecular weight of the gas in gram / mole in
@@ -693,17 +717,24 @@ class Snap:
         molecular_weight
             The molecular weight in units of gram / mole. E.g. Phantom
             uses 2.381 for molecular hydrogen with solar metallicity.
+
+        Returns
+        -------
+        Snap
+            The Snap.
         """
         self._properties['molecular_weight'] = molecular_weight
+        return self
 
     @property
-    def tree(self):
+    def tree(self) -> cKDTree:
         """Particle neighbour kd-tree.
 
         Trees are represented by scipy cKDTree objects.
         """
         if self._tree is None:
-            self._tree = cKDTree(self['position'].magnitude)
+            pos: Quantity = self['position']
+            self._tree = cKDTree(pos.magnitude)
         return self._tree
 
     def neighbours(self, indices: Union[ndarray, List[int]]) -> ndarray:
@@ -737,7 +768,9 @@ class Snap:
 
         return neighbours
 
-    def write_extra_arrays(self, arrays: List[str], filename: Union[str, Path] = None):
+    def write_extra_arrays(
+        self, arrays: List[str], filename: Union[str, Path] = None
+    ) -> Snap:
         """Write extra arrays to file.
 
         Parameters
@@ -746,6 +779,11 @@ class Snap:
             A list of strings with array names.
         filename : optional
             A filename to write to.
+
+        Returns
+        -------
+        Snap
+            The Snap.
         """
         if filename is None:
             filename = f'{self.file_path.stem}_extra.h5'
@@ -760,13 +798,20 @@ class Snap:
             dset[:] = arr
         f.close()
 
-    def read_extra_arrays(self, filename: Union[str, Path] = None):
+        return self
+
+    def read_extra_arrays(self, filename: Union[str, Path] = None) -> Snap:
         """Read extra arrays from file.
 
         Parameters
         ----------
         filename : optional
             A filename to read from.
+
+        Returns
+        -------
+        Snap
+            The Snap.
         """
         if filename is None:
             filename = f'{self.file_path.stem}_extra.h5'
@@ -774,6 +819,8 @@ class Snap:
         for array in f:
             self[array] = f[array][()]
         f.close()
+
+        return self
 
     def to_dataframe(
         self, columns: Union[Tuple[str, ...], List[str]] = None, units: List[str] = None
@@ -835,7 +882,7 @@ class Snap:
                     d[f'{name}.{idx+1}' + suffix] = array[:, idx]
         return pd.DataFrame(d)
 
-    def family(self, name: str, squeeze: bool = False):
+    def family(self, name: str, squeeze: bool = False) -> Union[SubSnap, List[SubSnap]]:
         """Get a SubSnap of a particle family by name.
 
         Parameters
@@ -886,7 +933,7 @@ class Snap:
         )
         return transform(array, **kwargs)[_slice]
 
-    def get_array_code_unit(self, arr: str) -> Any:
+    def get_array_code_unit(self, arr: str) -> Quantity:
         """Get array code units.
 
         Parameters
@@ -896,7 +943,7 @@ class Snap:
 
         Returns
         -------
-        unit
+        Quantity
             The Pint unit quantity, or the float 1.0 if no unit found.
         """
         base_name = self.base_array_name(arr)
@@ -925,7 +972,7 @@ class Snap:
         Returns
         -------
         str
-            The canonical name.
+            The base array name.
         """
         if name in self.available_arrays():
             return name
@@ -1003,7 +1050,7 @@ class Snap:
 
         raise ValueError('Unknown array')
 
-    def _get_array_from_registry(self, name: str, sinks: bool = False):
+    def _get_array_from_registry(self, name: str, sinks: bool = False) -> Quantity:
         if sinks:
             array = self._sink_registry[name](self)
         else:
@@ -1015,7 +1062,7 @@ class Snap:
             array += self.translation
         return array
 
-    def _get_array(self, name: str, sinks: bool = False) -> ndarray:
+    def _get_array(self, name: str, sinks: bool = False) -> Quantity:
         """Get an array by name."""
         if sinks:
             array_dict = self._sinks
@@ -1035,7 +1082,7 @@ class Snap:
 
     def _getitem(
         self, inp: Union[str, ndarray, int, slice], sinks: bool = False,
-    ) -> Union[ndarray, SubSnap]:
+    ) -> Union[Quantity, SubSnap, List[SubSnap]]:
         """Return an array, or family, or subset."""
         if isinstance(inp, str):
             if inp in self.particle_type:
@@ -1045,13 +1092,11 @@ class Snap:
             raise ValueError('Cannot return sinks as SubSnap')
         return SubSnap(self, inp)
 
-    def __getitem__(
-        self, inp: Union[str, ndarray, int, slice]
-    ) -> Union[ndarray, SubSnap]:
+    def __getitem__(self, inp: Union[str, ndarray, int, slice]):
         """Return an array, or family, or subset."""
         return self._getitem(inp, sinks=False)
 
-    def __setitem__(self, name: str, item: ndarray):
+    def __setitem__(self, name: str, item: Quantity):
         """Set a particle array."""
         if not isinstance(item, (ndarray, Quantity)):
             raise ValueError('"item" must be ndarray or Pint Quantity')
@@ -1073,19 +1118,19 @@ class Snap:
         """Delete an array from memory."""
         del self._arrays[name]
 
-    def _ipython_key_completions_(self):
+    def _ipython_key_completions_(self) -> List[str]:
         """Tab completion for IPython __getitem__ method."""
         return self.available_arrays(verbose=True)
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Length as number of particles."""
         return self.num_particles
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Dunder repr method."""
         return self.__str__()
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Dunder str method."""
         return f'<plonk.Snap "{self.file_path.name}">'
 
@@ -1162,24 +1207,24 @@ class SubSnap(Snap):
         self.translation = self.base.translation
 
     @property
-    def indices(self):
+    def indices(self) -> ndarray:
         """Particle indices."""
         return self._indices
 
     @property
-    def sinks(self):
+    def sinks(self) -> Sinks:
         """Sink particle arrays."""
         return self.base.sinks
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Dunder repr method."""
         return self.__str__()
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Dunder str method."""
         return f'<plonk.SubSnap "{self.file_path.name}">'
 
-    def _get_array(self, name: str, sinks: bool = False) -> ndarray:
+    def _get_array(self, name: str, sinks: bool = False) -> Quantity:
         return self.base._get_array(name, sinks)[self.indices]
 
 
@@ -1231,12 +1276,14 @@ class Sinks:
         self.file_path = self.base.file_path
 
     @property
-    def indices(self):
+    def indices(self) -> ndarray:
         """Sink particle indices."""
         return self._indices
 
-    def available_arrays(self, verbose: bool = False, aliases: bool = False):
-        """Return a tuple of available sink arrays.
+    def available_arrays(
+        self, verbose: bool = False, aliases: bool = False
+    ) -> List[str]:
+        """Return a list of available sink arrays.
 
         Parameters
         ----------
@@ -1248,18 +1295,20 @@ class Sinks:
 
         Returns
         -------
-        A tuple of names of available arrays.
+        List
+            A list of names of available arrays.
         """
         return self.base._available_arrays(sinks=True, verbose=verbose, aliases=aliases)
 
-    def loaded_arrays(self):
-        """Return a tuple of loaded arrays.
+    def loaded_arrays(self) -> List[str]:
+        """Return a list of loaded arrays.
 
         Returns
         -------
-        A tuple of names of loaded sink arrays.
+        List
+            A list of names of loaded sink arrays.
         """
-        return tuple(sorted(self.base._sinks.keys()))
+        return sorted(self.base._sinks.keys())
 
     def array(self, name: str) -> Quantity:
         """Get an array.
@@ -1292,26 +1341,26 @@ class Sinks:
             return Sinks(self.base, ind)
         raise ValueError('Cannot determine item to return')
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Length as number of particles."""
         return len(self.indices)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Dunder repr method."""
         return self.__str__()
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Dunder str method."""
         return f'<plonk.Sinks "{self.base.file_path.name}">'
 
-    def _ipython_key_completions_(self):
+    def _ipython_key_completions_(self) -> List[str]:
         """Tab completion for IPython __getitem__ method."""
         return self.available_arrays(verbose=True)
 
     plot = visualize.plot
 
 
-def _str_is_int(string):
+def _str_is_int(string: str) -> bool:
     try:
         int(string)
         return True
@@ -1319,7 +1368,9 @@ def _str_is_int(string):
         return False
 
 
-def _input_indices_array(inp: Union[ndarray, slice, list, int, tuple], max_slice: int):
+def _input_indices_array(
+    inp: Union[ndarray, slice, list, int, tuple], max_slice: int
+) -> Union[ndarray, List[int]]:
     """Take array, slice, int, list, tuple and return indices array."""
     if isinstance(inp, ndarray):
         if np.issubdtype(np.bool, inp.dtype):

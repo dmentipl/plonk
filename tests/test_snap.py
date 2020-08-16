@@ -17,7 +17,7 @@ from .stubdata.phantom_snapshot import (
 )
 
 TEST_FILE = Path(__file__).parent / 'stubdata/phantom_00000.h5'
-AVAILABLE_ARRAYS = (
+AVAILABLE_ARRAYS = [
     'angular_momentum',
     'angular_velocity',
     'azimuthal_angle',
@@ -49,7 +49,7 @@ AVAILABLE_ARRAYS = (
     'velocity_divergence',
     'velocity_radial_cylindrical',
     'velocity_radial_spherical',
-)
+]
 
 
 def test_load_phantom_snap():
@@ -135,7 +135,7 @@ def test_available_loaded_arrays():
     ]:
         snap[arr]
 
-    assert snap.loaded_arrays() == ('dust_to_gas_ratio', 'position', 'smoothing_length')
+    assert snap.loaded_arrays() == ['dust_to_gas_ratio', 'position', 'smoothing_length']
 
     snap.close_file()
 
@@ -321,17 +321,17 @@ def test_context():
 
     snap.cache_arrays = True
     with snap.context(cache=False):
-        assert snap.loaded_arrays() == ()
+        assert snap.loaded_arrays() == []
         with snap.context(cache=True):
             snap.image('density', number_of_pixels=(16, 16))
-            assert snap.loaded_arrays() == (
+            assert snap.loaded_arrays() == [
                 'density',
                 'mass',
                 'position',
                 'smoothing_length',
-            )
-        assert snap.loaded_arrays() == ()
-    assert snap.loaded_arrays() == ()
+            ]
+        assert snap.loaded_arrays() == []
+    assert snap.loaded_arrays() == []
 
     snap.close_file()
 

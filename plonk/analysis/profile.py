@@ -332,19 +332,19 @@ class Profile:
         """Tab completion for IPython __getitem__ method."""
         return self.available_profiles()
 
-    def loaded_profiles(self):
+    def loaded_profiles(self) -> List[str]:
         """Return a listing of loaded profiles."""
-        return tuple(sorted(self._profiles.keys()))
+        return sorted(self._profiles.keys())
 
-    def available_profiles(self):
+    def available_profiles(self) -> List[str]:
         """Return a listing of available profiles."""
         loaded = list(self.loaded_profiles())
         available = list(self._profile_functions.keys())
         snap_arrays = _1d_arrays(list(self.snap.available_arrays(verbose=True)))
-        return tuple(sorted(set(loaded + available + snap_arrays)))
+        return sorted(set(loaded + available + snap_arrays))
 
-    def get_canonical_profile_name(self, name):
-        """Get the canonical profile name from a string.
+    def base_array_name(self, name: str) -> str:
+        """Get the base array name from a string.
 
         For example, 'velocity_x' returns 'velocity', 'density' returns
         'density', 'dust_fraction_001' returns 'dust_fraction', 'x'
@@ -358,7 +358,7 @@ class Profile:
         Returns
         -------
         str
-            The canonical name.
+            The base name.
         """
         try:
             return self.snap.base_array_name(name)
@@ -376,7 +376,7 @@ class Profile:
         ax: Any = None,
         ax_kwargs={},
         **kwargs,
-    ):
+    ) -> Any:
         """Plot profile.
 
         Parameters
@@ -411,10 +411,9 @@ class Profile:
         if units is None:
             x_unit, y_unit = None, None
         else:
-            x_unit = units.get(self.get_canonical_profile_name(x), str(self[x].units))
+            x_unit = units.get(self.base_array_name(x), str(self[x].units))
             y_unit = [
-                units.get(self.get_canonical_profile_name(_y), str(self[_y].units))
-                for _y in y
+                units.get(self.base_array_name(_y), str(self[_y].units)) for _y in y
             ]
         if y_unit is not None:
             if isinstance(y_unit, str):
@@ -474,7 +473,7 @@ class Profile:
 
         return ax
 
-    def to_function(self, profile, **kwargs):
+    def to_function(self, profile: str, **kwargs) -> Callable:
         """Create function via interpolation.
 
         The function is of the coordinate of the profile, e.g.
@@ -490,7 +489,8 @@ class Profile:
 
         Returns
         -------
-        The function.
+        Callable
+            The function.
 
         Examples
         --------
