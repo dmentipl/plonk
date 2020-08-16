@@ -1302,6 +1302,20 @@ class Sinks:
         """
         return tuple(sorted(self.base._sinks.keys()))
 
+    def array(self, name: str) -> Quantity:
+        """Get an array.
+
+        Parameters
+        ----------
+        name
+            A string representing the name of the particle array.
+
+        Returns
+        -------
+        Quantity
+        """
+        return np.squeeze(self.base.array(name, sinks=True)[self.indices])[()]
+
     def __setitem__(self, name: str, item: Quantity):
         """Set an array."""
         if not isinstance(item, Quantity):
@@ -1313,7 +1327,7 @@ class Sinks:
     def __getitem__(self, inp):
         """Return an array or subset."""
         if isinstance(inp, str):
-            return np.squeeze(self.base.array(inp, sinks=True)[self.indices])[()]
+            return self.array(name=inp)
         ind = _input_indices_array(inp=inp, max_slice=len(self))
         if ind is not None:
             return Sinks(self.base, ind)
