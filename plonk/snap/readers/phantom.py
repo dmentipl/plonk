@@ -31,6 +31,9 @@ particle_array_name_map = {
     'eta_AD': 'ambipolar_diffusion_coefficient',
     'eta_HE': 'hall_effect_coefficient',
     'eta_OR': 'ohmic_resistivity_coefficient',
+    'gr_density': 'density_general_relativity',
+    'gr_entropy': 'entropy_general_relativity',
+    'gr_momentum': 'momentum_general_relativity',
     'graindens': 'grain_density',
     'grainsize': 'grain_size',
     'h': 'smoothing_length',
@@ -38,9 +41,11 @@ particle_array_name_map = {
     'luminosity': 'luminosity',
     'ne_on_n': 'electron_fraction',
     'poten': 'gravitational_potential',
+    'pressure': 'pressure',
     'psi': 'magnetic_field_psi',
     'St': 'stokes_number',
     'T': 'temperature',
+    'temperature_dust': 'temperature_dust',
     'tstop': 'stopping_time',
     'u': 'internal_energy',
     'vrel_on_vfrag': 'relative_on_fragmentation_velocity',
@@ -50,14 +55,18 @@ particle_array_name_map = {
 
 # Dictionary to convert Phantom HDF5 sinks array names to Plonk names
 sink_array_name_map = {
-    'xyz': 'position',
-    'vxyz': 'velocity',
-    'm': 'mass',
     'h': 'accretion_radius',
     'hsoft': 'softening_radius',
+    'lum': 'luminosity',
+    'm': 'mass',
     'maccreted': 'mass_accreted',
+    'mdotloss': 'mass_loss_rate',
+    'Reff': 'radius_effective',
     'spinxyz': 'spin',
+    'Teff': 'temperature_effective',
     'tlast': 'last_injection_time',
+    'vxyz': 'velocity',
+    'xyz': 'position',
 }
 
 
