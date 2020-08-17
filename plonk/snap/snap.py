@@ -215,6 +215,26 @@ class Snap:
 
         return _add_array
 
+    def add_unit(self, name: str, unit: str) -> Snap:
+        """Add missing code unit to array.
+
+        Add code units to an array from file that has not had units set
+        automatically.
+
+        Parameters
+        ----------
+        name
+            The name of the array
+        unit
+            A unit string representing the array code unit, e.g.
+            '1.234 kg * m / s'.
+        """
+        self._array_code_units[name] = plonk_units(unit)
+        if name in self._arrays:
+            del self[name]
+
+        return self
+
     def loaded_arrays(self) -> List[str]:
         """Return a list of loaded arrays.
 

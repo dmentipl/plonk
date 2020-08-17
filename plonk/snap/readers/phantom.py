@@ -318,11 +318,13 @@ def get_dataset(dataset: str, group: str) -> Callable:
 
     def func(snap: Snap) -> Quantity:
         array = snap._file_pointer[f'{group}/{dataset}'][()]
-        try:
+        if dataset in particle_array_name_map:
             unit = snap._array_code_units[particle_array_name_map[dataset]]
-        except KeyError:
+        elif dataset in sink_array_name_map:
+            unit = snap._array_code_units[sink_array_name_map[dataset]]
+        else:
             try:
-                unit = snap._array_code_units[sink_array_name_map[dataset]]
+                unit = snap._array_code_units[dataset]
             except KeyError:
                 logger.error(
                     f'Cannot get unit of dataset "{group}/{dataset}" - '
