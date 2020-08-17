@@ -119,6 +119,7 @@ class Snap:
         'position',
         'spin',
         'velocity',
+        'vorticity',
     }
 
     _dust_arrays = {
