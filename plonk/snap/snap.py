@@ -160,7 +160,8 @@ class Snap:
         self._sink_registry: Dict[str, Callable] = {}
         self._cache_arrays = True
         self._arrays = {}
-        self._sinks = {}
+        self._sink_arrays = {}
+        self._sinks = None
         self._file_pointer = None
         self._num_particles = -1
         self._num_particles_of_type = -1
@@ -376,7 +377,9 @@ class Snap:
     @property
     def sinks(self) -> Sinks:
         """Sink particle arrays."""
-        return Sinks(self)
+        if self._sinks is None:
+            self._sinks = Sinks(self)
+        return self._sinks
 
     @property
     def num_particles(self) -> int:
@@ -460,7 +463,7 @@ class Snap:
             for arr in self.loaded_arrays():
                 del self._arrays[arr]
             for arr in self.sinks.loaded_arrays():
-                del self._sinks[arr]
+                del self._sink_arrays[arr]
         else:
             logger.warning('Select something to reset')
 
@@ -520,13 +523,14 @@ class Snap:
                 array_m, array_u = self._arrays[arr].magnitude, self._arrays[arr].units
                 self._arrays[arr] = _rotation.apply(array_m) * array_u
             if arr in self.sinks.loaded_arrays():
-                array_m, array_u = self._sinks[arr].magnitude, self._sinks[arr].units
-                self._sinks[arr] = _rotation.apply(array_m) * array_u
+                array_m = self._sink_arrays[arr].magnitude
+                array_u = self._sink_arrays[arr].units
+                self._sink_arrays[arr] = _rotation.apply(array_m) * array_u
         for arr in self._vector_arrays:
             if arr in self.loaded_arrays():
                 del self._arrays[arr]
             if arr in self.sinks.loaded_arrays():
-                del self._sinks[arr]
+                del self._sink_arrays[arr]
 
         if self.rotation is None:
             self.rotation = _rotation
@@ -575,7 +579,7 @@ class Snap:
         if 'position' in self.loaded_arrays():
             self._arrays['position'] += translation
         if 'position' in self.sinks.loaded_arrays():
-            self._sinks['position'] += translation
+            self._sink_arrays['position'] += translation
 
         if self.translation is None:
             self.translation = translation
@@ -1022,7 +1026,7 @@ class Snap:
             return self._array_aliases[name]
         if name in self._arrays:
             return name
-        if name in self._sinks:
+        if name in self._sink_arrays:
             return name
 
         name_root = '_'.join(name.split('_')[:-1])
@@ -1048,7 +1052,7 @@ class Snap:
             return ''
         if name in self._arrays:
             return ''
-        if name in self._sinks:
+        if name in self._sink_arrays:
             return ''
 
         name_root = '_'.join(name.split('_')[:-1])
@@ -1105,7 +1109,7 @@ class Snap:
     def _get_array(self, name: str, sinks: bool = False) -> Quantity:
         """Get an array by name."""
         if sinks:
-            array_dict = self._sinks
+            array_dict = self._sink_arrays
         else:
             array_dict = self._arrays
         if name in array_dict:
@@ -1114,7 +1118,7 @@ class Snap:
             array = self._get_array_from_registry(name, sinks)
             if self.cache_arrays:
                 if sinks:
-                    self._sinks[name] = array
+                    self._sink_arrays[name] = array
                 else:
                     self._arrays[name] = array
             return array
@@ -1241,7 +1245,7 @@ class SubSnap(Snap):
         self._sink_registry = self.base._sink_registry
         self._cache_arrays = self.base._cache_arrays
         self._arrays = self.base._arrays
-        self._sinks = self.base._sinks
+        self._sink_arrays = self.base._sink_arrays
         self._file_pointer = self.base._file_pointer
         self.rotation = self.base.rotation
         self.translation = self.base.translation
@@ -1309,7 +1313,7 @@ class Sinks:
             indices = np.arange(base.num_sinks)
         ind = _input_indices_array(inp=indices, max_slice=base.num_sinks)
         if len(ind) == 0:
-            raise ValueError('Sinks has no particles')
+            logger.warning('Sinks has no particles')
         self._indices = ind
 
         # Attributes same as Snap
@@ -1348,7 +1352,7 @@ class Sinks:
         List
             A list of names of loaded sink arrays.
         """
-        return sorted(self.base._sinks.keys())
+        return sorted(self.base._sink_arrays.keys())
 
     def array(self, name: str) -> Quantity:
         """Get an array.
@@ -1370,7 +1374,7 @@ class Sinks:
             raise ValueError('"item" must be an array with units, i.e. a Pint Quantity')
         if item.shape[0] != len(self):
             raise ValueError('Length of array does not match particle number')
-        self.base._sinks[name] = item
+        self.base._sink_arrays[name] = item
 
     def __getitem__(self, inp):
         """Return an array or subset."""
