@@ -23,6 +23,7 @@ particle_array_name_map = {
     'alpha': 'alpha_viscosity_numerical',
     'Bxyz': 'magnetic_field',
     'curlBxyz': 'magnetic_field_curl',
+    'curlvxyz': 'vorticity',
     'deltavxyz': 'differential_velocity',
     'divB': 'magnetic_field_divergence',
     'divv': 'velocity_divergence',

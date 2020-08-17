@@ -68,6 +68,7 @@ units_dict = {
     'velocity_divergence': ('frequency', 'Hz'),
     'velocity_radial_cylindrical': ('velocity', 'm / s'),
     'velocity_radial_spherical': ('velocity', 'm / s'),
+    'vorticity': ('frequency', 'Hz'),
 }
 
 
