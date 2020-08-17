@@ -9,11 +9,7 @@ import h5py
 import numpy as np
 
 from ..._logging import logger
-from ..._units import (
-    Quantity,
-    generate_units_array_dictionary,
-    generate_units_dictionary,
-)
+from ..._units import Quantity, generate_array_units_dict, generate_code_units_dict
 from ..._units import units as plonk_units
 from ..extra import extra_quantities
 from ..snap import Snap
@@ -97,7 +93,7 @@ def generate_snap_from_file(filename: Union[str, Path]) -> Snap:
     # REQUIRED: Set snap._properties, snap.code_units, and snap._array_code_units.
     header = {key: val[()] for key, val in file_handle['header'].items()}
     snap._properties, units = header_to_properties(header)
-    snap._array_code_units = generate_units_array_dictionary(units)
+    snap._array_code_units = generate_array_units_dict(units)
     snap.code_units = {
         key: units[key]
         for key in ['length', 'time', 'mass', 'temperature', 'magnetic_field']
@@ -160,7 +156,7 @@ def header_to_properties(header: dict):
         * plonk_units('g ** (1/2) / cm ** (1/2) / s')
         * np.sqrt(plonk_units.magnetic_constant / (4 * np.pi))
     ).to_base_units()
-    units = generate_units_dictionary(length, mass, time, temperature, magnetic_field)
+    units = generate_code_units_dict(length, mass, time, temperature, magnetic_field)
 
     prop = dict()
 

@@ -14,73 +14,64 @@ units.define('earth_mass = 5.979e24 kg')
 units.define('earth_radius = 6.371315e6 m')
 units.define('jupiter_mass = 1.89813e27 kg')
 
-# Array names with corresponding units as a string
-array_units_str = {
-    'accretion_radius': 'length',
-    'alpha_viscosity_numerical': 'dimensionless',
-    'density': 'density',
-    'differential_velocity': 'velocity',
-    'dust_fraction': 'dimensionless',
-    'dust_to_gas_ratio': 'dimensionless',
-    'gravitational_potential': 'energy',
-    'internal_energy': 'specific_energy',
-    'last_injection_time': 'time',
-    'magnetic_field': 'magnetic_field',
-    'mass': 'mass',
-    'mass_accreted': 'mass',
-    'position': 'length',
-    'pressure': 'pressure',
-    'smoothing_length': 'length',
-    'softening_radius': 'length',
-    'sound_speed': 'velocity',
-    'spin': 'angular_momentum',
-    'stopping_time': 'time',
-    'sub_type': 'dimensionless',
-    'timestep': 'time',
-    'type': 'dimensionless',
-    'velocity': 'velocity',
-    'velocity_divergence': 'frequency',
-}
-
-# Some default units
-units_default = {
-    'accretion_radius': 'm',
-    'angular_momentum': 'kg * m ** 2 / s',
-    'azimuthal_angle': 'rad',
-    'density': 'kg / m ** 3',
-    'differential_velocity': 'm / s',
-    'gravitational_potential': 'J',
-    'internal_energy': 'J / kg',
-    'keplerian_frequency': 'Hz',
-    'kinetic_energy': 'J',
-    'last_injection_time': 's',
-    'magnetic_field': 'T',
-    'mass': 'kg',
-    'mass_accreted': 'kg',
-    'momentum': 'kg * m / s',
-    'polar_angle': 'rad',
-    'position': 'm',
-    'pressure': 'Pa',
-    'projection': 'm',
-    'radius_cylindrical': 'm',
-    'radius_spherical': 'm',
-    'semi_major_axis': 'm',
-    'smoothing_length': 'm',
-    'softening_radius': 'm',
-    'sound_speed': 'm / s',
-    'specific_angular_momentum': 'm ** 2 / s',
-    'spin': 'kg * m ** 2 / s',
-    'stopping_time': 's',
-    'temperature': 'K',
-    'timestep': 's',
-    'velocity': 'm / s',
-    'velocity_divergence': 'Hz',
-    'velocity_radial_cylindrical': 'm / s',
-    'velocity_radial_spherical': 'm / s',
+# Units dictionary
+#   key is the array name
+#   val is a tuple with
+#     - the array type, e.g. 'length' or 'density'
+#     - the array default unit, e.g. 'm' or 'kg / m ** 3'
+units_dict = {
+    'accretion_radius': ('length', 'm'),
+    'alpha_viscosity_numerical': ('dimensionless', ''),
+    'angular_momentum': ('angular_momentum', 'kg * m ** 2 / s'),
+    'angular_velocity': ('velocity', 'm / s'),
+    'azimuthal_angle': ('angle', 'rad'),
+    'density': ('density', 'kg / m ** 3'),
+    'differential_velocity': ('velocity', 'm / s'),
+    'dust_density': ('density', 'kg / m ** 3'),
+    'dust_fraction': ('dimensionless', ''),
+    'dust_mass': ('mass', 'kg'),
+    'dust_to_gas_ratio': ('dimensionless', ''),
+    'eccentricity': ('dimensionless', ''),
+    'gas_density': ('density', 'kg / m ** 3'),
+    'gas_fraction': ('dimensionless', ''),
+    'gas_mass': ('mass', 'kg'),
+    'gravitational_potential': ('energy', 'J'),
+    'inclination': ('angle', 'rad'),
+    'internal_energy': ('energy_specific', 'J / kg'),
+    'keplerian_frequency': ('frequency', 'Hz'),
+    'kinetic_energy': ('energy', 'J'),
+    'last_injection_time': ('time', 's'),
+    'magnetic_field': ('magnetic_field', 'T'),
+    'mass': ('mass', 'kg'),
+    'mass_accreted': ('mass', 'kg'),
+    'momentum': ('momentum', 'kg * m / s'),
+    'polar_angle': ('angle', 'rad'),
+    'position': ('length', 'm'),
+    'pressure': ('pressure', 'Pa'),
+    'projection': ('length', 'm'),
+    'radius_cylindrical': ('length', 'm'),
+    'radius_spherical': ('length', 'm'),
+    'semi_major_axis': ('length', 'm'),
+    'smoothing_length': ('length', 'm'),
+    'softening_radius': ('length', 'm'),
+    'sound_speed': ('velocity', 'm / s'),
+    'specific_angular_momentum': ('angular_momentum_specific', 'm ** 2 / s'),
+    'specific_kinetic_energy': ('energy_specific', 'J / kg'),
+    'spin': ('angular_momentum', 'kg * m ** 2 / s'),
+    'stokes_number': ('dimensionless', ''),
+    'stopping_time': ('time', 's'),
+    'sub_type': ('dimensionless', ''),
+    'temperature': ('temperature', 'K'),
+    'timestep': ('time', 's'),
+    'type': ('dimensionless', ''),
+    'velocity': ('velocity', 'm / s'),
+    'velocity_divergence': ('frequency', 'Hz'),
+    'velocity_radial_cylindrical': ('velocity', 'm / s'),
+    'velocity_radial_spherical': ('velocity', 'm / s'),
 }
 
 
-def units_dict():
+def units_defaults():
     """Return a dictionary of arrays with unit strings.
 
     Like the following:
@@ -89,16 +80,17 @@ def units_dict():
 
     This is useful for setting units for plots.
     """
-    return copy.copy(units_default)
+    units_defaults_dict = {key: val[1] for key, val in units_dict.items()}
+    return copy.copy(units_defaults_dict)
 
 
-def generate_units_array_dictionary(units_dictionary):
+def generate_array_units_dict(units_dictionary):
     """Generate units array dictionary.
 
     Parameters
     ----------
     units_dictionary
-        TODO: See generate_units_dictionary.
+        TODO: See generate_code_units_dict.
 
     Returns
     -------
@@ -106,12 +98,13 @@ def generate_units_array_dictionary(units_dictionary):
         A dictionary of units as Pint quantities.
     """
     _units = dict()
-    for arr, unit in array_units_str.items():
+    units_type_dict = {key: val[0] for key, val in units_dict.items()}
+    for arr, unit in units_type_dict.items():
         _units[arr] = units_dictionary[unit]
     return _units
 
 
-def generate_units_dictionary(length, mass, time, temperature, magnetic_field):
+def generate_code_units_dict(length, mass, time, temperature, magnetic_field):
     """Generate units dictionary.
 
     Parameters
@@ -134,23 +127,25 @@ def generate_units_dictionary(length, mass, time, temperature, magnetic_field):
     """
     _units = dict()
 
-    _units['dimensionless'] = length / length
-    _units['length'] = length
-    _units['time'] = time
-    _units['mass'] = mass
-    _units['magnetic_field'] = magnetic_field.to('tesla')
-    _units['frequency'] = (1 / time).to('hertz')
-    _units['velocity'] = length / time
-    _units['momentum'] = mass * length / time
-    _units['angular_momentum'] = mass * length ** 2 / time
-    _units['specific_angular_momentum'] = length ** 2 / time
-    _units['density'] = mass / length ** 3
     _units['acceleration'] = length / time ** 2
-    _units['force'] = (mass * length / time ** 2).to('newton')
+    _units['angle'] = units('radian')
+    _units['angular_momentum'] = mass * length ** 2 / time
+    _units['angular_momentum_specific'] = length ** 2 / time
+    _units['density'] = mass / length ** 3
+    _units['dimensionless'] = units('dimensionless')
     _units['energy'] = (mass * length ** 2 / time ** 2).to('joule')
-    _units['specific_energy'] = (length ** 2 / time ** 2).to('joule/kg')
+    _units['energy_specific'] = (length ** 2 / time ** 2).to('joule/kg')
+    _units['entropy'] = (mass * length ** 2 / time ** 2).to('joule') / temperature
+    _units['force'] = (mass * length / time ** 2).to('newton')
+    _units['frequency'] = (1 / time).to('hertz')
+    _units['length'] = length
+    _units['magnetic_field'] = magnetic_field.to('tesla')
+    _units['mass'] = mass
+    _units['momentum'] = mass * length / time
+    _units['power'] = (mass * length ** 2 / time ** 3).to('watt')
     _units['pressure'] = (mass / time ** 2 / length).to('pascal')
     _units['temperature'] = 1.0 * temperature
-    _units['entropy'] = (mass * length ** 2 / time ** 2).to('joule') / temperature
+    _units['time'] = time
+    _units['velocity'] = length / time
 
     return _units

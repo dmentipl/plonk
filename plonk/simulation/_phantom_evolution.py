@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 from pandas import DataFrame
 
-from .._units import generate_units_dictionary
+from .._units import generate_code_units_dict
 
 if TYPE_CHECKING:
     from .simulation import Simulation
@@ -174,7 +174,7 @@ def load_data_from_file(
 
 def evolution_units(sim: Simulation):
     """TODO"""
-    sim_units = generate_units_dictionary(**sim.units)
+    sim_units = generate_code_units_dict(**sim.units)
     units = dict()
     for key, val in UNITS.items():
         units[key] = sim_units[val]

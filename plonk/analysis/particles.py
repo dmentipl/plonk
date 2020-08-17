@@ -15,31 +15,6 @@ if TYPE_CHECKING:
 
 ORIGIN = (0, 0, 0) * plonk_units.au
 
-array_units = {
-    'angular_momentum': 'angular_momentum',
-    'angular_velocity': 'velocity',
-    'azimuthal_angle': 'radian',
-    'dust_density': 'density',
-    'dust_fraction': 'dimensionless',
-    'dust_mass': 'mass',
-    'eccentricity': 'dimensionless',
-    'gas_density': 'density',
-    'gas_fraction': 'dimensionless',
-    'gas_mass': 'mass',
-    'inclination': 'radian',
-    'keplerian_frequency': 'frequency',
-    'kinetic_energy': 'energy',
-    'momentum': 'momentum',
-    'polar_angle': 'radian',
-    'radial_distance': 'length',
-    'radial_velocity': 'velocity',
-    'semi_major_axis': 'length',
-    'specific_angular_momentum': 'specific_angular_momentum',
-    'specific_kinetic_energy': 'specific_energy',
-    'stokes_number': 'dimensionless',
-    'temperature': 'temperature',
-}
-
 array_requires = {
     'angular_momentum': ('mass', 'position', 'velocity'),
     'angular_velocity': ('position', 'velocity'),
