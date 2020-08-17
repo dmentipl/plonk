@@ -629,55 +629,52 @@ class Snap:
             ]
         return np.flatnonzero(self['type'] == self.particle_type[particle_type])
 
-    def subsnaps_by_type(
-        self, split_subtypes: bool = True
+    def subsnaps_as_dict(
+        self, squeeze: bool = False
     ) -> Dict[str, Union[SubSnap, List[SubSnap]]]:
         """Return particle-type subsnaps as a dict of SubSnaps.
 
         Parameters
         ----------
-        split_subtypes : optional
-            If True, split particle types into subtypes.
+        squeeze : optional
+            Squeeze sub-types. For each key, if False and the particle
+            family has sub-types then return a list of SubSnaps of each
+            sub-type. Otherwise return a SubSnap with all particle of
+            that type.
 
         Returns
         -------
         Dict
             A dict of all SubSnaps.
         """
-        if not split_subtypes:
-            raise NotImplementedError('Combined sub-types not implemented yet')
-        subsnaps_by_type: Dict[str, Any] = dict()
+        subsnaps_as_dict: Dict[str, Any] = dict()
         for key in self.particle_type:
-            try:
-                subsnap = self[key]
-                if isinstance(subsnap, list):
-                    if len(subsnap[0]) > 0:
-                        subsnaps_by_type[key] = self[key]
-                else:
-                    if len(subsnap) > 0:
-                        subsnaps_by_type[key] = self[key]
-            except ValueError:
-                pass
+            subsnap = self.family(key, squeeze=squeeze)
+            if isinstance(subsnap, list):
+                if len(subsnap[0]) > 0:
+                    subsnaps_as_dict[key] = subsnap
+            else:
+                if len(subsnap) > 0:
+                    subsnaps_as_dict[key] = subsnap
 
-        return subsnaps_by_type
+        return subsnaps_as_dict
 
-    def subsnaps_as_list(self, split_subtypes: bool = True) -> List[SubSnap]:
+    def subsnaps_as_list(self, squeeze: bool = False) -> List[SubSnap]:
         """Return particle-type subsnaps as a list of SubSnaps.
 
         Parameters
         ----------
-        split_subtypes : optional
-            If True, split particle types into subtypes.
+        squeeze : optional
+            Squeeze sub-types. If True then each particle sub-type of
+            the same type will be treated the same.
 
         Returns
         -------
         List[SubSnap]
             A list of all SubSnaps.
         """
-        if not split_subtypes:
-            raise NotImplementedError('Combined sub-types not implemented yet')
         subsnaps: List[SubSnap] = list()
-        for val in self.subsnaps_by_type().values():
+        for val in self.subsnaps_as_dict(squeeze=squeeze).values():
             if isinstance(val, list):
                 subsnaps = subsnaps + val
             else:
@@ -1226,7 +1223,7 @@ class SubSnap(Snap):
 
         ind = _input_indices_array(inp=indices, max_slice=len(base))
         if len(ind) == 0:
-            raise ValueError('SubSnap has no particles')
+            logger.warning('SubSnap has no particles')
         self._indices = ind
 
         # Attributes different to Snap

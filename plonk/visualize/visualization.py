@@ -602,7 +602,7 @@ def plot(
         # If color (c) and size (s) are not required we color each
         # particle type differently
         try:
-            subsnaps: Sequence[SnapLike] = snap.subsnaps_as_list()
+            subsnaps: Sequence[SnapLike] = snap.subsnaps_as_list(squeeze=False)
         except AttributeError:
             # Sinks do not have subsnaps
             subsnaps = [snap]

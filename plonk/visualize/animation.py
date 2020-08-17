@@ -380,7 +380,7 @@ def animation_particles(
 
         if c is None and s is None:
             try:
-                subsnaps = snap.subsnaps_as_list()
+                subsnaps = snap.subsnaps_as_list(squeeze=False)
             except AttributeError:
                 subsnaps = [snap]
         else:
