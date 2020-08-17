@@ -18,7 +18,7 @@ available with :meth:`~Snap.available_arrays`.
     >>> snap = plonk.load_snap('disc_00030.h5')
 
     >>> snap.available_arrays()
-    ('angular_momentum',
+    ['angular_momentum',
      'angular_velocity',
      'azimuthal_angle',
      'density',
@@ -48,7 +48,7 @@ available with :meth:`~Snap.available_arrays`.
      'velocity',
      'velocity_divergence',
      'velocity_radial_cylindrical',
-     'velocity_radial_spherical')
+     'velocity_radial_spherical']
 
 Load a single snapshot and access particle arrays and :attr:`~Snap.properties`.
 
@@ -90,14 +90,14 @@ Load a single snapshot and access sink arrays via :attr:`~Snap.sinks` attribute.
     >>> sinks = snap.sinks
 
     >>> sinks.available_arrays()
-    ('accretion_radius',
+    ['accretion_radius',
      'last_injection_time',
      'mass',
      'mass_accreted',
      'position',
      'softening_radius',
      'spin',
-     'velocity')
+     'velocity']
 
     >>> sinks['spin']
     array([[ 3.56866999e+36, -1.17910663e+37,  2.44598074e+40],

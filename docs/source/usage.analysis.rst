@@ -140,7 +140,7 @@ A :class:`Profile` allows for creating a 1-dimensional profile through the
     >>> prof = plonk.load_profile(snap)
 
     >>> prof.available_profiles()
-    ('angular_momentum_mag',
+    ['angular_momentum_mag',
      'angular_momentum_phi',
      'angular_momentum_theta',
      'angular_momentum_x',
@@ -197,7 +197,7 @@ A :class:`Profile` allows for creating a 1-dimensional profile through the
      'velocity_radial_spherical',
      'velocity_x',
      'velocity_y',
-     'velocity_z')
+     'velocity_z']
 
     >>> prof['surface_density']
     array([0.12710392, 0.28658185, 0.40671266, 0.51493316, 0.65174709,

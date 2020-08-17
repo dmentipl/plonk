@@ -22,7 +22,7 @@ Math
 Utils
 ~~~~~
 
-.. autofunction:: plonk.units_dict
+.. autofunction:: plonk.units_defaults
 .. automodule:: plonk.utils.utils
     :members:
 

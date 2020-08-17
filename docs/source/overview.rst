@@ -90,7 +90,7 @@ To see what arrays are loaded into memory you can use the
 .. code-block:: pycon
 
     >>> snap.loaded_arrays()
-    ('position',)
+    ['position']
 
 Use :meth:`~Snap.available_arrays` to see what arrays are available. Some of
 these arrays are stored on file, while others are computed as required.
@@ -98,7 +98,7 @@ these arrays are stored on file, while others are computed as required.
 .. code-block:: pycon
 
     >>> snap.available_arrays()
-    ('angular_momentum',
+    ['angular_momentum',
      'angular_velocity',
      'azimuthal_angle',
      'density',
@@ -128,7 +128,7 @@ these arrays are stored on file, while others are computed as required.
      'velocity',
      'velocity_divergence',
      'velocity_radial_cylindrical',
-     'velocity_radial_spherical')
+     'velocity_radial_spherical']
 
 You can also define your own alias to access arrays. For example, if you prefer
 to use the name `'coordinate'` rather than `'position',` use the
@@ -184,14 +184,14 @@ particles. They are available as an attribute :attr:`~Snap.sinks`.
     >>> sinks = snap.sinks
 
     >>> sinks.available_arrays()
-    ('accretion_radius',
+    ['accretion_radius',
      'last_injection_time',
      'mass',
      'mass_accreted',
      'position',
      'softening_radius',
      'spin',
-     'velocity')
+     'velocity']
 
     >>> sinks['spin']
     array([[ 3.56866999e+36, -1.17910663e+37,  2.44598074e+40],
@@ -249,9 +249,9 @@ We store this data in pandas DataFrames. Use :func:`load_ev` to instantiate.
     >>> ev = plonk.load_ev('disc01.ev')
 
 The data may be split over several files, for example, if the simulation was run
-with multiple jobs on a computation cluster. In that case, pass in a tuple or
-list of files in chronological order to :func:`load_ev`, and Plonk will
-concatenate the data removing any duplicated time steps.
+with multiple jobs on a computation cluster. In that case, pass in a list of
+files in chronological order to :func:`load_ev`, and Plonk will concatenate the
+data removing any duplicated time steps.
 
 The underlying data is stored as a pandas [#f1]_ DataFrame. This allows for
 the use of typical pandas operations with which users in the scientific Python
@@ -409,7 +409,7 @@ To see all available arrays on the :class:`Snap` object:
 .. code-block:: pycon
 
     >>> snap.available_arrays()
-    ('angular_momentum',
+    ['angular_momentum',
      'angular_velocity',
      'azimuthal_angle',
      'density',
@@ -439,7 +439,7 @@ To see all available arrays on the :class:`Snap` object:
      'velocity',
      'velocity_divergence',
      'velocity_radial_cylindrical',
-     'velocity_radial_spherical')
+     'velocity_radial_spherical']
 
 You can create a new, derived array on the particles as follows.
 
@@ -512,10 +512,10 @@ methods.
 .. code-block:: pycon
 
     >>> prof.loaded_profiles()
-    ('number', 'radius', 'size')
+    ['number', 'radius', 'size']
 
     >>> prof.available_profiles()
-    ('angular_momentum_mag',
+    ['angular_momentum_mag',
      'angular_momentum_phi',
      'angular_momentum_theta',
      'angular_momentum_x',
@@ -572,7 +572,7 @@ methods.
      'velocity_radial_spherical',
      'velocity_x',
      'velocity_y',
-     'velocity_z')
+     'velocity_z']
 
 To load a profile, simply call it.
 
@@ -611,13 +611,13 @@ and puts them into the DataFrame with units indicated in brackets.
 
 .. code-block:: pycon
 
-    >>> profiles = (
+    >>> profiles = [
     ...    'radius',
     ...    'angular_momentum_phi',
     ...    'angular_momentum_theta',
     ...    'surface_density',
     ...    'scale_height',
-    ... )
+    ... ]
     >>> df = prof.to_dataframe(columns=profiles)
     >>> df
           radius [m]  angular_momentum_phi [rad]  angular_momentum_theta [rad]  surface_density [kg / m ** 2]  scale_height [m]
