@@ -185,6 +185,9 @@ class Snap:
         name of the function is the string with which to reference the
         array.
 
+        The function being decorated should return a Pint Quantity
+        array, not a unitless numpy array.
+
         Parameters
         ----------
         vector

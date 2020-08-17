@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 
 ORIGIN = (0, 0, 0) * plonk_units.au
 
+# Derived quantities require some arrays already present
 array_requires = {
     'angular_momentum': ('mass', 'position', 'velocity'),
     'angular_velocity': ('position', 'velocity'),
@@ -40,55 +41,11 @@ array_requires = {
     'temperature': ('sound_speed',),
 }
 
-vector_arrays = {
-    'angular_momentum': True,
-    'angular_velocity': False,
-    'azimuthal_angle': False,
-    'dust_density': False,
-    'dust_fraction': False,
-    'dust_mass': False,
-    'eccentricity': False,
-    'gas_density': False,
-    'gas_fraction': False,
-    'gas_mass': False,
-    'inclination': False,
-    'keplerian_frequency': False,
-    'kinetic_energy': False,
-    'momentum': True,
-    'polar_angle': False,
-    'radial_distance': False,
-    'radial_velocity': False,
-    'semi_major_axis': False,
-    'specific_angular_momentum': True,
-    'specific_kinetic_energy': False,
-    'stokes_number': False,
-    'temperature': False,
-}
+# Arrays which represent quantities with x-, y-, z-components in space
+vector_arrays = ['angular_momentum', 'momentum', 'specific_angular_momentum']
 
-dust_arrays = {
-    'angular_momentum': False,
-    'angular_velocity': False,
-    'azimuthal_angle': False,
-    'dust_density': True,
-    'dust_fraction': True,
-    'dust_mass': True,
-    'eccentricity': False,
-    'gas_density': False,
-    'gas_fraction': False,
-    'gas_mass': False,
-    'inclination': False,
-    'keplerian_frequency': False,
-    'kinetic_energy': False,
-    'momentum': False,
-    'polar_angle': False,
-    'radial_distance': False,
-    'radial_velocity': False,
-    'semi_major_axis': False,
-    'specific_angular_momentum': False,
-    'specific_kinetic_energy': False,
-    'stokes_number': True,
-    'temperature': False,
-}
+# Arrays which represent dust quantities with columns per dust species
+dust_arrays = ['dust_density', 'dust_fraction', 'dust_mass', 'stokes_number']
 
 
 def momentum(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:

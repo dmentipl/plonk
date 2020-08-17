@@ -17,6 +17,7 @@ from ..snap import Snap
 igas, iboundary, istar, idarkmatter, ibulge = 1, 3, 4, 5, 6
 bignumber = 1e29
 
+# Dictionary to convert Phantom HDF5 particle array names to Plonk names
 particle_array_name_map = {
     'abundance': 'abundance',
     'alpha': 'alpha_viscosity_numerical',
@@ -47,6 +48,7 @@ particle_array_name_map = {
     'xyz': 'position',
 }
 
+# Dictionary to convert Phantom HDF5 sinks array names to Plonk names
 sink_array_name_map = {
     'xyz': 'position',
     'vxyz': 'velocity',
