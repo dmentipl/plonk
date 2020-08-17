@@ -462,8 +462,9 @@ class Snap:
         if any((arrays, rotation, translation)):
             for arr in self.loaded_arrays():
                 del self._arrays[arr]
-            for arr in self.sinks.loaded_arrays():
-                del self._sink_arrays[arr]
+            if self.num_sinks > 0:
+                for arr in self.sinks.loaded_arrays():
+                    del self._sink_arrays[arr]
         else:
             logger.warning('Select something to reset')
 
@@ -522,14 +523,14 @@ class Snap:
             if arr in self.loaded_arrays():
                 array_m, array_u = self._arrays[arr].magnitude, self._arrays[arr].units
                 self._arrays[arr] = _rotation.apply(array_m) * array_u
-            if arr in self.sinks.loaded_arrays():
+            if self.num_sinks > 0 and arr in self.sinks.loaded_arrays():
                 array_m = self._sink_arrays[arr].magnitude
                 array_u = self._sink_arrays[arr].units
                 self._sink_arrays[arr] = _rotation.apply(array_m) * array_u
         for arr in self._vector_arrays:
             if arr in self.loaded_arrays():
                 del self._arrays[arr]
-            if arr in self.sinks.loaded_arrays():
+            if self.num_sinks > 0 and arr in self.sinks.loaded_arrays():
                 del self._sink_arrays[arr]
 
         if self.rotation is None:
@@ -578,7 +579,7 @@ class Snap:
             translation *= plonk_units(unit)
         if 'position' in self.loaded_arrays():
             self._arrays['position'] += translation
-        if 'position' in self.sinks.loaded_arrays():
+        if self.num_sinks > 0 and 'position' in self.sinks.loaded_arrays():
             self._sink_arrays['position'] += translation
 
         if self.translation is None:
@@ -1017,7 +1018,7 @@ class Snap:
         """
         if name in self.available_arrays():
             return name
-        if name in self.sinks.available_arrays():
+        if self.num_sinks > 0 and name in self.sinks.available_arrays():
             return name
         if name in self._array_aliases:
             return self._array_aliases[name]
@@ -1041,11 +1042,9 @@ class Snap:
         raise ValueError('Unknown array')
 
     def _array_suffix(self, name: str) -> str:
-        if (
-            name in self.available_arrays()
-            or name in self.sinks.available_arrays()
-            or name in self._array_aliases
-        ):
+        if name in self.available_arrays() or name in self._array_aliases:
+            return ''
+        if self.num_sinks > 0 and name in self.sinks.available_arrays():
             return ''
         if name in self._arrays:
             return ''
