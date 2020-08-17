@@ -15,6 +15,8 @@ Types of changes:
 
 ## [Unreleased]
 
+## [0.7.0] - 2020-08-17
+
 ### Added
 
 - Added plonk.image to make image plots (with interpolation and then matplotlib imshow).
@@ -29,6 +31,7 @@ Types of changes:
 - Added bulk load and unload functions on Snap for loading/unloading multiple arrays into/out-of memory.
 - Add context manager for caching arrays on Snap.
 - Added public methods on Snap: family for accessing particle families, and array for accessing particle arrays. These are already accessible via __getitem__ but this makes the underlying methods available.
+- Add function to add missing units to array on Snap.
 
 ### Changed
 
