@@ -650,13 +650,10 @@ class Snap:
         """
         subsnaps_as_dict: Dict[str, Any] = dict()
         for key in self.particle_type:
-            subsnap = self.family(key, squeeze=squeeze)
-            if isinstance(subsnap, list):
-                if len(subsnap[0]) > 0:
-                    subsnaps_as_dict[key] = subsnap
-            else:
-                if len(subsnap) > 0:
-                    subsnaps_as_dict[key] = subsnap
+            try:
+                subsnaps_as_dict[key] = self.family(key, squeeze=squeeze)
+            except ValueError:
+                continue
 
         return subsnaps_as_dict
 
@@ -930,7 +927,11 @@ class Snap:
         if name in self.particle_type:
             ind = self.particle_indices(particle_type=name, squeeze=squeeze)
             if isinstance(ind, list):
+                if len(ind[0]) == 0:
+                    raise ValueError('Family has no particles')
                 return [SubSnap(self, _ind) for _ind in ind]
+            if len(ind) == 0:
+                raise ValueError('Family has no particles')
             return SubSnap(self, ind)
         raise ValueError('Family not available')
 
