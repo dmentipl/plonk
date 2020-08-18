@@ -999,7 +999,7 @@ class Snap:
         ndarray
             The array on the particles in code units.
         """
-        return (self[name] / self.array_code_unit(name)).magnitude
+        return (self[name] / self.array_code_unit(name)).to_reduced_units().magnitude
 
     def base_array_name(self, name: str) -> str:
         """Get the base array name from a string.
