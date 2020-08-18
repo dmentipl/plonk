@@ -1,78 +1,24 @@
 """Units."""
 
-import copy
+from pathlib import Path
+from typing import Union
 
 import pint
+
+from ._config import load_config
 
 units = pint.UnitRegistry()
 Quantity = units.Quantity
 
-# Add units
+# Add useful astronomical units
 units.define('solar_mass = 1.9891e30 kg')
 units.define('solar_radius = 6.959500e8 m')
 units.define('earth_mass = 5.979e24 kg')
 units.define('earth_radius = 6.371315e6 m')
 units.define('jupiter_mass = 1.89813e27 kg')
 
-# Units dictionary
-#   key is the array name
-#   val is a tuple with
-#     - the array type, e.g. 'length' or 'density'
-#     - the array default unit, e.g. 'm' or 'kg / m ** 3'
-units_dict = {
-    'accretion_radius': ('length', 'm'),
-    'alpha_viscosity_numerical': ('dimensionless', ''),
-    'angular_momentum': ('angular_momentum', 'kg * m ** 2 / s'),
-    'angular_velocity': ('velocity', 'm / s'),
-    'azimuthal_angle': ('angle', 'rad'),
-    'density': ('density', 'kg / m ** 3'),
-    'differential_velocity': ('velocity', 'm / s'),
-    'dust_density': ('density', 'kg / m ** 3'),
-    'dust_fraction': ('dimensionless', ''),
-    'dust_mass': ('mass', 'kg'),
-    'dust_to_gas_ratio': ('dimensionless', ''),
-    'eccentricity': ('dimensionless', ''),
-    'gas_density': ('density', 'kg / m ** 3'),
-    'gas_fraction': ('dimensionless', ''),
-    'gas_mass': ('mass', 'kg'),
-    'gravitational_potential': ('energy', 'J'),
-    'inclination': ('angle', 'rad'),
-    'internal_energy': ('energy_specific', 'J / kg'),
-    'keplerian_frequency': ('frequency', 'Hz'),
-    'kinetic_energy': ('energy', 'J'),
-    'last_injection_time': ('time', 's'),
-    'magnetic_field': ('magnetic_field', 'T'),
-    'mass': ('mass', 'kg'),
-    'mass_accreted': ('mass', 'kg'),
-    'momentum': ('momentum', 'kg * m / s'),
-    'polar_angle': ('angle', 'rad'),
-    'position': ('length', 'm'),
-    'pressure': ('pressure', 'Pa'),
-    'projection': ('length', 'm'),
-    'radius_cylindrical': ('length', 'm'),
-    'radius_spherical': ('length', 'm'),
-    'semi_major_axis': ('length', 'm'),
-    'smoothing_length': ('length', 'm'),
-    'softening_radius': ('length', 'm'),
-    'sound_speed': ('velocity', 'm / s'),
-    'specific_angular_momentum': ('angular_momentum_specific', 'm ** 2 / s'),
-    'specific_kinetic_energy': ('energy_specific', 'J / kg'),
-    'spin': ('angular_momentum', 'kg * m ** 2 / s'),
-    'stokes_number': ('dimensionless', ''),
-    'stopping_time': ('time', 's'),
-    'sub_type': ('dimensionless', ''),
-    'temperature': ('temperature', 'K'),
-    'timestep': ('time', 's'),
-    'type': ('dimensionless', ''),
-    'velocity': ('velocity', 'm / s'),
-    'velocity_divergence': ('frequency', 'Hz'),
-    'velocity_radial_cylindrical': ('velocity', 'm / s'),
-    'velocity_radial_spherical': ('velocity', 'm / s'),
-    'vorticity': ('frequency', 'Hz'),
-}
 
-
-def units_defaults():
+def units_defaults(filename: Union[str, Path] = None):
     """Return a dictionary of arrays with unit strings.
 
     Like the following:
@@ -81,8 +27,22 @@ def units_defaults():
 
     This is useful for setting units for plots.
     """
-    units_defaults_dict = {key: val[1] for key, val in units_dict.items()}
-    return copy.copy(units_defaults_dict)
+    if filename is None:
+        conf = load_config()
+    else:
+        conf = load_config(filename=filename)
+    d = dict()
+    for key, val in conf['arrays'].items():
+        d[key] = conf['units'][val]
+    return d
+
+
+def array_quantities(filename: Union[str, Path] = None):
+    """TODO."""
+    if filename is None:
+        return load_config()
+    else:
+        return load_config(filename=filename)
 
 
 def generate_array_units_dict(units_dictionary):
@@ -99,7 +59,7 @@ def generate_array_units_dict(units_dictionary):
         A dictionary of units as Pint quantities.
     """
     _units = dict()
-    units_type_dict = {key: val[0] for key, val in units_dict.items()}
+    units_type_dict = array_quantities()['arrays']
     for arr, unit in units_type_dict.items():
         _units[arr] = units_dictionary[unit]
     return _units

@@ -36,5 +36,6 @@ dependencies:
   - scipy
   - sphinx
   - sphinx_rtd_theme
+  - toml
   - tqdm
   - twine
