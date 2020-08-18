@@ -372,7 +372,7 @@ class Profile:
         x: str,
         y: Union[str, List[str]],
         units: Dict[str, Union[str, List[str]]] = None,
-        std_dev_shading: bool = False,
+        std: str = None,
         ax: Any = None,
         ax_kwargs={},
         **kwargs,
@@ -391,8 +391,9 @@ class Profile:
             quantities such as 'position', 'density', 'velocity', and so on.
             The values are strings representing units, e.g. 'g/cm^3' for
             density.
-        std_dev_shading : optional
-            Add shading for standard deviation of profile.
+        std: optional
+            Add standard deviation on profile. Can be 'shading' or
+            'errorbar'.
         ax : optional
             A matplotlib Axes object to plot to.
         ax_kwargs
@@ -421,6 +422,10 @@ class Profile:
             if len(y) != len(y_unit):
                 raise ValueError('Length of y does not match length of y_unit')
 
+        if std is not None:
+            if std not in ('shading', 'errorbar'):
+                raise ValueError('std must be "shading" or "errorbar"')
+
         _x = self[x]
         if x_unit is not None:
             _x = _x.to(x_unit)
@@ -434,7 +439,7 @@ class Profile:
 
         for idx, yi in enumerate(y):
             _y = self[yi]
-            if std_dev_shading:
+            if std:
                 if yi.split('_')[-1] in _aggregations:
                     _yi = '_'.join(yi.split('_')[:-1])
                 else:
@@ -443,30 +448,35 @@ class Profile:
                     _y_std = self[_yi + '_std']
                 except ValueError:
                     logger.warning('Cannot calculate standard deviation')
-                if self.aggregation != 'mean':
+                if self.aggregation in ('std', 'sum'):
                     _y_mean = self[_yi + '_mean']
                 else:
                     _y_mean = _y
             if y_unit is not None:
                 _y = _y.to(y_unit[idx])
-                if std_dev_shading:
+                if std:
                     _y_std = _y_std.to(y_unit[idx])
                     _y_mean = _y_mean.to(y_unit[idx])
             yname = pretty_array_name(yi)
             label = f'{yname} [{_y.units:~P}]'
             _y = _y.magnitude
-            if std_dev_shading:
+            if std:
                 _y_std = _y_std.magnitude
                 _y_mean = _y_mean.magnitude
             if kwargs.get('label') is None:
                 lines = ax.plot(_x, _y, label=label, **kwargs)
             else:
                 lines = ax.plot(_x, _y, **kwargs)
-            if std_dev_shading:
+            if std:
                 color = lines[0].get_color()
-                ax.fill_between(
-                    _x, _y_mean - _y_std, _y_mean + _y_std, color=color, alpha=0.2,
-                )
+                if std == 'shading':
+                    ax.fill_between(
+                        _x, _y_mean - _y_std, _y_mean + _y_std, color=color, alpha=0.2,
+                    )
+                elif std == 'errorbar':
+                    ax.errorbar(
+                        _x, _y_mean, yerr=_y_std, linestyle='', color=color, alpha=0.5
+                    )
 
         ax.legend()
         ax.set(**ax_kwargs)

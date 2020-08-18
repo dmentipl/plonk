@@ -83,7 +83,7 @@ def test_profile_plot():
         x='radius',
         y='density',
         units={'position': 'au', 'density': 'g/cm^3'},
-        std_dev_shading=True,
+        std='shading',
     )
 
     snap.close_file()
