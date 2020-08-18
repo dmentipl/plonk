@@ -18,7 +18,7 @@ units.define('earth_radius = 6.371315e6 m')
 units.define('jupiter_mass = 1.89813e27 kg')
 
 
-def units_defaults(filename: Union[str, Path] = None):
+def array_units(filename: Union[str, Path] = None):
     """Return a dictionary of arrays with unit strings.
 
     Like the following:
@@ -40,9 +40,10 @@ def units_defaults(filename: Union[str, Path] = None):
 def array_quantities(filename: Union[str, Path] = None):
     """TODO."""
     if filename is None:
-        return load_config()
+        config = load_config()
     else:
-        return load_config(filename=filename)
+        config = load_config(filename=filename)
+    return config['arrays']
 
 
 def generate_array_units_dict(units_dictionary):
@@ -59,8 +60,8 @@ def generate_array_units_dict(units_dictionary):
         A dictionary of units as Pint quantities.
     """
     _units = dict()
-    units_type_dict = array_quantities()['arrays']
-    for arr, unit in units_type_dict.items():
+    _array_quantities = array_quantities()
+    for arr, unit in _array_quantities.items():
         _units[arr] = units_dictionary[unit]
     return _units
 

@@ -57,7 +57,7 @@ available at https://github.com/dmentipl/plonk.
 import importlib_metadata
 
 from ._logging import logger_init as _logger_init
-from ._units import units, units_defaults
+from ._units import array_units, units
 from .analysis.profile import Profile, load_profile
 from .simulation.evolution import load_ev
 from .simulation.simulation import Simulation, load_sim
@@ -82,6 +82,7 @@ __all__ = [
     'animation',
     'animation_particles',
     'animation_profiles',
+    'array_units',
     'image',
     'interpolate',
     'load_ev',
@@ -90,7 +91,6 @@ __all__ = [
     'load_snap',
     'plot',
     'units',
-    'units_defaults',
     'vector',
     'visualize_sim',
 ]
