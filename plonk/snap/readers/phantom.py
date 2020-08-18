@@ -71,6 +71,25 @@ sink_array_name_map = {
 }
 
 
+def fileid(snap: Snap) -> str:
+    """Return Phantom 'fileid'.
+
+    This contains information on the type of snapshot and which physics
+    the simulation contains.
+
+    Parameters
+    ----------
+    snap
+        The Snap object.
+
+    Returns
+    -------
+    str
+        The file id.
+    """
+    return snap._file_pointer['header/fileident'][()].decode()
+
+
 def generate_snap_from_file(filename: Union[str, Path]) -> Snap:
     """Generate a Snap object from a Phantom HDF5 file.
 
@@ -329,18 +348,19 @@ def get_dataset(dataset: str, group: str) -> Callable:
     def func(snap: Snap) -> Quantity:
         array = snap._file_pointer[f'{group}/{dataset}'][()]
         if dataset in particle_array_name_map:
-            unit = snap._array_code_units[particle_array_name_map[dataset]]
+            name = particle_array_name_map[dataset]
         elif dataset in sink_array_name_map:
-            unit = snap._array_code_units[sink_array_name_map[dataset]]
+            name = sink_array_name_map[dataset]
         else:
-            try:
-                unit = snap._array_code_units[dataset]
-            except KeyError:
-                logger.error(
-                    f'Cannot get unit of dataset "{group}/{dataset}" - '
-                    'assuming dimensionless'
-                )
-                unit = plonk_units('dimensionless')
+            name = dataset
+        try:
+            unit = snap._array_code_units[name]
+        except KeyError:
+            logger.error(
+                f'Cannot get unit of dataset "{group}/{dataset}" - '
+                'assuming dimensionless'
+            )
+            unit = plonk_units('dimensionless')
         return array * unit
 
     return func
