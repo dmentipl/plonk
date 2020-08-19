@@ -371,11 +371,18 @@ def _interpolated_data(
     snap, quantity, x, y, interp, slice_normal, slice_offset, extent, units, **kwargs,
 ):
     if units is None:
-        _units = {
-            'quantity': 1 * snap[quantity].units,
-            'extent': 1 * snap['position'].units,
-            'projection': 1 * snap['position'].units,
-        }
+        try:
+            _units = {
+                'quantity': plonk_units(snap.default_units[quantity]),
+                'extent': plonk_units(snap.default_units['position']),
+                'projection': plonk_units(snap.default_units['projection']),
+            }
+        except KeyError:
+            _units = {
+                'quantity': 1 * snap[quantity].units,
+                'extent': 1 * snap['position'].units,
+                'projection': 1 * snap['position'].units,
+            }
     else:
         qunit = 1 * plonk_units(
             units.get(snap.base_array_name(quantity), str(snap[quantity].units))
@@ -640,14 +647,26 @@ def _plot_data(snap, x, y, c, s, units):
     _s: Quantity = snap[s] if s is not None else None
 
     if units is None:
-        _units = {
-            'x': 1 * snap[x].units,
-            'y': 1 * snap[y].units,
-        }
+        try:
+            _units = {
+                'x': plonk_units(snap.default_units[x]),
+                'y': plonk_units(snap.default_units[y]),
+            }
+        except (KeyError, AttributeError):
+            _units = {
+                'x': 1 * snap[x].units,
+                'y': 1 * snap[y].units,
+            }
         if c is not None:
-            _units['c'] = 1 * snap[c].units
+            try:
+                _units['c'] = plonk_units(snap.default_units[c])
+            except KeyError:
+                _units['c'] = 1 * snap[c].units
         if s is not None:
-            _units['s'] = 1 * snap[s].units
+            try:
+                _units['s'] = plonk_units(snap.default_units[s])
+            except KeyError:
+                _units['s'] = 1 * snap[s].units
     else:
         xunit = units.get(snap.base_array_name(x), str(snap[x].units))
         yunit = units.get(snap.base_array_name(y), str(snap[y].units))
