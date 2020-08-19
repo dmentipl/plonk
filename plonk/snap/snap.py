@@ -105,19 +105,6 @@ class Snap:
         'bulge': 6,
     }
 
-    @staticmethod
-    def add_alias(name: str, alias: str) -> None:
-        """Add alias to array.
-
-        Parameters
-        ----------
-        name
-            The name of the array.
-        alias
-            The alias to reference the array.
-        """
-        Snap._array_aliases[alias] = name
-
     def __init__(self):
 
         self.data_source = None
@@ -186,6 +173,18 @@ class Snap:
             return fn
 
         return _add_array
+
+    def add_alias(self, name: str, alias: str) -> None:
+        """Add alias to array.
+
+        Parameters
+        ----------
+        name
+            The name of the array.
+        alias
+            The alias to reference the array.
+        """
+        self._array_aliases[alias] = name
 
     def add_unit(self, name: str, unit: str) -> Snap:
         """Add missing code unit to array.
