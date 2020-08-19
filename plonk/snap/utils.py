@@ -36,7 +36,16 @@ def gravitational_constant_in_code_units(snap: SnapLike) -> float:
 
 
 def add_aliases(snap: SnapLike, filename: Union[str, Path] = None):
-    """TODO"""
+    """Add array aliases to a Snap.
+
+    Parameters
+    ----------
+    snap
+        The Snap object.
+    config : optional
+        The path to a Plonk config.toml file. If None, use the default
+        file.
+    """
     conf = load_config(filename=filename)
     for key, val in conf['arrays']['aliases'].items():
         snap.add_alias(key, val)
