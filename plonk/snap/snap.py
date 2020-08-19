@@ -1124,6 +1124,8 @@ class Snap:
                 array = self._get_array_from_registry(name, sinks).to(
                     self.default_units[name]
                 )
+            else:
+                array = self._get_array_from_registry(name, sinks)
             if self.cache_arrays:
                 if sinks:
                     self._sink_arrays[name] = array
