@@ -15,6 +15,18 @@ Types of changes:
 
 ## [Unreleased]
 
+### Added
+
+- Use a TOML config file to configure options.
+- Add default_units and set_units on Snap.
+
+### Changed
+
+- Renamed units_defaults to array_units.
+- Name mapping, units, aliases are no longer hard coded and are now in config.toml.
+- If no units specified in image/plot/vector functions then use the default units on the Snap if available.
+- Renamed some analysis.particles functions.
+
 ## [0.7.0] - 2020-08-17
 
 ### Added
