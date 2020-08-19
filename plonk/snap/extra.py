@@ -1,7 +1,6 @@
 """Add extra quantities to Snap."""
 
-from numpy import ndarray
-
+from .._units import Quantity
 from .._units import units as plonk_units
 from ..analysis import particles
 
@@ -33,7 +32,7 @@ def extra_quantities(snap):
         dust = _dust('momentum')
 
         @snap.add_array(vector=vector, dust=dust)
-        def momentum(snap) -> ndarray:
+        def momentum(snap) -> Quantity:
             """Momentum."""
             return particles.momentum(snap=snap)
 
@@ -42,7 +41,7 @@ def extra_quantities(snap):
         dust = _dust('angular_momentum')
 
         @snap.add_array(vector=vector, dust=dust)
-        def angular_momentum(snap) -> ndarray:
+        def angular_momentum(snap) -> Quantity:
             """Angular momentum."""
             origin = snap.translation if snap.translation is not None else ORIGIN
             return particles.angular_momentum(snap=snap, origin=origin)
@@ -52,7 +51,7 @@ def extra_quantities(snap):
         dust = _dust('specific_angular_momentum')
 
         @snap.add_array(vector=vector, dust=dust)
-        def specific_angular_momentum(snap) -> ndarray:
+        def specific_angular_momentum(snap) -> Quantity:
             """Specific angular momentum."""
             origin = snap.translation if snap.translation is not None else ORIGIN
             return particles.specific_angular_momentum(snap=snap, origin=origin)
@@ -62,7 +61,7 @@ def extra_quantities(snap):
         dust = _dust('kinetic_energy')
 
         @snap.add_array(vector=vector, dust=dust)
-        def kinetic_energy(snap) -> ndarray:
+        def kinetic_energy(snap) -> Quantity:
             """Kinetic energy."""
             return particles.kinetic_energy(snap=snap)
 
@@ -71,7 +70,7 @@ def extra_quantities(snap):
         dust = _dust('specific_kinetic_energy')
 
         @snap.add_array(vector=vector, dust=dust)
-        def specific_kinetic_energy(snap) -> ndarray:
+        def specific_kinetic_energy(snap) -> Quantity:
             """Specific kinetic energy."""
             return particles.specific_kinetic_energy(snap=snap)
 
@@ -80,7 +79,7 @@ def extra_quantities(snap):
         dust = _dust('keplerian_frequency')
 
         @snap.add_array(vector=vector, dust=dust)
-        def keplerian_frequency(snap) -> ndarray:
+        def keplerian_frequency(snap) -> Quantity:
             """Keplerian orbital frequency."""
             gravitational_parameter = snap.properties.get('gravitational_parameter')
             if gravitational_parameter is None:
@@ -100,7 +99,7 @@ def extra_quantities(snap):
         dust = _dust('semi_major_axis')
 
         @snap.add_array(vector=vector, dust=dust)
-        def semi_major_axis(snap) -> ndarray:
+        def semi_major_axis(snap) -> Quantity:
             """Semi-major axis."""
             gravitational_parameter = snap.properties.get('gravitational_parameter')
             if gravitational_parameter is None:
@@ -120,7 +119,7 @@ def extra_quantities(snap):
         dust = _dust('eccentricity')
 
         @snap.add_array(vector=vector, dust=dust)
-        def eccentricity(snap) -> ndarray:
+        def eccentricity(snap) -> Quantity:
             """Eccentricity."""
             gravitational_parameter = snap.properties.get('gravitational_parameter')
             if gravitational_parameter is None:
@@ -140,7 +139,7 @@ def extra_quantities(snap):
         dust = _dust('inclination')
 
         @snap.add_array(vector=vector, dust=dust)
-        def inclination(snap) -> ndarray:
+        def inclination(snap) -> Quantity:
             """Inclination."""
             return particles.inclination(snap=snap)
 
@@ -149,12 +148,12 @@ def extra_quantities(snap):
         dust = _dust('radial_distance')
 
         @snap.add_array(vector=vector, dust=dust)
-        def radius_cylindrical(snap) -> ndarray:
+        def radius_cylindrical(snap) -> Quantity:
             """Cylindrical radius."""
             return particles.radial_distance(snap=snap, coordinates='cylindrical')
 
         @snap.add_array(vector=vector, dust=dust)
-        def radius_spherical(snap) -> ndarray:
+        def radius_spherical(snap) -> Quantity:
             """Spherical radius."""
             return particles.radial_distance(snap=snap, coordinates='spherical')
 
@@ -163,7 +162,7 @@ def extra_quantities(snap):
         dust = _dust('azimuthal_angle')
 
         @snap.add_array(vector=vector, dust=dust)
-        def azimuthal_angle(snap) -> ndarray:
+        def azimuthal_angle(snap) -> Quantity:
             """Azimuthal angle."""
             return particles.azimuthal_angle(snap=snap)
 
@@ -172,7 +171,7 @@ def extra_quantities(snap):
         dust = _dust('polar_angle')
 
         @snap.add_array(vector=vector, dust=dust)
-        def polar_angle(snap) -> ndarray:
+        def polar_angle(snap) -> Quantity:
             """Polar angle."""
             return particles.polar_angle(snap=snap)
 
@@ -181,12 +180,12 @@ def extra_quantities(snap):
         dust = _dust('radial_velocity')
 
         @snap.add_array(vector=vector, dust=dust)
-        def velocity_radial_cylindrical(snap) -> ndarray:
+        def velocity_radial_cylindrical(snap) -> Quantity:
             """Cylindrical radial velocity."""
             return particles.radial_velocity(snap=snap, coordinates='cylindrical')
 
         @snap.add_array(vector=vector, dust=dust)
-        def velocity_radial_spherical(snap) -> ndarray:
+        def velocity_radial_spherical(snap) -> Quantity:
             """Spherical radial velocity."""
             return particles.radial_velocity(snap=snap, coordinates='spherical')
 
@@ -195,7 +194,7 @@ def extra_quantities(snap):
         dust = _dust('angular_velocity')
 
         @snap.add_array(vector=vector, dust=dust)
-        def angular_velocity(snap) -> ndarray:
+        def angular_velocity(snap) -> Quantity:
             """Angular velocity."""
             return particles.angular_velocity(snap=snap)
 
@@ -204,7 +203,7 @@ def extra_quantities(snap):
         dust = _dust('temperature')
 
         @snap.add_array(vector=vector, dust=dust)
-        def temperature(snap) -> ndarray:
+        def temperature(snap) -> Quantity:
             """Temperature."""
             molecular_weight = snap.properties.get('molecular_weight')
             if molecular_weight is None:
@@ -219,7 +218,7 @@ def extra_quantities(snap):
         dust = _dust('gas_fraction')
 
         @snap.add_array(vector=vector, dust=dust)
-        def gas_fraction(snap) -> ndarray:
+        def gas_fraction(snap) -> Quantity:
             """Gas fraction."""
             return particles.gas_fraction(snap=snap)
 
@@ -228,7 +227,7 @@ def extra_quantities(snap):
         dust = _dust('gas_mass')
 
         @snap.add_array(vector=vector, dust=dust)
-        def gas_mass(snap) -> ndarray:
+        def gas_mass(snap) -> Quantity:
             """Gas mass."""
             return particles.gas_mass(snap=snap)
 
@@ -237,7 +236,7 @@ def extra_quantities(snap):
         dust = _dust('gas_density')
 
         @snap.add_array(vector=vector, dust=dust)
-        def gas_density(snap) -> ndarray:
+        def gas_density(snap) -> Quantity:
             """Gas density."""
             return particles.gas_density(snap=snap)
 
@@ -248,7 +247,7 @@ def extra_quantities(snap):
         if snap.properties['dust_method'] == 'dust as separate sets of particles':
 
             @snap.add_array(vector=vector, dust=dust)
-            def dust_fraction(snap) -> ndarray:
+            def dust_fraction(snap) -> Quantity:
                 """Dust fraction."""
                 return particles.dust_fraction(snap=snap)
 
@@ -257,7 +256,7 @@ def extra_quantities(snap):
         dust = _dust('dust_mass')
 
         @snap.add_array(vector=vector, dust=dust)
-        def dust_mass(snap) -> ndarray:
+        def dust_mass(snap) -> Quantity:
             """Dust mass."""
             return particles.dust_mass(snap=snap)
 
@@ -266,7 +265,7 @@ def extra_quantities(snap):
         dust = _dust('dust_density')
 
         @snap.add_array(vector=vector, dust=dust)
-        def dust_density(snap) -> ndarray:
+        def dust_density(snap) -> Quantity:
             """Dust density."""
             return particles.dust_density(snap=snap)
 
@@ -275,7 +274,7 @@ def extra_quantities(snap):
         dust = _dust('stokes_number')
 
         @snap.add_array(vector=vector, dust=dust)
-        def stokes_number(snap) -> ndarray:
+        def stokes_number(snap) -> Quantity:
             """Stokes number."""
             gravitational_parameter = snap.properties.get('gravitational_parameter')
             if gravitational_parameter is None:
