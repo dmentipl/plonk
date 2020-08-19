@@ -48,11 +48,11 @@ class Profile:
         Cartesian along the x-axis. Default is 2.
     cmin : optional
         The minimum coordinate for binning. Can be a string, e.g.
-        '10 au', or a quantity with units, e.g. plonk.units['10 au'].
+        '10 au', or a quantity with units, e.g. plonk.units('10 au').
         Defaults to minimum on the particles.
     cmax : optional
         The maximum coordinate for binning. Can be a string, e.g.
-        '10 au', or a quantity with units, e.g. plonk.units['10 au'].
+        '10 au', or a quantity with units, e.g. plonk.units('10 au').
         Defaults to the 99 percentile distance.
     n_bins : optional
         The number of radial bins. Default is 100.
@@ -550,7 +550,7 @@ class Profile:
                 try:
                     _units.append(self[column].units)
                 except AttributeError:
-                    _units.append(plonk_units['dimensionless'])
+                    _units.append(plonk_units('dimensionless'))
         else:
             _units = list()
             for unit in units:

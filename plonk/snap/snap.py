@@ -80,39 +80,7 @@ class Snap:
     ...     return plonk.analysis.particles.radial_distance(snap)
     """
 
-    _array_aliases = {
-        'B': 'magnetic_field',
-        'c_s': 'sound_speed',
-        'dt': 'timestep',
-        'e': 'eccentricity',
-        'eps': 'dust_fraction',
-        'h': 'smoothing_length',
-        'j': 'specific_angular_momentum',
-        'L': 'angular_momentum',
-        'm': 'mass',
-        'omega_k': 'keplerian_frequency',
-        'p': 'momentum',
-        'P': 'pressure',
-        'pos': 'position',
-        'phi': 'azimuthal_angle',
-        'R': 'radius_cylindrical',
-        'r': 'radius_spherical',
-        'rho': 'density',
-        'rho_d': 'dust_density',
-        'rho_g': 'gas_density',
-        'St': 'stokes_number',
-        'T': 'temperature',
-        'theta': 'polar_angle',
-        't_s': 'stopping_time',
-        'u': 'internal_energy',
-        'v': 'velocity',
-        'v_R': 'velocity_radial_cylindrical',
-        'v_r': 'velocity_radial_spherical',
-        'v_phi': 'angular_velocity',
-        'velocity_R': 'radial_velocity_cylindrical',
-        'velocity_r': 'radial_velocity_spherical',
-        'velocity_phi': 'angular_velocity',
-    }
+    _array_aliases: Dict[str, str] = {}
 
     _vector_arrays = {
         'magnetic_field',
@@ -137,28 +105,17 @@ class Snap:
         'bulge': 6,
     }
 
-    @staticmethod
-    def add_alias(name: str, alias: str) -> None:
-        """Add alias to array.
-
-        Parameters
-        ----------
-        name
-            The name of the array.
-        alias
-            The alias to reference the array.
-        """
-        Snap._array_aliases[alias] = name
-
     def __init__(self):
 
         self.data_source = None
         self.file_path = None
-        self.code_units = {}
+        self._code_units = {}
+        self._default_units = {}
         self._properties = {}
         self._array_code_units = {}
         self._array_registry: Dict[str, Callable] = {}
         self._sink_registry: Dict[str, Callable] = {}
+        self._name_map = {}
         self._cache_arrays = True
         self._arrays = {}
         self._sink_arrays = {}
@@ -216,6 +173,18 @@ class Snap:
             return fn
 
         return _add_array
+
+    def add_alias(self, name: str, alias: str) -> None:
+        """Add alias to array.
+
+        Parameters
+        ----------
+        name
+            The name of the array.
+        alias
+            The alias to reference the array.
+        """
+        self._array_aliases[alias] = name
 
     def add_unit(self, name: str, unit: str) -> Snap:
         """Add missing code unit to array.
@@ -342,6 +311,7 @@ class Snap:
             _arrays = arrays
         with self.context(cache=True):
             for array in _arrays:
+                print(array)
                 try:
                     self[array]
                 except ValueError as e:
@@ -374,6 +344,41 @@ class Snap:
     def properties(self) -> Dict[str, Any]:
         """Snap properties."""
         return {key: self._properties[key] for key in sorted(self._properties.keys())}
+
+    @property
+    def default_units(self) -> Dict[str, Any]:
+        """Snap default units."""
+        return {
+            key: self._default_units[key] for key in sorted(self._default_units.keys())
+        }
+
+    def set_units(self, **kwargs) -> Snap:
+        """Set default unit for arrays.
+
+        Parameters
+        ----------
+        kwargs
+            Keyword arguments with keys as the array name, e.g.
+            'pressure', and with values as the unit as a string, e.g.
+            'pascal'.
+
+        Examples
+        --------
+        Set multiple default units.
+
+        >>> snap.set_units(pressure='pascal', density='g/cm^3')
+        """
+        for key, val in kwargs.items():
+            if key not in self.default_units:
+                logger.info(f'adding array {key} to default_units dict')
+            self._default_units[key] = val
+
+        return self
+
+    @property
+    def code_units(self) -> Dict[str, Any]:
+        """Snap code units."""
+        return {key: self._code_units[key] for key in sorted(self._code_units.keys())}
 
     @property
     def sinks(self) -> Sinks:
@@ -840,7 +845,7 @@ class Snap:
             filename = f'{self.file_path.stem}_extra.h5'
         f = h5py.File(filename, mode='r')
         for array in f:
-            self[array] = f[array][()] * plonk_units['dimensionless']
+            self[array] = f[array][()] * plonk_units('dimensionless')
         f.close()
 
         return self
@@ -876,7 +881,7 @@ class Snap:
                     arr: Quantity = self[column]
                     _units.append(arr.units)
                 except AttributeError:
-                    _units.append(plonk_units['dimensionless'])
+                    _units.append(plonk_units('dimensionless'))
         else:
             _units = list()
             for unit in units:
@@ -999,7 +1004,7 @@ class Snap:
         ndarray
             The array on the particles in code units.
         """
-        return (self[name] / self.array_code_unit(name)).magnitude
+        return (self[name] / self.array_code_unit(name)).to_reduced_units().magnitude
 
     def base_array_name(self, name: str) -> str:
         """Get the base array name from a string.
@@ -1111,9 +1116,16 @@ class Snap:
         else:
             array_dict = self._arrays
         if name in array_dict:
+            if name in self.default_units:
+                return array_dict[name].to(self.default_units[name])
             return array_dict[name]
         if name in self._array_registry or name in self._sink_registry:
-            array = self._get_array_from_registry(name, sinks)
+            if name in self.default_units:
+                array = self._get_array_from_registry(name, sinks).to(
+                    self.default_units[name]
+                )
+            else:
+                array = self._get_array_from_registry(name, sinks)
             if self.cache_arrays:
                 if sinks:
                     self._sink_arrays[name] = array
@@ -1236,7 +1248,7 @@ class SubSnap(Snap):
         # Attributes same as Snap
         self.data_source = self.base.data_source
         self.file_path = self.base.file_path
-        self.code_units = self.base.code_units
+        self._code_units = self.base._code_units
         self._properties = self.base._properties
         self._array_code_units = self.base._array_code_units
         self._array_registry = self.base._array_registry

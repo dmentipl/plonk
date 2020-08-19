@@ -64,7 +64,7 @@ class Simulation:
 
         self._snaps: List[Snap] = None
         self._properties: Dict[str, Any] = None
-        self._units: Dict[str, Any] = None
+        self._code_units: Dict[str, Any] = None
         self._time_series: Dict[str, Union[DataFrame, List[DataFrame]]] = None
 
         self._snap_file_extension = ''
@@ -131,12 +131,12 @@ class Simulation:
         return self._properties
 
     @property
-    def units(self) -> Dict[str, Any]:
+    def code_units(self) -> Dict[str, Any]:
         """Units associated with the simulation."""
-        if self._units is None:
+        if self._code_units is None:
             self._generate_units()
 
-        return self._units
+        return self._code_units
 
     @property
     def time_series(self) -> DataFrame:
@@ -217,13 +217,13 @@ class Simulation:
         self._properties = prop
 
     def _generate_units(self):
-        """Generate sim.units from snap.code_units."""
+        """Generate sim.code_units from snap.code_units."""
         u = copy(self.snaps[0].code_units)
         for snap in self.snaps:
             for key, val in snap.code_units.items():
                 if u[key] != val:
                     u[key] = '__inconsistent__'
-        self._units = u
+        self._code_units = u
 
     def _generate_time_series(self):
         """Generate time series data."""
@@ -264,9 +264,15 @@ class Simulation:
 
         return sinks
 
-    def set_units_on_time_series(self):
-        """Set physical units on time series data."""
-        units = evolution_units(self)
+    def set_units_on_time_series(self, config: Union[str, Path] = None):
+        """Set physical units on time series data.
+
+        Parameters
+        ----------
+        config : optional
+            The path to a Plonk config.toml file.
+        """
+        units = evolution_units(sim=self, data_source=self.data_source, config=config)
         if 'global' in self.time_series:
             _apply_units_to_dataframe(self.time_series['global'], units)
         if 'sinks' in self.time_series:
@@ -275,9 +281,15 @@ class Simulation:
 
         return self
 
-    def unset_units_on_time_series(self):
-        """Un-set physical units on time series data."""
-        units = evolution_units(self)
+    def unset_units_on_time_series(self, config: Union[str, Path] = None):
+        """Un-set physical units on time series data.
+
+        Parameters
+        ----------
+        config : optional
+            The path to a Plonk config.toml file.
+        """
+        units = evolution_units(sim=self, data_source=self.data_source, config=config)
         if 'global' in self.time_series:
             _un_apply_units_to_dataframe(self.time_series['global'], units)
         if 'sinks' in self.time_series:

@@ -143,7 +143,7 @@ def test_array_code_unit():
     """Testing getting array code unit."""
     snap = plonk.load_snap(TEST_FILE)
 
-    position_unit = 149600000000.0 * plonk.units['meter']
+    position_unit = 149600000000.0 * plonk.units('meter')
     assert snap.array_code_unit('position') == position_unit
 
     for arr in ['position', 'position_x', 'x']:
@@ -200,8 +200,8 @@ def test_translate_snap():
     with pytest.raises(ValueError):
         snap.translate(translation=(100, 200))
 
-    snap.translate(translation=(100, 200, 300) * plonk.units['au'], unit='au')
-    snap.translate(translation=(-100, -200, -300) * plonk.units['au'], unit='au')
+    snap.translate(translation=(100, 200, 300) * plonk.units('au'), unit='au')
+    snap.translate(translation=(-100, -200, -300) * plonk.units('au'), unit='au')
     _check_arrays(snap)
 
     snap.close_file()
@@ -258,11 +258,11 @@ def test_set_array():
     """Testing setting array on particles."""
     snap = plonk.load_snap(TEST_FILE)
 
-    particle_array = np.arange(len(snap)) * plonk.units['dimensionless']
+    particle_array = np.arange(len(snap)) * plonk.units('dimensionless')
     snap['array'] = particle_array
     np.testing.assert_allclose(snap['array'].m, particle_array.m)
 
-    sink_array = np.arange(len(snap.sinks)) * plonk.units['dimensionless']
+    sink_array = np.arange(len(snap.sinks)) * plonk.units('dimensionless')
     snap.sinks['array'] = sink_array
     np.testing.assert_allclose(snap.sinks['array'].m, sink_array.m)
 
@@ -283,7 +283,7 @@ def test_read_write_extra():
 
     filename = Path('tmp.h5')
 
-    arr = np.arange(len(snap)) * plonk.units['dimensionless']
+    arr = np.arange(len(snap)) * plonk.units('dimensionless')
     snap['my_array'] = arr
     snap.write_extra_arrays(arrays=['my_array'], filename=filename)
     snap = None

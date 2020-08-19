@@ -5,7 +5,7 @@ from pathlib import Path
 import plonk
 from plonk import visualize
 
-AU = plonk.units['au']
+AU = plonk.units('au')
 TEST_FILE = Path(__file__).parent / 'stubdata/phantom_00000.h5'
 
 

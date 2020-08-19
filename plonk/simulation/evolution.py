@@ -23,6 +23,7 @@ if TYPE_CHECKING:
 def load_ev(
     filenames: Union[str, Path, Tuple[str], Tuple[Path], List[str], List[Path]],
     data_source: str = 'Phantom',
+    config: Union[str, Path] = None,
 ) -> DataFrame:
     """Load time evolution data from file(s).
 
@@ -38,8 +39,10 @@ def load_ev(
     filename(s)
         Collection of paths to evolution file(s) in chronological order.
         These should all contain the same columns.
-    data_source
+    data_source : optional
         The code used to produce the data. Default is 'Phantom'.
+    config : optional
+        The path to a Plonk config.toml file.
 
     Returns
     -------
@@ -59,12 +62,28 @@ def load_ev(
     >>> ev = plonk.load_ev(file_names)
     """
     if data_source == 'Phantom':
-        return load_data_from_file_phantom(filenames)
+        return load_data_from_file_phantom(filenames=filenames, config=config)
     raise ValueError('Cannot determine code used to produce evolution data')
 
 
-def evolution_units(sim: Simulation, data_source: str = 'Phantom'):
-    """TODO"""
+def evolution_units(
+    sim: Simulation, data_source: str = 'Phantom', config: Union[str, Path] = None
+):
+    """Get units of time series data from Simulation object.
+
+    Parameters
+    ----------
+    sim
+        The Simulation object.
+    data_source : optional
+        The code used to produce the data. Default is 'Phantom'.
+    config : optional
+        The path to a Plonk config.toml file.
+
+    Returns
+    -------
+    Dict
+    """
     if data_source == 'Phantom':
-        return evolution_units_phantom(sim)
+        return evolution_units_phantom(sim=sim, config=config)
     raise ValueError('Cannot determine code used to produce evolution data')
