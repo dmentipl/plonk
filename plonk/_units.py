@@ -23,7 +23,7 @@ def array_units(filename: Union[str, Path] = None):
 
     Like the following:
 
-        `{'density': 'kg / m ** 3', ... 'position': 'm', ... }`
+        `{'density': 'kg / m ^ 3', ... 'position': 'm', ... }`
 
     This is useful for setting units for plots.
     """
@@ -33,7 +33,14 @@ def array_units(filename: Union[str, Path] = None):
         conf = load_config(filename=filename)
     d = dict()
     for key, val in conf['arrays'].items():
-        d[key] = conf['units'][val]
+        dim = _convert_dim_string(val)
+        if dim == {'[angle]': 1.0}:
+            d[key] = "radian"
+        else:
+            for key1, val1 in conf['units'].items():
+                if _dimensionality_comparison(dict(units(val1).dimensionality), dim):
+                    d[key] = val1
+                    break
     return d
 
 
@@ -43,16 +50,19 @@ def array_quantities(filename: Union[str, Path] = None):
         config = load_config()
     else:
         config = load_config(filename=filename)
-    return config['arrays']
+    arrays = config['arrays']
+    dim = dict()
+    for key, val in arrays.items():
+        dim[key] = _convert_dim_string(val)
+    return dim
 
 
-def generate_array_units_dict(units_dictionary):
-    """Generate units array dictionary.
+def generate_array_code_units(code_units):
+    """Generate array code units dictionary.
 
     Parameters
     ----------
-    units_dictionary
-        TODO: See generate_code_units_dict.
+    code_units
 
     Returns
     -------
@@ -62,52 +72,35 @@ def generate_array_units_dict(units_dictionary):
     _units = dict()
     _array_quantities = array_quantities()
     for arr, unit in _array_quantities.items():
-        _units[arr] = units_dictionary[unit]
+        _units[arr] = _get_code_unit(unit, code_units)
     return _units
 
 
-def generate_code_units_dict(length, mass, time, temperature, magnetic_field):
-    """Generate units dictionary.
+def _convert_dim_string(string):
+    if string == '':
+        return {}
+    list_dims = [dim.strip() for dim in string.split(',')]
+    keys = list()
+    vals = list()
+    for dim in list_dims:
+        key, val = dim.split(': ')
+        val = float(val)
+        keys.append(key)
+        vals.append(val)
+    return {'[' + key + ']': val for key, val in zip(keys, vals)}
 
-    Parameters
-    ----------
-    length
-        Length unit as a Pint quantity.
-    mass
-        Mass unit as a Pint quantity.
-    time
-        Time unit as a Pint quantity.
-    temperature
-        Temperature unit as a Pint quantity.
-    magnetic_field
-        Magnetic field unit as a Pint quantity.
 
-    Returns
-    -------
-    units
-        A dictionary of units as Pint quantities.
-    """
-    _units = dict()
+def _get_code_unit(dim_dict, code_units):
+    unit = 1.0 * units['dimensionless']
+    for d in dim_dict:
+        if d == '[angle]':
+            unit *= units['radian']
+        else:
+            unit *= code_units[d[1:-1]] ** dim_dict[d]
+    return unit
 
-    _units['acceleration'] = length / time ** 2
-    _units['angle'] = units('radian')
-    _units['angular_momentum'] = mass * length ** 2 / time
-    _units['angular_momentum_specific'] = length ** 2 / time
-    _units['density'] = mass / length ** 3
-    _units['dimensionless'] = units('dimensionless')
-    _units['energy'] = (mass * length ** 2 / time ** 2).to('joule')
-    _units['energy_specific'] = (length ** 2 / time ** 2).to('joule/kg')
-    _units['entropy'] = (mass * length ** 2 / time ** 2).to('joule') / temperature
-    _units['force'] = (mass * length / time ** 2).to('newton')
-    _units['frequency'] = (1 / time).to('hertz')
-    _units['length'] = length
-    _units['magnetic_field'] = magnetic_field.to('tesla')
-    _units['mass'] = mass
-    _units['momentum'] = mass * length / time
-    _units['power'] = (mass * length ** 2 / time ** 3).to('watt')
-    _units['pressure'] = (mass / time ** 2 / length).to('pascal')
-    _units['temperature'] = 1.0 * temperature
-    _units['time'] = time
-    _units['velocity'] = length / time
 
-    return _units
+def _dimensionality_comparison(dim1, dim2):
+    _dim1 = {key: float(val) for key, val in dim1.items()}
+    _dim2 = {key: float(val) for key, val in dim2.items()}
+    return _dim1 == _dim2

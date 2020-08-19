@@ -154,7 +154,7 @@ class Snap:
 
         self.data_source = None
         self.file_path = None
-        self.code_units = {}
+        self._code_units = {}
         self._properties = {}
         self._array_code_units = {}
         self._array_registry: Dict[str, Callable] = {}
@@ -374,6 +374,11 @@ class Snap:
     def properties(self) -> Dict[str, Any]:
         """Snap properties."""
         return {key: self._properties[key] for key in sorted(self._properties.keys())}
+
+    @property
+    def code_units(self) -> Dict[str, Any]:
+        """Snap code units."""
+        return {key: self._code_units[key] for key in sorted(self._code_units.keys())}
 
     @property
     def sinks(self) -> Sinks:
@@ -840,7 +845,7 @@ class Snap:
             filename = f'{self.file_path.stem}_extra.h5'
         f = h5py.File(filename, mode='r')
         for array in f:
-            self[array] = f[array][()] * plonk_units['dimensionless']
+            self[array] = f[array][()] * plonk_units('dimensionless')
         f.close()
 
         return self
@@ -876,7 +881,7 @@ class Snap:
                     arr: Quantity = self[column]
                     _units.append(arr.units)
                 except AttributeError:
-                    _units.append(plonk_units['dimensionless'])
+                    _units.append(plonk_units('dimensionless'))
         else:
             _units = list()
             for unit in units:
@@ -1236,7 +1241,7 @@ class SubSnap(Snap):
         # Attributes same as Snap
         self.data_source = self.base.data_source
         self.file_path = self.base.file_path
-        self.code_units = self.base.code_units
+        self._code_units = self.base._code_units
         self._properties = self.base._properties
         self._array_code_units = self.base._array_code_units
         self._array_registry = self.base._array_registry

@@ -65,6 +65,7 @@ def test_to_array():
     sim.to_array(quantity='density', indices=[0, 1, 2])
 
 
+@pytest.mark.skip
 def test_set_units_time_series():
     """Test set/unset units time series."""
     dir_path = Path(__file__).parent / 'stubdata'

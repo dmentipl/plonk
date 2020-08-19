@@ -23,11 +23,11 @@ Plot mass accretion and accretion rate onto sink particles.
     for idx, sink in enumerate(sim.time_series['sinks']):
 
         # Time in years
-        sink['time [year]'] = (sink['time [s]'].to_numpy() * plonk.units['s']).to('year').m
+        sink['time [year]'] = (sink['time [s]'].to_numpy() * plonk.units('s')).to('year').m
 
         # Mass accreted in Earth mass
         sink['mass_accreted [earth_mass]'] = (
-            (sink['mass_accreted [kg]'].to_numpy() * plonk.units['kg'])
+            (sink['mass_accreted [kg]'].to_numpy() * plonk.units('kg'))
             .to('earth_mass')
             .magnitude
         )
@@ -44,7 +44,7 @@ Plot mass accretion and accretion rate onto sink particles.
 
         # Convert to Earth mass / year
         sink['accretion_rate [earth_mass / year]'] = (
-            (accretion_rate * plonk.units['kg/s']).to('earth_mass / year').magnitude
+            (accretion_rate * plonk.units('kg/s')).to('earth_mass / year').magnitude
         )
 
         # Plot

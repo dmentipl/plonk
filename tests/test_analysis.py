@@ -6,7 +6,7 @@ import plonk
 from plonk import analysis
 
 TEST_FILE = Path(__file__).parent / 'stubdata/phantom_00000.h5'
-AU = plonk.units['au']
+AU = plonk.units('au')
 
 
 def test_particles():

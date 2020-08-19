@@ -9,7 +9,7 @@ import h5py
 import numpy as np
 
 from ..._logging import logger
-from ..._units import Quantity, generate_array_units_dict, generate_code_units_dict
+from ..._units import Quantity, generate_array_code_units
 from ..._units import units as plonk_units
 from ..extra import extra_quantities
 from ..snap import Snap
@@ -121,14 +121,10 @@ def generate_snap_from_file(filename: Union[str, Path]) -> Snap:
     file_handle = h5py.File(file_path, mode='r')
     snap._file_pointer = file_handle
 
-    # REQUIRED: Set snap._properties, snap.code_units, and snap._array_code_units.
+    # REQUIRED: Set snap._properties, snap._code_units, and snap._array_code_units.
     header = {key: val[()] for key, val in file_handle['header'].items()}
-    snap._properties, units = header_to_properties(header)
-    snap._array_code_units = generate_array_units_dict(units)
-    snap.code_units = {
-        key: units[key]
-        for key in ['length', 'time', 'mass', 'temperature', 'magnetic_field']
-    }
+    snap._properties, snap._code_units = header_to_properties(header)
+    snap._array_code_units = generate_array_code_units(snap._code_units)
 
     # REQUIRED: Set snap._array_registry dictionary.
     #
@@ -187,7 +183,15 @@ def header_to_properties(header: dict):
         * plonk_units('g ** (1/2) / cm ** (1/2) / s')
         * np.sqrt(plonk_units.magnetic_constant / (4 * np.pi))
     ).to_base_units()
-    units = generate_code_units_dict(length, mass, time, temperature, magnetic_field)
+    current = (mass / time ** 2 / magnetic_field).to_base_units()
+
+    units = {
+        'length': length,
+        'time': time,
+        'mass': mass,
+        'temperature': temperature,
+        'current': current,
+    }
 
     prop = dict()
 
@@ -221,7 +225,9 @@ def header_to_properties(header: dict):
     n_dust = ndustsmall + ndustlarge
     if n_dust > 0:
         prop['grain_size'] = header['grainsize'][:n_dust] * units['length']
-        prop['grain_density'] = header['graindens'][:n_dust] * units['density']
+        prop['grain_density'] = (
+            header['graindens'][:n_dust] * units['mass'] / units['length'] ** 3
+        )
 
     return prop, units
 
