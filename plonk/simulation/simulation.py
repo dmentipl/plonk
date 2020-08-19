@@ -64,7 +64,7 @@ class Simulation:
 
         self._snaps: List[Snap] = None
         self._properties: Dict[str, Any] = None
-        self._units: Dict[str, Any] = None
+        self._code_units: Dict[str, Any] = None
         self._time_series: Dict[str, Union[DataFrame, List[DataFrame]]] = None
 
         self._snap_file_extension = ''
@@ -131,12 +131,12 @@ class Simulation:
         return self._properties
 
     @property
-    def units(self) -> Dict[str, Any]:
+    def code_units(self) -> Dict[str, Any]:
         """Units associated with the simulation."""
-        if self._units is None:
+        if self._code_units is None:
             self._generate_units()
 
-        return self._units
+        return self._code_units
 
     @property
     def time_series(self) -> DataFrame:
@@ -217,13 +217,13 @@ class Simulation:
         self._properties = prop
 
     def _generate_units(self):
-        """Generate sim.units from snap.code_units."""
+        """Generate sim.code_units from snap.code_units."""
         u = copy(self.snaps[0].code_units)
         for snap in self.snaps:
             for key, val in snap.code_units.items():
                 if u[key] != val:
                     u[key] = '__inconsistent__'
-        self._units = u
+        self._code_units = u
 
     def _generate_time_series(self):
         """Generate time series data."""
@@ -364,10 +364,9 @@ def load_sim(
         is 'Phantom'.
     """
     return (
-        Simulation().load_sim(
-            prefix=prefix, directory=directory, data_source=data_source
-        )
-        # .set_units_on_time_series()
+        Simulation()
+        .load_sim(prefix=prefix, directory=directory, data_source=data_source)
+        .set_units_on_time_series()
     )
 
 

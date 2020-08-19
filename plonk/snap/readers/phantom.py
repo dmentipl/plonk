@@ -81,7 +81,10 @@ def generate_snap_from_file(
 
     # OPTIONAL: Set snap._name_map
     conf = load_config(filename=config)
-    snap._name_map = conf['namemap']['phantom']
+    snap._name_map = {
+        'particles': conf['phantom']['particles']['namemap'],
+        'sinks': conf['phantom']['sinks']['namemap'],
+    }
 
     # REQUIRED: Set snap._array_registry dictionary.
     #

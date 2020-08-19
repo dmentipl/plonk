@@ -9,149 +9,30 @@ import numpy as np
 import pandas as pd
 from pandas import DataFrame
 
-from .._units import generate_array_code_units
+from .._config import load_config
+from .._units import _convert_dim_string, _get_code_unit, generate_array_code_units
 
 if TYPE_CHECKING:
     from .simulation import Simulation
 
 
-UNITS = {
-    'alpha_viscosity_numerical': 'dimensionless',
-    'angular_momentum': 'angular_momentum',
-    'boundary_density_average': 'density',
-    'boundary_density_max': 'density',
-    'bulge_density_average': 'density',
-    'bulge_density_max': 'density',
-    'center_of_mass_x': 'length',
-    'center_of_mass_y': 'length',
-    'center_of_mass_z': 'length',
-    'dark_matter_density_average': 'density',
-    'dark_matter_density_max': 'density',
-    'density_average': 'density',
-    'density_max': 'density',
-    'dust_density_average': 'density',
-    'dust_density_max': 'density',
-    'dust_gas_ratio': 'dimensionless',
-    'energy_kinetic': 'energy',
-    'energy_magnetic': 'energy',
-    'energy_potential': 'energy',
-    'energy_rotational_total': 'energy',
-    'energy_rotational_x': 'energy',
-    'energy_rotational_y': 'energy',
-    'energy_rotational_z': 'energy',
-    'energy_thermal': 'energy',
-    'energy_total': 'energy',
-    'entropy': 'entropy',
-    'force_x': 'force',
-    'force_y': 'force',
-    'force_z': 'force',
-    'gas_density_average': 'density',
-    'gas_density_max': 'density',
-    'mach_number_rms': 'dimensionless',
-    'magnetic_field_average': 'magnetic_field',
-    'magnetic_field_divergence_average': 'magnetic_field',
-    'magnetic_field_divergence_max': 'magnetic_field',
-    'magnetic_field_max': 'magnetic_field',
-    'magnetic_field_min': 'magnetic_field',
-    'mass_accreted': 'mass',
-    'momentum': 'momentum',
-    'plasma_beta_average': 'dimensionless',
-    'plasma_beta_max': 'dimensionless',
-    'plasma_beta_min': 'dimensionless',
-    'position_x': 'length',
-    'position_y': 'length',
-    'position_z': 'length',
-    'sink_sink_force_x': 'force',
-    'sink_sink_force_y': 'force',
-    'sink_sink_force_z': 'force',
-    'spin_x': 'angular_momentum',
-    'spin_y': 'angular_momentum',
-    'spin_z': 'angular_momentum',
-    'star_density_average': 'density',
-    'star_density_max': 'density',
-    'stopping_time': 'time',
-    'time': 'time',
-    'timestep': 'time',
-    'timestep_max': 'time',
-    'velocity_rms': 'velocity',
-    'velocity_x': 'velocity',
-    'velocity_y': 'velocity',
-    'velocity_z': 'velocity',
-}
-
-NAME = {
-    'time': 'time',
-    'ekin': 'energy_kinetic',
-    'etherm': 'energy_thermal',
-    'emag': 'energy_magnetic',
-    'epot': 'energy_potential',
-    'etot': 'energy_total',
-    'totmom': 'momentum',
-    'angtot': 'angular_momentum',
-    'rho max': 'density_max',
-    'rho ave': 'density_average',
-    'dt': 'timestep',
-    'dtmax': 'timestep_max',
-    'totentrop': 'entropy',
-    'rmsmach': 'mach_number_rms',
-    'vrms': 'velocity_rms',
-    'xcom': 'center_of_mass_x',
-    'ycom': 'center_of_mass_y',
-    'zcom': 'center_of_mass_z',
-    'rho gas max': 'gas_density_max',
-    'rho gas ave': 'gas_density_average',
-    'rho dust X': 'dust_density_max',
-    'rho dust A': 'dust_density_average',
-    'rho bdy max': 'boundary_density_max',
-    'rho bdy ave': 'boundary_density_average',
-    'rho star X': 'star_density_max',
-    'rho star A': 'star_density_average',
-    'rho dm max': 'dark_matter_density_max',
-    'rho dm ave': 'dark_matter_density_average',
-    'rho blg max': 'bulge_density_max',
-    'rho blg ave': 'bulge_density_average',
-    'alpha': 'alpha_viscosity_numerical',
-    'B max': 'magnetic_field_max',
-    'B min': 'magnetic_field_min',
-    'B ave': 'magnetic_field_average',
-    'divB max': 'magnetic_field_divergence_max',
-    'divB ave': 'magnetic_field_divergence_average',
-    'beta_P max': 'plasma_beta_max',
-    'beta_P min': 'plasma_beta_min',
-    'beta_P ave': 'plasma_beta_average',
-    'erot_x': 'energy_rotational_x',
-    'erot_y': 'energy_rotational_y',
-    'erot_z': 'energy_rotational_z',
-    'erot': 'energy_rotational_total',
-    'dust/gas': 'dust_gas_ratio',
-    't_s': 'stopping_time',
-    'x': 'position_x',
-    'y': 'position_y',
-    'z': 'position_z',
-    'vx': 'velocity_x',
-    'vy': 'velocity_y',
-    'vz': 'velocity_z',
-    'spinx': 'spin_x',
-    'spiny': 'spin_y',
-    'spinz': 'spin_z',
-    'macc': 'mass_accreted',
-    'fx': 'force_x',
-    'fy': 'force_y',
-    'fz': 'force_z',
-    'fssx': 'sink_sink_force_x',
-    'fssy': 'sink_sink_force_y',
-    'fssz': 'sink_sink_force_z',
-}
-
-
-NAME.update({f'DustMass{idx:03}': f'dust_mass_{idx:03}' for idx in range(100)})
-UNITS.update({f'dust_mass_{idx:03}': 'mass' for idx in range(100)})
-
-
 def load_data_from_file(
     filenames: Union[str, Path, Tuple[str], Tuple[Path], List[str], List[Path]],
+    config: Union[str, Path] = None,
 ):
-    """Load data from Phantom .ev files."""
+    """Load data from Phantom .ev files.
+
+    Parameters
+    ----------
+    filenames
+        The filename or filenames (as a list).
+    config : optional
+        The path to a Plonk config.toml file.
+
+    Returns
+    -------
+    DataFrame
+    """
     if isinstance(filenames, (str, Path)):
         _filenames = [filenames]
     elif isinstance(filenames, (list, tuple)):
@@ -159,26 +40,45 @@ def load_data_from_file(
     else:
         raise ValueError('filenames is not a known type')
 
+    conf = load_config(filename=config)
+    name_map = conf['phantom']['time_series']['namemap']
+
     _file_paths = list()
     for filename in _filenames:
         path = Path(filename)
         _file_paths.append(path.resolve())
     file_paths = tuple(_file_paths)
 
-    _check_file_consistency(file_paths, NAME)
-    columns = _get_columns(file_paths[0], NAME)
-    dataframe = _get_data(columns, file_paths)
+    _check_file_consistency(filenames=file_paths, name_map=name_map)
+    columns = _get_columns(filename=file_paths[0], name_map=name_map)
+    dataframe = _get_data(columns=columns, file_paths=file_paths)
 
     return dataframe
 
 
-def evolution_units(sim: Simulation):
-    """TODO"""
-    sim_units = generate_array_code_units(sim.units)
-    units = dict()
-    for key, val in UNITS.items():
-        units[key] = sim_units[val]
-    return units
+def evolution_units(sim: Simulation, config: Union[str, Path] = None):
+    """Get units of Phantom .ev files from Simulation object.
+
+    Parameters
+    ----------
+    sim
+        The Simulation object.
+    config : optional
+        The path to a Plonk config.toml file.
+
+    Returns
+    -------
+    Dict
+    """
+    conf = load_config(filename=config)
+    arrays = conf['phantom']['time_series']['dimensions']
+    dim = dict()
+    for key, val in arrays.items():
+        dim[key] = _convert_dim_string(val)
+    _units = dict()
+    for arr, unit in dim.items():
+        _units[arr] = _get_code_unit(unit, sim.code_units)
+    return _units
 
 
 def _get_data(columns: Tuple[str, ...], file_paths: Tuple[Path, ...]) -> DataFrame:
