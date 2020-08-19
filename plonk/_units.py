@@ -1,7 +1,7 @@
 """Units."""
 
 from pathlib import Path
-from typing import Union
+from typing import Any, Dict, Union
 
 import pint
 
@@ -11,23 +11,38 @@ units = pint.UnitRegistry()
 Quantity = units.Quantity
 
 
-def add_units(filename: Union[str, Path] = None):
-    """TODO"""
-    conf = load_config(filename=filename)
-    for unit_definition in conf['units']['definitions']:
-        units.define(unit_definition)
+def add_units(config: Union[str, Path] = None):
+    """Add units to the unit registry from a config file.
+
+    Parameters
+    ----------
+    config : optional
+        The path to a Plonk config.toml file. If None, use the default
+        file.
+    """
+    conf = load_config(filename=config)
+    for unit, definition in conf['units']['definitions'].items():
+        units.define(f'{unit} = {definition}')
 
 
-def array_units(filename: Union[str, Path] = None):
+def array_units(config: Union[str, Path] = None) -> Dict[str, str]:
     """Return a dictionary of arrays with unit strings.
 
     Like the following:
 
         `{'density': 'kg / m ^ 3', ... 'position': 'm', ... }`
 
-    This is useful for setting units for plots.
+    Parameters
+    ----------
+    config : optional
+        The path to a Plonk config.toml file. If None, use the default
+        file.
+
+    Returns
+    -------
+    Dict
     """
-    conf = load_config(filename=filename)
+    conf = load_config(filename=config)
     d = dict()
     for key, val in conf['arrays']['dimensions'].items():
         dim = _convert_dim_string(val)
@@ -41,18 +56,47 @@ def array_units(filename: Union[str, Path] = None):
     return d
 
 
-def array_quantities(filename: Union[str, Path] = None):
-    """TODO."""
-    config = load_config(filename=filename)
-    arrays = config['arrays']['dimensions']
+def array_quantities(config: Union[str, Path] = None) -> Dict[str, Any]:
+    """Array dimensions dictionary.
+
+    Like the following:
+
+        `{
+            'density': {'[mass]': 1, '[length]': -3},
+            ...
+            'position': {'[length]': 1},
+            ...
+        }`
+
+    Parameters
+    ----------
+    config : optional
+        The path to a Plonk config.toml file. If None, use the default
+        file.
+
+    Returns
+    -------
+    Dict
+    """
+    conf = load_config(filename=config)
+    arrays = conf['arrays']['dimensions']
     dim = dict()
     for key, val in arrays.items():
         dim[key] = _convert_dim_string(val)
     return dim
 
 
-def generate_array_code_units(code_units):
+def generate_array_code_units(code_units: Dict[str, Any]) -> Dict[str, Any]:
     """Generate array code units dictionary.
+
+    Like the following:
+
+        `{
+            'density': 1.0 <Unit('kilogram / meter ** 3')>,
+            ...
+            'position': 149600000000.0 <Unit('meter')>,
+            ...
+        }`
 
     Parameters
     ----------
@@ -60,7 +104,7 @@ def generate_array_code_units(code_units):
 
     Returns
     -------
-    units
+    Dict
         A dictionary of units as Pint quantities.
     """
     _units = dict()

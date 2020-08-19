@@ -80,7 +80,7 @@ def generate_snap_from_file(
     snap._array_code_units = generate_array_code_units(snap._code_units)
 
     # OPTIONAL: Set snap._units.
-    snap._default_units = array_units(filename=config)
+    snap._default_units = array_units(config=config)
 
     # OPTIONAL: Set snap._name_map.
     conf = load_config(filename=config)
