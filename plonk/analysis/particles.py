@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
+from .._logging import logger
 from .._units import Quantity
 from .._units import units as plonk_units
 from ..utils.math import cross, norm
@@ -14,6 +15,7 @@ if TYPE_CHECKING:
     from ..snap.snap import SnapLike
 
 ORIGIN = (0, 0, 0) * plonk_units.au
+MOLECULAR_HYDROGEN_WEIGHT = 2.381
 
 # Derived quantities require some arrays already present
 array_requires = {
@@ -32,13 +34,15 @@ array_requires = {
     'kinetic_energy': ('mass', 'velocity'),
     'momentum': ('mass', 'velocity'),
     'polar_angle': ('position',),
-    'radial_distance': ('position',),
-    'radial_velocity': ('position', 'velocity'),
+    'radius_cylindrical': ('position',),
+    'radius_spherical': ('position',),
     'semi_major_axis': ('position', 'velocity'),
     'specific_angular_momentum': ('position', 'velocity'),
     'specific_kinetic_energy': 'velocity',
     'stokes_number': ('position', 'stopping_time'),
     'temperature': ('sound_speed',),
+    'velocity_radial_cylindrical': ('position', 'velocity'),
+    'velocity_radial_spherical': ('position', 'velocity'),
 }
 
 # Arrays which represent quantities with x-, y-, z-components in space
@@ -75,7 +79,7 @@ def momentum(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
 
 
 def angular_momentum(
-    snap: SnapLike, origin: Quantity = ORIGIN, ignore_accreted: bool = False
+    snap: SnapLike, origin: Quantity = None, ignore_accreted: bool = False
 ) -> Quantity:
     """Calculate the angular momentum.
 
@@ -104,13 +108,14 @@ def angular_momentum(
         pos = snap['position']
         vel = snap['velocity']
 
+    origin = snap.translation if snap.translation is not None else ORIGIN
     pos = pos - origin
 
     return mass[:, np.newaxis] * cross(pos, vel)
 
 
 def specific_angular_momentum(
-    snap: SnapLike, origin: Quantity = ORIGIN, ignore_accreted: bool = False
+    snap: SnapLike, origin: Quantity = None, ignore_accreted: bool = False
 ) -> Quantity:
     """Calculate the specific angular momentum.
 
@@ -137,6 +142,7 @@ def specific_angular_momentum(
         pos = snap['position']
         vel = snap['velocity']
 
+    origin = snap.translation if snap.translation is not None else ORIGIN
     pos = pos - origin
 
     return cross(pos, vel)
@@ -194,8 +200,8 @@ def specific_kinetic_energy(snap: SnapLike, ignore_accreted: bool = False) -> Qu
 
 def keplerian_frequency(
     snap: SnapLike,
-    gravitational_parameter: Quantity,
-    origin: Quantity = ORIGIN,
+    gravitational_parameter: Quantity = None,
+    origin: Quantity = None,
     ignore_accreted: bool = False,
 ) -> Quantity:
     """Calculate the Keplerian orbital frequency.
@@ -227,9 +233,15 @@ def keplerian_frequency(
     else:
         pos = snap['position']
 
+    origin = snap.translation if snap.translation is not None else ORIGIN
     pos = pos - origin
 
-    mu = gravitational_parameter
+    mu = snap.properties.get('gravitational_parameter')
+    if mu is None:
+        raise ValueError(
+            'must pass in gravitational_parameter or '
+            'set on Snap with set_gravitational_parameter'
+        )
 
     radius = norm(pos, axis=1)
     return np.sqrt(mu / radius ** 3)
@@ -237,8 +249,8 @@ def keplerian_frequency(
 
 def stokes_number(
     snap: SnapLike,
-    gravitational_parameter: Quantity,
-    origin: Quantity = ORIGIN,
+    gravitational_parameter: Quantity = None,
+    origin: Quantity = None,
     ignore_accreted: bool = False,
 ) -> Quantity:
     """Calculate the Stokes number.
@@ -268,9 +280,15 @@ def stokes_number(
         pos = snap['position']
         t_s = snap['stopping_time']
 
+    origin = snap.translation if snap.translation is not None else ORIGIN
     pos = pos - origin
 
-    mu = gravitational_parameter
+    mu = snap.properties.get('gravitational_parameter')
+    if mu is None:
+        raise ValueError(
+            'must pass in gravitational_parameter or '
+            'set on Snap with set_gravitational_parameter'
+        )
 
     radius = norm(pos, axis=1)
     Omega_k = np.sqrt(mu / radius ** 3)
@@ -281,8 +299,8 @@ def stokes_number(
 
 def semi_major_axis(
     snap: SnapLike,
-    gravitational_parameter: Quantity,
-    origin: Quantity = ORIGIN,
+    gravitational_parameter: Quantity = None,
+    origin: Quantity = None,
     ignore_accreted: bool = False,
 ) -> Quantity:
     """Calculate the semi-major axis.
@@ -316,9 +334,15 @@ def semi_major_axis(
         pos = snap['position']
         vel = snap['velocity']
 
+    origin = snap.translation if snap.translation is not None else ORIGIN
     pos = pos - origin
 
-    mu = gravitational_parameter
+    mu = snap.properties.get('gravitational_parameter')
+    if mu is None:
+        raise ValueError(
+            'must pass in gravitational_parameter or '
+            'set on Snap with set_gravitational_parameter'
+        )
 
     radius = norm(pos, axis=1)
 
@@ -338,8 +362,8 @@ def semi_major_axis(
 
 def eccentricity(
     snap: SnapLike,
-    gravitational_parameter: Quantity,
-    origin: Quantity = ORIGIN,
+    gravitational_parameter: Quantity = None,
+    origin: Quantity = None,
     ignore_accreted: bool = False,
 ) -> Quantity:
     """Calculate the eccentricity.
@@ -373,9 +397,15 @@ def eccentricity(
         pos = snap['position']
         vel = snap['velocity']
 
+    origin = snap.translation if snap.translation is not None else ORIGIN
     pos = pos - origin
 
-    mu = gravitational_parameter
+    mu = snap.properties.get('gravitational_parameter')
+    if mu is None:
+        raise ValueError(
+            'must pass in gravitational_parameter or '
+            'set on Snap with set_gravitational_parameter'
+        )
 
     radius = norm(pos, axis=1)
 
@@ -645,23 +675,15 @@ def dust_density(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
     return density[:, np.newaxis] * _dust_fraction
 
 
-def radial_distance(
-    snap: SnapLike,
-    coordinates: str = 'cylindrical',
-    origin: Quantity = ORIGIN,
-    ignore_accreted: bool = False,
+def radius_cylindrical(
+    snap: SnapLike, origin: Quantity = None, ignore_accreted: bool = False,
 ) -> Quantity:
-    """Calculate the radial distance.
-
-    Can compute the radial distance in cylindrical and spherical
-    coordinates.
+    """Calculate the cylindrical radial distance.
 
     Parameters
     ----------
     snap
         The Snap object.
-    coordinates : optional
-        Either 'cylindrical' or 'spherical'. Default is 'cylindrical'.
     ignore_accreted : optional
         Ignore accreted particles. Default is False.
 
@@ -676,14 +698,41 @@ def radial_distance(
     else:
         pos = snap['position']
 
+    origin = snap.translation if snap.translation is not None else ORIGIN
+    pos = pos - origin
+    x, y = pos[:, 0], pos[:, 1]
+
+    return np.sqrt(x ** 2 + y ** 2)
+
+
+def radius_spherical(
+    snap: SnapLike, origin: Quantity = None, ignore_accreted: bool = False,
+) -> Quantity:
+    """Calculate the spherical radial distance.
+
+    Parameters
+    ----------
+    snap
+        The Snap object.
+    ignore_accreted : optional
+        Ignore accreted particles. Default is False.
+
+    Returns
+    -------
+    Quantity
+        The radial distance on the particles.
+    """
+    if ignore_accreted:
+        h: Quantity = snap['smoothing_length']
+        pos: Quantity = snap['position'][h > 0]
+    else:
+        pos = snap['position']
+
+    origin = snap.translation if snap.translation is not None else ORIGIN
     pos = pos - origin
     x, y, z = pos[:, 0], pos[:, 1], pos[:, 2]
 
-    if coordinates == 'cylindrical':
-        return np.sqrt(x ** 2 + y ** 2)
-    if coordinates == 'spherical':
-        return np.sqrt(x ** 2 + y ** 2 + z ** 2)
-    raise ValueError('Cannot determine coordinates')
+    return np.sqrt(x ** 2 + y ** 2 + z ** 2)
 
 
 def azimuthal_angle(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
@@ -737,20 +786,46 @@ def polar_angle(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
     return np.arccos(z / r)
 
 
-def radial_velocity(
-    snap: SnapLike, coordinates: str = 'cylindrical', ignore_accreted: bool = False
+def velocity_radial_cylindrical(
+    snap: SnapLike, ignore_accreted: bool = False
 ) -> Quantity:
-    """Calculate the radial velocity.
-
-    Can compute the radial velocity in cylindrical and spherical
-    coordinates.
+    """Calculate the cylindrical radial velocity.
 
     Parameters
     ----------
     snap
         The Snap object.
-    coordinates : optional
-        Either 'cylindrical' or 'spherical'. Default is 'cylindrical'.
+    ignore_accreted : optional
+        Ignore accreted particles. Default is False.
+
+    Returns
+    -------
+    Quantity
+        The radial velocity on the particles.
+    """
+    if ignore_accreted:
+        h: Quantity = snap['smoothing_length']
+        pos: Quantity = snap['position'][h > 0]
+        vel: Quantity = snap['velocity'][h > 0]
+    else:
+        pos = snap['position']
+        vel = snap['velocity']
+
+    x, y = pos[:, 0], pos[:, 1]
+    vx, vy = vel[:, 0], vel[:, 1]
+
+    return (x * vx + y * vy) / np.sqrt(x ** 2 + y ** 2)
+
+
+def velocity_radial_spherical(
+    snap: SnapLike, ignore_accreted: bool = False
+) -> Quantity:
+    """Calculate the spherical radial velocity.
+
+    Parameters
+    ----------
+    snap
+        The Snap object.
     ignore_accreted : optional
         Ignore accreted particles. Default is False.
 
@@ -770,14 +845,7 @@ def radial_velocity(
     x, y, z = pos[:, 0], pos[:, 1], pos[:, 2]
     vx, vy, vz = vel[:, 0], vel[:, 1], vel[:, 2]
 
-    if coordinates == 'cylindrical':
-        vr = (x * vx + y * vy) / np.sqrt(x ** 2 + y ** 2)
-    elif coordinates == 'spherical':
-        vr = (x * vx + y * vy + z * vz) / np.sqrt(x ** 2 + y ** 2 + z ** 2)
-    else:
-        raise ValueError('Cannot determine coordinates')
-
-    return vr
+    return (x * vx + y * vy + z * vz) / np.sqrt(x ** 2 + y ** 2 + z ** 2)
 
 
 def angular_velocity(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
@@ -812,7 +880,7 @@ def angular_velocity(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
 
 
 def temperature(
-    snap: SnapLike, molecular_weight: float = 2.381, ignore_accreted: bool = False
+    snap: SnapLike, molecular_weight: float = None, ignore_accreted: bool = False
 ) -> Quantity:
     """Calculate the gas temperature.
 
@@ -838,6 +906,14 @@ def temperature(
         cs = snap['sound_speed']
 
     gamma = snap.properties['adiabatic_index']
+
+    molecular_weight = snap.properties.get('molecular_weight')
+    if molecular_weight is None:
+        logger.warning(
+            'molecular_weight not set, assuming 2.381 for molecular hydrogen\n'
+            'use set_molecular_weight to set on Snap'
+        )
+        molecular_weight = MOLECULAR_HYDROGEN_WEIGHT
 
     molecular_weight = molecular_weight * plonk_units('gram / mole')
     specific_gas_constant = (plonk_units.R / molecular_weight).to_base_units()

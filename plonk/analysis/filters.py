@@ -3,7 +3,7 @@
 from .._units import Quantity
 from .._units import units as plonk_units
 from ..snap.snap import SnapLike, SubSnap
-from .particles import radial_distance
+from .particles import radius_cylindrical, radius_spherical
 
 CENTER = (0, 0, 0) * plonk_units.au
 
@@ -71,7 +71,7 @@ def cylinder(
         The SubSnap with particles in the cylinder.
     """
     dh = height / 2
-    R = radial_distance(snap=snap, origin=center, coordinates='cylindrical')
+    R = radius_cylindrical(snap=snap, origin=center)
     mask = (
         (R < radius)
         & (snap['position_z'] < center[2] + dh)
@@ -109,7 +109,7 @@ def annulus(
         The SubSnap with particles in the annulus.
     """
     dh = height / 2
-    R = radial_distance(snap=snap, origin=center, coordinates='cylindrical')
+    R = radius_cylindrical(snap=snap, origin=center)
     mask = (
         (R > radius_min)
         & (R < radius_max)
@@ -137,7 +137,7 @@ def sphere(snap: SnapLike, radius: Quantity, center: Quantity = CENTER) -> SubSn
     SubSnap
         The SubSnap with particles in the sphere.
     """
-    R = radial_distance(snap=snap, origin=center, coordinates='spherical')
+    R = radius_spherical(snap=snap, origin=center)
     mask = R < radius
     return snap[mask]
 
@@ -167,6 +167,6 @@ def shell(
     SubSnap
         The SubSnap with particles in the shell.
     """
-    R = radial_distance(snap=snap, origin=center, coordinates='spherical')
+    R = radius_spherical(snap=snap, origin=center)
     mask = (R > radius_min) & (R < radius_max)
     return snap[mask]

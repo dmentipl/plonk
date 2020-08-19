@@ -44,8 +44,8 @@ def _test_particles(snap, ignore, mu):
     analysis.particles.kinetic_energy(snap=snap, ignore_accreted=ignore)
     analysis.particles.momentum(snap=snap, ignore_accreted=ignore)
     analysis.particles.polar_angle(snap=snap, ignore_accreted=ignore)
-    analysis.particles.radial_distance(snap=snap, ignore_accreted=ignore)
-    analysis.particles.radial_velocity(snap=snap, ignore_accreted=ignore)
+    analysis.particles.radius_cylindrical(snap=snap, ignore_accreted=ignore)
+    analysis.particles.radius_spherical(snap=snap, ignore_accreted=ignore)
     analysis.particles.semi_major_axis(
         snap=snap, gravitational_parameter=mu, ignore_accreted=ignore
     )
