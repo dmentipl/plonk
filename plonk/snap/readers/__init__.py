@@ -11,10 +11,14 @@ from .phantom import generate_snap_from_file as read_phantom
 if TYPE_CHECKING:
     from ..snap import Snap
 
-_data_sources = ('Phantom',)
+_data_sources = ['Phantom']
 
 
-def load_snap(filename: Union[str, Path], data_source: str = 'Phantom') -> Snap:
+def load_snap(
+    filename: Union[str, Path],
+    data_source: str = 'Phantom',
+    config: Union[str, Path] = None,
+) -> Snap:
     """Load a snapshot from file.
 
     Parameters
@@ -23,6 +27,8 @@ def load_snap(filename: Union[str, Path], data_source: str = 'Phantom') -> Snap:
         Path to snapshot file.
     data_source : optional
         The SPH software that produced the data. Default is 'Phantom'.
+    config : optional
+        The path to a Plonk config.toml file.
 
     Returns
     -------
@@ -36,7 +42,7 @@ def load_snap(filename: Union[str, Path], data_source: str = 'Phantom') -> Snap:
 
     if data_source == 'Phantom':
         try:
-            return read_phantom(filename)
+            return read_phantom(filename=filename, config=config)
         except FileNotFoundError as e:
             logger.error(f'File not found: {filename}')
             raise e

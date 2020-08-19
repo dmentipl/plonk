@@ -264,9 +264,15 @@ class Simulation:
 
         return sinks
 
-    def set_units_on_time_series(self):
-        """Set physical units on time series data."""
-        units = evolution_units(self)
+    def set_units_on_time_series(self, config: Union[str, Path] = None):
+        """Set physical units on time series data.
+
+        Parameters
+        ----------
+        config : optional
+            The path to a Plonk config.toml file.
+        """
+        units = evolution_units(sim=self, data_source=self.data_source, config=config)
         if 'global' in self.time_series:
             _apply_units_to_dataframe(self.time_series['global'], units)
         if 'sinks' in self.time_series:
@@ -275,9 +281,15 @@ class Simulation:
 
         return self
 
-    def unset_units_on_time_series(self):
-        """Un-set physical units on time series data."""
-        units = evolution_units(self)
+    def unset_units_on_time_series(self, config: Union[str, Path] = None):
+        """Un-set physical units on time series data.
+
+        Parameters
+        ----------
+        config : optional
+            The path to a Plonk config.toml file.
+        """
+        units = evolution_units(sim=self, data_source=self.data_source, config=config)
         if 'global' in self.time_series:
             _un_apply_units_to_dataframe(self.time_series['global'], units)
         if 'sinks' in self.time_series:
