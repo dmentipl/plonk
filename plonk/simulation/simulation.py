@@ -364,8 +364,9 @@ def load_sim(
         is 'Phantom'.
     """
     return (
-        Simulation()
-        .load_sim(prefix=prefix, directory=directory, data_source=data_source)
+        Simulation().load_sim(
+            prefix=prefix, directory=directory, data_source=data_source
+        )
         # .set_units_on_time_series()
     )
 

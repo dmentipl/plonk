@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from pathlib import Path
+from typing import TYPE_CHECKING, Union
 
+from .._config import load_config
 from .._units import units as plonk_units
 
 if TYPE_CHECKING:
@@ -31,3 +33,14 @@ def gravitational_constant_in_code_units(snap: SnapLike) -> float:
     )
     G = (G / G_units).to_base_units().magnitude
     return G
+
+
+def add_aliases(snap: SnapLike, filename: Union[str, Path] = None):
+    """TODO"""
+    if filename is None:
+        conf = load_config()
+    else:
+        conf = load_config(filename=filename)
+
+    for key, val in conf['arrays']['aliases'].items():
+        snap.add_alias(key, val)

@@ -80,39 +80,7 @@ class Snap:
     ...     return plonk.analysis.particles.radial_distance(snap)
     """
 
-    _array_aliases = {
-        'B': 'magnetic_field',
-        'c_s': 'sound_speed',
-        'dt': 'timestep',
-        'e': 'eccentricity',
-        'eps': 'dust_fraction',
-        'h': 'smoothing_length',
-        'j': 'specific_angular_momentum',
-        'L': 'angular_momentum',
-        'm': 'mass',
-        'omega_k': 'keplerian_frequency',
-        'p': 'momentum',
-        'P': 'pressure',
-        'pos': 'position',
-        'phi': 'azimuthal_angle',
-        'R': 'radius_cylindrical',
-        'r': 'radius_spherical',
-        'rho': 'density',
-        'rho_d': 'dust_density',
-        'rho_g': 'gas_density',
-        'St': 'stokes_number',
-        'T': 'temperature',
-        'theta': 'polar_angle',
-        't_s': 'stopping_time',
-        'u': 'internal_energy',
-        'v': 'velocity',
-        'v_R': 'velocity_radial_cylindrical',
-        'v_r': 'velocity_radial_spherical',
-        'v_phi': 'angular_velocity',
-        'velocity_R': 'radial_velocity_cylindrical',
-        'velocity_r': 'radial_velocity_spherical',
-        'velocity_phi': 'angular_velocity',
-    }
+    _array_aliases: Dict[str, str] = {}
 
     _vector_arrays = {
         'magnetic_field',

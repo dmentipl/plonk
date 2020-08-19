@@ -13,6 +13,7 @@ from ..._units import Quantity, generate_array_code_units
 from ..._units import units as plonk_units
 from ..extra import extra_quantities
 from ..snap import Snap
+from ..utils import add_aliases
 
 igas, iboundary, istar, idarkmatter, ibulge = 1, 3, 4, 5, 6
 bignumber = 1e29
@@ -151,6 +152,9 @@ def generate_snap_from_file(filename: Union[str, Path]) -> Snap:
             sinks=sinks, name_map=sink_array_name_map
         )
         snap._sink_registry.update(sink_registry)
+
+    # OPTIONAL: Add aliases
+    add_aliases(snap)
 
     # OPTIONAL: Make extra derived quantities available.
     extra_quantities(snap)

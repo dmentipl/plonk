@@ -1,11 +1,10 @@
-[units]
+[units.defaults]
 
 acceleration = "m / s ** 2"
 angle = "radian"
 angular_momentum = "kg * m ** 2 / s"
 angular_momentum_specific = "m ** 2 / s"
 density = "kg / m ** 3"
-dimensionless = "dimensionless"
 energy = "joule"
 energy_specific = "joule / kg"
 entropy = "joule / kelvin"
@@ -21,7 +20,15 @@ temperature = "kelvin"
 time = "s"
 velocity = "m / s"
 
-[arrays]
+[units.definitions]
+
+solar_mass = "1.9891e30 kg"
+solar_radius = "6.959500e8 m"
+earth_mass = "5.979e24 kg"
+earth_radius = "6.371315e6 m"
+jupiter_mass = "1.89813e27 kg"
+
+[arrays.dimensions]
 
 accretion_radius = "length: 1"
 alpha_viscosity_numerical = ""
@@ -74,3 +81,34 @@ velocity_divergence = "time: -1"
 velocity_radial_cylindrical = "length: 1, time: -1"
 velocity_radial_spherical = "length: 1, time: -1"
 vorticity = "time: -1"
+
+[arrays.aliases]
+
+angular_momentum = 'L'
+angular_velocity = 'v_phi'
+azimuthal_angle = 'phi'
+density = 'rho'
+dust_density = 'rho_d'
+dust_fraction = 'eps'
+eccentricity = 'e'
+gas_density = 'rho_g'
+internal_energy = 'u'
+keplerian_frequency = 'omega_k'
+magnetic_field = 'B'
+mass = 'm'
+momentum = 'p'
+polar_angle = 'theta'
+position = 'pos'
+pressure = 'P'
+radius_cylindrical = 'R'
+radius_spherical = 'r'
+smoothing_length = 'h'
+sound_speed = 'c_s'
+specific_angular_momentum = 'j'
+stokes_number = 'St'
+stopping_time = 't_s'
+temperature = 'T'
+timestep = 'dt'
+velocity = 'v'
+velocity_radial_cylindrical = 'v_R'
+velocity_radial_spherical = 'v_r'
