@@ -10,7 +10,7 @@ import numpy as np
 
 from ..._config import load_config
 from ..._logging import logger
-from ..._units import Quantity, generate_array_code_units
+from ..._units import Quantity, array_units, generate_array_code_units
 from ..._units import units as plonk_units
 from ..extra import extra_quantities
 from ..snap import Snap
@@ -79,7 +79,10 @@ def generate_snap_from_file(
     snap._properties, snap._code_units = header_to_properties(header)
     snap._array_code_units = generate_array_code_units(snap._code_units)
 
-    # OPTIONAL: Set snap._name_map
+    # OPTIONAL: Set snap._units.
+    snap._default_units = array_units(filename=config)
+
+    # OPTIONAL: Set snap._name_map.
     conf = load_config(filename=config)
     snap._name_map = {
         'particles': conf['phantom']['particles']['namemap'],

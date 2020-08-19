@@ -123,6 +123,7 @@ class Snap:
         self.data_source = None
         self.file_path = None
         self._code_units = {}
+        self._default_units = {}
         self._properties = {}
         self._array_code_units = {}
         self._array_registry: Dict[str, Callable] = {}
@@ -311,6 +312,7 @@ class Snap:
             _arrays = arrays
         with self.context(cache=True):
             for array in _arrays:
+                print(array)
                 try:
                     self[array]
                 except ValueError as e:
@@ -343,6 +345,36 @@ class Snap:
     def properties(self) -> Dict[str, Any]:
         """Snap properties."""
         return {key: self._properties[key] for key in sorted(self._properties.keys())}
+
+    @property
+    def default_units(self) -> Dict[str, Any]:
+        """Snap default units."""
+        return {
+            key: self._default_units[key] for key in sorted(self._default_units.keys())
+        }
+
+    def set_units(self, **kwargs) -> Snap:
+        """Set default unit for arrays.
+
+        Parameters
+        ----------
+        kwargs
+            Keyword arguments with keys as the array name, e.g.
+            'pressure', and with values as the unit as a string, e.g.
+            'pascal'.
+
+        Examples
+        --------
+        Set multiple default units.
+
+        >>> snap.set_units(pressure='pascal', density='g/cm^3')
+        """
+        for key, val in kwargs.items():
+            if key not in self.default_units:
+                logger.info(f'adding array {key} to default_units dict')
+            self._default_units[key] = val
+
+        return self
 
     @property
     def code_units(self) -> Dict[str, Any]:
@@ -1085,9 +1117,14 @@ class Snap:
         else:
             array_dict = self._arrays
         if name in array_dict:
+            if name in self.default_units:
+                return array_dict[name].to(self.default_units[name])
             return array_dict[name]
         if name in self._array_registry or name in self._sink_registry:
-            array = self._get_array_from_registry(name, sinks)
+            if name in self.default_units:
+                array = self._get_array_from_registry(name, sinks).to(
+                    self.default_units[name]
+                )
             if self.cache_arrays:
                 if sinks:
                     self._sink_arrays[name] = array
