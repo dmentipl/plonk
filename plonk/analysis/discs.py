@@ -3,11 +3,8 @@
 import numpy as np
 from numpy import ndarray
 
-from .._units import units as plonk_units
 from ..snap.snap import Snap
 from .total import angular_momentum, center_of_mass
-
-ORIGIN = (0, 0, 0) * plonk_units.au
 
 
 def normal(snap: Snap, ignore_accreted: bool = True) -> ndarray:
