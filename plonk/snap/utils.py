@@ -37,10 +37,6 @@ def gravitational_constant_in_code_units(snap: SnapLike) -> float:
 
 def add_aliases(snap: SnapLike, filename: Union[str, Path] = None):
     """TODO"""
-    if filename is None:
-        conf = load_config()
-    else:
-        conf = load_config(filename=filename)
-
+    conf = load_config(filename=filename)
     for key, val in conf['arrays']['aliases'].items():
         snap.add_alias(key, val)

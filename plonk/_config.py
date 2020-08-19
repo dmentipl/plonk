@@ -8,7 +8,7 @@ import toml
 CONFIG_FILE = Path(__file__).parent / 'config.toml'
 
 
-def load_config(filename: Union[str, Path] = CONFIG_FILE) -> MutableMapping[str, Any]:
+def load_config(filename: Union[str, Path] = None) -> MutableMapping[str, Any]:
     """Load config file.
 
     Parameters
@@ -22,6 +22,8 @@ def load_config(filename: Union[str, Path] = CONFIG_FILE) -> MutableMapping[str,
     Dict
         The config as a nested dictionary.
     """
+    if filename is None:
+        filename = CONFIG_FILE
     return toml.load(filename)
 
 

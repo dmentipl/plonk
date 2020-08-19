@@ -127,6 +127,7 @@ class Snap:
         self._array_code_units = {}
         self._array_registry: Dict[str, Callable] = {}
         self._sink_registry: Dict[str, Callable] = {}
+        self._name_map = {}
         self._cache_arrays = True
         self._arrays = {}
         self._sink_arrays = {}

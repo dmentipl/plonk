@@ -8,6 +8,7 @@ from typing import Callable, Dict, List, Union
 import h5py
 import numpy as np
 
+from ..._config import load_config
 from ..._logging import logger
 from ..._units import Quantity, generate_array_code_units
 from ..._units import units as plonk_units
@@ -17,59 +18,6 @@ from ..utils import add_aliases
 
 igas, iboundary, istar, idarkmatter, ibulge = 1, 3, 4, 5, 6
 bignumber = 1e29
-
-# Dictionary to convert Phantom HDF5 particle array names to Plonk names
-particle_array_name_map = {
-    'abundance': 'abundance',
-    'alpha': 'alpha_viscosity_numerical',
-    'Bxyz': 'magnetic_field',
-    'curlBxyz': 'magnetic_field_curl',
-    'curlvxyz': 'vorticity',
-    'deltavxyz': 'differential_velocity',
-    'divB': 'magnetic_field_divergence',
-    'divv': 'velocity_divergence',
-    'dt': 'timestep',
-    'dustfrac': 'dust_fraction',
-    'eta_AD': 'ambipolar_diffusion_coefficient',
-    'eta_HE': 'hall_effect_coefficient',
-    'eta_OR': 'ohmic_resistivity_coefficient',
-    'gr_density': 'density_general_relativity',
-    'gr_entropy': 'entropy_general_relativity',
-    'gr_momentum': 'momentum_general_relativity',
-    'graindens': 'grain_density',
-    'grainsize': 'grain_size',
-    'h': 'smoothing_length',
-    'itype': 'type',
-    'luminosity': 'luminosity',
-    'ne_on_n': 'electron_fraction',
-    'poten': 'gravitational_potential',
-    'pressure': 'pressure',
-    'psi': 'magnetic_field_psi',
-    'St': 'stokes_number',
-    'T': 'temperature',
-    'temperature_dust': 'temperature_dust',
-    'tstop': 'stopping_time',
-    'u': 'internal_energy',
-    'vrel_on_vfrag': 'relative_on_fragmentation_velocity',
-    'vxyz': 'velocity',
-    'xyz': 'position',
-}
-
-# Dictionary to convert Phantom HDF5 sinks array names to Plonk names
-sink_array_name_map = {
-    'h': 'accretion_radius',
-    'hsoft': 'softening_radius',
-    'lum': 'luminosity',
-    'm': 'mass',
-    'maccreted': 'mass_accreted',
-    'mdotloss': 'mass_loss_rate',
-    'Reff': 'radius_effective',
-    'spinxyz': 'spin',
-    'Teff': 'temperature_effective',
-    'tlast': 'last_injection_time',
-    'vxyz': 'velocity',
-    'xyz': 'position',
-}
 
 
 def fileid(snap: Snap) -> str:
@@ -91,13 +39,17 @@ def fileid(snap: Snap) -> str:
     return snap._file_pointer['header/fileident'][()].decode()
 
 
-def generate_snap_from_file(filename: Union[str, Path]) -> Snap:
+def generate_snap_from_file(
+    filename: Union[str, Path], config: Union[str, Path] = None
+) -> Snap:
     """Generate a Snap object from a Phantom HDF5 file.
 
     Parameters
     ----------
     filename
         The path to the file.
+    config : optional
+        The path to a Plonk config.toml file.
 
     Returns
     -------
@@ -127,6 +79,10 @@ def generate_snap_from_file(filename: Union[str, Path]) -> Snap:
     snap._properties, snap._code_units = header_to_properties(header)
     snap._array_code_units = generate_array_code_units(snap._code_units)
 
+    # OPTIONAL: Set snap._name_map
+    conf = load_config(filename=config)
+    snap._name_map = conf['namemap']['phantom']
+
     # REQUIRED: Set snap._array_registry dictionary.
     #
     # The keys are the names of the arrays and the values are functions that return the
@@ -136,7 +92,7 @@ def generate_snap_from_file(filename: Union[str, Path]) -> Snap:
     ndustlarge = header['ndustlarge']
     array_registry = populate_particle_array_registry(
         arrays=arrays,
-        name_map=particle_array_name_map,
+        name_map=snap._name_map['particles'],
         ndustsmall=ndustsmall,
         ndustlarge=ndustlarge,
     )
@@ -149,7 +105,7 @@ def generate_snap_from_file(filename: Union[str, Path]) -> Snap:
     if header['nptmass'] > 0:
         sinks = list(file_handle['sinks'])
         sink_registry = populate_sink_array_registry(
-            sinks=sinks, name_map=sink_array_name_map
+            sinks=sinks, name_map=snap._name_map['sinks']
         )
         snap._sink_registry.update(sink_registry)
 
@@ -357,10 +313,9 @@ def get_dataset(dataset: str, group: str) -> Callable:
 
     def func(snap: Snap) -> Quantity:
         array = snap._file_pointer[f'{group}/{dataset}'][()]
-        if dataset in particle_array_name_map:
-            name = particle_array_name_map[dataset]
-        elif dataset in sink_array_name_map:
-            name = sink_array_name_map[dataset]
+        name_map = snap._name_map[group]
+        if dataset in name_map:
+            name = name_map[dataset]
         else:
             name = dataset
         try:

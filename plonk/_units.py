@@ -13,11 +13,7 @@ Quantity = units.Quantity
 
 def add_units(filename: Union[str, Path] = None):
     """TODO"""
-    if filename is None:
-        conf = load_config()
-    else:
-        conf = load_config(filename=filename)
-
+    conf = load_config(filename=filename)
     for unit_definition in conf['units']['definitions']:
         units.define(unit_definition)
 
@@ -31,10 +27,7 @@ def array_units(filename: Union[str, Path] = None):
 
     This is useful for setting units for plots.
     """
-    if filename is None:
-        conf = load_config()
-    else:
-        conf = load_config(filename=filename)
+    conf = load_config(filename=filename)
     d = dict()
     for key, val in conf['arrays']['dimensions'].items():
         dim = _convert_dim_string(val)
@@ -50,10 +43,7 @@ def array_units(filename: Union[str, Path] = None):
 
 def array_quantities(filename: Union[str, Path] = None):
     """TODO."""
-    if filename is None:
-        config = load_config()
-    else:
-        config = load_config(filename=filename)
+    config = load_config(filename=filename)
     arrays = config['arrays']['dimensions']
     dim = dict()
     for key, val in arrays.items():
