@@ -1,279 +1,213 @@
 """Calculate extra quantities on the sinks."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+import numba
 import numpy as np
 
+from .._units import Quantity
+from .._units import units as plonk_units
 
-def kinetic_energy(m, v):
+if TYPE_CHECKING:
+    from ..snap.snap import Sinks
+
+G = (1 * plonk_units.newtonian_constant_of_gravitation).to_base_units()
+
+
+def kinetic_energy(sinks: Sinks) -> Quantity:
     """Calculate the kinetic energy.
 
     Parameters
     ----------
-    m
-        The mass of the body.
-    v
-        The velocity of the body.
+    sinks
+        The Sinks object.
 
     Returns
     -------
-    The kinetic energy.
+    Quantity
     """
+    m, v = sinks['mass'], sinks['velocity']
     return 1 / 2 * m * _norm(v) ** 2
 
 
-def gravitational_potential_energy(m1, m2, x1, x2, G):
+def gravitational_potential_energy(sinks: Sinks) -> Quantity:
     """Calculate the gravitational potential energy.
 
     Parameters
     ----------
-    m1
-        The mass of the first body.
-    m2
-        The mass of the second body.
-    x1
-        The position of the first body.
-    x2
-        The position of the second body.
-    v1
-        The velocity of the first body.
-    v2
-        The velocity of the second body.
-    G
-        The gravitational constant (in appropriate units).
+    sinks
+        The Sinks object.
 
     Returns
     -------
-    The gravitational potential energy.
+    Quantity
     """
-    r = _norm(x1 - x2)
-    return -G * m1 * m2 / r
+    position = sinks['position']
+    mass = sinks['mass']
+    potential = _potential(position=position.magnitude, mass=mass.magnitude)
+    return (potential * G * mass.units ** 2 / position.units).to_base_units()
 
 
-def specific_orbital_energy(m1, m2, x1, x2, v1, v2, G):
-    """Calculate the specific orbital energy.
+def specific_orbital_energy(sinks: Sinks) -> Quantity:
+    """Calculate the specific orbital energy for two sinks.
 
     Parameters
     ----------
-    m1
-        The mass of the first body.
-    m2
-        The mass of the second body.
-    x1
-        The position of the first body.
-    x2
-        The position of the second body.
-    v1
-        The velocity of the first body.
-    v2
-        The velocity of the second body.
-    G
-        The gravitational constant (in appropriate units).
+    sinks
+        The Sinks object. Must have length 2.
 
     Returns
     -------
-    The specific orbital energy.
+    Quantity
     """
+    if len(sinks) != 2:
+        raise ValueError('sinks must have length 2')
+    m1, m2 = sinks['mass']
     mu = m1 * m2 / (m1 + m2)
-    ke = kinetic_energy(m1, v1) + kinetic_energy(m2, v2)
-    pe = gravitational_potential_energy(m1, m2, x1, x2, G)
+    ke = np.sum(kinetic_energy(sinks=sinks))
+    pe = gravitational_potential_energy(sinks=sinks)
     return (ke + pe) / mu
 
 
-def specific_angular_momentum(m1, m2, x1, x2, v1, v2):
-    """Calculate the specific orbital energy.
+def specific_angular_momentum(sinks: Sinks) -> Quantity:
+    """Calculate the specific orbital energy for two sinks.
 
     Parameters
     ----------
-    m1
-        The mass of the first body.
-    m2
-        The mass of the second body.
-    x1
-        The position of the first body.
-    x2
-        The position of the second body.
-    v1
-        The velocity of the first body.
-    v2
-        The velocity of the second body.
+    sinks
+        The Sinks object. Must have length 2.
 
     Returns
     -------
-    The specific orbital energy.
+    Quantity
+        The specific angular momentum.
     """
-    r = x1 - x2
-    v = v1 - v2
+    if len(sinks) != 2:
+        raise ValueError('sinks must have length 2')
+    r = sinks['position'][1] - sinks['position'][0]
+    v = sinks['velocity'][1] - sinks['velocity'][0]
     return np.cross(r, v)
 
 
-def eccentricity(m1, m2, x1, x2, v1, v2, G):
+def eccentricity(sinks: Sinks) -> Quantity:
     """Calculate the eccentricity.
 
     Parameters
     ----------
-    m1
-        The mass of the first body.
-    m2
-        The mass of the second body.
-    x1
-        The position of the first body.
-    x2
-        The position of the second body.
-    v1
-        The velocity of the first body.
-    v2
-        The velocity of the second body.
-    G
-        The gravitational constant (in appropriate units).
+    sinks
+        The Sinks object. Must have length 2.
 
     Returns
     -------
-    The eccentricity.
+    Quantity
     """
-    mu = G * (m1 + m2)
-    eps = specific_orbital_energy(m1, m2, x1, x2, v1, v2, G)
-    h = specific_angular_momentum(m1, m2, x1, x2, v1, v2)
+    if len(sinks) != 2:
+        raise ValueError('sinks must have length 2')
+    mu = G * np.sum(sinks['mass'])
+    eps = specific_orbital_energy(sinks)
+    h = specific_angular_momentum(sinks)
     h_mag = _norm(h)
     return np.sqrt(1 + 2 * eps * h_mag ** 2 / mu ** 2)
 
 
-def semi_major_axis(m1, m2, x1, x2, v1, v2, G):
-    """Calculate the semi-major axis.
+def semi_major_axis(sinks: Sinks) -> Quantity:
+    """Calculate the semi-major axis for two sinks.
 
     Parameters
     ----------
-    m1
-        The mass of the first body.
-    m2
-        The mass of the second body.
-    x1
-        The position of the first body.
-    x2
-        The position of the second body.
-    v1
-        The velocity of the first body.
-    v2
-        The velocity of the second body.
-    G
-        The gravitational constant (in appropriate units).
+    sinks
+        The Sinks object. Must have length 2.
 
     Returns
     -------
-    The semi-major axis.
+    Quantity
     """
-    mu = G * (m1 + m2)
-    h = specific_angular_momentum(m1, m2, x1, x2, v1, v2)
+    if len(sinks) != 2:
+        raise ValueError('sinks must have length 2')
+    mu = G * np.sum(sinks['mass'])
+    h = specific_angular_momentum(sinks)
     h_mag = _norm(h)
-    e = eccentricity(m1, m2, x1, x2, v1, v2, G)
+    e = eccentricity(sinks)
     return h_mag ** 2 / (mu * (1 - e ** 2))
 
 
-def inclination(m1, m2, x1, x2, v1, v2):
-    """Calculate the inclination.
+def inclination(sinks: Sinks) -> Quantity:
+    """Calculate the inclination for two sinks.
 
     Parameters
     ----------
-    m1
-        The mass of the first body.
-    m2
-        The mass of the second body.
-    x1
-        The position of the first body.
-    x2
-        The position of the second body.
-    v1
-        The velocity of the first body.
-    v2
-        The velocity of the second body.
+    sinks
+        The Sinks object. Must have length 2.
 
     Returns
     -------
-    The inclination.
+    Quantity
     """
-    h = specific_angular_momentum(m1, m2, x1, x2, v1, v2)
+    if len(sinks) != 2:
+        raise ValueError('sinks must have length 2')
+    h = specific_angular_momentum(sinks)
     h_z = h[..., 2]
     h_mag = _norm(h)
     return np.arccos(h_z / h_mag)
 
 
-def orbital_period(m1, m2, x1, x2, v1, v2, G):
-    """Calculate the orbital period.
+def orbital_period(sinks: Sinks) -> Quantity:
+    """Calculate the orbital period for two sinks.
 
     Parameters
     ----------
-    m1
-        The mass of the first body.
-    m2
-        The mass of the second body.
-    x1
-        The position of the first body.
-    x2
-        The position of the second body.
-    v1
-        The velocity of the first body.
-    v2
-        The velocity of the second body.
-    G
-        The gravitational constant (in appropriate units).
+    sinks
+        The Sinks object. Must have length 2.
 
     Returns
     -------
-    The orbital period.
+    Quantity
     """
-    a = semi_major_axis(m1, m2, x1, x2, v1, v2, G)
-    mu = G * (m1 + m2)
+    if len(sinks) != 2:
+        raise ValueError('sinks must have length 2')
+    a = semi_major_axis(sinks)
+    mu = G * np.sum(sinks['mass'])
     return 2 * np.pi * np.sqrt(a ** 3 / mu)
 
 
-def mean_motion(m1, m2, x1, x2, v1, v2, G):
-    """Calculate the mean motion.
+def mean_motion(sinks: Sinks) -> Quantity:
+    """Calculate the mean motion for two sinks.
 
     Parameters
     ----------
-    m1
-        The mass of the first body.
-    m2
-        The mass of the second body.
-    x1
-        The position of the first body.
-    x2
-        The position of the second body.
-    v1
-        The velocity of the first body.
-    v2
-        The velocity of the second body.
-    G
-        The gravitational constant (in appropriate units).
+    sinks
+        The Sinks object. Must have length 2.
 
     Returns
     -------
-    The mean motion.
+    Quantity
     """
-    P = orbital_period(m1, m2, x1, x2, v1, v2, G)
+    if len(sinks) != 2:
+        raise ValueError('sinks must have length 2')
+    P = orbital_period(sinks)
     return 2 * np.pi / P
 
 
-def Roche_sphere(m1, m2, x1, x2):
-    """Calculate an estimate of the Roche sphere.
+def Roche_sphere(sinks: Sinks) -> Quantity:
+    """Calculate an estimate of the Roche sphere for two sinks.
 
     Uses the formula from Eggleton (1983) ApJ 268, 368-369.
 
     Parameters
     ----------
-    m1
-        The mass of the body around which to calculate the Roche sphere.
-    m2
-        The mass of the second body.
-    x1
-        The position of the first body.
-    x2
-        The position of the second body.
+    sinks
+        The Sinks object. Must have length 2.
 
     Returns
     -------
-    The Roche sphere radius.
+    Quantity
     """
-    separation = _norm(x1 - x2)
-    q = m1 / m2
+    if len(sinks) != 2:
+        raise ValueError('sinks must have length 2')
+    separation = _norm(sinks['position'][1] - sinks['position'][0])
+    q = sinks['mass'][0] / sinks['mass'][1]
     return (
         separation
         * 0.49
@@ -282,29 +216,69 @@ def Roche_sphere(m1, m2, x1, x2):
     )
 
 
-def Hill_radius(M, m, X, x):
-    """Calculate the Hill radius.
+def Hill_radius(sinks: Sinks) -> Quantity:
+    """Calculate the Hill radius for two sinks.
 
     This calculation assumes zero eccentricity, i.e. a circular orbit.
 
     Parameters
     ----------
-    M
-        The mass of the larger body.
-    m
-        The mass of the smaller body.
-    X
-        The position of the larger body.
-    x
-        The position of the smaller body.
+    sinks
+        The Sinks object. Must have length 2.
 
     Returns
     -------
-    The Hill sphere radius.
+    Quantity
     """
-    a = _norm(X - x)
-    return a * (m / (3 * M)) ** (1 / 3)
+    if len(sinks) != 2:
+        raise ValueError('sinks must have length 2')
+    M, m = sinks['mass']
+    if m > M:
+        _m = m
+        m = M
+        M = _m
+    a = semi_major_axis(sinks)
+    e = eccentricity(sinks)
+    return a * (1 - e) * (m / (3 * M)) ** (1 / 3)
 
 
 def _norm(x):
     return np.sqrt(x[..., 0] ** 2 + x[..., 1] ** 2 + x[..., 2] ** 2)
+
+
+@numba.njit
+def _potential(position, mass):
+    """Get gravitational potential on particles.
+
+    Parameters
+    ----------
+    position
+        Particle positions.
+    mass
+        Particle masses.
+
+    Returns
+    -------
+    potential
+        The total gravitational potential.
+    """
+    number_of_particles = len(mass)
+    potential = 0.0
+
+    # Loop over all particles...
+    for i in range(number_of_particles):
+        # ...and all neighbours
+        phi = 0.0
+        for j in range(number_of_particles):
+            # Ignore self
+            if j == i:
+                continue
+            dx = position[i, :] - position[j, :]
+            r = np.sqrt(dx[0] ** 2 + dx[1] ** 2 + dx[2] ** 2)
+            phi += -mass[j] / r
+        potential += mass[i] * phi
+
+    # Account for double counting
+    potential /= 2
+
+    return potential
