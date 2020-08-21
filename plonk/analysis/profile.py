@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 from bisect import bisect
+from copy import copy
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Tuple, Union
 
 import matplotlib.pyplot as plt
@@ -127,6 +128,7 @@ class Profile:
 
         self._profiles: Dict[str, Quantity] = {}
         self._profile_functions: Dict[str, Callable] = {}
+        self._default_units = copy(self.snap._default_units)
 
         self._weights = self.snap['mass']
         self._mask = self._setup_particle_mask(ignore_accreted)
@@ -342,6 +344,37 @@ class Profile:
         available = list(self._profile_functions.keys())
         snap_arrays = _1d_arrays(list(self.snap.available_arrays(verbose=True)))
         return sorted(set(loaded + available + snap_arrays))
+
+    @property
+    def default_units(self) -> Dict[str, Any]:
+        """Profile default units."""
+        return {
+            key: self._default_units[key] for key in sorted(self._default_units.keys())
+        }
+
+    def set_units(self, **kwargs) -> Profile:
+        """Set default unit for profiles.
+
+        Parameters
+        ----------
+        kwargs
+            Keyword arguments with keys as the profile name, e.g.
+            'pressure', and with values as the unit as a string, e.g.
+            'pascal'.
+
+        Examples
+        --------
+        Set multiple default units.
+
+        >>> profile.set_units(pressure='pascal', density='g/cm^3')
+        """
+        for key, val in kwargs.items():
+            defaults = list(self.default_units) + list(self.snap.default_units)
+            if key not in defaults:
+                logger.info(f'adding profile {key} to default_units dict')
+            self._default_units[key] = val
+
+        return self
 
     def base_array_name(self, name: str) -> str:
         """Get the base array name from a string.
@@ -635,8 +668,8 @@ def _get_unit(profile, name, units):
             return 1 * plonk_units(units[name])
         if base_name in units:
             return 1 * plonk_units(units[base_name])
-    if base_name in profile.snap.default_units:
-        return 1 * plonk_units(profile.snap.default_units[base_name])
+    if base_name in profile.default_units:
+        return 1 * plonk_units(profile.default_units[base_name])
     return 1 * profile[base_name].units
 
 
