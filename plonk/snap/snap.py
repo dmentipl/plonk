@@ -1433,7 +1433,7 @@ def _input_indices_array(
             return inp
     if isinstance(inp, (list, tuple)):
         return np.array(inp)
-    if isinstance(inp, int):
+    if isinstance(inp, (int, np.integer)):
         return np.array([inp])
     if isinstance(inp, slice):
         i1 = inp.start if inp.start is not None else 0
