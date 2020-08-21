@@ -15,6 +15,8 @@ Types of changes:
 
 ## [Unreleased]
 
+## [0.7.1] - 2020-08-21
+
 ### Added
 
 - Use a TOML config file to configure options.
