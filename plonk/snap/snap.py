@@ -311,7 +311,6 @@ class Snap:
             _arrays = arrays
         with self.context(cache=True):
             for array in _arrays:
-                print(array)
                 try:
                     self[array]
                 except ValueError as e:
@@ -1392,7 +1391,8 @@ class Sinks:
             return self.array(name=inp)
         ind = _input_indices_array(inp=inp, max_slice=len(self))
         if ind is not None:
-            return Sinks(self.base, ind)
+            _ind = self.indices[ind]
+            return Sinks(self.base, _ind)
         raise ValueError('Cannot determine item to return')
 
     def __len__(self) -> int:
@@ -1432,8 +1432,7 @@ def _input_indices_array(
         if np.issubdtype(np.int, inp.dtype):
             return inp
     if isinstance(inp, (list, tuple)):
-        if isinstance(inp[0], int):
-            return np.array(inp)
+        return np.array(inp)
     if isinstance(inp, int):
         return np.array([inp])
     if isinstance(inp, slice):
