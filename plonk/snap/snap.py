@@ -1324,6 +1324,7 @@ class Sinks:
         if len(ind) == 0:
             logger.warning('Sinks has no particles')
         self._indices = ind
+        self._iter_index = 0
 
         # Attributes same as Snap
         self.file_path = self.base.file_path
@@ -1406,6 +1407,30 @@ class Sinks:
     def __str__(self) -> str:
         """Dunder str method."""
         return f'<plonk.Sinks "{self.base.file_path.name}">'
+
+    def __add__(self, other):
+        """Add Sinks."""
+        indices = list(self.indices) + list(other.indices)
+        return self.base.sinks[indices]
+
+    def __eq__(self, other):
+        """Compare Sinks."""
+        same_base = self.base == other.base
+        same_indices = np.all(self.indices == other.indices)
+        return same_base and same_indices
+
+    def __iter__(self):
+        """Sinks iterator."""
+        return self
+
+    def __next__(self):
+        """Sinks iterator."""
+        if self._iter_index > len(self) - 1:
+            self._iter_index = 0
+            raise StopIteration()
+        index = self._iter_index
+        self._iter_index += 1
+        return self[index]
 
     def _ipython_key_completions_(self) -> List[str]:
         """Tab completion for IPython __getitem__ method."""

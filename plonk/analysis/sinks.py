@@ -238,9 +238,9 @@ def Hill_radius(primary: Sinks, secondary: Sinks) -> Quantity:
         raise ValueError('primary must have length 1')
     M = primary['mass']
     Hill = list()
-    for idx, sink_idx in enumerate(secondary.indices):
-        m = secondary[idx]['mass']
-        indices = [primary.indices[0], sink_idx]
+    for idx, sink in enumerate(secondary):
+        m = sink['mass']
+        indices = [primary.indices[0], sink.indices[0]]
         sinks = primary.base.sinks[indices]
         a = semi_major_axis(sinks)
         e = eccentricity(sinks)
