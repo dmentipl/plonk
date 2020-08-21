@@ -57,7 +57,7 @@ def plot_smoothing_length(
     py: Quantity = snap[y][indices]
     try:
         h: Quantity = snap['smoothing_length'][indices]
-    except ValueError:
+    except (ValueError, KeyError):
         # Sinks accretion radius is equivalent to smoothing length
         h = snap['accretion_radius'][indices]
     if units is None:
