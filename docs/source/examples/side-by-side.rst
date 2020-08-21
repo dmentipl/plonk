@@ -14,9 +14,12 @@ Plot dust and gas side-by-side.
     # Load the snapshot
     snap = plonk.load_snap('disc_00030.h5')
 
+    # Set units for plot
+    snap.set_units(position='au', density='g/cm^3', projection='cm')
+
     # Specify dust and gas subsnaps
-    gas = snap['gas']
-    dust = snap['dust'][0]
+    gas = snap.family('gas')
+    dust = snap.family('dust', squeeze=True)
     extent = (-150, 150, -150, 150) * plonk.units('au')
 
     # Make plot

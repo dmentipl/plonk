@@ -41,6 +41,21 @@ Set plot units, extent, colormap, and colorbar range.
 
 .. image:: _static/density_zoom.png
 
+You can set the units on the :class:`Snap` instead of passing into the
+:meth:`~Snap.image` method.
+
+.. code-block:: python
+
+    >>> snap.set_units(position='au', density='g/cm^3', projection='cm')
+
+    >>> snap.image(
+    ...     quantity='density',
+    ...     extent=(20, 120, -50, 50),
+    ...     cmap='gist_heat',
+    ...     vmin=0.1,
+    ...     vmax=0.2,
+    ... )
+
 ~~~~~~~~~~~~~~~~~~
 Cross-section plot
 ~~~~~~~~~~~~~~~~~~
@@ -53,14 +68,13 @@ Produce a cross-section :meth:`~Snap.image` plot of density.
 
     >>> snap = plonk.load_snap('disc_00030.h5')
 
-    >>> units={'position': 'au', 'density': 'g/cm^3'}
+    >>> snap.set_units(position='au', density='g/cm^3')
 
     >>> snap.image(
     ...     quantity='density',
     ...     x='x',
     ...     y='z',
     ...     interp='slice',
-    ...     units=units,
     ...     cmap='gist_heat',
     ... )
 
@@ -81,8 +95,9 @@ The different colours refer to different particle types.
 
     >>> snap = plonk.load_snap('disc_00030.h5')
 
-    >>> units = {'position': 'au', 'smoothing_length': 'au'}
-    >>> snap.plot(x='z', y='h', units=units, alpha=0.1)
+    >>> snap.set_units(position='au', smoothing_length='au')
+
+    >>> snap.plot(x='z', y='h', alpha=0.1)
 
 .. image:: _static/particle_plot.png
 
@@ -94,12 +109,12 @@ Plot particles with color representing density.
 
     >>> snap = plonk.load_snap('disc_00030.h5')
 
-    >>> units={'position': 'au', 'density': 'g/cm^3'}
+    >>> snap.set_units(position='au', density='g/cm^3')
+
     >>> ax = snap.plot(
     ...     x='x',
     ...     y='z',
     ...     c='density',
-    ...     units=units,
     ...     xlim=(-50, 50),
     ...     ylim=(-20, 20),
     ... )

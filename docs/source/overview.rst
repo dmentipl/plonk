@@ -172,6 +172,20 @@ units of the data are available as :attr:`~Snap.code_units`.
     >>> snap.code_units['length']
     149600000000.0 <Unit('meter')>
 
+You can set default units as follows.
+
+.. code-block:: pycon
+
+    >>> snap.set_units(position='au', density='g/cm^3', velocity='km/s')
+
+    >>> snap['position']
+    array([[ -24.6998837 ,   49.60184016,   -4.98066567],
+           [-108.99398271,   77.74774493,   12.89317897],
+           [ -51.22291689,  108.64608658,    1.56621873],
+           ...,
+           [  93.29792694,  -77.66152625,    5.40843496],
+           [  63.75198868,   66.74562821,    3.30174062],
+           [   8.11650561,  139.453159  ,    7.55350939]]) <Unit('astronomical_unit')>
 
 Sink particles are handled separately from the fluid, e.g. gas or dust,
 particles. They are available as an attribute :attr:`~Snap.sinks`.
@@ -323,11 +337,10 @@ minimum and maxiumum. In addition, we set the extent, i.e. the x- and y-limits.
 
 .. code-block:: pycon
 
-    >>> units = {'position': 'au', 'density': 'g/cm^3', 'projection': 'cm'}
+    >>> snap.set_units(position='au', density='g/cm^3', projection='cm')
     >>> snap.image(
     ...     quantity='density',
     ...     extent=(20, 120, -50, 50),
-    ...     units=units,
     ...     cmap='gist_heat',
     ...     vmin=0.1,
     ...     vmax=0.2,
@@ -353,34 +366,34 @@ example, the simulation we have been working with has dust and gas. So far we
 have been plotting the total density. We may want to visualize the dust and gas
 separately.
 
-To do this we take a :class:`SubSnap`. We can use the tags 'gas' and 'dust'
-to access those particles. Given that there may be sub-types of dust, using
-'dust' returns a list. In this simulation there is only one dust species.
+To do this we make a :class:`SubSnap` object. We can access these quantities
+using the :meth:`~Snap.family` method. Given that there may be sub-types of
+dust, using 'dust' returns a list by default. In this simulation there is only
+one dust species. We can squeeze all the dust sub-types together using the
+`squeeze` argument.
 
 .. code-block:: pycon
 
-    >>> gas = snap['gas']
-    >>> dust = snap['dust'][0]
+    >>> gas = snap.family('gas')
+    >>> dust = snap.family('dust', squeeze=True)
 
 You can access arrays on the :py:class:`SubSnap` objects as for any
 :py:class:`Snap` object.
 
 .. code-block:: pycon
 
-    >>> gas['mass']
-    array([1.9891e+21, 1.9891e+21, 1.9891e+21, ..., 1.9891e+21, 1.9891e+21,
-           1.9891e+21]) <Unit('kilogram')>
+    >>> gas['mass'].sum().to('solar_mass')
+    0.0010000000000000005 <Unit('solar_mass')>
 
-    >>> dust['mass']
-    array([1.9891e+20, 1.9891e+20, 1.9891e+20, ..., 1.9891e+20, 1.9891e+20,
-           1.9891e+20]) <Unit('kilogram')>
+    >>> dust['mass'].sum().to('earth_mass')
+    3.326810503428664 <Unit('earth_mass')>
 
 Let's plot the gas and dust side-by-side.
 
 .. code-block:: pycon
 
     >>> subsnaps = [gas, dust]
-    >>> extent = (-200, 200, -200, 200) * plonk.units('au')
+    >>> extent = (-200, 200, -200, 200)
 
     >>> fig, axs = plt.subplots(ncols=2, figsize=(14, 5))
 
@@ -639,10 +652,10 @@ We can also plot the profiles.
 
 .. code-block:: pycon
 
-    >>> units = {'position': 'au', 'scale_height': 'au', 'surface_density': 'g/cm^2'}
+    >>> prof.set_units(position='au', scale_height='au', surface_density='g/cm^2')
     >>> fig, axs = plt.subplots(ncols=2, figsize=(12, 5))
-    >>> prof.plot('radius', 'surface_density', units=units, ax=axs[0])
-    >>> prof.plot('radius', 'scale_height', units=units, ax=axs[1])
+    >>> prof.plot('radius', 'surface_density', ax=axs[0])
+    >>> prof.plot('radius', 'scale_height', ax=axs[1])
 
 .. figure:: _static/profile.png
 

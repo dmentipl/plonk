@@ -30,12 +30,10 @@ radii in a disc.
     vertical_height = 40 * au
 
     # Plot units
-    units = {'position': 'au', 'density': 'g/cm^3', 'temperature': 'K'}
+    snap.set_units(position='au', density='g/cm^3', temperature='K')
 
     # Make figure and axes
     fig, axs = plt.subplots(ncols=2, figsize=(12, 5))
-    axs[0].set(xlabel='Altitude', ylabel=f'Density [{units["density"]}]')
-    axs[1].set(xlabel='Altitude', ylabel=f'Temperature [{units["temperature"]}]')
 
     # Loop over radius
     for R in radius:
@@ -59,15 +57,10 @@ radii in a disc.
         )
 
         # Plot density
-        ax_kwargs = {
-            'xlabel': 'Altitude',
-            'ylabel': f'Density [{units["density"]}]',
-            'yscale': 'log',
-        }
+        ax_kwargs = {'xlabel': 'Altitude [au]', 'ylabel': r'Density [g/cm${}^3$]', 'yscale': 'log'}
         prof.plot(
             x='z',
             y='density',
-            units=units,
             std='shading',
             label=f'{R:~P}',
             ax_kwargs=ax_kwargs,
@@ -75,15 +68,10 @@ radii in a disc.
         )
 
         # Plot temperature
-        ax_kwargs = {
-            'xlabel': 'Altitude',
-            'ylabel': f'Temperature [{units["temperature"]}]',
-            'yscale': 'linear'
-        }
+        ax_kwargs = {'xlabel': 'Altitude [au]', 'ylabel': 'Temperature [K]', 'yscale': 'linear'}
         prof.plot(
             x='z',
             y='temperature',
-            units=units,
             std='shading',
             label=f'{R:~P}',
             ax_kwargs=ax_kwargs,

@@ -20,12 +20,7 @@ Plot a density profile for multiple snapshots.
     times = sim.properties['time'].to('year')[::stride]
     profiles = list()
     for snap in sim.snaps[::stride]:
-        profile = plonk.load_profile(
-            snap,
-            cmin='10 au',
-            cmax='150 au',
-            n_bins=50,
-        )
+        profile = plonk.load_profile(snap, cmin='10 au', cmax='150 au', n_bins=50)
         profiles.append(profile)
 
     # Plot profiles

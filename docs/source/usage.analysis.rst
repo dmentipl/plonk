@@ -16,17 +16,17 @@ Access the gas and dust subsets of the particles as a :class:`SubSnap`.
 
     >>> snap = plonk.load_snap('disc_00030.h5')
 
-    >>> gas = snap['gas']
+    >>> gas = snap.family('gas')
 
-    >>> gas['mass'].to('solar_mass')[0]
-    9.99999999999999e-10 <Unit('solar_mass')>
+    # Dust can have multiple sub-species
+    # So we combine into one family with squeeze=True
+    >>> dust = snap.family('dust', squeeze=True)
 
-    # Returns a list as there can be multiple dust sub-types
-    >>> snap['dust']
-    [<plonk.SubSnap "disc_00030.h5">]
+    >>> gas['mass'].sum().to('solar_mass')
+    0.0010000000000000005 <Unit('solar_mass')>
 
-    >>> snap['dust'][0]['mass'].to('solar_mass')[0]
-    9.99999999999999e-11 <Unit('solar_mass')>
+    >>> dust['mass'].sum().to('earth_mass')
+    3.326810503428664 <Unit('earth_mass')>
 
 Generate a :class:`SubSnap` with a boolean mask.
 
@@ -232,8 +232,8 @@ Plot a radial profile.
 
     >>> prof = plonk.load_profile(snap)
 
-    >>> units = {'position': 'au', 'scale_height': 'au'}
-    >>> ax = prof.plot('radius', 'scale_height', units=units)
+    >>> prof.set_units(position='au', scale_height='au')
+    >>> ax = prof.plot('radius', 'scale_height')
     >>> ax.set_ylabel('Scale height [au]')
     >>> ax.legend().remove()
 
@@ -261,8 +261,8 @@ of particles by radius.
     ...     cmax='15 au',
     ... )
 
-    >>> units = {'position': 'au', 'density': 'g/cm^3'}
-    >>> ax = prof.plot('z', 'density', units=units)
+    >>> prof.set_units(position='au', density='g/cm^3')
+    >>> ax = prof.plot('z', 'density')
 
 .. image:: _static/profile_z.png
 

@@ -32,6 +32,9 @@ Plot deviation from Keplerian velocity around planet.
     # Load data
     snap = plonk.load_snap('disc_00030.h5')
 
+    # Set default units
+    snap.set_units(position='au', velocity='km/s')
+
     # Star and planet
     star = snap.sinks[star_index]
     planet = snap.sinks[planet_index]
@@ -69,9 +72,6 @@ Plot deviation from Keplerian velocity around planet.
     # Focus on deviation from Keplerian of gas
     gas = snap['gas']
 
-    # Units for plot
-    units={'position': 'au', 'velocity': 'km/s'}
-
     # Loop over z-slices
     for slice_offset, ax in zip(z_slices, grid):
         gas.image(
@@ -81,7 +81,6 @@ Plot deviation from Keplerian velocity around planet.
             slice_offset=slice_offset,
             vmin=-velocity_max,
             vmax=velocity_max,
-            units=units,
             cmap='RdBu',
             show_colorbar=False,
             ax=ax,
