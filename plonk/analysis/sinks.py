@@ -236,17 +236,18 @@ def Hill_radius(primary: Sinks, secondary: Sinks) -> Quantity:
     """
     if len(primary) != 1:
         raise ValueError('primary must have length 1')
-    M = primary['mass']
-    Hill = list()
-    for idx, sink in enumerate(secondary):
-        m = sink['mass']
-        indices = [primary.indices[0], sink.indices[0]]
-        sinks = primary.base.sinks[indices]
-        a = semi_major_axis(sinks)
-        e = eccentricity(sinks)
-        Hill.append(a * (1 - e) * (m / (3 * M)) ** (1 / 3))
-
+    Hill = [_Hill_radius(primary + sink) for sink in secondary]
     return [H.magnitude for H in Hill] * Hill[0].units
+
+
+def _Hill_radius(sinks):
+    if len(sinks) != 2:
+        raise ValueError('sinks must have length 2')
+    M, m = sinks['mass']
+    q = m / M if m / M < 1 else M / m
+    a = semi_major_axis(sinks)
+    e = eccentricity(sinks)
+    return a * (1 - e) * (q / 3) ** (1 / 3)
 
 
 def _norm(x):
