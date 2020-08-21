@@ -5,7 +5,6 @@
 from __future__ import annotations
 
 from bisect import bisect
-from functools import partial
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Tuple, Union
 
 import matplotlib.pyplot as plt
@@ -20,6 +19,7 @@ from .._units import Quantity
 from .._units import units as plonk_units
 from ..utils.math import average
 from ..utils.utils import is_documented_by, pretty_array_name
+from ._profiles import extra_profiles
 
 if TYPE_CHECKING:
     from ..snap.snap import SnapLike
@@ -88,9 +88,9 @@ class Profile:
 
     >>> prof['aspect_ratio'] = prof['scale_height'] / prof['radius']
 
-    Alternatively use the profile_property decorator.
+    Alternatively use the add_profile decorator.
 
-    >>> @prof.profile_property
+    >>> @prof.add_profile
     ... def mass(prof):
     ...     M = prof.snap['mass']
     ...     return prof.particles_to_binned_quantity('sum', M)
@@ -105,26 +105,6 @@ class Profile:
     >>> units = {'position': 'au', 'surface_density'='g/cm^2'}
     >>> prof.plot('radius', 'surface_density', units=units)
     """
-
-    _profile_functions: Dict[str, Callable] = {}
-
-    @staticmethod
-    def profile_property(fn: Callable) -> Callable:
-        """Decorate function to add profile to Profile.
-
-        Parameters
-        ----------
-        fn
-            A function that returns the profile as an array. The name of
-            the function is the string with which to reference the array.
-
-        Returns
-        -------
-        Callable
-            The function which returns the array.
-        """
-        Profile._profile_functions[fn.__name__] = fn
-        return fn
 
     def __init__(
         self,
@@ -146,6 +126,7 @@ class Profile:
         self.properties: Dict[str, Any] = {}
 
         self._profiles: Dict[str, Quantity] = {}
+        self._profile_functions: Dict[str, Callable] = {}
 
         self._weights = self.snap['mass']
         self._mask = self._setup_particle_mask(ignore_accreted)
@@ -172,7 +153,26 @@ class Profile:
         except KeyError:
             num_separate_dust = 0
         num_mixture_dust_species = self.snap.num_dust_species - num_separate_dust
-        _generate_profiles(num_mixture_dust_species)
+
+        # Add pre-defined profiles
+        extra_profiles(self, num_mixture_dust_species)
+
+    def add_profile(self, fn: Callable) -> Callable:
+        """Decorate function to add profile to Profile.
+
+        Parameters
+        ----------
+        fn
+            A function that returns the profile as an array. The name of
+            the function is the string with which to reference the array.
+
+        Returns
+        -------
+        Callable
+            The function which returns the array.
+        """
+        self._profile_functions[fn.__name__] = fn
+        return fn
 
     def _setup_particle_mask(self, ignore_accreted: bool) -> ndarray:
         if ignore_accreted is False:
@@ -616,98 +616,6 @@ class Profile:
         binned_quantity *= val.units
 
         return binned_quantity
-
-
-def _generate_profiles(num_mixture_dust_species: int = 0):
-    @Profile.profile_property
-    def mass(prof) -> Quantity:
-        """Mass profile."""
-        M = prof.snap['mass']
-        return prof.particles_to_binned_quantity('sum', M)
-
-    @Profile.profile_property
-    def surface_density(prof) -> Quantity:
-        """Surface density profile.
-
-        Units are [mass / length ** ndim], which depends on ndim of profile.
-        """
-        return prof['mass'] / prof['size']
-
-    @Profile.profile_property
-    def scale_height(prof) -> Quantity:
-        """Scale height profile."""
-        z = prof.snap['z']
-        return prof.particles_to_binned_quantity('std', z)
-
-    @Profile.profile_property
-    def aspect_ratio(prof) -> Quantity:
-        """Aspect ratio profile."""
-        H = prof['scale_height']
-        R = prof['radius']
-        return H / R
-
-    @Profile.profile_property
-    def angular_momentum_theta(prof) -> Quantity:
-        """Angle between specific angular momentum and xy-plane."""
-        angular_momentum_z = prof['angular_momentum_z']
-        angular_momentum_magnitude = prof['angular_momentum_mag']
-
-        return np.arccos(angular_momentum_z / angular_momentum_magnitude)
-
-    @Profile.profile_property
-    def angular_momentum_phi(prof) -> Quantity:
-        """Angle between specific angular momentum and x-axis in xy-plane."""
-        angular_momentum_x = prof['angular_momentum_x']
-        angular_momentum_y = prof['angular_momentum_y']
-        return np.arctan2(angular_momentum_y, angular_momentum_x)
-
-    @Profile.profile_property
-    def toomre_Q(prof) -> Quantity:
-        """Toomre Q parameter."""
-        G = (1 * plonk_units.newtonian_constant_of_gravitation).to_base_units()
-        return (
-            prof['sound_speed']
-            * prof['keplerian_frequency']
-            / (np.pi * G * prof['surface_density'])
-        )
-
-    if num_mixture_dust_species > 0:
-
-        @Profile.profile_property
-        def gas_mass(prof) -> Quantity:
-            """Gas mass profile."""
-            M = prof.snap['gas_mass']
-            return prof.particles_to_binned_quantity('sum', M)
-
-        @Profile.profile_property
-        def gas_surface_density(prof) -> Quantity:
-            """Gas surface density profile.
-
-            Units are [mass / length ** ndim], which depends on ndim of profile.
-            """
-            return prof['gas_mass'] / prof['size']
-
-        for idx in range(num_mixture_dust_species):
-
-            def dust_mass(idx, prof) -> Quantity:
-                """Dust mass profile."""
-                M = prof.snap[f'dust_mass_{idx+1:03}']
-                return prof.particles_to_binned_quantity('sum', M)
-
-            def dust_surface_density(idx, prof) -> Quantity:
-                """Dust surface density profile.
-
-                Units are [mass / length ** ndim], which depends on ndim of profile.
-                """
-                return prof[f'dust_mass_{idx+1:03}'] / prof['size']
-
-            Profile._profile_functions[f'dust_mass_{idx+1:03}'] = partial(
-                dust_mass, idx
-            )
-
-            Profile._profile_functions[f'dust_surface_density_{idx+1:03}'] = partial(
-                dust_surface_density, idx
-            )
 
 
 @is_documented_by(Profile)
