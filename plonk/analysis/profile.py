@@ -406,78 +406,34 @@ class Profile:
         ax
             The matplotlib Axes object.
         """
-        if isinstance(y, str):
-            y = [y]
-
-        if units is None:
-            x_unit, y_unit = None, None
-        else:
-            x_unit = units.get(self.base_array_name(x), str(self[x].units))
-            y_unit = [
-                units.get(self.base_array_name(_y), str(self[_y].units)) for _y in y
-            ]
-        if y_unit is not None:
-            if isinstance(y_unit, str):
-                y_unit = [y_unit for _ in range(len(y))]
-            if len(y) != len(y_unit):
-                raise ValueError('Length of y does not match length of y_unit')
-
         if std is not None:
             if std not in ('shading', 'errorbar'):
                 raise ValueError('std must be "shading" or "errorbar"')
 
-        _x = self[x]
-        if x_unit is not None:
-            _x = _x.to(x_unit)
-
         if ax is None:
             _, ax = plt.subplots()
 
-        xname = pretty_array_name(x)
-        ax.set_xlabel(f'{xname} [{_x.units:~P}]')
-        _x = _x.magnitude
+        if isinstance(y, str):
+            y = [y]
 
-        for idx, yi in enumerate(y):
-            _y = self[yi]
-            if std:
-                if yi.split('_')[-1] in _aggregations:
-                    _yi = '_'.join(yi.split('_')[:-1])
-                else:
-                    _yi = yi
-                try:
-                    _y_std = self[_yi + '_std']
-                except ValueError:
-                    logger.warning('Cannot calculate standard deviation')
-                if self.aggregation in ('std', 'sum'):
-                    _y_mean = self[_yi + '_mean']
-                else:
-                    _y_mean = _y
-            if y_unit is not None:
-                _y = _y.to(y_unit[idx])
-                if std:
-                    _y_std = _y_std.to(y_unit[idx])
-                    _y_mean = _y_mean.to(y_unit[idx])
-            yname = pretty_array_name(yi)
-            label = f'{yname} [{_y.units:~P}]'
-            _y = _y.magnitude
-            if std:
-                _y_std = _y_std.magnitude
-                _y_mean = _y_mean.magnitude
+        x_unit = _get_unit(self, x, units)
+        y_unit = [_get_unit(self, yi, units) for yi in y]
+
+        xdata = self[x].to(x_unit)
+
+        xlabel = pretty_array_name(x)
+        ax.set_xlabel(f'{xlabel} [{xdata.units:~P}]')
+
+        for idx, yname in enumerate(y):
+            ydata = self[yname].to(y_unit[idx])
+            ylabel = pretty_array_name(yname)
+            label = f'{ylabel} [{ydata.units:~P}]'
             if kwargs.get('label') is None:
-                lines = ax.plot(_x, _y, label=label, **kwargs)
+                ax.plot(xdata.magnitude, ydata.magnitude, label=label, **kwargs)
             else:
-                lines = ax.plot(_x, _y, **kwargs)
+                ax.plot(xdata.magnitude, ydata.magnitude, **kwargs)
             if std:
-                color = lines[0].get_color()
-                if std == 'shading':
-                    ax.fill_between(
-                        _x, _y_mean - _y_std, _y_mean + _y_std, color=color, alpha=0.2,
-                    )
-                elif std == 'errorbar':
-                    ax.errorbar(
-                        _x, _y_mean, yerr=_y_std, linestyle='', color=color, alpha=0.5
-                    )
-
+                _std_plot(self, xdata, ydata, yname, y_unit[idx], std, ax)
         ax.legend()
         ax.set(**ax_kwargs)
 
@@ -668,3 +624,42 @@ def _1d_arrays(arrays: list) -> list:
         else:
             _arrays.append(array)
     return _arrays
+
+
+def _get_unit(profile, name, units):
+    if name is None:
+        return None
+    base_name = profile.base_array_name(name)
+    if units is not None:
+        if name in units:
+            return 1 * plonk_units(units[name])
+        if base_name in units:
+            return 1 * plonk_units(units[base_name])
+    if base_name in profile.snap.default_units:
+        return 1 * plonk_units(profile.snap.default_units[base_name])
+    return 1 * profile[base_name].units
+
+
+def _std_plot(profile, xdata, ydata, yname, yunit, std, ax):
+    if yname.split('_')[-1] in _aggregations:
+        _yname = '_'.join(yname.split('_')[:-1])
+    else:
+        _yname = yname
+    try:
+        y_std = profile[_yname + '_std']
+    except ValueError:
+        logger.warning('Cannot calculate standard deviation')
+    if profile.aggregation in ('std', 'sum'):
+        y_mean = profile[_yname + '_mean']
+    else:
+        y_mean = ydata
+    y_std = y_std.to(yunit).magnitude
+    y_mean = y_mean.to(yunit).magnitude
+    color = ax.lines[0].get_color()
+    xdata = xdata.magnitude
+    if std == 'shading':
+        ax.fill_between(
+            xdata, y_mean - y_std, y_mean + y_std, color=color, alpha=0.2,
+        )
+    elif std == 'errorbar':
+        ax.errorbar(xdata, y_mean, yerr=y_std, linestyle='', color=color, alpha=0.5)
