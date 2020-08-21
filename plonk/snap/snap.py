@@ -1328,6 +1328,8 @@ class Sinks:
 
         # Attributes same as Snap
         self.file_path = self.base.file_path
+        self.base_array_name = self.base.base_array_name
+        self.default_units = self.base.default_units
 
     @property
     def indices(self) -> ndarray:

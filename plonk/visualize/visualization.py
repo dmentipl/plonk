@@ -370,26 +370,11 @@ def _interpolation_plot(
 def _interpolated_data(
     snap, quantity, x, y, interp, slice_normal, slice_offset, extent, units, **kwargs,
 ):
-    if units is None:
-        try:
-            _units = {
-                'quantity': plonk_units(snap.default_units[quantity]),
-                'extent': plonk_units(snap.default_units['position']),
-                'projection': plonk_units(snap.default_units['projection']),
-            }
-        except KeyError:
-            _units = {
-                'quantity': 1 * snap[quantity].units,
-                'extent': 1 * snap['position'].units,
-                'projection': 1 * snap['position'].units,
-            }
-    else:
-        qunit = 1 * plonk_units(
-            units.get(snap.base_array_name(quantity), str(snap[quantity].units))
-        )
-        eunit = 1 * plonk_units(units.get('position', str(snap['position'].units)))
-        punit = 1 * plonk_units(units.get('projection', str(snap['position'].units)))
-        _units = {'quantity': qunit, 'extent': eunit, 'projection': punit}
+    _units = {
+        'quantity': _get_unit(snap, quantity, units),
+        'extent': _get_unit(snap, 'position', units),
+        'projection': _get_unit(snap, 'projection', units),
+    }
 
     if extent is None:
         _extent = get_extent_from_percentile(snap=snap, x=x, y=y)
@@ -646,40 +631,12 @@ def _plot_data(snap, x, y, c, s, units):
     _c: Quantity = snap[c] if c is not None else None
     _s: Quantity = snap[s] if s is not None else None
 
-    if units is None:
-        try:
-            _units = {
-                'x': plonk_units(snap.default_units[x]),
-                'y': plonk_units(snap.default_units[y]),
-            }
-        except (KeyError, AttributeError):
-            _units = {
-                'x': 1 * snap[x].units,
-                'y': 1 * snap[y].units,
-            }
-        if c is not None:
-            try:
-                _units['c'] = plonk_units(snap.default_units[c])
-            except KeyError:
-                _units['c'] = 1 * snap[c].units
-        if s is not None:
-            try:
-                _units['s'] = plonk_units(snap.default_units[s])
-            except KeyError:
-                _units['s'] = 1 * snap[s].units
-    else:
-        xunit = units.get(snap.base_array_name(x), str(snap[x].units))
-        yunit = units.get(snap.base_array_name(y), str(snap[y].units))
-        _units = {
-            'x': 1 * plonk_units(xunit),
-            'y': 1 * plonk_units(yunit),
-        }
-        if c is not None:
-            cunit = units.get(snap.base_array_name(c), str(snap[c].units))
-            _units['c'] = 1 * plonk_units(cunit)
-        if s is not None:
-            sunit = units.get(snap.base_array_name(s), str(snap[s].units))
-            _units['s'] = 1 * plonk_units(sunit)
+    _units = {
+        'x': _get_unit(snap, x, units),
+        'y': _get_unit(snap, y, units),
+        'c': _get_unit(snap, c, units),
+        's': _get_unit(snap, s, units),
+    }
 
     _x = _x.to(_units['x']).magnitude
     _y = _y.to(_units['y']).magnitude
@@ -809,3 +766,22 @@ def _convert_units_for_cmap(vm, name, units, interp):
             logger.warning(f'{name} has no units, assuming same units as quantity')
 
     return vm
+
+
+def _get_unit(snap, name, units):
+    if name is None:
+        return None
+    if name == 'projection':
+        base_name = 'projection'
+    else:
+        base_name = snap.base_array_name(name)
+    if units is not None:
+        if name in units:
+            return 1 * plonk_units(units[name])
+        if base_name in units:
+            return 1 * plonk_units(units[base_name])
+    if base_name in snap.default_units:
+        return 1 * plonk_units(snap.default_units[base_name])
+    if name == 'projection':
+        return 1 * snap['position'].units
+    return 1 * snap[base_name].units
