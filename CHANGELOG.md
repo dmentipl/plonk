@@ -18,14 +18,25 @@ Types of changes:
 ### Added
 
 - Use a TOML config file to configure options.
-- Add default_units and set_units on Snap.
+- Add default_units and set_units on Snap and Profile.
+- Sinks are iterable.
+- Plot error bars on profiles.
 
 ### Changed
 
+- Renamed subsnaps_by_type to subsnaps_as_dict.
 - Renamed units_defaults to array_units.
 - Name mapping, units, aliases are no longer hard coded and are now in config.toml.
 - If no units specified in image/plot/vector functions then use the default units on the Snap if available.
 - Renamed some analysis.particles functions.
+- Sinks analysis functions take a Sinks object as arguments.
+- Profile.plot "std_dev_shading" argument changed to "std", and now is a string not a bool.
+
+### Fixed
+
+- Fixed bug in using Snap for snaps with no sinks.
+- Fixed bug in accessing a single Sink if a np.int rather than int was passed in.
+- Fixed bug in reading Phantom datasets without knowing units.
 
 ## [0.7.0] - 2020-08-17
 
