@@ -1248,6 +1248,7 @@ class SubSnap(Snap):
         self.data_source = self.base.data_source
         self.file_path = self.base.file_path
         self._code_units = self.base._code_units
+        self._default_units = self.base._default_units
         self._properties = self.base._properties
         self._array_code_units = self.base._array_code_units
         self._array_registry = self.base._array_registry
