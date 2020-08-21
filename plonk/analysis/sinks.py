@@ -17,7 +17,7 @@ G = (1 * plonk_units.newtonian_constant_of_gravitation).to_base_units()
 
 
 def kinetic_energy(sinks: Sinks) -> Quantity:
-    """Calculate the kinetic energy.
+    """Calculate the total kinetic energy.
 
     Parameters
     ----------
@@ -29,11 +29,11 @@ def kinetic_energy(sinks: Sinks) -> Quantity:
     Quantity
     """
     m, v = sinks['mass'], sinks['velocity']
-    return 1 / 2 * m * _norm(v) ** 2
+    return np.sum(1 / 2 * m * _norm(v) ** 2)
 
 
 def gravitational_potential_energy(sinks: Sinks) -> Quantity:
-    """Calculate the gravitational potential energy.
+    """Calculate the total gravitational potential energy.
 
     Parameters
     ----------
@@ -51,7 +51,7 @@ def gravitational_potential_energy(sinks: Sinks) -> Quantity:
 
 
 def specific_orbital_energy(sinks: Sinks) -> Quantity:
-    """Calculate the specific orbital energy for two sinks.
+    """Calculate the specific orbital energy for two bodies.
 
     Parameters
     ----------
@@ -66,13 +66,13 @@ def specific_orbital_energy(sinks: Sinks) -> Quantity:
         raise ValueError('sinks must have length 2')
     m1, m2 = sinks['mass']
     mu = m1 * m2 / (m1 + m2)
-    ke = np.sum(kinetic_energy(sinks=sinks))
+    ke = kinetic_energy(sinks=sinks)
     pe = gravitational_potential_energy(sinks=sinks)
     return (ke + pe) / mu
 
 
 def specific_angular_momentum(sinks: Sinks) -> Quantity:
-    """Calculate the specific orbital energy for two sinks.
+    """Calculate the specific orbital energy for two bodies.
 
     Parameters
     ----------
@@ -113,7 +113,7 @@ def eccentricity(sinks: Sinks) -> Quantity:
 
 
 def semi_major_axis(sinks: Sinks) -> Quantity:
-    """Calculate the semi-major axis for two sinks.
+    """Calculate the semi-major axis for two bodies.
 
     Parameters
     ----------
@@ -134,7 +134,7 @@ def semi_major_axis(sinks: Sinks) -> Quantity:
 
 
 def inclination(sinks: Sinks) -> Quantity:
-    """Calculate the inclination for two sinks.
+    """Calculate the inclination for two bodies.
 
     Parameters
     ----------
@@ -154,7 +154,7 @@ def inclination(sinks: Sinks) -> Quantity:
 
 
 def orbital_period(sinks: Sinks) -> Quantity:
-    """Calculate the orbital period for two sinks.
+    """Calculate the orbital period for two bodies.
 
     Parameters
     ----------
@@ -173,7 +173,7 @@ def orbital_period(sinks: Sinks) -> Quantity:
 
 
 def mean_motion(sinks: Sinks) -> Quantity:
-    """Calculate the mean motion for two sinks.
+    """Calculate the mean motion for two bodies.
 
     Parameters
     ----------
@@ -191,9 +191,10 @@ def mean_motion(sinks: Sinks) -> Quantity:
 
 
 def Roche_sphere(sinks: Sinks) -> Quantity:
-    """Calculate an estimate of the Roche sphere for two sinks.
+    """Calculate an estimate of the Roche sphere for two bodies.
 
-    Uses the formula from Eggleton (1983) ApJ 268, 368-369.
+    The Roche sphere radius is calculated around the first of the two
+    sinks. Uses the formula from Eggleton (1983) ApJ 268, 368-369.
 
     Parameters
     ----------
@@ -216,30 +217,36 @@ def Roche_sphere(sinks: Sinks) -> Quantity:
     )
 
 
-def Hill_radius(sinks: Sinks) -> Quantity:
-    """Calculate the Hill radius for two sinks.
-
-    This calculation assumes zero eccentricity, i.e. a circular orbit.
+def Hill_radius(primary: Sinks, secondary: Sinks) -> Quantity:
+    """Calculate the Hill radius.
 
     Parameters
     ----------
-    sinks
-        The Sinks object. Must have length 2.
+    primary
+        The primary, i.e. heavy object, as a Sinks object. It must have
+        one sink.
+    secondary
+        The secondary, i.e. light objects, as a Sinks object. It can
+        have more than one sink, e.g. when calculating the Hill radiius
+        for multiple planets orbiting a star.
 
     Returns
     -------
     Quantity
     """
-    if len(sinks) != 2:
-        raise ValueError('sinks must have length 2')
-    M, m = sinks['mass']
-    if m > M:
-        _m = m
-        m = M
-        M = _m
-    a = semi_major_axis(sinks)
-    e = eccentricity(sinks)
-    return a * (1 - e) * (m / (3 * M)) ** (1 / 3)
+    if len(primary) != 1:
+        raise ValueError('primary must have length 1')
+    M = primary['mass']
+    Hill = list()
+    for idx, sink_idx in enumerate(secondary.indices):
+        m = secondary[idx]['mass']
+        indices = [primary.indices[0], sink_idx]
+        sinks = primary.base.sinks[indices]
+        a = semi_major_axis(sinks)
+        e = eccentricity(sinks)
+        Hill.append(a * (1 - e) * (m / (3 * M)) ** (1 / 3))
+
+    return [H.magnitude for H in Hill] * Hill[0].units
 
 
 def _norm(x):
