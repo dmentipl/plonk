@@ -148,7 +148,7 @@ class Profile:
         self._profiles[self._coordinate] = self.bin_centers
         self._profiles['number'] = np.histogram(
             self._x.magnitude, self.bin_edges.magnitude
-        )[0]
+        )[0] * plonk_units('dimensionless')
 
         try:
             num_separate_dust = len(self.snap.num_particles_of_type['dust'])
@@ -206,14 +206,12 @@ class Profile:
             rmin = Quantity(cmin)
             if not rmin.dimensionality == Quantity('cm').dimensionality:
                 raise ValueError('must specify cmin units, e.g. cmin="10 au"')
-            rmin = rmin.to_base_units()
         if cmax is None:
             rmax = np.percentile(self._x.magnitude, 99, axis=0) * self._x.units
         else:
             rmax = Quantity(cmax)
             if not rmax.dimensionality == Quantity('cm').dimensionality:
                 raise ValueError('must specify cmin units, e.g. cmax="100 au"')
-            rmax = rmax.to_base_units()
 
         return rmin, rmax
 
@@ -682,6 +680,7 @@ def _std_plot(profile, xdata, ydata, yname, yunit, std, ax):
         y_std = profile[_yname + '_std']
     except ValueError:
         logger.warning('Cannot calculate standard deviation')
+        return
     if profile.aggregation in ('std', 'sum'):
         y_mean = profile[_yname + '_mean']
     else:
