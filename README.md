@@ -106,9 +106,9 @@ array([-24.6998837 ,  49.60184016,  -4.98066567]) <Unit('astronomical_unit')>
 You can get a subset of particles as a SubSnap.
 
 ```python
->>> subsnap = snap['gas']
 >>> subsnap = snap[:1000]
 >>> subsnap = snap[snap['x'] > 0]
+>>> subsnap = snap.family('gas')
 ```
 
 ### More
