@@ -301,7 +301,7 @@ the returned indices are relative to type.
 
     >>> snap.set_kernel('cubic')
 
-    >>> dust = snap['dust'][0]
+    >>> dust = snap.family('dust', squeeze=True)
 
     # Find the neighbours of the first three dust particles
     >>> dust.neighbours([0, 1, 2])

@@ -57,7 +57,11 @@ radii in a disc.
         )
 
         # Plot density
-        ax_kwargs = {'xlabel': 'Altitude [au]', 'ylabel': r'Density [g/cm${}^3$]', 'yscale': 'log'}
+        ax_kwargs = {
+            'xlabel': 'Altitude [au]',
+            'ylabel': r'Density [g/cm${}^3$]',
+            'yscale': 'log'
+        }
         prof.plot(
             x='z',
             y='density',
@@ -68,7 +72,11 @@ radii in a disc.
         )
 
         # Plot temperature
-        ax_kwargs = {'xlabel': 'Altitude [au]', 'ylabel': 'Temperature [K]', 'yscale': 'linear'}
+        ax_kwargs = {
+            'xlabel': 'Altitude [au]',
+            'ylabel': 'Temperature [K]',
+            'yscale': 'linear'
+        }
         prof.plot(
             x='z',
             y='temperature',
