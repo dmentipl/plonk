@@ -51,11 +51,14 @@ Plot deviation from Keplerian velocity around planet.
     @snap.add_array()
     def delta_keplerian(snap):
         """Deviation from Keplerian velocity."""
-        G = (1 * plonk.units.gravitational_constant).to_base_units()
+        G = plonk.units.gravitational_constant
         M_star = star['mass']
         v_k = np.sqrt(G * M_star / snap['R'] ** 3)
-        return (snap['v_phi'] - v_k) * snap['R']
+        return ((snap['v_phi'] - v_k) * snap['R']).to_base_units()
 
+
+    # Set units for plot
+    snap.set_units(position='au', delta_keplerian='km/s')
 
     # Generate figure and grid
     fig = plt.figure(figsize=(15, 5))

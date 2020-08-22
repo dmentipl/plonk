@@ -370,42 +370,19 @@ def _interpolation_plot(
 def _interpolated_data(
     snap, quantity, x, y, interp, slice_normal, slice_offset, extent, units, **kwargs,
 ):
-    _units = {
+    units = {
         'quantity': _get_unit(snap, quantity, units),
         'extent': _get_unit(snap, 'position', units),
         'projection': _get_unit(snap, 'projection', units),
     }
 
     if extent is None:
-        _extent = get_extent_from_percentile(snap=snap, x=x, y=y)
-        _extent = np.array([e.magnitude for e in _extent]) * _extent[0].units
+        extent = get_extent_from_percentile(snap=snap, x=x, y=y)
+    if not isinstance(extent[0], Quantity):
+        extent = np.array(extent) * units['extent']
     else:
-        _extent = extent
-    if not isinstance(_extent[0], Quantity):
-        _extent = (
-            _extent[0] * _units['extent'],
-            _extent[1] * _units['extent'],
-            _extent[2] * _units['extent'],
-            _extent[3] * _units['extent'],
-        )
-    __extent = (
-        (_extent[0] / snap.code_units['length']).to_base_units().magnitude,
-        (_extent[1] / snap.code_units['length']).to_base_units().magnitude,
-        (_extent[2] / snap.code_units['length']).to_base_units().magnitude,
-        (_extent[3] / snap.code_units['length']).to_base_units().magnitude,
-    )
-
-    if interp == 'slice':
-        if slice_normal is None:
-            slice_normal = (0, 0, 1)
-        if slice_offset is None:
-            slice_offset = 0 * plonk_units('cm')
-        if isinstance(slice_offset, Quantity):
-            slice_offset = (
-                (slice_offset / snap.code_units['length']).to_base_units().magnitude
-            )
-        else:
-            logger.warning('slice_offset has no units, assuming code units')
+        if isinstance(extent, (tuple, list)):
+            extent = np.array([e.magnitude for e in extent]) * extent[0].units
 
     # Interpolate in code units
     interpolated_data = interpolate(
@@ -416,20 +393,20 @@ def _interpolated_data(
         interp=interp,
         slice_normal=slice_normal,
         slice_offset=slice_offset,
-        extent=__extent,
+        extent=extent,
         **kwargs,
     )
-    # Convert back to physical units
-    interpolated_data, ___extent = _convert_units_for_interpolation(
-        snap=snap,
-        quantity=quantity,
-        interpolated_data=interpolated_data,
-        extent=__extent,
-        units=_units,
-        interp=interp,
-    )
 
-    return interpolated_data, ___extent, _units
+    # Convert Quantity to ndarray
+    extent = extent.to(units['extent']).magnitude
+    if interp == 'projection':
+        interpolated_data = interpolated_data.to(
+            units['quantity'] * units['projection']
+        ).magnitude
+    else:
+        interpolated_data = interpolated_data.to(units['quantity']).magnitude
+
+    return interpolated_data, extent, units
 
 
 def _interpolated_plot(

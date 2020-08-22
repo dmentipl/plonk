@@ -12,6 +12,8 @@ import numpy as np
 from numpy import ndarray
 
 from .._logging import logger
+from .._units import Quantity
+from .._units import units as plonk_units
 from ..utils.geometry import distance_from_plane
 from .splash import interpolate_projection, interpolate_slice
 
@@ -29,8 +31,8 @@ def interpolate(
     y: str = 'y',
     interp: 'str',
     slice_normal: Tuple[float, float, float] = None,
-    slice_offset: float = None,
-    extent: Extent,
+    slice_offset: Quantity = None,
+    extent: Quantity,
     **kwargs,
 ) -> ndarray:
     """Interpolate a quantity on the snapshot to a pixel grid.
@@ -65,9 +67,9 @@ def interpolate(
 
     Returns
     -------
-    ndarray
-        The interpolated quantity on a pixel grid as an ndarray. The
-        shape for scalar data is (npixx, npixy), and for vector is
+    Quantity
+        The interpolated quantity on a pixel grid as a Pint Quantity.
+        The shape for scalar data is (npixx, npixy), and for vector is
         (2, npixx, npixy).
 
     Examples
@@ -81,9 +83,19 @@ def interpolate(
     ...     extent=(-100, 100, -100, 100),
     ... )
     """
+    if not isinstance(extent[0], Quantity):
+        raise ValueError('extent must have units')
+
     _quantity, x, y, z = _get_arrays_from_str(snap=snap, quantity=quantity, x=x, y=y)
     h = snap.array_in_code_units('smoothing_length')
     m = snap.array_in_code_units('mass')
+
+    extent = (
+        (extent[0] / snap.code_units['length']).to_base_units().magnitude,
+        (extent[1] / snap.code_units['length']).to_base_units().magnitude,
+        (extent[2] / snap.code_units['length']).to_base_units().magnitude,
+        (extent[3] / snap.code_units['length']).to_base_units().magnitude,
+    )
 
     if interp == 'projection':
         dist_from_slice = None
@@ -93,9 +105,14 @@ def interpolate(
             logger.warning('ignoring slice_offset for projection')
     elif interp == 'slice':
         if slice_offset is None:
-            slice_offset = 0.0
+            slice_offset = 0.0 * plonk_units('meter')
+        if not isinstance(slice_offset, Quantity):
+            raise ValueError('slice_offset must have units')
         if slice_normal is None:
             slice_normal = np.array([0, 0, 1])
+        slice_offset = (
+            (slice_offset / snap.code_units['length']).to_base_units().magnitude
+        )
         dist_from_slice = distance_from_plane(x, y, z, slice_normal, slice_offset)
 
     if _quantity.ndim == 1:
@@ -128,6 +145,9 @@ def interpolate(
     else:
         raise ValueError('quantity.ndim > 2: cannot determine quantity')
 
+    interpolated_data = interpolated_data * snap.array_code_unit(quantity)
+    if interp == 'projection':
+        interpolated_data = interpolated_data * snap.array_code_unit('position')
     return interpolated_data
 
 
