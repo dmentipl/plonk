@@ -252,7 +252,6 @@ class Snap:
                     registered += [
                         f'{arr}_{n:03}' for n in range(1, self.num_dust_species + 1)
                     ]
-                    registered.append(f'{arr}_tot')
 
         if aliases:
             extra = [
@@ -268,7 +267,6 @@ class Snap:
                             _extra.append(arr + f'_{suffix}')
                     if self.base_array_name(arr) in self._dust_arrays:
                         suffixes = [f'{n+1:03}' for n in range(self.num_dust_species)]
-                        suffixes += ['tot']
                         for suffix in suffixes:
                             _extra.append(arr + f'_{suffix}')
                 extra += _extra
@@ -1042,7 +1040,7 @@ class Snap:
         if name_root in self._vector_arrays and name_suffix in ('x', 'y', 'z', 'mag'):
             return name_root
         if name_root in self._dust_arrays:
-            if _str_is_int(name_suffix) or name_suffix == 'tot':
+            if _str_is_int(name_suffix):
                 return name_root
 
         raise ValueError('Unknown array')
@@ -1068,8 +1066,6 @@ class Snap:
         if name_root in self._dust_arrays:
             if _str_is_int(name_suffix):
                 return name_suffix
-            if name_suffix == 'tot':
-                return name_suffix
 
         raise ValueError('Unknown array')
 
@@ -1090,9 +1086,10 @@ class Snap:
                 return norm, (), {'axis': 1}
         if base_name in self._dust_arrays:
             if _str_is_int(suffix):
-                return nothing, (..., int(suffix) - 1), {}
-            if suffix == 'tot':
-                return np.sum, (), {'axis': 1}
+                if int(suffix) < 1 or int(suffix) > self.num_dust_species:
+                    pass
+                else:
+                    return nothing, (..., int(suffix) - 1), {}
 
         raise ValueError('Unknown array')
 

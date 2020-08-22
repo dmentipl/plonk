@@ -296,8 +296,7 @@ class Profile:
             'Requested profile has array dimension > 1.\nTo access x-, y-, or '
             'z-components, or magnitude of vector quantities,\ntry, for '
             'example, prof["velocity_x"] or prof["momentum_mag"].\nTo '
-            'access dust profiles, try, for example, prof["stopping_time_001"] '
-            'or\nprof["dust_mass_tot"].'
+            'access dust profiles, try, for example, prof["stopping_time_001"]'
         )
 
     def __getitem__(self, name: str) -> Quantity:

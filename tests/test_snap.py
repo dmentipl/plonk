@@ -131,7 +131,7 @@ def test_available_loaded_arrays():
         'position_z',
         'position_mag',
         'h',
-        'dust_to_gas_ratio_tot',
+        'dust_to_gas_ratio',
     ]:
         snap[arr]
 
