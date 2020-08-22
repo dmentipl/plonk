@@ -28,12 +28,12 @@ def _test_particles(snap, ignore, mu):
     analysis.particles.angular_momentum(snap=snap, ignore_accreted=ignore)
     analysis.particles.angular_velocity(snap=snap, ignore_accreted=ignore)
     analysis.particles.azimuthal_angle(snap=snap, ignore_accreted=ignore)
-    analysis.particles.dust_density(snap=snap, ignore_accreted=ignore)
-    analysis.particles.dust_fraction(snap=snap, ignore_accreted=ignore)
-    analysis.particles.dust_mass(snap=snap, ignore_accreted=ignore)
-    analysis.particles.gas_density(snap=snap, ignore_accreted=ignore)
-    analysis.particles.gas_fraction(snap=snap, ignore_accreted=ignore)
-    analysis.particles.gas_mass(snap=snap, ignore_accreted=ignore)
+    if snap.properties['dust_method'] == 'dust/gas mixture':
+        analysis.particles.dust_density(snap=snap, ignore_accreted=ignore)
+        analysis.particles.dust_mass(snap=snap, ignore_accreted=ignore)
+        analysis.particles.gas_density(snap=snap, ignore_accreted=ignore)
+        analysis.particles.gas_fraction(snap=snap, ignore_accreted=ignore)
+        analysis.particles.gas_mass(snap=snap, ignore_accreted=ignore)
     analysis.particles.eccentricity(
         snap=snap, gravitational_parameter=mu, ignore_accreted=ignore
     )

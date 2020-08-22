@@ -38,6 +38,7 @@ AVAILABLE_ARRAYS = [
     'smoothing_length',
     'sound_speed',
     'specific_angular_momentum',
+    'specific_kinetic_energy',
     'stokes_number',
     'stopping_time',
     'sub_type',

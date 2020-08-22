@@ -18,38 +18,38 @@ ORIGIN = (0, 0, 0) * plonk_units.au
 MOLECULAR_HYDROGEN_WEIGHT = 2.381
 
 # Derived quantities require some arrays already present
+# Ignoring type, sub_type, (optional) smoothing_length
 array_requires = {
-    'angular_momentum': ('mass', 'position', 'velocity'),
-    'angular_velocity': ('position', 'velocity'),
-    'azimuthal_angle': ('position',),
-    'dust_density': ('dust_fraction',),
-    'dust_fraction': ('dust_fraction',),
-    'dust_mass': ('dust_fraction',),
-    'eccentricity': ('position', 'velocity'),
-    'gas_density': ('dust_fraction',),
-    'gas_fraction': ('dust_fraction',),
-    'gas_mass': ('dust_fraction',),
-    'inclination': ('mass', 'position', 'velocity'),
-    'keplerian_frequency': ('position',),
-    'kinetic_energy': ('mass', 'velocity'),
-    'momentum': ('mass', 'velocity'),
-    'polar_angle': ('position',),
-    'radius_cylindrical': ('position',),
-    'radius_spherical': ('position',),
-    'semi_major_axis': ('position', 'velocity'),
-    'specific_angular_momentum': ('position', 'velocity'),
-    'specific_kinetic_energy': 'velocity',
-    'stokes_number': ('position', 'stopping_time'),
-    'temperature': ('sound_speed',),
-    'velocity_radial_cylindrical': ('position', 'velocity'),
-    'velocity_radial_spherical': ('position', 'velocity'),
+    'angular_momentum': ['mass', 'position', 'velocity'],
+    'angular_velocity': ['position', 'velocity'],
+    'azimuthal_angle': ['position'],
+    'dust_density': ['density', 'dust_fraction'],
+    'dust_mass': ['dust_fraction', 'mass'],
+    'eccentricity': ['position', 'velocity'],
+    'gas_density': ['density', 'dust_fraction'],
+    'gas_fraction': ['dust_fraction'],
+    'gas_mass': ['dust_fraction', 'mass'],
+    'inclination': ['mass', 'position', 'velocity'],
+    'keplerian_frequency': ['position'],
+    'kinetic_energy': ['mass', 'velocity'],
+    'momentum': ['mass', 'velocity'],
+    'polar_angle': ['position'],
+    'radius_cylindrical': ['position'],
+    'radius_spherical': ['position'],
+    'semi_major_axis': ['position', 'velocity'],
+    'specific_angular_momentum': ['position', 'velocity'],
+    'specific_kinetic_energy': ['velocity'],
+    'stokes_number': ['position', 'stopping_time'],
+    'temperature': ['sound_speed'],
+    'velocity_radial_cylindrical': ['position', 'velocity'],
+    'velocity_radial_spherical': ['position', 'velocity'],
 }
 
 # Arrays which represent quantities with x-, y-, z-components in space
 vector_arrays = ['angular_momentum', 'momentum', 'specific_angular_momentum']
 
 # Arrays which represent dust quantities with columns per dust species
-dust_arrays = ['dust_density', 'dust_fraction', 'dust_mass', 'stokes_number']
+dust_arrays = ['dust_density', 'dust_mass', 'stokes_number']
 
 
 def angular_momentum(
@@ -165,12 +165,11 @@ def dust_density(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
         _dust_fraction: Quantity = snap['dust_fraction']
 
     elif snap.properties['dust_method'] == 'dust as separate sets of particles':
-        n_dust = len(snap.properties.get('grain_size', []))
-        sub_type = snap['sub_type']
-        type_mask = snap['type'] == snap.particle_type['dust']
-        _dust_fraction = np.zeros((len(snap), n_dust))
-        for idx in range(n_dust):
-            _dust_fraction[type_mask & (sub_type == idx + 1), idx] = 1
+        raise ValueError(
+            'Dust method is "dust as separate sets of particles"\n'
+            'To get dust_density create a SubSnap with snap.family("dust")\n'
+            'and then access "density"'
+        )
 
     else:
         raise ValueError('No dust available')
@@ -181,43 +180,6 @@ def dust_density(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
         _dust_mass = density[:, np.newaxis] * _dust_fraction
         return _dust_mass[h > 0]
     return density[:, np.newaxis] * _dust_fraction
-
-
-def dust_fraction(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
-    """Calculate the dust fraction.
-
-    For dust/gas mixtures this exists already.
-
-    Parameters
-    ----------
-    snap
-        The Snap object.
-    ignore_accreted : optional
-        Ignore accreted particles. Default is False.
-
-    Returns
-    -------
-    Quantity
-        The gas fraction on the particles.
-    """
-    if snap.properties['dust_method'] == 'dust/gas mixture':
-        _dust_fraction: Quantity = snap['dust_fraction']
-
-    elif snap.properties['dust_method'] == 'dust as separate sets of particles':
-        n_dust = len(snap.properties.get('grain_size', []))
-        sub_type = snap['sub_type']
-        type_mask = snap['type'] == snap.particle_type['dust']
-        _dust_fraction = np.zeros((len(snap), n_dust))
-        for idx in range(n_dust):
-            _dust_fraction[type_mask & (sub_type == idx + 1), idx] = 1
-
-    else:
-        raise ValueError('No dust available')
-
-    if ignore_accreted:
-        h: Quantity = snap['smoothing_length']
-        return _dust_fraction[h > 0]
-    return _dust_fraction
 
 
 def dust_mass(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
@@ -241,12 +203,11 @@ def dust_mass(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
         _dust_fraction: Quantity = snap['dust_fraction']
 
     elif snap.properties['dust_method'] == 'dust as separate sets of particles':
-        n_dust = len(snap.properties.get('grain_size', []))
-        sub_type = snap['sub_type']
-        type_mask = snap['type'] == snap.particle_type['dust']
-        _dust_fraction = np.zeros((len(snap), n_dust))
-        for idx in range(n_dust):
-            _dust_fraction[type_mask & (sub_type == idx + 1), idx] = 1
+        raise ValueError(
+            'Dust method is "dust as separate sets of particles"\n'
+            'To get dust_mass create a SubSnap with snap.family("dust")\n'
+            'and then access "mass"'
+        )
 
     else:
         raise ValueError('No dust available')
@@ -341,9 +302,11 @@ def gas_density(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
         _gas_fraction = 1 - _dust_fraction.sum(axis=1)
 
     elif snap.properties['dust_method'] == 'dust as separate sets of particles':
-        particle_type = snap['type']
-        _gas_fraction = np.zeros(len(snap))
-        _gas_fraction[particle_type == snap.particle_type['gas']] = 1
+        raise ValueError(
+            'Dust method is "dust as separate sets of particles"\n'
+            'To get gas_density create a SubSnap with snap.family("gas")\n'
+            'and then access "density"'
+        )
 
     density: Quantity = snap['density']
     if ignore_accreted:
@@ -374,9 +337,10 @@ def gas_fraction(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
         _gas_fraction = 1 - _dust_fraction.sum(axis=1)
 
     elif snap.properties['dust_method'] == 'dust as separate sets of particles':
-        particle_type = snap['type']
-        _gas_fraction = np.ones(len(snap))
-        _gas_fraction[particle_type != snap.particle_type['gas']] = 0
+        raise ValueError(
+            'Dust method is "dust as separate sets of particles"\n'
+            'The gas_fraction is 1 on gas particles, and 0 otherwise'
+        )
 
     else:
         _gas_fraction = np.ones(len(snap))
@@ -409,9 +373,11 @@ def gas_mass(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
         _gas_fraction = 1 - _dust_fraction.sum(axis=1)
 
     elif snap.properties['dust_method'] == 'dust as separate sets of particles':
-        particle_type = snap['type']
-        _gas_fraction = np.zeros(len(snap))
-        _gas_fraction[particle_type == snap.particle_type['gas']] = 1
+        raise ValueError(
+            'Dust method is "dust as separate sets of particles"\n'
+            'To get gas_density create a SubSnap with snap.family("gas")\n'
+            'and then access "mass"'
+        )
 
     mass: Quantity = snap['mass']
     if ignore_accreted:

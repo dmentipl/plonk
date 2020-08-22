@@ -91,9 +91,9 @@ class Snap:
     }
 
     _dust_arrays = {
-        'stopping_time',
         'dust_fraction',
         'dust_to_gas_ratio',
+        'stopping_time',
     }
 
     particle_type = {
