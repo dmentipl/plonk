@@ -6,7 +6,17 @@ from __future__ import annotations
 
 from bisect import bisect
 from copy import copy
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -404,6 +414,7 @@ class Profile:
         y: Union[str, List[str]],
         units: Dict[str, Union[str, List[str]]] = None,
         std: str = None,
+        label: Union[str, List[str]] = None,
         ax: Any = None,
         ax_kwargs={},
         **kwargs,
@@ -415,16 +426,18 @@ class Profile:
         x
             The x axis to plot as a string.
         y
-            The y axis to plot. Can be string or multiple as a list of
-            strings.
+            The y axis to plot. Can be string or a list of strings.
         units
-            The units of the plot as a dictionary. The keys correspond to
-            quantities such as 'position', 'density', 'velocity', and so on.
-            The values are strings representing units, e.g. 'g/cm^3' for
-            density.
-        std: optional
+            The units of the plot as a dictionary. The keys correspond
+            to quantities such as 'position', 'density', 'velocity', and
+            so on. The values are strings representing units, e.g.
+            'g/cm^3' for density.
+        std : optional
             Add standard deviation on profile. Can be 'shading' or
             'errorbar'.
+        label : optional
+            A label for the plot. Can be a string or a list of strings,
+            one per y.
         ax : optional
             A matplotlib Axes object to plot to.
         ax_kwargs
@@ -437,34 +450,40 @@ class Profile:
         ax
             The matplotlib Axes object.
         """
-        if std is not None:
-            if std not in ('shading', 'errorbar'):
-                raise ValueError('std must be "shading" or "errorbar"')
+        if std is not None and std not in ('shading', 'errorbar'):
+            raise ValueError('std must be "shading" or "errorbar"')
 
         if ax is None:
             _, ax = plt.subplots()
 
         if isinstance(y, str):
-            y = [y]
+            ynames = [y]
+        else:
+            ynames = y
 
-        x_unit = _get_unit(self, x, units)
-        y_unit = [_get_unit(self, yi, units) for yi in y]
-
-        xdata = self[x].to(x_unit)
-
-        xlabel = pretty_array_name(x)
-        ax.set_xlabel(f'{xlabel} [{xdata.units:~P}]')
-
-        for idx, yname in enumerate(y):
-            ydata = self[yname].to(y_unit[idx])
-            ylabel = pretty_array_name(yname)
-            label = f'{ylabel} [{ydata.units:~P}]'
-            if kwargs.get('label') is None:
-                ax.plot(xdata.magnitude, ydata.magnitude, label=label, **kwargs)
+        labels: Sequence[Optional[str]]
+        if label is not None:
+            if isinstance(label, str):
+                labels = [label]
             else:
-                ax.plot(xdata.magnitude, ydata.magnitude, **kwargs)
+                labels = label
+        else:
+            labels = [None for _ in ynames]
+
+        xunit = _get_unit(self, x, units)
+        yunits = [_get_unit(self, y, units) for y in ynames]
+
+        xdata = self[x].to(xunit)
+
+        for yname, yunit, label in zip(ynames, yunits, labels):
+            ydata = self[yname].to(yunit)
+            if label is None:
+                label = f'{pretty_array_name(yname)} [{ydata.units:~P}]'
+            ax.plot(xdata.magnitude, ydata.magnitude, label=label, **kwargs)
             if std:
-                _std_plot(self, xdata, ydata, yname, y_unit[idx], std, ax)
+                _std_plot(self, xdata, ydata, yname, yunit, std, ax)
+
+        ax.set_xlabel(f'{pretty_array_name(x)} [{xdata.units:~P}]')
         ax.legend()
         ax.set(**ax_kwargs)
 
