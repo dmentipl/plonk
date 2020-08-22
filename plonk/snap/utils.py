@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, List, Union
 
 from .._config import load_config
 from .._units import units as plonk_units
@@ -49,3 +49,32 @@ def add_aliases(snap: SnapLike, filename: Union[str, Path] = None):
     conf = load_config(filename=filename)
     for key, val in conf['arrays']['aliases'].items():
         snap.add_alias(key, val)
+
+
+def dust_array_names(snap: SnapLike, name: str) -> List[str]:
+    """List dust array names.
+
+    Parameters
+    ----------
+    snap
+        The Snap object.
+    name
+        The base array name, e.g. "dust_density" or "stopping_time".
+
+    Returns
+    -------
+    List
+        A list of array names with appropriate suffixes.
+
+    Examples
+    --------
+    Get the dust density strings.
+
+    >>> dust_name_list(snap, 'dust_density')
+    ['dust_density_001',
+     'dust_density_002',
+     'dust_density_003',
+     'dust_density_004',
+     'dust_density_005']
+    """
+    return [f'{name}_{n+1:03}' for n in range(snap.num_dust_species)]
