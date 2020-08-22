@@ -47,7 +47,9 @@ def array_units(config: Union[str, Path] = None) -> Dict[str, str]:
     for key, val in conf['arrays']['dimensions'].items():
         dim = _convert_dim_string(val)
         if dim == {'[angle]': 1.0}:
-            d[key] = "radian"
+            d[key] = 'radian'
+        elif dim == {}:
+            d[key] = 'dimensionless'
         else:
             for key1, val1 in conf['units']['defaults'].items():
                 if _dimensionality_comparison(dict(units(val1).dimensionality), dim):
