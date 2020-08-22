@@ -51,7 +51,7 @@ def add_aliases(snap: SnapLike, filename: Union[str, Path] = None):
         snap.add_alias(key, val)
 
 
-def dust_array_names(snap: SnapLike, name: str) -> List[str]:
+def dust_array_names(snap: SnapLike, name: str, add_gas: bool = False) -> List[str]:
     """List dust array names.
 
     Parameters
@@ -60,6 +60,8 @@ def dust_array_names(snap: SnapLike, name: str) -> List[str]:
         The Snap object.
     name
         The base array name, e.g. "dust_density" or "stopping_time".
+    add_gas
+        If True add the gas version of the dust name.
 
     Returns
     -------
@@ -76,5 +78,19 @@ def dust_array_names(snap: SnapLike, name: str) -> List[str]:
      'dust_density_003',
      'dust_density_004',
      'dust_density_005']
+
+    Get the dust density strings with gas.
+
+    >>> dust_name_list(snap=snap, name='dust_density' add_gas=True)
+    ['gas_density',
+     'dust_density_001',
+     'dust_density_002',
+     'dust_density_003',
+     'dust_density_004',
+     'dust_density_005']
     """
-    return [f'{name}_{n+1:03}' for n in range(snap.num_dust_species)]
+    names = list()
+    if add_gas:
+        names.append(f'{name.replace("dust", "gas")}')
+    names += [f'{name}_{n+1:03}' for n in range(snap.num_dust_species)]
+    return names

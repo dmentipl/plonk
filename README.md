@@ -43,8 +43,8 @@ To read in a simulation with snapshot files like `disc_00000.h5`, and global qua
 >>> simulation = plonk.load_sim(prefix='disc')
 >>> simulation.snaps
 [<plonk.Snap "disc_00000.h5">,
-...
-<plonk.Snap "disc_00030.h5">]
+ ...
+ <plonk.Snap "disc_00030.h5">]
 ```
 
 You can load individual snapshots and access the particle arrays:

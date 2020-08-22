@@ -2,7 +2,7 @@
 Dust profiles
 -------------
 
-Plot the dust density profile per species.
+Plot the surface density profile of each dust species.
 
 .. figure:: ../_static/dust_profiles.png
 
@@ -15,22 +15,23 @@ Plot the dust density profile per species.
 .. code-block:: python
 
     import plonk
+    from plonk.snap import dust_array_names
 
     snap = plonk.load_snap('dstau2mj_00130.h5')
 
     prof = plonk.load_profile(snap)
 
-    prof.set_units(position='au', dust_density='g/cm^3')
+    # Set the profile units for plotting
+    prof.set_units(position='au', dust_surface_density='g/cm^2')
 
-    # The line below produces a list of strings like:
-    #   ['dust_density_001',
-    #    'dust_density_002',
-    #    'dust_density_003',
-    #    'dust_density_004',
-    #    'dust_density_005',
-    #    'dust_density_006']
-    y = [f'dust_density_{n+1:03}' for n in range(snap.num_dust_species)]
-    labels = [f'Dust {n+1:03}' for n in range(snap.num_dust_species)]
+    # Get the profile names 'dust_density' for each dust species
+    y = dust_array_names(snap=snap, name='dust_surface_density')
 
-    ax_kwargs = {'ylabel': r'Density [g/cm${}^3$]', 'yscale': 'log'}
-    ax = prof.plot(x='radius', y=y, label=labels, ax_kwargs=ax_kwargs)
+    # Get the grain size per species as labels for the plot
+    labels = [f'{size:.1f~P}' for size in snap.properties['grain_size'].to('micrometer')]
+
+    # Set the y-label and set the y-scale to logarithmic
+    ax_kwargs = {'ylabel': r'Surface density [g/cm${}^2$]', 'yscale': 'log'}
+
+    # Make the plot
+    prof.plot(x='radius', y=y, label=labels, ax_kwargs=ax_kwargs)

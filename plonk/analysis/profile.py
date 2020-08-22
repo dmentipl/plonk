@@ -383,8 +383,8 @@ class Profile:
 
         return self
 
-    def base_array_name(self, name: str) -> str:
-        """Get the base array name from a string.
+    def base_profile_name(self, name: str) -> str:
+        """Get the base profile name from a string.
 
         For example, 'velocity_x' returns 'velocity', 'density' returns
         'density', 'dust_fraction_001' returns 'dust_fraction', 'x'
@@ -405,6 +405,16 @@ class Profile:
         except ValueError:
             if name == self._coordinate:
                 return 'position'
+            name_root = '_'.join(name.split('_')[:-1])
+            name_suffix = name.split('_')[-1]
+            if name_root == '' and name_suffix in ('x', 'y', 'z'):
+                return 'position'
+            if name_root in self.snap._array_aliases:
+                return self.snap._array_aliases[name_root]
+            if name_suffix in ('x', 'y', 'z', 'mag'):
+                return name_root
+            if _str_is_int(name_suffix):
+                return name_root
             return name
 
     def plot(
@@ -678,7 +688,7 @@ def _1d_arrays(arrays: list) -> list:
 def _get_unit(profile, name, units):
     if name is None:
         return None
-    base_name = profile.base_array_name(name)
+    base_name = profile.base_profile_name(name)
     if units is not None:
         if name in units:
             return 1 * plonk_units(units[name])
@@ -713,3 +723,11 @@ def _std_plot(profile, xdata, ydata, yname, yunit, std, ax):
         )
     elif std == 'errorbar':
         ax.errorbar(xdata, y_mean, yerr=y_std, linestyle='', color=color, alpha=0.5)
+
+
+def _str_is_int(string: str) -> bool:
+    try:
+        int(string)
+        return True
+    except ValueError:
+        return False

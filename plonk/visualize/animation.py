@@ -250,9 +250,9 @@ def animation_profiles(
 
     units = kwargs.get('units')
     if units is not None:
-        xunit = plonk_units(units.get(prof.base_array_name(x), str(prof[x].units)))
+        xunit = plonk_units(units.get(prof.base_profile_name(x), str(prof[x].units)))
         yunits = [
-            plonk_units(units.get(prof.base_array_name(y), str(prof[y].units)))
+            plonk_units(units.get(prof.base_profile_name(y), str(prof[y].units)))
             for y in ys
         ]
     else:
