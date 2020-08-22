@@ -148,6 +148,7 @@ class Profile:
 
         self.bin_edges, self['size'] = self._setup_bins()
         self.bin_centers = 0.5 * (self.bin_edges[:-1] + self.bin_edges[1:])
+        self._x = self._x.to(self.bin_edges.units)
         self._particle_bin = np.digitize(self._x.magnitude, self.bin_edges.magnitude)
         self.bin_indicies = self._set_particle_bin_indicies()
 
@@ -608,27 +609,25 @@ class Profile:
         if aggregation not in _aggregations:
             raise ValueError('Cannot determine aggregation method')
 
-        binned_quantity = np.zeros(self.n_bins)
+        _array = array[self._mask]
+        binned_quantity = np.zeros(self.n_bins) * _array.units
         for idx, bin_ind in enumerate(self.bin_indicies):
             if bin_ind.size == 0:
                 continue
             if aggregation == 'average':
                 val = average(
-                    array[self._mask][bin_ind],
-                    weights=self._weights[self._mask][bin_ind],
+                    _array[bin_ind], weights=self._weights[self._mask][bin_ind],
                 )
             elif aggregation == 'mean':
-                val = np.mean(array[self._mask][bin_ind])
+                val = np.mean(_array[bin_ind])
             elif aggregation == 'median':
-                val = np.median(array[self._mask][bin_ind])
+                val = np.median(_array[bin_ind])
             elif aggregation == 'std':
-                val = np.std(array[self._mask][bin_ind])
+                val = np.std(_array[bin_ind])
             elif aggregation == 'sum':
-                val = np.sum(array[self._mask][bin_ind])
+                val = np.sum(_array[bin_ind])
 
-            binned_quantity[idx] = val.magnitude
-
-        binned_quantity *= val.units
+            binned_quantity[idx] = val
 
         return binned_quantity
 

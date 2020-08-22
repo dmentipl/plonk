@@ -71,7 +71,7 @@ Filters are available to generate :class:`SubSnap` from geometric shapes.
     >>> import plonk
     >>> from plonk.analysis import filters
 
-    >>> au = plonk.units.['au']
+    >>> au = plonk.units['au']
 
     >>> snap = plonk.load_snap('disc_00030.h5')
 
