@@ -15,6 +15,24 @@ Types of changes:
 
 ## [Unreleased]
 
+### Added
+
+- Add label argument to Profile.plot.
+- Add dust_array_names utility function. This makes a list of array names broken into sub-species.
+
+### Changed
+
+- Analysis particles functions with dust quantites are now for the dust "mixture method" (i.e. 1-fluid).
+- Remove '_tot' as an array suffix for dust arrays. This was causing confusion as it makes no sense to sum stopping times.
+- Rename base_array_name to base_profile_name.
+- Change interpolate to return dimensionful quantity.
+
+### Fixed
+
+- Fix bug in setting default units for dimensionless arrays.
+- Fix bugs in Profile related to units.
+- Fix bug in std dev shading in Profile.plot.
+
 ## [0.7.1] - 2020-08-21
 
 ### Added
