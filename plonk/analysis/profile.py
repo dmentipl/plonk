@@ -489,9 +489,10 @@ class Profile:
             ydata = self[yname].to(yunit)
             if label is None:
                 label = f'{pretty_array_name(yname)} [{ydata.units:~P}]'
-            ax.plot(xdata.magnitude, ydata.magnitude, label=label, **kwargs)
+            [line] = ax.plot(xdata.magnitude, ydata.magnitude, label=label, **kwargs)
             if std:
-                _std_plot(self, xdata, ydata, yname, yunit, std, ax)
+                color = line.get_color()
+                _std_plot(self, xdata, ydata, yname, yunit, std, color, ax)
 
         ax.set_xlabel(f'{pretty_array_name(x)} [{xdata.units:~P}]')
         ax.legend()
@@ -698,7 +699,7 @@ def _get_unit(profile, name, units):
     return 1 * profile[base_name].units
 
 
-def _std_plot(profile, xdata, ydata, yname, yunit, std, ax):
+def _std_plot(profile, xdata, ydata, yname, yunit, std, color, ax):
     if yname.split('_')[-1] in _aggregations:
         _yname = '_'.join(yname.split('_')[:-1])
     else:
@@ -714,7 +715,6 @@ def _std_plot(profile, xdata, ydata, yname, yunit, std, ax):
         y_mean = ydata
     y_std = y_std.to(yunit).magnitude
     y_mean = y_mean.to(yunit).magnitude
-    color = ax.lines[0].get_color()
     xdata = xdata.magnitude
     if std == 'shading':
         ax.fill_between(
