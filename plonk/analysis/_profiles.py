@@ -73,13 +73,27 @@ def extra_profiles(profile, num_mixture_dust_species: int = 0):
         )
 
     @profile.add_profile
-    def disc_viscosity(prof) -> Quantity:
-        """Disc viscosity. I.e. nu = alpha_SS c_s H."""
+    def alpha_shakura_sunyaev(prof) -> Quantity:
+        """Shakura-Sunyaev alpha disc viscosity."""
         try:
             alpha = prof.snap._file_pointer['header/alpha'][()]
         except KeyError:
             raise ValueError('Cannot determine artificial viscosity alpha')
-        return alpha / 10 * prof['smoothing_length'] * prof['sound_speed']
+        return alpha / 10 * prof['smoothing_length'] / prof['scale_height']
+
+    @profile.add_profile
+    def disc_viscosity(prof) -> Quantity:
+        """Disc viscosity. I.e. nu = alpha_SS c_s H."""
+        return (
+            prof['alpha_shakura_sunyaev'] * prof['sound_speed'] * prof['scale_height']
+        )
+
+    @profile.add_profile
+    def epicyclic_frequency(prof) -> Quantity:
+        """Epicyclic frequency."""
+        Omega = prof['keplerian_frequency']
+        R = prof['radius']
+        return np.sqrt(2 * Omega / R * np.gradient(R ** 2 * Omega, R))
 
     if num_mixture_dust_species > 0:
 
