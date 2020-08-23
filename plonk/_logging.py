@@ -13,7 +13,7 @@ file_handler = logging.FileHandler('.plonk.log')
 console_handler.setLevel(logging.INFO)
 file_handler.setLevel(logging.DEBUG)
 
-console_format = logging.Formatter('%(levelname)s - %(message)s')
+console_format = logging.Formatter('%(levelname)s - %(funcName)s - %(message)s')
 file_format = logging.Formatter(
     '%(asctime)s - %(levelname)s - %(funcName)s - %(message)s'
 )

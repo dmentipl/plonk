@@ -21,6 +21,7 @@ Types of changes:
 - Add dust_array_names utility function. This makes a list of array names broken into sub-species.
 - Add plonk.animate function to provide a common interface to animation functions.
 - Always cache arrays during plotting using the caching context manager.
+- Added function name to logging messages.
 
 ### Changed
 
