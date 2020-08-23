@@ -15,6 +15,8 @@ Types of changes:
 
 ## [Unreleased]
 
+## [0.7.2] - 2020-08-23
+
 ### Added
 
 - Add label argument to Profile.plot.
