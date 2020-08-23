@@ -117,6 +117,8 @@ class Profile:
     >>> prof.plot('radius', 'surface_density', units=units)
     """
 
+    _profile_aliases: Dict[str, str] = {}
+
     def __init__(
         self,
         snap: SnapLike,
@@ -141,16 +143,16 @@ class Profile:
         self._default_units = copy(self.snap._default_units)
 
         self._weights = self.snap['mass']
-        self._mask = self._setup_particle_mask(ignore_accreted)
-        self._x = self._calculate_x(coordinate)
-        self.range = self._set_range(cmin, cmax)
+        self._mask = _setup_particle_mask(snap, ignore_accreted)
+        self._x = _calculate_x(snap, self._mask, ndim, coordinate)
+        self.range = _set_range(self._x, cmin, cmax)
         self.n_bins = n_bins
 
-        self.bin_edges, self['size'] = self._setup_bins()
+        self.bin_edges, self['size'] = _setup_bins(ndim, spacing, self.range, n_bins)
         self.bin_centers = 0.5 * (self.bin_edges[:-1] + self.bin_edges[1:])
         self._x = self._x.to(self.bin_edges.units)
         self._particle_bin = np.digitize(self._x.magnitude, self.bin_edges.magnitude)
-        self.bin_indicies = self._set_particle_bin_indicies()
+        self.bin_indices = _set_particle_bin_indices(self._particle_bin, n_bins)
 
         if ndim == 1:
             self._coordinate = coordinate
@@ -187,160 +189,17 @@ class Profile:
         self._profile_functions[fn.__name__] = fn
         return fn
 
-    def _setup_particle_mask(self, ignore_accreted: bool) -> ndarray:
-        if ignore_accreted is False:
-            return np.ones(len(self.snap), dtype=bool)
-        h: Quantity = self.snap['h']
-        return h > 0
+    def add_alias(self, name: str, alias: str) -> None:
+        """Add alias to array.
 
-    def _calculate_x(self, coordinate) -> Quantity:
-        pos: Quantity = self.snap['position']
-        pos = pos[self._mask]
-        if self.ndim == 1:
-            if coordinate == 'x':
-                return pos[:, 0]
-            if coordinate == 'y':
-                return pos[:, 1]
-            if coordinate == 'z':
-                return pos[:, 2]
-            raise ValueError('coordinate must be "x", "y", or "z" for ndim==1')
-        if self.ndim == 2:
-            return np.sqrt(pos[:, 0] ** 2 + pos[:, 1] ** 2)
-        if self.ndim == 3:
-            return np.sqrt(pos[:, 0] ** 2 + pos[:, 1] ** 2 + pos[:, 2] ** 2)
-        raise ValueError('Unknown ndim: cannot calculate x array')
-
-    def _set_range(self, cmin: Any, cmax: Any) -> Tuple[float, float]:
-        if cmin is None:
-            rmin = self._x.min()
-        else:
-            rmin = Quantity(cmin)
-            if not rmin.dimensionality == Quantity('cm').dimensionality:
-                raise ValueError('must specify cmin units, e.g. cmin="10 au"')
-        if cmax is None:
-            rmax = np.percentile(self._x.magnitude, 99, axis=0) * self._x.units
-        else:
-            rmax = Quantity(cmax)
-            if not rmax.dimensionality == Quantity('cm').dimensionality:
-                raise ValueError('must specify cmin units, e.g. cmax="100 au"')
-
-        return rmin, rmax
-
-    def _setup_bins(self) -> Quantity:
-        bin_edges = self._bin_edges()
-        if self.ndim == 1:
-            bin_sizes = bin_edges[1:] - bin_edges[:-1]
-        elif self.ndim == 2:
-            bin_sizes = np.pi * (bin_edges[1:] ** 2 - bin_edges[:-1] ** 2)
-        elif self.ndim == 3:
-            bin_sizes = 4 / 3 * np.pi * (bin_edges[1:] ** 3 - bin_edges[:-1] ** 3)
-        return bin_edges, bin_sizes
-
-    def _bin_edges(self):
-        if self.spacing == 'linear':
-            bin_edges = (
-                np.linspace(
-                    self.range[0].magnitude, self.range[1].magnitude, self.n_bins + 1
-                )
-                * self.range[0].units
-            )
-        elif self.spacing == 'log':
-            bin_edges = (
-                np.logspace(
-                    np.log10(self.range[0].magnitude),
-                    np.log10(self.range[1].magnitude),
-                    self.n_bins + 1,
-                )
-                * self.range[0].units
-            )
-        else:
-            raise ValueError('Cannot determine spacing to setup bins')
-        return bin_edges
-
-    def _set_particle_bin_indicies(self) -> List[ndarray]:
-        sortind = self._particle_bin.argsort()
-        sort_pind = self._particle_bin[sortind]
-        binind = list()
-        prev_index = bisect(sort_pind, 0)
-        for i in range(self.n_bins):
-            new_index = bisect(sort_pind, i + 1)
-            binind.append(np.sort(sortind[prev_index:new_index]))
-            prev_index = new_index
-        return binind
-
-    def _getitem(self, name: str) -> Quantity:
-        """Return the profile of a given kind."""
-        name_root = '_'.join(name.split('_')[:-1])
-        name_suffix = name.split('_')[-1]
-
-        if name in self._profiles:
-            return self._profiles[name]
-        if name in self._profile_functions:
-            self._profiles[name] = self._profile_functions[name](self)
-            return self._profiles[name]
-
-        if name_suffix in _aggregations:
-            aggregation = name_suffix
-            array_name = name_root
-        else:
-            aggregation = self.aggregation
-            array_name = name
-        try:
-            array: Quantity = self.snap[array_name]
-        except ValueError as e:
-            logger.error(e)
-            raise ValueError(f'array "{array_name}" not available on snap')
-        if array.ndim == 1:
-            self._profiles[name] = self.particles_to_binned_quantity(aggregation, array)
-            return self._profiles[name]
-        raise ValueError(
-            'Requested profile has array dimension > 1.\nTo access x-, y-, or '
-            'z-components, or magnitude of vector quantities,\ntry, for '
-            'example, prof["velocity_x"] or prof["momentum_mag"].\nTo '
-            'access dust profiles, try, for example, prof["stopping_time_001"]'
-        )
-
-    def __getitem__(self, name: str) -> Quantity:
-        """Return the profile of a given kind."""
-        return self._getitem(name)
-
-    def __setitem__(self, name: str, item: Quantity):
-        """Set the profile directly."""
-        if not isinstance(item, Quantity):
-            raise ValueError('"item" must be pint Quantity')
-        if item.shape[0] != self.n_bins:
-            raise ValueError('Length of array does not match number of bins')
-        if name in self.loaded_profiles():
-            raise ValueError(
-                'Attempting to overwrite existing profile. To do so, first delete the '
-                'profile\nwith del prof["profile"], then try again.'
-            )
-        if name in self.available_profiles():
-            raise ValueError(
-                'Attempting to set profile already available. '
-                'See prof.available_profiles().'
-            )
-        self._profiles[name] = item
-
-    def __delitem__(self, name):
-        """Delete a profile from memory."""
-        del self._profiles[name]
-
-    def __len__(self):
-        """Length as number of bins."""
-        return self.n_bins
-
-    def __repr__(self):
-        """Dunder repr method."""
-        return self.__str__()
-
-    def __str__(self):
-        """Dunder str method."""
-        return f'<plonk.Profile "{self.snap.file_path.name}">'
-
-    def _ipython_key_completions_(self):
-        """Tab completion for IPython __getitem__ method."""
-        return self.available_profiles()
+        Parameters
+        ----------
+        name
+            The name of the array.
+        alias
+            The alias to reference the array.
+        """
+        self._profile_aliases[alias] = name
 
     def loaded_profiles(self) -> List[str]:
         """Return a listing of loaded profiles."""
@@ -612,7 +471,7 @@ class Profile:
 
         _array = array[self._mask]
         binned_quantity = np.zeros(self.n_bins) * _array.units
-        for idx, bin_ind in enumerate(self.bin_indicies):
+        for idx, bin_ind in enumerate(self.bin_indices):
             if bin_ind.size == 0:
                 continue
             if aggregation == 'average':
@@ -631,6 +490,78 @@ class Profile:
             binned_quantity[idx] = val
 
         return binned_quantity
+
+    def __getitem__(self, name: str) -> Quantity:
+        """Return the profile of a given kind."""
+        name_root = '_'.join(name.split('_')[:-1])
+        name_suffix = name.split('_')[-1]
+
+        if name in self._profile_aliases:
+            name = self._profile_aliases[name]
+        if name in self._profiles:
+            return self._profiles[name]
+        if name in self._profile_functions:
+            self._profiles[name] = self._profile_functions[name](self)
+            return self._profiles[name]
+
+        if name_suffix in _aggregations:
+            aggregation = name_suffix
+            array_name = name_root
+        else:
+            aggregation = self.aggregation
+            array_name = name
+        try:
+            array: Quantity = self.snap[array_name]
+        except ValueError as e:
+            logger.error(e)
+            raise ValueError(f'array "{array_name}" not available on snap')
+        if array.ndim == 1:
+            self._profiles[name] = self.particles_to_binned_quantity(aggregation, array)
+            return self._profiles[name]
+        raise ValueError(
+            'Requested profile has array dimension > 1.\nTo access x-, y-, or '
+            'z-components, or magnitude of vector quantities,\ntry, for '
+            'example, prof["velocity_x"] or prof["momentum_mag"].\nTo '
+            'access dust profiles, try, for example, prof["stopping_time_001"]'
+        )
+
+    def __setitem__(self, name: str, item: Quantity):
+        """Set the profile directly."""
+        if not isinstance(item, Quantity):
+            raise ValueError('"item" must be pint Quantity')
+        if item.shape[0] != self.n_bins:
+            raise ValueError('Length of array does not match number of bins')
+        if name in self.loaded_profiles():
+            raise ValueError(
+                'Attempting to overwrite existing profile. To do so, first delete the '
+                'profile\nwith del prof["profile"], then try again.'
+            )
+        if name in self.available_profiles():
+            raise ValueError(
+                'Attempting to set profile already available. '
+                'See prof.available_profiles().'
+            )
+        self._profiles[name] = item
+
+    def __delitem__(self, name):
+        """Delete a profile from memory."""
+        del self._profiles[name]
+
+    def __len__(self):
+        """Length as number of bins."""
+        return self.n_bins
+
+    def __repr__(self):
+        """Dunder repr method."""
+        return self.__str__()
+
+    def __str__(self):
+        """Dunder str method."""
+        return f'<plonk.Profile "{self.snap.file_path.name}">'
+
+    def _ipython_key_completions_(self):
+        """Tab completion for IPython __getitem__ method."""
+        return self.available_profiles()
 
 
 @is_documented_by(Profile)
@@ -657,6 +588,91 @@ def load_profile(
         coordinate=coordinate,
         ignore_accreted=ignore_accreted,
     )
+
+
+def _setup_particle_mask(snap: SnapLike, ignore_accreted: bool) -> ndarray:
+    if ignore_accreted is False:
+        return np.ones(len(snap), dtype=bool)
+    h: Quantity = snap['h']
+    return h > 0
+
+
+def _calculate_x(snap: SnapLike, mask: ndarray, ndim: int, coordinate: str) -> Quantity:
+    pos: Quantity = snap['position']
+    pos = pos[mask]
+    if ndim == 1:
+        if coordinate == 'x':
+            return pos[:, 0]
+        if coordinate == 'y':
+            return pos[:, 1]
+        if coordinate == 'z':
+            return pos[:, 2]
+        raise ValueError('coordinate must be "x", "y", or "z" for ndim==1')
+    if ndim == 2:
+        return np.sqrt(pos[:, 0] ** 2 + pos[:, 1] ** 2)
+    if ndim == 3:
+        return np.sqrt(pos[:, 0] ** 2 + pos[:, 1] ** 2 + pos[:, 2] ** 2)
+    raise ValueError('Unknown ndim: cannot calculate x array')
+
+
+def _set_range(x: Quantity, cmin: Any, cmax: Any) -> Tuple[float, float]:
+    if cmin is None:
+        rmin = x.min()
+    else:
+        rmin = Quantity(cmin)
+        if not rmin.dimensionality == Quantity('cm').dimensionality:
+            raise ValueError('must specify cmin units, e.g. cmin="10 au"')
+    if cmax is None:
+        rmax = np.percentile(x.magnitude, 99, axis=0) * x.units
+    else:
+        rmax = Quantity(cmax)
+        if not rmax.dimensionality == Quantity('cm').dimensionality:
+            raise ValueError('must specify cmin units, e.g. cmax="100 au"')
+
+    return rmin, rmax
+
+
+def _setup_bins(ndim: int, spacing: str, xrange: Quantity, n_bins: int) -> Quantity:
+    bin_edges = _bin_edges(spacing, xrange, n_bins)
+    if ndim == 1:
+        bin_sizes = bin_edges[1:] - bin_edges[:-1]
+    elif ndim == 2:
+        bin_sizes = np.pi * (bin_edges[1:] ** 2 - bin_edges[:-1] ** 2)
+    elif ndim == 3:
+        bin_sizes = 4 / 3 * np.pi * (bin_edges[1:] ** 3 - bin_edges[:-1] ** 3)
+    return bin_edges, bin_sizes
+
+
+def _bin_edges(spacing: str, xrange: Quantity, n_bins: int) -> Quantity:
+    if spacing == 'linear':
+        bin_edges = (
+            np.linspace(xrange[0].magnitude, xrange[1].magnitude, n_bins + 1)
+            * xrange[0].units
+        )
+    elif spacing == 'log':
+        bin_edges = (
+            np.logspace(
+                np.log10(xrange[0].magnitude),
+                np.log10(xrange[1].magnitude),
+                n_bins + 1,
+            )
+            * xrange[0].units
+        )
+    else:
+        raise ValueError('Cannot determine spacing to setup bins')
+    return bin_edges
+
+
+def _set_particle_bin_indices(particle_bin: ndarray, n_bins: int) -> List[ndarray]:
+    sortind = particle_bin.argsort()
+    sort_pind = particle_bin[sortind]
+    binind = list()
+    prev_index = bisect(sort_pind, 0)
+    for i in range(n_bins):
+        new_index = bisect(sort_pind, i + 1)
+        binind.append(np.sort(sortind[prev_index:new_index]))
+        prev_index = new_index
+    return binind
 
 
 def _check_aggregation(method: str) -> str:

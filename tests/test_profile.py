@@ -97,3 +97,14 @@ def test_to_function():
     fn = prof.to_function(profile='scale_height')
     assert np.allclose(fn(prof['radius']), prof['scale_height'])
     snap.close_file()
+
+
+def test_alias():
+    """Test using profile aliases."""
+    snap = plonk.load_snap(TEST_FILE)
+    prof = plonk.load_profile(snap=snap)
+
+    prof.add_alias('scale_height', 'H')
+    prof['H']
+
+    snap.close_file()
