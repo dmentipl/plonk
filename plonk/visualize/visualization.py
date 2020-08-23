@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
 from copy import copy
 from typing import TYPE_CHECKING, Any, Dict, Sequence, Tuple, Union
 
@@ -561,48 +562,69 @@ def plot(
     >>> units = {'position': 'au', 'density': 'g/cm^3'}
     >>> snap.plot(x='x', y='y', c='density', units=units)
     """
-    with snap.context(cache=True):
-        logger.debug(
-            f'Plotting particles "{x}" vs "{y}"" on snap: {snap.file_path.name}'
+    try:
+        context = snap.context(cache=True)
+    except AttributeError:
+        context = suppress()
+    with context:
+        return _plot(
+            snap=snap,
+            x=x,
+            y=y,
+            c=c,
+            s=s,
+            units=units,
+            xlim=xlim,
+            ylim=ylim,
+            ax=ax,
+            ax_kwargs=ax_kwargs,
+            colorbar_kwargs=colorbar_kwargs,
+            **kwargs,
         )
-        _kwargs = copy(kwargs)
 
-        if ax is None:
-            fig, ax = plt.subplots()
-        else:
-            fig = ax.figure
 
-        if c is None and s is None:
-            # If color (c) and size (s) are not required we color each
-            # particle type differently
-            try:
-                subsnaps: Sequence[SnapLike] = snap.subsnaps_as_list(squeeze=False)
-            except AttributeError:
-                # Sinks do not have subsnaps
-                subsnaps = [snap]
-        else:
-            # The subsnaps list is just a list with the original snap
+def _plot(
+    snap, x, y, c, s, units, xlim, ylim, ax, ax_kwargs, colorbar_kwargs, **kwargs,
+) -> Any:
+    logger.debug(f'Plotting particles "{x}" vs "{y}"" on snap: {snap.file_path.name}')
+    _kwargs = copy(kwargs)
+
+    if ax is None:
+        fig, ax = plt.subplots()
+    else:
+        fig = ax.figure
+
+    if c is None and s is None:
+        # If color (c) and size (s) are not required we color each
+        # particle type differently
+        try:
+            subsnaps: Sequence[SnapLike] = snap.subsnaps_as_list(squeeze=False)
+        except AttributeError:
+            # Sinks do not have subsnaps
             subsnaps = [snap]
+    else:
+        # The subsnaps list is just a list with the original snap
+        subsnaps = [snap]
 
-        for subsnap in subsnaps:
-            _x, _y, _c, _s, _units = _plot_data(
-                snap=subsnap, x=x, y=y, c=c, s=s, units=units
-            )
-            _plot_plot(
-                x=_x,
-                y=_y,
-                c=_c,
-                s=_s,
-                units=_units,
-                xlim=xlim,
-                ylim=ylim,
-                names={'x': x, 'y': y, 'c': c, 's': s},
-                fig=fig,
-                ax=ax,
-                ax_kwargs=ax_kwargs,
-                colorbar_kwargs=colorbar_kwargs,
-                **_kwargs,
-            )
+    for subsnap in subsnaps:
+        _x, _y, _c, _s, _units = _plot_data(
+            snap=subsnap, x=x, y=y, c=c, s=s, units=units
+        )
+        _plot_plot(
+            x=_x,
+            y=_y,
+            c=_c,
+            s=_s,
+            units=_units,
+            xlim=xlim,
+            ylim=ylim,
+            names={'x': x, 'y': y, 'c': c, 's': s},
+            fig=fig,
+            ax=ax,
+            ax_kwargs=ax_kwargs,
+            colorbar_kwargs=colorbar_kwargs,
+            **_kwargs,
+        )
 
     return ax
 
