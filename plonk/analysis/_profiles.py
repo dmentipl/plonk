@@ -64,7 +64,7 @@ def extra_profiles(profile, num_mixture_dust_species: int = 0):
         return np.arctan2(angular_momentum_y, angular_momentum_x)
 
     @profile.add_profile
-    def toomre_Q(prof) -> Quantity:
+    def toomre_q(prof) -> Quantity:
         """Toomre Q parameter."""
         return (
             prof['sound_speed']
