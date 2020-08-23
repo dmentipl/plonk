@@ -163,14 +163,13 @@ class Profile:
             self._x.magnitude, self.bin_edges.magnitude
         )[0] * plonk_units('dimensionless')
 
+        # Add pre-defined profiles
         try:
             num_separate_dust = len(self.snap.num_particles_of_type['dust'])
         except KeyError:
             num_separate_dust = 0
-        num_mixture_dust_species = self.snap.num_dust_species - num_separate_dust
-
-        # Add pre-defined profiles
-        extra_profiles(self, num_mixture_dust_species)
+        num_mixture_dust = self.snap.num_dust_species - num_separate_dust
+        extra_profiles(self, num_separate_dust, num_mixture_dust)
 
     def add_profile(self, fn: Callable) -> Callable:
         """Decorate function to add profile to Profile.

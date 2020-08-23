@@ -10,14 +10,16 @@ from .._units import units as plonk_units
 G = (1 * plonk_units.newtonian_constant_of_gravitation).to_base_units()
 
 
-def extra_profiles(profile, num_mixture_dust_species: int = 0):
+def extra_profiles(profile, num_separate_dust: int = 0, num_mixture_dust: int = 0):
     """Make extra profiles available.
 
     Parameters
     ----------
     profile
         The profile object to add extra profiles to.
-    num_mixture_dust_species
+    num_separate_dust
+        The number of "separate sets of particles" dust species.
+    num_mixture_dust
         The number of "mixture" dust species.
     """
 
@@ -95,7 +97,29 @@ def extra_profiles(profile, num_mixture_dust_species: int = 0):
         R = prof['radius']
         return np.sqrt(2 * Omega / R * np.gradient(R ** 2 * Omega, R))
 
-    if num_mixture_dust_species > 0:
+    num_dust_species = num_mixture_dust + num_separate_dust
+
+    for idx in range(num_dust_species):
+
+        def midplane_stokes_number(idx, prof) -> Quantity:
+            """Midplane Stokes number profile."""
+            gamma = prof.snap.properties['adiabatic_index']
+            grain_density = prof.snap.properties['grain_density'][idx]
+            grain_size = prof.snap.properties['grain_size'][idx]
+            return (
+                np.pi
+                * np.sqrt(gamma)
+                * grain_density
+                * grain_size
+                / 2
+                / prof['surface_density']
+            )
+
+        profile._profile_functions[f'midplane_stokes_number_{idx+1:03}'] = partial(
+            midplane_stokes_number, idx
+        )
+
+    if num_mixture_dust > 0:
 
         @profile.add_profile
         def gas_mass(prof) -> Quantity:
@@ -111,7 +135,7 @@ def extra_profiles(profile, num_mixture_dust_species: int = 0):
             """
             return prof['gas_mass'] / prof['size']
 
-        for idx in range(num_mixture_dust_species):
+        for idx in range(num_mixture_dust):
 
             def dust_mass(idx, prof) -> Quantity:
                 """Dust mass profile."""
