@@ -1,6 +1,6 @@
-~~~~~
-Plots
-~~~~~
+~~~~~~~~~
+Visualize
+~~~~~~~~~
 
 .. autofunction:: plonk.image
 .. autofunction:: plonk.plot
