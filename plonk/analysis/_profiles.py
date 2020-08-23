@@ -72,6 +72,15 @@ def extra_profiles(profile, num_mixture_dust_species: int = 0):
             / (np.pi * G * prof['surface_density'])
         )
 
+    @profile.add_profile
+    def disc_viscosity(prof) -> Quantity:
+        """Disc viscosity. I.e. nu = alpha_SS c_s H."""
+        try:
+            alpha = prof.snap._file_pointer['header/alpha'][()]
+        except KeyError:
+            raise ValueError('Cannot determine artificial viscosity alpha')
+        return alpha / 10 * prof['smoothing_length'] * prof['sound_speed']
+
     if num_mixture_dust_species > 0:
 
         @profile.add_profile
