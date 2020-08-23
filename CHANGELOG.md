@@ -20,6 +20,7 @@ Types of changes:
 - Add label argument to Profile.plot.
 - Add dust_array_names utility function. This makes a list of array names broken into sub-species.
 - Add plonk.animate function to provide a common interface to animation functions.
+- Always cache arrays during plotting using the caching context manager.
 
 ### Changed
 
