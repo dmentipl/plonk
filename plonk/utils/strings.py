@@ -1,4 +1,4 @@
-"""Utility functions."""
+"""Utils for strings."""
 
 
 def is_documented_by(original):

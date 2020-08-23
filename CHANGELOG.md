@@ -26,6 +26,7 @@ Types of changes:
 - Remove '_tot' as an array suffix for dust arrays. This was causing confusion as it makes no sense to sum stopping times.
 - Rename base_array_name to base_profile_name.
 - Change interpolate to return dimensionful quantity.
+- Moved utils functions from each sub-package to modules in utils sub-package.
 
 ### Fixed
 

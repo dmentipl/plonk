@@ -1,6 +1,7 @@
-"""NumPy functions with Pint support."""
+"""Utils for math."""
 
 import numpy as np
+from numpy import ndarray
 
 from .._units import Quantity
 
@@ -68,3 +69,30 @@ def average(x, weights, **kwargs):
     if isinstance(x, Quantity):
         return np.average(x.magnitude, weights=weights.magnitude, **kwargs) * x.units
     return np.average(x, weights=weights, **kwargs)
+
+
+def distance_from_plane(
+    x: ndarray, y: ndarray, z: ndarray, normal: ndarray, height: float = 0
+) -> float:
+    """Calculate distance from a plane.
+
+    Parameters
+    ----------
+    x
+        The x-positions.
+    y
+        The y-positions.
+    z
+        The z-positions.
+    normal
+        The normal vector describing the plane (x, y, z).
+    height
+        The height of the plane above the origin.
+
+    Return
+    ------
+    The distance from the plane of each point.
+    """
+    a, b, c = normal
+    d = height
+    return np.abs((a * x + b * y + c * z + d) / np.sqrt(a ** 2 + b ** 2 + c ** 2))

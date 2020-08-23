@@ -1,4 +1,4 @@
-"""Physical units on snapshots."""
+"""Utils for snaps."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from .._config import load_config
 from .._units import units as plonk_units
 
 if TYPE_CHECKING:
-    from .snap import SnapLike
+    from ..snap.snap import SnapLike
 
 
 def gravitational_constant_in_code_units(snap: SnapLike) -> float:

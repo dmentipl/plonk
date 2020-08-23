@@ -9,7 +9,7 @@ Plot the accretion radius on the sink particles.
 .. code-block:: python
 
     import plonk
-    from plonk import visualize
+    from plonk.utils.visualize import plot_smoothing_length
 
     snap = plonk.load_snap('disc_00030.h5')
 
@@ -20,4 +20,4 @@ Plot the accretion radius on the sink particles.
 
     ax = snap.image('density', cmap='gist_heat')
 
-    visualize.plot_smoothing_length(snap=snap.sinks, indices=indices, alpha=0.8, ax=ax)
+    plot_smoothing_length(snap=snap.sinks, indices=indices, alpha=0.8, ax=ax)

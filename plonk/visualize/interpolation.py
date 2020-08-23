@@ -14,7 +14,7 @@ from numpy import ndarray
 from .._logging import logger
 from .._units import Quantity
 from .._units import units as plonk_units
-from ..utils.geometry import distance_from_plane
+from ..utils.math import distance_from_plane
 from .splash import interpolate_projection, interpolate_slice
 
 if TYPE_CHECKING:

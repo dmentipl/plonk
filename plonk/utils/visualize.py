@@ -1,14 +1,22 @@
-"""Functions for visualization."""
+"""Utils for visualize."""
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, List, Union
+from typing import TYPE_CHECKING, Any, List, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.collections import PatchCollection
 from matplotlib.patches import Circle
+from numpy import ndarray
+from scipy.interpolate import RectBivariateSpline
 
+try:
+    from skimage import transform
+except ImportError:
+    transform = None
+
+from .._logging import logger
 from .._units import Quantity
 
 if TYPE_CHECKING:
@@ -129,6 +137,55 @@ def get_extent_from_percentile(
         return (xlim[0], xlim[1], ylim[0], ylim[1])
 
     return (xlim[0], xlim[1], ylim[0], ylim[1])
+
+
+def cartesian_to_polar(
+    interpolated_data_cartesian: ndarray,
+    extent_cartesian: Tuple[float, float, float, float],
+) -> Tuple[ndarray, Tuple[float, float, float, float]]:
+    """Convert interpolated Cartesian pixel grid to polar coordinates.
+
+    Parameters
+    ----------
+    interpolated_data_cartesian
+        The interpolated data on a Cartesian grid.
+    extent_cartesian
+        The extent in Cartesian space as (xmin, xmax, ymin, ymax). It
+        must be square.
+
+    Returns
+    -------
+    interpolated_data_polar
+        The interpolated data on a polar grid (R, phi).
+    extent_polar
+        The extent on a polar grid (0, Rmax, 0, 2π).
+    """
+    if transform is None:
+        logger.error(
+            'cartesian_to_polar requires skimage (scikit-image) which is unavailable\n'
+            'try pip install scikit-image --or-- conda install scikit-image'
+        )
+    data, extent = interpolated_data_cartesian, extent_cartesian
+
+    if not np.allclose(extent[1] - extent[0], extent[3] - extent[2]):
+        raise ValueError('Bad polar plot: x and y have different scales')
+
+    number_of_pixels = data.shape
+    radius_pix = 0.5 * data.shape[0]
+
+    data = transform.warp_polar(data, radius=radius_pix)
+
+    radius = 0.5 * (extent[1] - extent[0])
+    extent_polar = (0, radius, 0, 2 * np.pi)
+
+    x_grid = np.linspace(*extent[:2], data.shape[0])
+    y_grid = np.linspace(*extent[2:], data.shape[1])
+    spl = RectBivariateSpline(x_grid, y_grid, data)
+    x_regrid = np.linspace(extent[0], extent[1], number_of_pixels[0])
+    y_regrid = np.linspace(extent[2], extent[3], number_of_pixels[1])
+    interpolated_data_polar = spl(x_regrid, y_regrid)
+
+    return interpolated_data_polar, extent_polar
 
 
 def _set_new_lim(ax, x, y, h, fac):

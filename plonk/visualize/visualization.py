@@ -13,9 +13,9 @@ from numpy import ndarray
 from .._logging import logger
 from .._units import Quantity
 from .._units import units as plonk_units
-from ..utils.utils import pretty_array_name
+from ..utils.strings import pretty_array_name
+from ..utils.visualize import get_extent_from_percentile
 from . import plots
-from .functions import get_extent_from_percentile
 from .interpolation import interpolate
 
 if TYPE_CHECKING:

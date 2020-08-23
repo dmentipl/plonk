@@ -12,9 +12,9 @@ from ..._config import load_config
 from ..._logging import logger
 from ..._units import Quantity, array_units, generate_array_code_units
 from ..._units import units as plonk_units
+from ...utils.snap import add_aliases
 from ..extra import extra_quantities
 from ..snap import Snap
-from ..utils import add_aliases
 
 igas, iboundary, istar, idarkmatter, ibulge = 1, 3, 4, 5, 6
 bignumber = 1e29

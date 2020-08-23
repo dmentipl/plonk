@@ -8,12 +8,12 @@ Here is the documentation for the Plonk API. It provides documentation of the
 available functions and classes in Plonk.
 
 The documentation is generated from the function/class docstrings, and so is
-also available at the Python/IPython REPL, e.g. :code:`help(plonk.load_snap)`
-and :code:`plonk.load_snap?`.
+also available at the Python/IPython REPL or in a Jupyter notebook, e.g.
+:code:`help(plonk.load_snap)` and :code:`plonk.load_snap?`.
 
 .. toctree::
 
     api/data
     api/analysis
     api/visualization
-    api/miscellaneous
+    api/utils
