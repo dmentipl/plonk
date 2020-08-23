@@ -694,9 +694,11 @@ def _get_unit(profile, name, units):
             return 1 * plonk_units(units[name])
         if base_name in units:
             return 1 * plonk_units(units[base_name])
+    if name in profile.default_units:
+        return 1 * plonk_units(profile.default_units[name])
     if base_name in profile.default_units:
         return 1 * plonk_units(profile.default_units[base_name])
-    return 1 * profile[base_name].units
+    return 1 * profile[name].units
 
 
 def _std_plot(profile, xdata, ydata, yname, yunit, std, color, ax):
