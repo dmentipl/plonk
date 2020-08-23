@@ -2,6 +2,7 @@
 Animation
 ~~~~~~~~~
 
-.. autofunction:: plonk.animation
-.. autofunction:: plonk.animation_profiles
-.. autofunction:: plonk.animation_particles
+.. autofunction:: plonk.animate
+.. autofunction:: plonk.visualize.animation_images
+.. autofunction:: plonk.visualize.animation_particles
+.. autofunction:: plonk.visualize.animation_profiles
