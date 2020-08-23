@@ -24,7 +24,169 @@ if TYPE_CHECKING:
 _interp_kwargs = ('number_of_pixels', 'density_weighted')
 
 
-def animation(
+def animate(
+    filename: Union[str, Path],
+    *,
+    snaps: List[SnapLike] = None,
+    profiles: List[Profile] = None,
+    quantity: str = None,
+    x: str = None,
+    y: str = None,
+    fig: Any = None,
+    adaptive_colorbar: bool = True,
+    adaptive_limits: bool = True,
+    text: List[str] = None,
+    text_kwargs: Dict[str, Any] = {},
+    func_animation_kwargs: Dict[str, Any] = {},
+    save_kwargs: Dict[str, Any] = {},
+    **kwargs,
+):
+    """Animate a Snap or Profile visualization.
+
+    Pass in a list of Snap objects or Profile objects. If snaps are
+    passed in and the quantity is None, then the animation will be of
+    particle plots, otherwise it will be of images. If profiles are
+    passed in the animation will be of profiles.
+
+    Parameters
+    ----------
+    filename
+        The file name to save the animation to.
+    snaps
+        A list of Snap objects to animate.
+    profiles
+        A list of Profile objects to animate.
+    quantity : optional
+        The quantity to visualize. Must be a string to pass to Snap.
+    x : optional
+        The quantity for the x-axis. Must be a string to pass to Snap.
+        For interpolated plots must be 'x', 'y', or 'z'.
+    y : optional
+        The quantity for the y-axis. Must be a string to pass to Snap.
+        For interpolated plots must be 'x', 'y', or 'z'.
+    fig : optional
+        A matplotlib Figure object to animate. If None, generate a new
+        Figure.
+    adaptive_colorbar : optional
+        If True, adapt colorbar range during animation. If False, the
+        colorbar range is fixed by the initial image. Default is True.
+    adaptive_limits : optional
+        If True, adapt plot limits during animation. If False, the plot
+        limits are fixed by the initial plot. Default is True.
+    text : optional
+        List of strings to display per snap.
+    text_kwargs : optional
+        Keyword arguments to pass to matplotlib text.
+    func_animation_kwargs : optional
+        Keyword arguments to pass to matplotlib FuncAnimation.
+    save_kwargs : optional
+        Keyword arguments to pass to matplotlib Animation.save.
+    **kwargs
+        Arguments to pass to visualize.image.
+
+    Returns
+    -------
+    anim
+        The matplotlib FuncAnimation object.
+
+    Examples
+    --------
+    Make an image animation of projected density.
+
+    >>> units = {
+    ...     'position': 'au',
+    ...     'density': 'g/cm^3',
+    ...     'projection': 'cm'
+    ... }
+    >>> plonk.animate(
+    ...     filename='animation.mp4',
+    ...     snaps=snaps,
+    ...     quantity='density',
+    ...     units=units,
+    ...     save_kwargs={'fps': 10, 'dpi': 300},
+    ... )
+
+    Make a particle animation of x vs density.
+
+    >>> units = {'position': 'au', 'density': 'g/cm^3'}
+    >>> plonk.animate(
+    ...     filename='animation.mp4',
+    ...     snaps=snaps,
+    ...     x='x',
+    ...     y='density',
+    ...     units=units,
+    ...     adaptive_limits=False,
+    ...     save_kwargs={'fps': 10, 'dpi': 300},
+    ... )
+
+    Make a profile animation of radius vs surface density.
+
+    >>> units={'position': 'au', 'surface_density': 'g/cm^2'}
+    >>> plonk.animate(
+    ...     filename='animation.mp4',
+    ...     profiles=profiles,
+    ...     x='radius',
+    ...     y='surface_density',
+    ...     units=units,
+    ...     adaptive_limits=False,
+    ...     save_kwargs={'fps': 10, 'dpi': 300},
+    ... )
+    """
+    if snaps is not None:
+        if profiles is not None:
+            raise ValueError('Cannot pass in snaps and profiles')
+        if quantity is None:
+            anim = animation_particles(
+                filename=filename,
+                snaps=snaps,
+                x=x,
+                y=y,
+                fig=fig,
+                adaptive_limits=adaptive_limits,
+                text=text,
+                text_kwargs=text_kwargs,
+                func_animation_kwargs=func_animation_kwargs,
+                save_kwargs=save_kwargs,
+                **kwargs,
+            )
+        else:
+            anim = animation_images(
+                filename=filename,
+                snaps=snaps,
+                quantity=quantity,
+                fig=fig,
+                adaptive_colorbar=adaptive_colorbar,
+                text=text,
+                text_kwargs=text_kwargs,
+                func_animation_kwargs=func_animation_kwargs,
+                save_kwargs=save_kwargs,
+                **kwargs,
+            )
+    elif profiles is not None:
+        if x is None:
+            raise ValueError('x must be passed in for profile animations')
+        if y is None:
+            raise ValueError('y must be passed in for profile animations')
+        anim = animation_profiles(
+            filename=filename,
+            profiles=profiles,
+            x=x,
+            y=y,
+            fig=fig,
+            adaptive_limits=adaptive_limits,
+            text=text,
+            text_kwargs=text_kwargs,
+            func_animation_kwargs=func_animation_kwargs,
+            save_kwargs=save_kwargs,
+            **kwargs,
+        )
+    else:
+        raise ValueError('Must pass in snaps or profiles')
+
+    return anim
+
+
+def animation_images(
     *,
     filename: Union[str, Path],
     snaps: List[SnapLike],
@@ -73,7 +235,7 @@ def animation(
     --------
     Make an animation of projected density.
 
-    >>> plonk.animation(
+    >>> animation_images(
     ...     filename='animation.mp4',
     ...     snaps=snaps,
     ...     quantity='density',
@@ -206,7 +368,7 @@ def animation_profiles(
     --------
     Make an animation of radius vs surface density.
 
-    >>> plonk.animation_profiles(
+    >>> animation_profiles(
     ...     filename='animation.mp4',
     ...     profiles=profiles,
     ...     x='radius',
@@ -333,7 +495,7 @@ def animation_particles(
     --------
     Make an animation of x vs density on the particles.
 
-    >>> plonk.animation(
+    >>> animation_particles(
     ...     filename='animation.mp4',
     ...     snaps=snaps,
     ...     x='x',

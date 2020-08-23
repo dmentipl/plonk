@@ -19,6 +19,7 @@ Types of changes:
 
 - Add label argument to Profile.plot.
 - Add dust_array_names utility function. This makes a list of array names broken into sub-species.
+- Add plonk.animate function to provide a common interface to animation functions.
 
 ### Changed
 
@@ -27,6 +28,8 @@ Types of changes:
 - Rename base_array_name to base_profile_name.
 - Change interpolate to return dimensionful quantity.
 - Moved utils functions from each sub-package to modules in utils sub-package.
+- Moved animation, animation_particles, animation_profiles from plonk namespace to plonk.visualize namespace.
+- Renamed animation to animation_images.
 
 ### Fixed
 

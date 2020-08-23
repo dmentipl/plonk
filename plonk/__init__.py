@@ -54,7 +54,7 @@ See https://plonk.readthedocs.io/ for documentation. The source code is
 available at https://github.com/dmentipl/plonk.
 """
 
-import importlib_metadata
+import importlib_metadata as _importlib_metadata
 
 from ._logging import logger_init as _logger_init
 from ._units import add_units, array_units, units
@@ -63,12 +63,12 @@ from .simulation.evolution import load_ev
 from .simulation.simulation import Simulation, load_sim
 from .snap.readers import load_snap
 from .snap.snap import Sinks, Snap, SnapLike, SubSnap
-from .visualize.animation import animation, animation_particles, animation_profiles
+from .visualize.animation import animate
 from .visualize.interpolation import interpolate
 from .visualize.simulation import visualize_sim
 from .visualize.visualization import image, plot, vector
 
-__version__ = importlib_metadata.version('plonk')
+__version__ = _importlib_metadata.version('plonk')
 
 _logger_init(__version__)
 
@@ -82,9 +82,7 @@ __all__ = [
     'SnapLike',
     'SubSnap',
     'add_units',
-    'animation',
-    'animation_particles',
-    'animation_profiles',
+    'animate',
     'array_units',
     'image',
     'interpolate',
