@@ -120,3 +120,34 @@ Plot particles with color representing density.
     ... )
 
 .. image:: _static/particle_plot2.png
+
+~~~~~~~~~~
+Animations
+~~~~~~~~~~
+
+Produce an animation of images using :func:`~animate`.
+
+.. code-block:: python
+
+    >>> import plonk
+
+    >>> sim = plonk.load_sim(prefix='disc')
+
+    >>> units={'position': 'au', 'density': 'g/cm^3', 'projection': 'cm'}
+
+    >>> plonk.animate(
+    ...     filename='animation.mp4',
+    ...     snaps=sim.snaps,
+    ...     quantity='density',
+    ...     extent=(-160, 160, -160, 160),
+    ...     units=units,
+    ...     adaptive_colorbar=False,
+    ...     save_kwargs={'fps': 10, 'dpi': 300},
+    ... )
+
+.. raw:: html
+
+    <video width="100%" controls>
+        <source src="_static/animation.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
