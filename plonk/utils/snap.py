@@ -94,3 +94,43 @@ def dust_array_names(snap: SnapLike, name: str, add_gas: bool = False) -> List[s
         names.append(f'{name.replace("dust", "gas")}')
     names += [f'{name}_{n+1:03}' for n in range(snap.num_dust_species)]
     return names
+
+
+def vector_array_names(snap: SnapLike, name: str, add_mag: bool = False) -> List[str]:
+    """List vector array names.
+
+    Parameters
+    ----------
+    snap
+        The Snap object.
+    name
+        The base array name, e.g. "angular_momentum".
+    add_mag
+        If True add the magnitude of the array.
+
+    Returns
+    -------
+    List
+        A list of array names with appropriate suffixes.
+
+    Examples
+    --------
+    Get the angular momentum strings.
+
+    >>> vector_name_list(snap, 'angular_momentum')
+    ['angular_momentum_x',
+     'angular_momentum_y',
+     'angular_momentum_z']
+
+    Get the angular momentum strings with magnitude.
+
+    >>> vector_name_list(snap, 'angular_momentum', add_mag=True)
+    ['angular_momentum_x',
+     'angular_momentum_y',
+     'angular_momentum_z',
+     'angular_momentum_mag']
+    """
+    names = [f'{name}_{x}' for x in ['x', 'y', 'z']]
+    if add_mag:
+        names.append(f'{name}_mag')
+    return names
