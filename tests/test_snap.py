@@ -8,14 +8,14 @@ from scipy.spatial.transform import Rotation
 
 import plonk
 
-from .stubdata.phantom_snapshot import (
+from .data.phantom.dustseparate_snapshot import (
     array_name_map,
     mean_array_values,
     properties,
     std_array_values,
 )
 
-TEST_FILE = Path(__file__).parent / 'stubdata/phantom_00000.h5'
+TEST_FILE = Path(__file__).parent / 'data/phantom/dustseparate_00000.h5'
 AVAILABLE_ARRAYS = [
     'angular_momentum',
     'angular_velocity',

@@ -7,23 +7,23 @@ import pytest
 
 import plonk
 
+DIR_PATH = Path(__file__).parent / 'data/phantom'
+PREFIX = 'dustseparate'
+EV_FILENAME = 'dustseparate01.ev'
+
 
 def test_init_simulation():
     """Testing initialising simulation."""
-    dir_path = Path(__file__).parent / 'stubdata'
-    plonk.load_sim(prefix='phantom', directory=dir_path)
+    plonk.load_sim(prefix=PREFIX, directory=DIR_PATH)
     with pytest.raises(ValueError):
-        plonk.load_sim(
-            prefix='phantom', directory=dir_path, data_source='not_available'
-        )
+        plonk.load_sim(prefix=PREFIX, directory=DIR_PATH, data_source='not_available')
     with pytest.raises(FileNotFoundError):
-        plonk.load_sim(prefix='does_not_exist', directory=dir_path)
+        plonk.load_sim(prefix='does_not_exist', directory=DIR_PATH)
 
 
 def test_sim_data():
     """Testing data in simulation."""
-    dir_path = Path(__file__).parent / 'stubdata'
-    sim = plonk.load_sim(prefix='phantom', directory=dir_path)
+    sim = plonk.load_sim(prefix=PREFIX, directory=DIR_PATH)
 
     snaps = sim.snaps
     assert len(snaps) == 1
@@ -45,13 +45,12 @@ def test_sim_data():
         else:
             assert sim.properties[key] == properties[key]
 
-    assert sim.paths['time_series_global'][0].name == 'phantom01.ev'
+    assert sim.paths['time_series_global'][0].name == EV_FILENAME
 
 
 def test_simulation_visualization():
     """Test simulation visualization."""
-    dir_path = Path(__file__).parent / 'stubdata'
-    sim = plonk.load_sim(prefix='phantom', directory=dir_path)
+    sim = plonk.load_sim(prefix=PREFIX, directory=DIR_PATH)
 
     viz = sim.visualize(kind='particle', x='x', y='y')
     viz.next()
@@ -60,14 +59,12 @@ def test_simulation_visualization():
 
 def test_to_array():
     """Testing to_array method."""
-    dir_path = Path(__file__).parent / 'stubdata'
-    sim = plonk.load_sim(prefix='phantom', directory=dir_path)
+    sim = plonk.load_sim(prefix=PREFIX, directory=DIR_PATH)
     sim.to_array(quantity='density', indices=[0, 1, 2])
 
 
 def test_set_units_time_series():
     """Test set/unset units time series."""
-    dir_path = Path(__file__).parent / 'stubdata'
-    sim = plonk.load_sim(prefix='phantom', directory=dir_path)
+    sim = plonk.load_sim(prefix=PREFIX, directory=DIR_PATH)
     sim.unset_units_on_time_series()
     sim.set_units_on_time_series()

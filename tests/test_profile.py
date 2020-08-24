@@ -8,8 +8,8 @@ import pytest
 
 import plonk
 
-TEST_FILE = Path(__file__).parent / 'stubdata/phantom_00000.h5'
-CSV_FILE = Path(__file__).parent / 'stubdata/phantom_00000_profile.csv'
+TEST_FILE = Path(__file__).parent / 'data/phantom/dustseparate_00000.h5'
+CSV_FILE = Path(__file__).parent / 'data/phantom/dustseparate_00000_profile.csv'
 
 
 def test_load_profile():

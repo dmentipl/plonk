@@ -8,8 +8,8 @@ import pytest
 import plonk
 from plonk import analysis
 
-TEST_FILE = Path(__file__).parent / 'stubdata/phantom_00000.h5'
-NEIGHBOURS_FILE = Path(__file__).parent / 'stubdata/neighbours.csv'
+TEST_FILE = Path(__file__).parent / 'data/phantom/dustseparate_00000.h5'
+NEIGHBOURS_FILE = Path(__file__).parent / 'data/phantom/dustseparate_neighbours.csv'
 
 with open(NEIGHBOURS_FILE) as fp:
     NEIGHBOURS = list()

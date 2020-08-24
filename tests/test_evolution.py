@@ -7,9 +7,9 @@ import pytest
 
 import plonk
 
-from .stubdata.phantom_evolution import mean_values
+from .data.phantom.dustseparate_evolution import mean_values
 
-TEST_FILE = Path(__file__).parent / 'stubdata/phantom01.ev'
+TEST_FILE = Path(__file__).parent / 'data/phantom/dustseparate01.ev'
 
 
 def test_read_evolution():

@@ -5,11 +5,13 @@ from pathlib import Path
 import plonk
 from plonk import visualize
 
+DIR_PATH = Path(__file__).parent / 'data/phantom'
+PREFIX = 'dustseparate'
+
 
 def test_animate():
     """Test animate."""
-    dir_path = Path(__file__).parent / 'stubdata'
-    sim = plonk.load_sim(prefix='phantom', directory=dir_path)
+    sim = plonk.load_sim(prefix=PREFIX, directory=DIR_PATH)
 
     snaps = [sim.snaps[0], sim.snaps[0], sim.snaps[0]]
     filename = Path('animation.mp4')
@@ -26,8 +28,7 @@ def test_animate():
 
 def test_animation_images():
     """Test animation of images."""
-    dir_path = Path(__file__).parent / 'stubdata'
-    sim = plonk.load_sim(prefix='phantom', directory=dir_path)
+    sim = plonk.load_sim(prefix=PREFIX, directory=DIR_PATH)
 
     snaps = [sim.snaps[0], sim.snaps[0], sim.snaps[0]]
     filename = Path('animation.mp4')
@@ -44,8 +45,7 @@ def test_animation_images():
 
 def test_animation_profiles():
     """Test animation of profiles."""
-    dir_path = Path(__file__).parent / 'stubdata'
-    sim = plonk.load_sim(prefix='phantom', directory=dir_path)
+    sim = plonk.load_sim(prefix=PREFIX, directory=DIR_PATH)
 
     snaps = [sim.snaps[0], sim.snaps[0], sim.snaps[0]]
     profiles = [plonk.load_profile(snap) for snap in snaps]
@@ -63,8 +63,7 @@ def test_animation_profiles():
 
 def test_animation_particles():
     """Test animation of particle plots."""
-    dir_path = Path(__file__).parent / 'stubdata'
-    sim = plonk.load_sim(prefix='phantom', directory=dir_path)
+    sim = plonk.load_sim(prefix=PREFIX, directory=DIR_PATH)
 
     snaps = [sim.snaps[0], sim.snaps[0], sim.snaps[0]]
     filename = Path('animation.mp4')

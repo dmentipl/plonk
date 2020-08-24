@@ -6,7 +6,7 @@ import plonk
 from plonk.utils import visualize
 
 AU = plonk.units('au')
-TEST_FILE = Path(__file__).parent / 'stubdata/phantom_00000.h5'
+TEST_FILE = Path(__file__).parent / 'data/phantom/dustseparate_00000.h5'
 
 
 def test_plot():

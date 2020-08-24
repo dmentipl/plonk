@@ -4,7 +4,7 @@ import numpy as np
 
 from plonk.visualize.interpolation import scalar_interpolation, vector_interpolation
 
-from .stubdata.interpolation_arrays import (
+from .data.interpolation_arrays import (
     scalar_projection,
     scalar_slice,
     vector_projection,
