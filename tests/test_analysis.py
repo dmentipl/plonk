@@ -2,20 +2,28 @@
 
 from pathlib import Path
 
+import pytest
+
 import plonk
 from plonk import analysis
 
-TEST_FILE = Path(__file__).parent / 'data/phantom/dustseparate_00000.h5'
+from .data.phantom import adiabatic, dustmixture, dustseparate, mhd
+
+SNAPTYPES = [adiabatic, dustmixture, dustseparate, mhd]
+DIR = Path(__file__).parent / 'data/phantom'
 AU = plonk.units('au')
 
 
-def test_particles():
+@pytest.mark.parametrize('snaptype', SNAPTYPES)
+def test_particles(snaptype):
     """Test particles analysis functions."""
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
 
     snap.set_molecular_weight(2.381)
-    snap.set_gravitational_parameter(0)
-    mu = snap.properties['gravitational_parameter']
+    if snap.num_sinks > 0:
+        snap.set_gravitational_parameter(0)
+    mu = snap.properties.get('gravitational_parameter')
 
     _test_particles(snap=snap, ignore=False, mu=mu)
     _test_particles(snap=snap, ignore=True, mu=mu)
@@ -28,38 +36,44 @@ def _test_particles(snap, ignore, mu):
     analysis.particles.angular_momentum(snap=snap, ignore_accreted=ignore)
     analysis.particles.angular_velocity(snap=snap, ignore_accreted=ignore)
     analysis.particles.azimuthal_angle(snap=snap, ignore_accreted=ignore)
-    if snap.properties['dust_method'] == 'dust/gas mixture':
-        analysis.particles.dust_density(snap=snap, ignore_accreted=ignore)
-        analysis.particles.dust_mass(snap=snap, ignore_accreted=ignore)
-        analysis.particles.gas_density(snap=snap, ignore_accreted=ignore)
-        analysis.particles.gas_fraction(snap=snap, ignore_accreted=ignore)
-        analysis.particles.gas_mass(snap=snap, ignore_accreted=ignore)
-    analysis.particles.eccentricity(
-        snap=snap, gravitational_parameter=mu, ignore_accreted=ignore
-    )
     analysis.particles.inclination(snap=snap, ignore_accreted=ignore)
-    analysis.particles.keplerian_frequency(
-        snap=snap, gravitational_parameter=mu, ignore_accreted=ignore
-    )
     analysis.particles.kinetic_energy(snap=snap, ignore_accreted=ignore)
     analysis.particles.momentum(snap=snap, ignore_accreted=ignore)
     analysis.particles.polar_angle(snap=snap, ignore_accreted=ignore)
     analysis.particles.radius_cylindrical(snap=snap, ignore_accreted=ignore)
     analysis.particles.radius_spherical(snap=snap, ignore_accreted=ignore)
-    analysis.particles.semi_major_axis(
-        snap=snap, gravitational_parameter=mu, ignore_accreted=ignore
-    )
     analysis.particles.specific_angular_momentum(snap=snap, ignore_accreted=ignore)
     analysis.particles.specific_kinetic_energy(snap=snap, ignore_accreted=ignore)
-    analysis.particles.stokes_number(
-        snap=snap, gravitational_parameter=mu, ignore_accreted=ignore
-    )
     analysis.particles.temperature(snap=snap, ignore_accreted=ignore)
 
+    if snap.num_dust_species > 0:
+        if snap.properties['dust_method'] == 'dust/gas mixture':
+            analysis.particles.dust_density(snap=snap, ignore_accreted=ignore)
+            analysis.particles.dust_mass(snap=snap, ignore_accreted=ignore)
+            analysis.particles.gas_density(snap=snap, ignore_accreted=ignore)
+            analysis.particles.gas_fraction(snap=snap, ignore_accreted=ignore)
+            analysis.particles.gas_mass(snap=snap, ignore_accreted=ignore)
 
-def test_total():
+    if mu is not None:
+        analysis.particles.eccentricity(
+            snap=snap, gravitational_parameter=mu, ignore_accreted=ignore
+        )
+        analysis.particles.keplerian_frequency(
+            snap=snap, gravitational_parameter=mu, ignore_accreted=ignore
+        )
+        analysis.particles.semi_major_axis(
+            snap=snap, gravitational_parameter=mu, ignore_accreted=ignore
+        )
+        analysis.particles.stokes_number(
+            snap=snap, gravitational_parameter=mu, ignore_accreted=ignore
+        )
+
+
+@pytest.mark.parametrize('snaptype', SNAPTYPES)
+def test_total(snaptype):
     """Test total analysis functions."""
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
 
     analysis.total.accreted_mass(snap=snap)
     analysis.total.angular_momentum(snap=snap)
@@ -75,9 +89,11 @@ def test_total():
     snap.close_file()
 
 
-def test_filters():
+@pytest.mark.parametrize('snaptype', SNAPTYPES)
+def test_filters(snaptype):
     """Test particle filter functions."""
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
 
     xwidth, ywidth, zwidth = 10 * AU, 10 * AU, 10 * AU
     height = 10 * AU
@@ -96,9 +112,11 @@ def test_filters():
     snap.close_file()
 
 
-def test_discs():
+@pytest.mark.parametrize('snaptype', [dustmixture, dustseparate])
+def test_discs(snaptype):
     """Test discs analysis functions."""
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
 
     analysis.discs.normal(snap)
     analysis.discs.rotate_edge_on(snap)

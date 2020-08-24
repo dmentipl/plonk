@@ -7,18 +7,19 @@ import pytest
 
 import plonk
 
-from .data.phantom.dustseparate import mean_ev_values
+from .data.phantom import dustseparate
 
-TEST_FILE = Path(__file__).parent / 'data/phantom/dustseparate01.ev'
+DIR = Path(__file__).parent / 'data/phantom'
 
 
 def test_read_evolution():
     """Test reading Phantom evolution files."""
     # Read from Path
-    plonk.load_ev(TEST_FILE)
+    filename = DIR / dustseparate.ev_file
+    plonk.load_ev(filename)
 
     # Read from str
-    plonk.load_ev(str(TEST_FILE))
+    plonk.load_ev(str(filename))
 
     # Not exists
     with pytest.raises(FileNotFoundError):
@@ -27,9 +28,10 @@ def test_read_evolution():
 
 def test_read_evolution_data():
     """Test reading data from Phantom evolution files."""
-    ev = plonk.load_ev(TEST_FILE)
+    filename = DIR / dustseparate.ev_file
+    ev = plonk.load_ev(filename)
 
-    assert set(ev.columns) == mean_ev_values.keys()
+    assert set(ev.columns) == dustseparate.mean_ev_values.keys()
 
     for key in ev.columns:
-        np.testing.assert_allclose(ev[key].mean(), mean_ev_values[key])
+        np.testing.assert_allclose(ev[key].mean(), dustseparate.mean_ev_values[key])

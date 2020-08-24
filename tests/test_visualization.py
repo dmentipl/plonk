@@ -2,24 +2,33 @@
 
 from pathlib import Path
 
+import pytest
+
 import plonk
 from plonk.utils import visualize
 
+from .data.phantom import adiabatic, dustmixture, dustseparate, mhd
+
+SNAPTYPES = [adiabatic, dustmixture, dustseparate, mhd]
+DIR = Path(__file__).parent / 'data/phantom'
 AU = plonk.units('au')
-TEST_FILE = Path(__file__).parent / 'data/phantom/dustseparate_00000.h5'
 
 
-def test_plot():
+@pytest.mark.parametrize('snaptype', SNAPTYPES)
+def test_plot(snaptype):
     """Test particle plot."""
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
     plonk.plot(snap=snap)
 
     snap.close_file()
 
 
-def test_plot_with_kwargs():
+@pytest.mark.parametrize('snaptype', SNAPTYPES)
+def test_plot_with_kwargs(snaptype):
     """Test particle plot with kwargs."""
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
     plonk.plot(
         snap=snap,
         x='x',
@@ -31,17 +40,21 @@ def test_plot_with_kwargs():
     snap.close_file()
 
 
-def test_image_projection():
+@pytest.mark.parametrize('snaptype', SNAPTYPES)
+def test_image_projection(snaptype):
     """Test image projection."""
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
     plonk.image(snap=snap, quantity='density', number_of_pixels=(32, 32))
 
     snap.close_file()
 
 
-def test_image_projection_with_kwargs():
+@pytest.mark.parametrize('snaptype', SNAPTYPES)
+def test_image_projection_with_kwargs(snaptype):
     """Test image projection with kwargs."""
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
     plonk.image(
         snap=snap,
         quantity='density',
@@ -57,17 +70,21 @@ def test_image_projection_with_kwargs():
     snap.close_file()
 
 
-def test_image_on_snap():
+@pytest.mark.parametrize('snaptype', SNAPTYPES)
+def test_image_on_snap(snaptype):
     """Test image projection as method on Snap."""
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
     snap.image(quantity='density', number_of_pixels=(32, 32))
 
     snap.close_file()
 
 
-def test_image_slice():
+@pytest.mark.parametrize('snaptype', SNAPTYPES)
+def test_image_slice(snaptype):
     """Test image slice."""
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
     plonk.image(
         snap=snap, quantity='density', interp='slice', number_of_pixels=(32, 32)
     )
@@ -75,9 +92,11 @@ def test_image_slice():
     snap.close_file()
 
 
-def test_image_slice_with_kwargs():
+@pytest.mark.parametrize('snaptype', SNAPTYPES)
+def test_image_slice_with_kwargs(snaptype):
     """Test image slice with kwargs."""
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
     plonk.image(
         snap=snap,
         quantity='density',
@@ -94,18 +113,22 @@ def test_image_slice_with_kwargs():
     snap.close_file()
 
 
-def test_plot_smoothing_length():
+@pytest.mark.parametrize('snaptype', SNAPTYPES)
+def test_plot_smoothing_length(snaptype):
     """Test plot smoothing length as circle."""
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
 
     visualize.plot_smoothing_length(snap=snap, indices=[0, 1])
 
     snap.close_file()
 
 
-def test_get_extent():
+@pytest.mark.parametrize('snaptype', SNAPTYPES)
+def test_get_extent(snaptype):
     """Test getting extent from percentile."""
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
 
     visualize.get_extent_from_percentile(snap=snap, x='x', y='y')
 

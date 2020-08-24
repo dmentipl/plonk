@@ -4,7 +4,11 @@ import numpy as np
 
 filename = 'dustseparate_00000.h5'
 
+ev_file = 'dustseparate01.ev'
+
 profile_file = 'dustseparate_00000_profile.csv'
+
+neighbours_file = 'dustseparate_neighbours.csv'
 
 array_name_map = {
     'divv': 'velocity_divergence',
