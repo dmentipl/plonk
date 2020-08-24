@@ -8,12 +8,12 @@ from scipy.spatial.transform import Rotation
 
 import plonk
 
-from .data.phantom import dustseparate
+from .data.phantom import dustmixture, dustseparate
 
 DIR = Path(__file__).parent / 'data/phantom'
 
 
-@pytest.mark.parametrize('snaptype', [dustseparate])
+@pytest.mark.parametrize('snaptype', [dustmixture, dustseparate])
 def test_load_phantom_snap(snaptype):
     """Testing reading Phantom HDF5 snapshots."""
     # Read from Path
@@ -28,7 +28,7 @@ def test_load_phantom_snap(snaptype):
         plonk.load_snap('does_not_exist.h5')
 
 
-@pytest.mark.parametrize('snaptype', [dustseparate])
+@pytest.mark.parametrize('snaptype', [dustmixture, dustseparate])
 def test_get_item(snaptype):
     """Testing getting items from Snap."""
     filename = DIR / snaptype.filename
@@ -55,7 +55,7 @@ def test_get_item(snaptype):
     snap.close_file()
 
 
-@pytest.mark.parametrize('snaptype', [dustseparate])
+@pytest.mark.parametrize('snaptype', [dustmixture, dustseparate])
 def test_read_particle_arrays_from_phantom(snaptype):
     """Testing reading Phantom HDF5 snapshot particle arrays."""
     filename = DIR / snaptype.filename
@@ -69,7 +69,7 @@ def test_read_particle_arrays_from_phantom(snaptype):
     snap.close_file()
 
 
-@pytest.mark.parametrize('snaptype', [dustseparate])
+@pytest.mark.parametrize('snaptype', [dustmixture, dustseparate])
 def test_read_properties_from_phantom(snaptype):
     """Testing reading Phantom HDF5 snapshot properties."""
     filename = DIR / snaptype.filename
@@ -93,7 +93,7 @@ def test_read_properties_from_phantom(snaptype):
     snap.close_file()
 
 
-@pytest.mark.parametrize('snaptype', [dustseparate])
+@pytest.mark.parametrize('snaptype', [dustmixture, dustseparate])
 def test_available_loaded_arrays(snaptype):
     """Testing seeing available/loaded arrays on Snap."""
     filename = DIR / snaptype.filename
@@ -107,16 +107,16 @@ def test_available_loaded_arrays(snaptype):
         'position_z',
         'position_mag',
         'h',
-        'dust_to_gas_ratio',
+        'angular_momentum',
     ]:
         snap[arr]
 
-    assert snap.loaded_arrays() == ['dust_to_gas_ratio', 'position', 'smoothing_length']
+    assert snap.loaded_arrays() == snaptype.loaded_arrays
 
     snap.close_file()
 
 
-@pytest.mark.parametrize('snaptype', [dustseparate])
+@pytest.mark.parametrize('snaptype', [dustmixture, dustseparate])
 def test_array_code_unit(snaptype):
     """Testing getting array code unit."""
     filename = DIR / snaptype.filename
@@ -134,7 +134,7 @@ def test_array_code_unit(snaptype):
     snap.close_file()
 
 
-@pytest.mark.parametrize('snaptype', [dustseparate])
+@pytest.mark.parametrize('snaptype', [dustmixture, dustseparate])
 def test_rotate_snap(snaptype):
     """Testing rotating Snap."""
     filename = DIR / snaptype.filename
@@ -176,7 +176,7 @@ def test_rotate_snap(snaptype):
     snap.close_file()
 
 
-@pytest.mark.parametrize('snaptype', [dustseparate])
+@pytest.mark.parametrize('snaptype', [dustmixture, dustseparate])
 def test_translate_snap(snaptype):
     """Testing translating Snap."""
     filename = DIR / snaptype.filename
@@ -220,7 +220,7 @@ def test_translate_snap(snaptype):
     snap.close_file()
 
 
-@pytest.mark.parametrize('snaptype', [dustseparate])
+@pytest.mark.parametrize('snaptype', [dustmixture, dustseparate])
 def test_write_to_dataframe(snaptype):
     """Testing writing Snap to DataFrame."""
     filename = DIR / snaptype.filename
@@ -235,7 +235,7 @@ def test_write_to_dataframe(snaptype):
     snap.close_file()
 
 
-@pytest.mark.parametrize('snaptype', [dustseparate])
+@pytest.mark.parametrize('snaptype', [dustmixture, dustseparate])
 def test_subsnap(snaptype):
     """Testing getting SubSnap."""
     filename = DIR / snaptype.filename
@@ -259,7 +259,7 @@ def test_subsnap(snaptype):
     snap.close_file()
 
 
-@pytest.mark.parametrize('snaptype', [dustseparate])
+@pytest.mark.parametrize('snaptype', [dustmixture, dustseparate])
 def test_sinks(snaptype):
     """Testing getting sink particles."""
     filename = DIR / snaptype.filename
@@ -273,7 +273,7 @@ def test_sinks(snaptype):
     snap.close_file()
 
 
-@pytest.mark.parametrize('snaptype', [dustseparate])
+@pytest.mark.parametrize('snaptype', [dustmixture, dustseparate])
 def test_set_array(snaptype):
     """Testing setting array on particles."""
     filename = DIR / snaptype.filename
@@ -290,7 +290,7 @@ def test_set_array(snaptype):
     snap.close_file()
 
 
-@pytest.mark.parametrize('snaptype', [dustseparate])
+@pytest.mark.parametrize('snaptype', [dustmixture, dustseparate])
 def test_bulk_load(snaptype):
     """Testing bulk loading arrays."""
     filename = DIR / snaptype.filename
@@ -300,7 +300,7 @@ def test_bulk_load(snaptype):
     snap.close_file()
 
 
-@pytest.mark.parametrize('snaptype', [dustseparate])
+@pytest.mark.parametrize('snaptype', [dustmixture, dustseparate])
 def test_read_write_extra(snaptype):
     """Testing read write extra arrays."""
     filename = DIR / snaptype.filename
@@ -322,7 +322,7 @@ def test_read_write_extra(snaptype):
     snap.close_file()
 
 
-@pytest.mark.parametrize('snaptype', [dustseparate])
+@pytest.mark.parametrize('snaptype', [dustmixture, dustseparate])
 def test_plot_as_methods(snaptype):
     """Testing plot methods."""
     filename = DIR / snaptype.filename
@@ -341,7 +341,7 @@ def test_plot_as_methods(snaptype):
     snap.close_file()
 
 
-@pytest.mark.parametrize('snaptype', [dustseparate])
+@pytest.mark.parametrize('snaptype', [dustmixture, dustseparate])
 def test_context(snaptype):
     """Testing cache context manager."""
     filename = DIR / snaptype.filename

@@ -71,6 +71,8 @@ available_arrays = [
     'velocity_radial_spherical',
 ]
 
+loaded_arrays = ['angular_momentum', 'mass', 'position', 'smoothing_length', 'velocity']
+
 position_shape = (2000, 3)
 
 mean_ev_values = {
