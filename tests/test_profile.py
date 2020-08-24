@@ -8,13 +8,17 @@ import pytest
 
 import plonk
 
-TEST_FILE = Path(__file__).parent / 'data/phantom/dustseparate_00000.h5'
-CSV_FILE = Path(__file__).parent / 'data/phantom/dustseparate_00000_profile.csv'
+from .data.phantom import adiabatic, dustmixture, dustseparate, mhd
+
+SNAPTYPES = [adiabatic, dustmixture, dustseparate, mhd]
+DIR = Path(__file__).parent / 'data/phantom'
 
 
-def test_load_profile():
+@pytest.mark.parametrize('snaptype', SNAPTYPES)
+def test_load_profile(snaptype):
     """Test loading Profile."""
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
 
     prof = plonk.load_profile(snap=snap)
     for p in ['aspect_ratio', 'angular_momentum_phi', 'angular_momentum_theta']:
@@ -34,9 +38,11 @@ def test_load_profile():
     snap.close_file()
 
 
-def test_check_data():
+@pytest.mark.parametrize('snaptype', SNAPTYPES)
+def test_check_data(snaptype):
     """Test Profile data accuracy."""
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
     prof = plonk.load_profile(snap)
 
     columns = [
@@ -54,14 +60,17 @@ def test_check_data():
 
     units = ['g/cm^3', 'g', '', 'au', 'au', 'au^2', 'au', 'km/s']
     df = prof.to_dataframe(columns=columns, units=units)
-    pd.testing.assert_frame_equal(df, pd.read_csv(CSV_FILE, index_col=0))
+    profile_file = DIR / snaptype.profile_file
+    pd.testing.assert_frame_equal(df, pd.read_csv(profile_file, index_col=0))
 
     snap.close_file()
 
 
-def test_set_data():
+@pytest.mark.parametrize('snaptype', SNAPTYPES)
+def test_set_data(snaptype):
     """Test setting array on Profile."""
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
 
     prof = plonk.load_profile(snap=snap)
     prof['array'] = np.arange(len(prof)) * plonk.units.au
@@ -73,9 +82,11 @@ def test_set_data():
     snap.close_file()
 
 
-def test_profile_plot():
+@pytest.mark.parametrize('snaptype', SNAPTYPES)
+def test_profile_plot(snaptype):
     """Test loading Profile."""
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
 
     prof = plonk.load_profile(snap=snap)
     prof.plot(x='radius', y='surface_density')
@@ -89,9 +100,11 @@ def test_profile_plot():
     snap.close_file()
 
 
-def test_to_function():
+@pytest.mark.parametrize('snaptype', SNAPTYPES)
+def test_to_function(snaptype):
     """Test to_function."""
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
     prof = plonk.load_profile(snap=snap)
 
     fn = prof.to_function(profile='scale_height')
@@ -99,9 +112,11 @@ def test_to_function():
     snap.close_file()
 
 
-def test_alias():
+@pytest.mark.parametrize('snaptype', SNAPTYPES)
+def test_alias(snaptype):
     """Test using profile aliases."""
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
     prof = plonk.load_profile(snap=snap)
 
     prof.add_alias('scale_height', 'H')

@@ -4,6 +4,8 @@ import numpy as np
 
 filename = 'dustmixture_00000.h5'
 
+profile_file = 'dustmixture_00000_profile.csv'
+
 array_name_map = {
     'deltavxyz': 'differential_velocity',
     'divv': 'velocity_divergence',

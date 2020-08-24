@@ -4,6 +4,8 @@ import numpy as np
 
 filename = 'dustseparate_00000.h5'
 
+profile_file = 'dustseparate_00000_profile.csv'
+
 array_name_map = {
     'divv': 'velocity_divergence',
     'dt': 'timestep',

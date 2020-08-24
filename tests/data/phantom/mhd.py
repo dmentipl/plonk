@@ -2,6 +2,8 @@
 
 filename = 'mhd_00000.h5'
 
+profile_file = 'mhd_00000_profile.csv'
+
 array_name_map = {
     'Bxyz': 'magnetic_field',
     'alpha': 'alpha_viscosity_numerical',

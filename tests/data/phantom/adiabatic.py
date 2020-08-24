@@ -2,6 +2,8 @@
 
 filename = 'adiabatic_00000.h5'
 
+profile_file = 'adiabatic_00000_profile.csv'
+
 array_name_map = {
     'alpha': 'alpha_viscosity_numerical',
     'divv': 'velocity_divergence',
