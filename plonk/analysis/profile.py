@@ -358,7 +358,7 @@ class Profile:
                 label = f'{pretty_array_name(yname)}'
                 if ydata.units != plonk_units.dimensionless:
                     label = f'{pretty_array_name(yname)}'
-                    label += ' [{ydata.units:~P}]'
+                    label += f' [{ydata.units:~P}]'
             [line] = ax.plot(xdata.magnitude, ydata.magnitude, label=label, **kwargs)
             if std:
                 color = line.get_color()
