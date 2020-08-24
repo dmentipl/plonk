@@ -29,6 +29,7 @@ from .._logging import logger
 from .._units import Quantity
 from .._units import units as plonk_units
 from ..utils.math import average
+from ..utils.snap import dust_array_names, vector_array_names
 from ..utils.strings import is_documented_by, pretty_array_name
 from ._profiles import extra_profiles
 
@@ -321,11 +322,16 @@ class Profile:
         if std is not None and std not in ('shading', 'errorbar'):
             raise ValueError('std must be "shading" or "errorbar"')
 
-        if ax is None:
-            _, ax = plt.subplots()
-
         if isinstance(y, str):
-            ynames = [y]
+            if y not in self.available_profiles():
+                if y + '_001' in self.available_profiles():
+                    ynames = dust_array_names(
+                        name=y, num_dust_species=self.snap.num_dust_species
+                    )
+                elif y + '_x' in self.available_profiles():
+                    ynames = vector_array_names(name=y)
+            else:
+                ynames = [y]
         else:
             ynames = y
 
@@ -343,10 +349,16 @@ class Profile:
 
         xdata = self[x].to(xunit)
 
+        if ax is None:
+            _, ax = plt.subplots()
+
         for yname, yunit, label in zip(ynames, yunits, labels):
             ydata = self[yname].to(yunit)
             if label is None:
-                label = f'{pretty_array_name(yname)} [{ydata.units:~P}]'
+                label = f'{pretty_array_name(yname)}'
+                if ydata.units != plonk_units.dimensionless:
+                    label = f'{pretty_array_name(yname)}'
+                    label += ' [{ydata.units:~P}]'
             [line] = ax.plot(xdata.magnitude, ydata.magnitude, label=label, **kwargs)
             if std:
                 color = line.get_color()
