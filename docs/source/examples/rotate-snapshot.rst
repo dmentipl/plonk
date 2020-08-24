@@ -8,6 +8,11 @@ plane.
 .. figure:: ../_static/rotate.png
 .. figure:: ../_static/rotate2.png
 
+.. note::
+
+    The data is from a Phantom simulation with a single dust species using the
+    separate particles (or "2-fluid") method with an embedded planet.
+
 .. code-block:: python
 
     import numpy as np

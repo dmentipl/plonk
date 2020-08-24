@@ -8,9 +8,8 @@ Plot the surface density profile of each dust species.
 
 .. note::
 
-    The data is from a Phantom snapshot with multiple dust species using the
-    mixture (or "1-fluid") method. I.e., the particles carry a mixture of dust
-    and gas.
+    The data is from a Phantom simulation with multiple dust species using the
+    mixture (or "1-fluid") method with an embedded planet.
 
 .. code-block:: python
 

@@ -6,6 +6,11 @@ Plot dust and gas side-by-side.
 
 .. figure:: ../_static/dust_and_gas.png
 
+.. note::
+
+    The data is from a Phantom simulation with a single dust species using the
+    separate particles (or "2-fluid") method with an embedded planet.
+
 .. code-block:: python
 
     import matplotlib.pyplot as plt
