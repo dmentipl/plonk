@@ -388,30 +388,34 @@ class Snap:
     def num_particles(self) -> int:
         """Return number of particles."""
         if self._num_particles == -1:
-            self._num_particles = len(self['type'])
+            with self.context(cache=False):
+                self._num_particles = len(self['type'])
         return self._num_particles
 
     @property
     def num_particles_of_type(self) -> Dict[str, Any]:
         """Return number of particles per type."""
         if self._num_particles_of_type == -1:
-            int_to_name = {idx: name for name, idx in self.particle_type.items()}
-            d = {}
-            ptype: Quantity = self['type']
-            stype: Quantity = self['sub_type']
-            for idx, num in enumerate(np.bincount(ptype.magnitude)):
-                if num > 0:
-                    if idx == self.particle_type['dust']:
-                        # Dust particle sub-type skips zero: 1, 2, 3 ...
-                        d['dust'] = list(
-                            np.bincount(stype[ptype.magnitude == idx].magnitude)[1:]
-                        )
-                    elif idx == self.particle_type['boundary']:
-                        # Boundary particle sub-type: 0 (gas), 1, 2, 3... (dust)
-                        d['boundary'] = list(np.bincount(stype[ptype == idx].magnitude))
-                    else:
-                        d[int_to_name[idx]] = num
-            self._num_particles_of_type = d
+            with self.context(cache=False):
+                int_to_name = {idx: name for name, idx in self.particle_type.items()}
+                d = {}
+                ptype: Quantity = self['type']
+                stype: Quantity = self['sub_type']
+                for idx, num in enumerate(np.bincount(ptype.magnitude)):
+                    if num > 0:
+                        if idx == self.particle_type['dust']:
+                            # Dust particle sub-type skips zero: 1, 2, 3 ...
+                            d['dust'] = list(
+                                np.bincount(stype[ptype.magnitude == idx].magnitude)[1:]
+                            )
+                        elif idx == self.particle_type['boundary']:
+                            # Boundary particle sub-type: 0 (gas), 1, 2, 3... (dust)
+                            d['boundary'] = list(
+                                np.bincount(stype[ptype == idx].magnitude)
+                            )
+                        else:
+                            d[int_to_name[idx]] = num
+                self._num_particles_of_type = d
         return self._num_particles_of_type
 
     @property
@@ -428,7 +432,7 @@ class Snap:
     def num_dust_species(self) -> int:
         """Return number of dust species."""
         if self._num_dust_species == -1:
-            self._num_dust_species = len(self._properties.get('grain_size', []))
+            self._num_dust_species = len(self.properties.get('grain_size', []))
         return self._num_dust_species
 
     @property
