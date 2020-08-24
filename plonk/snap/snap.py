@@ -617,12 +617,15 @@ class Snap:
             indices, one for each subtype. However, if squeeze
             is True, return a single array.
         """
+        with self.context(cache=False):
+            ptype = self['type']
+            stype = self['sub_type']
+
         if particle_type == 'dust' and not squeeze:
             # Dust particle sub-type skips zero: 1, 2, 3 ...
             return [
                 np.flatnonzero(
-                    (self['type'] == self.particle_type['dust'])
-                    & (self['sub_type'] == idx + 1)
+                    (ptype == self.particle_type['dust']) & (stype == idx + 1)
                 )
                 for idx in range(self.num_dust_species)
             ]
@@ -630,12 +633,11 @@ class Snap:
             # Boundary particle sub-type: 0 (gas), 1, 2, 3... (dust)
             return [
                 np.flatnonzero(
-                    (self['type'] == self.particle_type['boundary'])
-                    & (self['sub_type'] == idx)
+                    (ptype == self.particle_type['boundary']) & (stype == idx)
                 )
                 for idx in range(self.num_dust_species + 1)
             ]
-        return np.flatnonzero(self['type'] == self.particle_type[particle_type])
+        return np.flatnonzero(ptype == self.particle_type[particle_type])
 
     def subsnaps_as_dict(
         self, squeeze: bool = False
