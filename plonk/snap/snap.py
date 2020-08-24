@@ -934,6 +934,8 @@ class Snap:
         if name in self.particle_type:
             ind = self.particle_indices(particle_type=name, squeeze=squeeze)
             if isinstance(ind, list):
+                if len(ind) == 0:
+                    raise ValueError('Family has no particles')
                 if len(ind[0]) == 0:
                     raise ValueError('Family has no particles')
                 return [SubSnap(self, _ind) for _ind in ind]

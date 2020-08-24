@@ -1,4 +1,4 @@
-"""Test data for reading Phantom snapshots."""
+"""Test data: Phantom dust as separate particles."""
 
 import numpy as np
 
@@ -74,6 +74,12 @@ available_arrays = [
 loaded_arrays = ['angular_momentum', 'mass', 'position', 'smoothing_length', 'velocity']
 
 position_shape = (2000, 3)
+
+num_sinks = 1
+
+len_gas = 1000
+
+length_unit = 149600000000.0
 
 mean_ev_values = {
     'time': 5.918015573791112,
