@@ -1,4 +1,4 @@
-"""Test data: Phantom adiabatic eos."""
+"""Test data: Phantom adiabatic gas shock in a periodic box."""
 
 filename = 'adiabatic_00000.h5'
 

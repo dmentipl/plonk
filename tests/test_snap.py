@@ -8,10 +8,11 @@ from scipy.spatial.transform import Rotation
 
 import plonk
 
-from .data.phantom import adiabatic, dustmixture, dustseparate
+from .data.phantom import adiabatic, dustmixture, dustseparate, mhd
 
-SNAPTYPES = [adiabatic, dustmixture, dustseparate]
+SNAPTYPES = [adiabatic, dustmixture, dustseparate, mhd]
 DIR = Path(__file__).parent / 'data/phantom'
+RTOL = 1e-6
 
 
 @pytest.mark.parametrize('snaptype', SNAPTYPES)
@@ -87,7 +88,7 @@ def test_read_properties_from_phantom(snaptype):
             snap_value = snap.properties[key]
             numpy_array = True
         if numpy_array:
-            np.testing.assert_allclose(snap_value, value)
+            np.testing.assert_allclose(snap_value, value, rtol=RTOL)
         else:
             assert snap_value == value
 
@@ -184,7 +185,7 @@ def test_translate_snap(snaptype):
     filename = DIR / snaptype.filename
     snap = plonk.load_snap(filename)
 
-    unit = str(snap['position'].units)
+    unit = f"{snap.code_units['length'].m} {snap.code_units['length'].u}"
     snap['position']
     if snap.num_sinks > 0:
         snap.sinks['position']
@@ -286,11 +287,11 @@ def test_set_array(snaptype):
 
     particle_array = np.arange(len(snap)) * plonk.units('dimensionless')
     snap['array'] = particle_array
-    np.testing.assert_allclose(snap['array'].m, particle_array.m)
+    np.testing.assert_allclose(snap['array'].m, particle_array.m, rtol=RTOL)
 
     sink_array = np.arange(len(snap.sinks)) * plonk.units('dimensionless')
     snap.sinks['array'] = sink_array
-    np.testing.assert_allclose(snap.sinks['array'].m, sink_array.m)
+    np.testing.assert_allclose(snap.sinks['array'].m, sink_array.m, rtol=RTOL)
 
     snap.close_file()
 
@@ -320,7 +321,7 @@ def test_read_write_extra(snaptype):
 
     snap = plonk.load_snap(filename)
     snap.read_extra_arrays(filename=_filename)
-    np.allclose(snap['my_array'], arr)
+    np.testing.assert_allclose(snap['my_array'], arr, rtol=RTOL)
 
     _filename.unlink()
 
@@ -375,10 +376,12 @@ def _check_arrays(snap, array_name_map, mean_array_values, std_array_values):
         np.testing.assert_allclose(
             snap.array_in_code_units(array_name_map[array]).mean(),
             mean_array_values[array],
+            rtol=RTOL,
         )
 
     for array in std_array_values.keys():
         np.testing.assert_allclose(
             snap.array_in_code_units(array_name_map[array]).std(),
             std_array_values[array],
+            rtol=RTOL,
         )

@@ -572,7 +572,7 @@ class Snap:
         """
         logger.debug(f'Translating snapshot: {self.file_path.name}')
         if isinstance(translation, (list, tuple)):
-            translation = np.array(translation)
+            translation = np.array(translation, dtype=np.float)
         if translation.shape != (3,):
             raise ValueError('translation must be like (x, y, z)')
         if isinstance(translation, Quantity):
