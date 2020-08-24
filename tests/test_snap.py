@@ -8,69 +8,34 @@ from scipy.spatial.transform import Rotation
 
 import plonk
 
-from .data.phantom.dustseparate_snapshot import (
-    array_name_map,
-    mean_array_values,
-    properties,
-    std_array_values,
-)
+from .data.phantom import dustseparate
 
-TEST_FILE = Path(__file__).parent / 'data/phantom/dustseparate_00000.h5'
-AVAILABLE_ARRAYS = [
-    'angular_momentum',
-    'angular_velocity',
-    'azimuthal_angle',
-    'density',
-    'dust_to_gas_ratio',
-    'eccentricity',
-    'id',
-    'inclination',
-    'keplerian_frequency',
-    'kinetic_energy',
-    'mass',
-    'momentum',
-    'polar_angle',
-    'position',
-    'pressure',
-    'radius_cylindrical',
-    'radius_spherical',
-    'semi_major_axis',
-    'smoothing_length',
-    'sound_speed',
-    'specific_angular_momentum',
-    'specific_kinetic_energy',
-    'stokes_number',
-    'stopping_time',
-    'sub_type',
-    'temperature',
-    'timestep',
-    'type',
-    'velocity',
-    'velocity_divergence',
-    'velocity_radial_cylindrical',
-    'velocity_radial_spherical',
-]
+DIR = Path(__file__).parent / 'data/phantom'
 
 
-def test_load_phantom_snap():
+@pytest.mark.parametrize('snaptype', [dustseparate])
+def test_load_phantom_snap(snaptype):
     """Testing reading Phantom HDF5 snapshots."""
     # Read from Path
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
     snap.close_file()
     # Read from str
-    snap = plonk.load_snap(str(TEST_FILE))
+    snap = plonk.load_snap(str(filename))
     snap.close_file()
     # Not exists
     with pytest.raises(FileNotFoundError):
         plonk.load_snap('does_not_exist.h5')
 
 
-def test_get_item():
+@pytest.mark.parametrize('snaptype', [dustseparate])
+def test_get_item(snaptype):
     """Testing getting items from Snap."""
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
 
     position = snap['position']
-    assert position.shape == (2000, 3)
+    assert position.shape == snaptype.position_shape
 
     subsnap = snap['gas']
     assert type(subsnap) == plonk.snap.snap.SubSnap
@@ -90,18 +55,27 @@ def test_get_item():
     snap.close_file()
 
 
-def test_read_particle_arrays_from_phantom():
+@pytest.mark.parametrize('snaptype', [dustseparate])
+def test_read_particle_arrays_from_phantom(snaptype):
     """Testing reading Phantom HDF5 snapshot particle arrays."""
-    snap = plonk.load_snap(TEST_FILE)
-    _check_arrays(snap)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
+    _check_arrays(
+        snap,
+        snaptype.array_name_map,
+        snaptype.mean_array_values,
+        snaptype.std_array_values,
+    )
     snap.close_file()
 
 
-def test_read_properties_from_phantom():
+@pytest.mark.parametrize('snaptype', [dustseparate])
+def test_read_properties_from_phantom(snaptype):
     """Testing reading Phantom HDF5 snapshot properties."""
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
 
-    for key, value in properties.items():
+    for key, value in snaptype.properties.items():
         if isinstance(snap.properties[key], plonk.units.Quantity):
             snap_value = snap.properties[key].magnitude
             numpy_array = True
@@ -119,11 +93,13 @@ def test_read_properties_from_phantom():
     snap.close_file()
 
 
-def test_available_loaded_arrays():
+@pytest.mark.parametrize('snaptype', [dustseparate])
+def test_available_loaded_arrays(snaptype):
     """Testing seeing available/loaded arrays on Snap."""
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
 
-    assert snap.available_arrays() == AVAILABLE_ARRAYS
+    assert snap.available_arrays() == snaptype.available_arrays
 
     for arr in [
         'position_x',
@@ -140,9 +116,11 @@ def test_available_loaded_arrays():
     snap.close_file()
 
 
-def test_array_code_unit():
+@pytest.mark.parametrize('snaptype', [dustseparate])
+def test_array_code_unit(snaptype):
     """Testing getting array code unit."""
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
 
     position_unit = 149600000000.0 * plonk.units('meter')
     assert snap.array_code_unit('position') == position_unit
@@ -156,44 +134,73 @@ def test_array_code_unit():
     snap.close_file()
 
 
-def test_rotate_snap():
+@pytest.mark.parametrize('snaptype', [dustseparate])
+def test_rotate_snap(snaptype):
     """Testing rotating Snap."""
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
 
     snap['position']
     snap['radius_cylindrical']
     snap.sinks['position']
     snap.rotate(axis=(1, 2, 3), angle=np.pi)
     snap.rotate(axis=(1, 2, 3), angle=-np.pi)
-    _check_arrays(snap)
+    _check_arrays(
+        snap,
+        snaptype.array_name_map,
+        snaptype.mean_array_values,
+        snaptype.std_array_values,
+    )
 
     snap.rotate(axis=(1, 2, 3), angle=np.pi)
     snap.reset()
-    _check_arrays(snap)
+    _check_arrays(
+        snap,
+        snaptype.array_name_map,
+        snaptype.mean_array_values,
+        snaptype.std_array_values,
+    )
 
     rot = np.array([1, 2, 3])
     rot = rot / np.linalg.norm(rot)
     rot *= np.pi
     rotation = Rotation.from_rotvec(rot)
     snap.rotate(rotation=rotation)
-    _check_arrays(snap)
+    _check_arrays(
+        snap,
+        snaptype.array_name_map,
+        snaptype.mean_array_values,
+        snaptype.std_array_values,
+    )
 
     snap.close_file()
 
 
-def test_translate_snap():
+@pytest.mark.parametrize('snaptype', [dustseparate])
+def test_translate_snap(snaptype):
     """Testing translating Snap."""
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
 
     snap['position']
     snap.sinks['position']
     snap.translate(translation=(100, 200, 300), unit='au')
     snap.translate(translation=(-100, -200, -300), unit='au')
-    _check_arrays(snap)
+    _check_arrays(
+        snap,
+        snaptype.array_name_map,
+        snaptype.mean_array_values,
+        snaptype.std_array_values,
+    )
 
     snap.translate(translation=(100, 200, 300), unit='au')
     snap.reset()
-    _check_arrays(snap)
+    _check_arrays(
+        snap,
+        snaptype.array_name_map,
+        snaptype.mean_array_values,
+        snaptype.std_array_values,
+    )
 
     with pytest.raises(ValueError):
         snap.translate(translation=(100, 200, 300))
@@ -203,14 +210,21 @@ def test_translate_snap():
 
     snap.translate(translation=(100, 200, 300) * plonk.units('au'), unit='au')
     snap.translate(translation=(-100, -200, -300) * plonk.units('au'), unit='au')
-    _check_arrays(snap)
+    _check_arrays(
+        snap,
+        snaptype.array_name_map,
+        snaptype.mean_array_values,
+        snaptype.std_array_values,
+    )
 
     snap.close_file()
 
 
-def test_write_to_dataframe():
+@pytest.mark.parametrize('snaptype', [dustseparate])
+def test_write_to_dataframe(snaptype):
     """Testing writing Snap to DataFrame."""
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
 
     columns = ['position', 'density', 'smoothing_length']
     snap.to_dataframe(columns=columns)
@@ -221,9 +235,11 @@ def test_write_to_dataframe():
     snap.close_file()
 
 
-def test_subsnap():
+@pytest.mark.parametrize('snaptype', [dustseparate])
+def test_subsnap(snaptype):
     """Testing getting SubSnap."""
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
 
     gas = snap['gas']
     assert len(gas) == 1000
@@ -243,9 +259,11 @@ def test_subsnap():
     snap.close_file()
 
 
-def test_sinks():
+@pytest.mark.parametrize('snaptype', [dustseparate])
+def test_sinks(snaptype):
     """Testing getting sink particles."""
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
 
     sinks = snap.sinks
 
@@ -255,9 +273,11 @@ def test_sinks():
     snap.close_file()
 
 
-def test_set_array():
+@pytest.mark.parametrize('snaptype', [dustseparate])
+def test_set_array(snaptype):
     """Testing setting array on particles."""
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
 
     particle_array = np.arange(len(snap)) * plonk.units('dimensionless')
     snap['array'] = particle_array
@@ -270,37 +290,43 @@ def test_set_array():
     snap.close_file()
 
 
-def test_bulk_load():
+@pytest.mark.parametrize('snaptype', [dustseparate])
+def test_bulk_load(snaptype):
     """Testing bulk loading arrays."""
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
     snap.bulk_load()
 
     snap.close_file()
 
 
-def test_read_write_extra():
+@pytest.mark.parametrize('snaptype', [dustseparate])
+def test_read_write_extra(snaptype):
     """Testing read write extra arrays."""
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
 
-    filename = Path('tmp.h5')
+    _filename = Path('tmp.h5')
 
     arr = np.arange(len(snap)) * plonk.units('dimensionless')
     snap['my_array'] = arr
-    snap.write_extra_arrays(arrays=['my_array'], filename=filename)
+    snap.write_extra_arrays(arrays=['my_array'], filename=_filename)
     snap = None
 
-    snap = plonk.load_snap(TEST_FILE)
-    snap.read_extra_arrays(filename=filename)
+    snap = plonk.load_snap(filename)
+    snap.read_extra_arrays(filename=_filename)
     np.allclose(snap['my_array'], arr)
 
-    filename.unlink()
+    _filename.unlink()
 
     snap.close_file()
 
 
-def test_plot_as_methods():
+@pytest.mark.parametrize('snaptype', [dustseparate])
+def test_plot_as_methods(snaptype):
     """Testing plot methods."""
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
 
     snap.image('density', number_of_pixels=(16, 16))
     snap.plot()
@@ -315,9 +341,11 @@ def test_plot_as_methods():
     snap.close_file()
 
 
-def test_context():
+@pytest.mark.parametrize('snaptype', [dustseparate])
+def test_context(snaptype):
     """Testing cache context manager."""
-    snap = plonk.load_snap(TEST_FILE)
+    filename = DIR / snaptype.filename
+    snap = plonk.load_snap(filename)
 
     snap.cache_arrays = True
     with snap.context(cache=False):
@@ -336,7 +364,7 @@ def test_context():
     snap.close_file()
 
 
-def _check_arrays(snap):
+def _check_arrays(snap, array_name_map, mean_array_values, std_array_values):
     for array in mean_array_values.keys():
         np.testing.assert_allclose(
             snap.array_in_code_units(array_name_map[array]).mean(),

@@ -7,7 +7,7 @@ import pytest
 
 import plonk
 
-from .data.phantom.dustseparate_evolution import mean_values
+from .data.phantom.dustseparate import mean_ev_values
 
 TEST_FILE = Path(__file__).parent / 'data/phantom/dustseparate01.ev'
 
@@ -29,7 +29,7 @@ def test_read_evolution_data():
     """Test reading data from Phantom evolution files."""
     ev = plonk.load_ev(TEST_FILE)
 
-    assert set(ev.columns) == mean_values.keys()
+    assert set(ev.columns) == mean_ev_values.keys()
 
     for key in ev.columns:
-        np.testing.assert_allclose(ev[key].mean(), mean_values[key])
+        np.testing.assert_allclose(ev[key].mean(), mean_ev_values[key])
