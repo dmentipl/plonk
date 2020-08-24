@@ -51,15 +51,17 @@ def add_aliases(snap: SnapLike, filename: Union[str, Path] = None):
         snap.add_alias(key, val)
 
 
-def dust_array_names(snap: SnapLike, name: str, add_gas: bool = False) -> List[str]:
+def dust_array_names(
+    name: str, num_dust_species: int, add_gas: bool = False
+) -> List[str]:
     """List dust array names.
 
     Parameters
     ----------
-    snap
-        The Snap object.
     name
         The base array name, e.g. "dust_density" or "stopping_time".
+    num_dust_species
+        The number of dust species.
     add_gas
         If True add the gas version of the dust name.
 
@@ -72,7 +74,7 @@ def dust_array_names(snap: SnapLike, name: str, add_gas: bool = False) -> List[s
     --------
     Get the dust density strings.
 
-    >>> dust_name_list(snap, 'dust_density')
+    >>> dust_name_list('dust_density', 5)
     ['dust_density_001',
      'dust_density_002',
      'dust_density_003',
@@ -81,7 +83,7 @@ def dust_array_names(snap: SnapLike, name: str, add_gas: bool = False) -> List[s
 
     Get the dust density strings with gas.
 
-    >>> dust_name_list(snap=snap, name='dust_density' add_gas=True)
+    >>> dust_name_list(name='dust_density', num_dust_species=5, add_gas=True)
     ['gas_density',
      'dust_density_001',
      'dust_density_002',
@@ -92,17 +94,15 @@ def dust_array_names(snap: SnapLike, name: str, add_gas: bool = False) -> List[s
     names = list()
     if add_gas:
         names.append(f'{name.replace("dust", "gas")}')
-    names += [f'{name}_{n+1:03}' for n in range(snap.num_dust_species)]
+    names += [f'{name}_{n+1:03}' for n in range(num_dust_species)]
     return names
 
 
-def vector_array_names(snap: SnapLike, name: str, add_mag: bool = False) -> List[str]:
+def vector_array_names(name: str, add_mag: bool = False) -> List[str]:
     """List vector array names.
 
     Parameters
     ----------
-    snap
-        The Snap object.
     name
         The base array name, e.g. "angular_momentum".
     add_mag
@@ -117,14 +117,14 @@ def vector_array_names(snap: SnapLike, name: str, add_mag: bool = False) -> List
     --------
     Get the angular momentum strings.
 
-    >>> vector_name_list(snap, 'angular_momentum')
+    >>> vector_name_list('angular_momentum')
     ['angular_momentum_x',
      'angular_momentum_y',
      'angular_momentum_z']
 
     Get the angular momentum strings with magnitude.
 
-    >>> vector_name_list(snap, 'angular_momentum', add_mag=True)
+    >>> vector_name_list(name='angular_momentum', add_mag=True)
     ['angular_momentum_x',
      'angular_momentum_y',
      'angular_momentum_z',
