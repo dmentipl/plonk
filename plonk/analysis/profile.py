@@ -323,15 +323,7 @@ class Profile:
             raise ValueError('std must be "shading" or "errorbar"')
 
         ynames = _yname_from_yinput(y, self)
-
-        labels: Sequence[Optional[str]]
-        if label is not None:
-            if isinstance(label, str):
-                labels = [label]
-            else:
-                labels = label
-        else:
-            labels = [None for _ in ynames]
+        labels = _labels(label, ynames)
 
         xunit = _get_unit(self, x, units)
         yunits = [_get_unit(self, y, units) for y in ynames]
@@ -729,6 +721,16 @@ def _yname_from_yinput(y, profile):
             return [y]
         return [y]
     return y
+
+
+def _labels(label, ynames):
+    labels: Sequence[Optional[str]]
+    if label is not None:
+        if isinstance(label, str):
+            return [label for _ in ynames]
+        return label
+    else:
+        return [None for _ in ynames]
 
 
 def _std_plot(profile, xdata, ydata, yname, yunit, std, color, ax):
