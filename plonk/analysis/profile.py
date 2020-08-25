@@ -322,18 +322,7 @@ class Profile:
         if std is not None and std not in ('shading', 'errorbar'):
             raise ValueError('std must be "shading" or "errorbar"')
 
-        if isinstance(y, str):
-            if y not in self.available_profiles():
-                if y + '_001' in self.available_profiles():
-                    ynames = dust_array_names(
-                        name=y, num_dust_species=self.snap.num_dust_species
-                    )
-                elif y + '_x' in self.available_profiles():
-                    ynames = vector_array_names(name=y)
-            else:
-                ynames = [y]
-        else:
-            ynames = y
+        ynames = _yname_from_yinput(y, self)
 
         labels: Sequence[Optional[str]]
         if label is not None:
@@ -726,6 +715,20 @@ def _get_unit(profile, name, units):
     if base_name in profile.default_units:
         return 1 * plonk_units(profile.default_units[base_name])
     return 1 * profile[name].units
+
+
+def _yname_from_yinput(y, profile):
+    if isinstance(y, str):
+        if y not in profile.available_profiles():
+            if y + '_001' in profile.available_profiles():
+                return dust_array_names(
+                    name=y, num_dust_species=profile.snap.num_dust_species
+                )
+            elif y + '_x' in profile.available_profiles():
+                return vector_array_names(name=y)
+            return [y]
+        return [y]
+    return y
 
 
 def _std_plot(profile, xdata, ydata, yname, yunit, std, color, ax):
