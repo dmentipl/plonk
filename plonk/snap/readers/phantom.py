@@ -18,6 +18,51 @@ from ..snap import Snap
 
 igas, iboundary, istar, idarkmatter, ibulge = 1, 3, 4, 5, 6
 bignumber = 1e29
+missing_infile_parameters = ['alpha', 'alphaB', 'alphau', 'C_cour', 'C_force', 'tolh']
+
+
+def add_to_header_from_infile(
+    snapfile: Union[str, Path], infile: Union[str, Path], parameters: List[str] = None,
+):
+    """Add missing values to Phantom snapshot header.
+
+    Some values can be missing from the Phantom snapshot header after
+    conversion from the non-HDF5 file format. These values are
+    available in the in-file. This function reads the infile and sets
+    the values in the Phantom-HDF5 snapshot file header.
+
+    Parameters
+    ----------
+    snapfile
+        The path to the snapshot file.
+    infile
+        The path to the in-file.
+    parameters : optional
+        A list of strings of parameters to set in the snap header from
+        the in-file.
+    """
+    try:
+        import phantomconfig as pc
+    except ModuleNotFoundError as e:
+        print(
+            'phantom-config unavailable, '
+            'install with python -m pip install phantomconfig'
+        )
+        raise e
+    if parameters is None:
+        parameters = missing_infile_parameters
+    config = pc.read_config(infile)
+    logger.info(f'Reading parameters in {infile}')
+    filename = Path(snapfile).expanduser()
+    if not filename.is_file():
+        raise FileNotFoundError('Cannot find snapshot file')
+    file = h5py.File(filename, mode='r+')
+    logger.info(f'Opening snapshot file {snapfile}')
+    for param in parameters:
+        if param in config.config:
+            logger.info(f'Updating {param} from in-file')
+            file[f'header/{param}'][()] = config.config[param].value
+    file.close()
 
 
 def fileid(snap: Snap) -> str:
