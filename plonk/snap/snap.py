@@ -598,7 +598,7 @@ class Snap:
         return self
 
     def particle_indices(
-        self, particle_type: str, squeeze: bool = False,
+        self, particle_type: str, squeeze: bool = False
     ) -> Union[ndarray, List[ndarray]]:
         """Particle indices of a particular type.
 
@@ -930,9 +930,6 @@ class Snap:
         Returns
         -------
         SubSnap or List[SubSnap]
-            If the particle family has no sub-types then return a
-            SubSnap. Otherwise, if split_subtype is True, return a list
-            of SubSnaps.
         """
         if name in self.particle_type:
             ind = self.particle_indices(particle_type=name, squeeze=squeeze)
@@ -1339,6 +1336,8 @@ class Sinks:
         self.file_path = self.base.file_path
         self.base_array_name = self.base.base_array_name
         self.default_units = self.base.default_units
+        self.rotation = self.base.rotation
+        self.translation = self.base.translation
 
     @property
     def indices(self) -> ndarray:

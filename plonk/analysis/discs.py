@@ -298,69 +298,61 @@ def stokes_number(
     return Stokes
 
 
-def normal(snap: SnapLike, ignore_accreted: bool = True) -> ndarray:
+def unit_normal(snap: SnapLike) -> ndarray:
     """Calculate unit normal to disc.
 
     Parameters
     ----------
     snap
-        The Snap object.
-    ignore_accreted : optional
-        Ignore accreted particles. Default is True.
+        The Snap object which is assumed to be a single disc.
 
     Returns
     -------
     ndarray
         A unit normal to the plane of the disc.
     """
-    origin = center_of_mass(snap=snap, ignore_accreted=ignore_accreted)
-    L = angular_momentum(
-        snap=snap, origin=origin, ignore_accreted=ignore_accreted
-    ).magnitude
+    origin = center_of_mass(snap=snap, sinks=False)
+    L = angular_momentum(snap=snap, sinks=False, origin=origin).magnitude
     return L / np.linalg.norm(L)
 
 
-def rotate_face_on(snap: SnapLike, ignore_accreted: bool = True) -> SnapLike:
+def rotate_face_on(snap: SnapLike) -> SnapLike:
     """Rotate disc to face-on.
 
     Parameters
     ----------
     snap
         The Snap object.
-    ignore_accreted : optional
-        Ignore accreted particles. Default is True.
 
     Returns
     -------
     Snap
         The rotated Snap.
     """
-    x, y, z = normal(snap=snap, ignore_accreted=ignore_accreted)
+    x, y, z = unit_normal(snap=snap)
     axis = (-x, y, 0)
     angle = np.arctan(np.sqrt(x ** 2 + y ** 2) / z)
     return snap.rotate(axis=axis, angle=angle)
 
 
-def rotate_edge_on(snap: SnapLike, ignore_accreted: bool = True) -> SnapLike:
+def rotate_edge_on(snap: SnapLike) -> SnapLike:
     """Rotate disc to edge-on.
 
     Parameters
     ----------
     snap
         The Snap object.
-    ignore_accreted : optional
-        Ignore accreted particles. Default is True.
 
     Returns
     -------
     Snap
         The rotated Snap.
     """
-    snap = rotate_face_on(snap=snap, ignore_accreted=ignore_accreted)
+    snap = rotate_face_on(snap=snap)
     return snap.rotate(axis=(1, 0, 0), angle=np.pi / 2)
 
 
-def position_angle(snap: SnapLike, ignore_accreted: bool = True) -> Quantity:
+def position_angle(snap: SnapLike) -> Quantity:
     """Calculate the disc position angle.
 
     The position angle is taken from the x-axis in the xy-plane. It
@@ -370,15 +362,13 @@ def position_angle(snap: SnapLike, ignore_accreted: bool = True) -> Quantity:
     ----------
     snap
         The Snap object.
-    ignore_accreted : optional
-        Ignore accreted particles. Default is True.
 
     Returns
     -------
     Quantity
         The disc position angle.
     """
-    angmom = angular_momentum(snap=snap, ignore_accreted=ignore_accreted)
+    angmom = angular_momentum(snap=snap)
     if isinstance(angmom, Quantity):
         pi_2 = np.pi / 2 * Quantity('radian')
     else:
@@ -386,7 +376,7 @@ def position_angle(snap: SnapLike, ignore_accreted: bool = True) -> Quantity:
     return np.arctan2(angmom[1], angmom[0]) + pi_2
 
 
-def inclination_disc(snap: SnapLike, ignore_accreted: bool = True) -> Quantity:
+def inclination_disc(snap: SnapLike) -> Quantity:
     """Calculate the disc inclination.
 
     The inclination is calculated by taking the angle between the
@@ -397,13 +387,11 @@ def inclination_disc(snap: SnapLike, ignore_accreted: bool = True) -> Quantity:
     ----------
     snap
         The Snap object.
-    ignore_accreted : optional
-        Ignore accreted particles. Default is True.
 
     Returns
     -------
     Quantity
         The disc inclination.
     """
-    angmom = angular_momentum(snap=snap, ignore_accreted=ignore_accreted)
+    angmom = angular_momentum(snap=snap)
     return np.arccos(angmom[2] / norm(angmom))

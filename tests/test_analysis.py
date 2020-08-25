@@ -102,7 +102,7 @@ def test_discs(snaptype):
         snap.set_gravitational_parameter(0)
     mu = snap.properties.get('gravitational_parameter')
 
-    discs.normal(snap=snap)
+    discs.unit_normal(snap=snap)
     discs.rotate_edge_on(snap=snap)
     discs.rotate_face_on(snap=snap)
 

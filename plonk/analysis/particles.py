@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 import numpy as np
 
@@ -12,7 +12,7 @@ from .._units import units as plonk_units
 from ..utils.math import cross, norm
 
 if TYPE_CHECKING:
-    from ..snap.snap import SnapLike
+    from ..snap.snap import Sinks, SnapLike
 
 ORIGIN = (0, 0, 0) * plonk_units.au
 MOLECULAR_HYDROGEN_WEIGHT = 2.381
@@ -48,7 +48,7 @@ dust_arrays = ['dust_density', 'dust_mass', 'stokes_number']
 
 
 def angular_momentum(
-    snap: SnapLike, origin: Quantity = None, ignore_accreted: bool = False
+    snap: Union[SnapLike, Sinks], origin: Quantity = None, ignore_accreted: bool = False
 ) -> Quantity:
     """Calculate the angular momentum.
 
@@ -80,11 +80,13 @@ def angular_momentum(
     origin = snap.translation if snap.translation is not None else ORIGIN
     pos = pos - origin
 
+    if pos.ndim == 1:
+        return mass * cross(pos, vel)
     return mass[:, np.newaxis] * cross(pos, vel)
 
 
 def angular_velocity(
-    snap: SnapLike, origin: Quantity = None, ignore_accreted: bool = False
+    snap: Union[SnapLike, Sinks], origin: Quantity = None, ignore_accreted: bool = False
 ) -> Quantity:
     """Calculate the angular velocity.
 
@@ -123,7 +125,7 @@ def angular_velocity(
 
 
 def azimuthal_angle(
-    snap: SnapLike, origin: Quantity = None, ignore_accreted: bool = False
+    snap: Union[SnapLike, Sinks], origin: Quantity = None, ignore_accreted: bool = False
 ) -> Quantity:
     """Calculate the azimuthal angle.
 
@@ -337,7 +339,9 @@ def gas_mass(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
     return mass * _gas_fraction
 
 
-def kinetic_energy(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
+def kinetic_energy(
+    snap: Union[SnapLike, Sinks], ignore_accreted: bool = False
+) -> Quantity:
     """Calculate the kinetic energy.
 
     Parameters
@@ -363,7 +367,7 @@ def kinetic_energy(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
     return 1 / 2 * mass * norm(vel, axis=1) ** 2
 
 
-def momentum(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
+def momentum(snap: Union[SnapLike, Sinks], ignore_accreted: bool = False) -> Quantity:
     """Calculate the momentum.
 
     Parameters
@@ -386,11 +390,13 @@ def momentum(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
         mass = snap['mass']
         vel = snap['velocity']
 
+    if vel.ndim == 1:
+        return mass * vel
     return mass[:, np.newaxis] * vel
 
 
 def polar_angle(
-    snap: SnapLike, origin: Quantity = None, ignore_accreted: bool = False
+    snap: Union[SnapLike, Sinks], origin: Quantity = None, ignore_accreted: bool = False
 ) -> Quantity:
     """Calculate the polar angle.
 
@@ -424,7 +430,9 @@ def polar_angle(
 
 
 def radius_cylindrical(
-    snap: SnapLike, origin: Quantity = None, ignore_accreted: bool = False,
+    snap: Union[SnapLike, Sinks],
+    origin: Quantity = None,
+    ignore_accreted: bool = False,
 ) -> Quantity:
     """Calculate the cylindrical radial distance.
 
@@ -455,7 +463,9 @@ def radius_cylindrical(
 
 
 def radius_spherical(
-    snap: SnapLike, origin: Quantity = None, ignore_accreted: bool = False,
+    snap: Union[SnapLike, Sinks],
+    origin: Quantity = None,
+    ignore_accreted: bool = False,
 ) -> Quantity:
     """Calculate the spherical radial distance.
 
@@ -486,7 +496,7 @@ def radius_spherical(
 
 
 def specific_angular_momentum(
-    snap: SnapLike, origin: Quantity = None, ignore_accreted: bool = False
+    snap: Union[SnapLike, Sinks], origin: Quantity = None, ignore_accreted: bool = False
 ) -> Quantity:
     """Calculate the specific angular momentum.
 
@@ -519,7 +529,9 @@ def specific_angular_momentum(
     return cross(pos, vel)
 
 
-def specific_kinetic_energy(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
+def specific_kinetic_energy(
+    snap: Union[SnapLike, Sinks], ignore_accreted: bool = False
+) -> Quantity:
     """Calculate the specific kinetic energy.
 
     Parameters
@@ -586,7 +598,7 @@ def temperature(
 
 
 def velocity_radial_cylindrical(
-    snap: SnapLike, origin: Quantity = None, ignore_accreted: bool = False
+    snap: Union[SnapLike, Sinks], origin: Quantity = None, ignore_accreted: bool = False
 ) -> Quantity:
     """Calculate the cylindrical radial velocity.
 
@@ -623,7 +635,7 @@ def velocity_radial_cylindrical(
 
 
 def velocity_radial_spherical(
-    snap: SnapLike, origin: Quantity = None, ignore_accreted: bool = False
+    snap: Union[SnapLike, Sinks], origin: Quantity = None, ignore_accreted: bool = False
 ) -> Quantity:
     """Calculate the spherical radial velocity.
 
