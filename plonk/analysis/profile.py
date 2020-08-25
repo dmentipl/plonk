@@ -31,7 +31,7 @@ from .._units import units as plonk_units
 from ..utils.math import average
 from ..utils.snap import dust_array_names, vector_array_names
 from ..utils.strings import is_documented_by, pretty_array_name
-from ._profiles import extra_profiles
+from .extra import extra_profiles
 
 if TYPE_CHECKING:
     from ..snap.snap import SnapLike
