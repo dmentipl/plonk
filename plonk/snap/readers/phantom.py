@@ -13,7 +13,6 @@ from ..._logging import logger
 from ..._units import Quantity, array_units, generate_array_code_units
 from ..._units import units as plonk_units
 from ...utils.snap import add_aliases
-from ..extra import extra_quantities
 from ..snap import Snap
 
 igas, iboundary, istar, idarkmatter, ibulge = 1, 3, 4, 5, 6
@@ -164,7 +163,7 @@ def generate_snap_from_file(
     add_aliases(snap)
 
     # OPTIONAL: Make extra derived quantities available.
-    extra_quantities(snap)
+    snap.add_quantities()
 
     # REQUIRED: Return Snap object.
     return snap

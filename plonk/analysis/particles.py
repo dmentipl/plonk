@@ -25,21 +25,16 @@ array_requires = {
     'azimuthal_angle': ['position'],
     'dust_density': ['density', 'dust_fraction'],
     'dust_mass': ['dust_fraction', 'mass'],
-    'eccentricity': ['position', 'velocity'],
     'gas_density': ['density', 'dust_fraction'],
     'gas_fraction': ['dust_fraction'],
     'gas_mass': ['dust_fraction', 'mass'],
-    'inclination': ['mass', 'position', 'velocity'],
-    'keplerian_frequency': ['position'],
     'kinetic_energy': ['mass', 'velocity'],
     'momentum': ['mass', 'velocity'],
     'polar_angle': ['position'],
     'radius_cylindrical': ['position'],
     'radius_spherical': ['position'],
-    'semi_major_axis': ['position', 'velocity'],
     'specific_angular_momentum': ['position', 'velocity'],
     'specific_kinetic_energy': ['velocity'],
-    'stokes_number': ['position', 'stopping_time'],
     'temperature': ['sound_speed'],
     'velocity_radial_cylindrical': ['position', 'velocity'],
     'velocity_radial_spherical': ['position', 'velocity'],
@@ -88,13 +83,18 @@ def angular_momentum(
     return mass[:, np.newaxis] * cross(pos, vel)
 
 
-def angular_velocity(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
+def angular_velocity(
+    snap: SnapLike, origin: Quantity = None, ignore_accreted: bool = False
+) -> Quantity:
     """Calculate the angular velocity.
 
     Parameters
     ----------
     snap
         The Snap object.
+    origin : optional
+        The origin around which to compute the angular momentum as a
+        Quantity like (x, y, z) * au. Default is (0, 0, 0).
     ignore_accreted : optional
         Ignore accreted particles. Default is False.
 
@@ -111,6 +111,9 @@ def angular_velocity(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
         pos = snap['position']
         vel = snap['velocity']
 
+    origin = snap.translation if snap.translation is not None else ORIGIN
+    pos = pos - origin
+
     x, y = pos[:, 0], pos[:, 1]
     vx, vy = vel[:, 0], vel[:, 1]
 
@@ -119,13 +122,18 @@ def angular_velocity(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
     return vphi
 
 
-def azimuthal_angle(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
+def azimuthal_angle(
+    snap: SnapLike, origin: Quantity = None, ignore_accreted: bool = False
+) -> Quantity:
     """Calculate the azimuthal angle.
 
     Parameters
     ----------
     snap
         The Snap object.
+    origin : optional
+        The origin around which to compute the angular momentum as a
+        Quantity like (x, y, z) * au. Default is (0, 0, 0).
     ignore_accreted : optional
         Ignore accreted particles. Default is False.
 
@@ -139,6 +147,9 @@ def azimuthal_angle(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
         pos: Quantity = snap['position'][h > 0]
     else:
         pos = snap['position']
+
+    origin = snap.translation if snap.translation is not None else ORIGIN
+    pos = pos - origin
 
     x, y = pos[:, 0], pos[:, 1]
     return np.arctan2(y, x)
@@ -218,66 +229,6 @@ def dust_mass(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
         _dust_mass = mass[:, np.newaxis] * _dust_fraction
         return _dust_mass[h > 0]
     return mass[:, np.newaxis] * _dust_fraction
-
-
-def eccentricity(
-    snap: SnapLike,
-    gravitational_parameter: Quantity = None,
-    origin: Quantity = None,
-    ignore_accreted: bool = False,
-) -> Quantity:
-    """Calculate the eccentricity.
-
-    The eccentricity of particles around a mass specified by
-    gravitational parameter with an optional to specify the position of
-    the mass.
-
-    Parameters
-    ----------
-    snap
-        The Snap object.
-    gravitational_parameter
-        The gravitational parameter (mu = G M) as a Pint quantity.
-    origin : optional
-        The origin around which to compute the eccentricity as a
-        Quantity like (x, y, z) * au. Default is (0, 0, 0).
-    ignore_accreted : optional
-        Ignore accreted particles. Default is False.
-
-    Returns
-    -------
-    Quantity
-        The eccentricity on the particles.
-    """
-    if ignore_accreted:
-        h: Quantity = snap['smoothing_length']
-        pos: Quantity = snap['position'][h > 0]
-        vel: Quantity = snap['velocity'][h > 0]
-    else:
-        pos = snap['position']
-        vel = snap['velocity']
-
-    origin = snap.translation if snap.translation is not None else ORIGIN
-    pos = pos - origin
-
-    mu = snap.properties.get('gravitational_parameter')
-    if mu is None:
-        raise ValueError(
-            'must pass in gravitational_parameter or '
-            'set on Snap with set_gravitational_parameter'
-        )
-
-    radius = norm(pos, axis=1)
-
-    _specific_angular_momentum = cross(pos, vel)
-    specific_angular_momentum_magnitude = norm(_specific_angular_momentum, axis=1)
-
-    _specific_kinetic_energy = 1 / 2 * norm(vel, axis=1) ** 2
-    specific_potential_energy = -mu / radius
-    specific_energy = _specific_kinetic_energy + specific_potential_energy
-
-    term = specific_energy * (specific_angular_momentum_magnitude / mu) ** 2
-    return np.sqrt(1 + 2 * term)
 
 
 def gas_density(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
@@ -386,94 +337,6 @@ def gas_mass(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
     return mass * _gas_fraction
 
 
-def inclination(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
-    """Calculate the inclination.
-
-    The inclination is calculated by taking the angle between the
-    angular momentum vector and the z-axis, with the angular momentum
-    calculated with respect to the center of mass.
-
-    Parameters
-    ----------
-    snap
-        The Snap object.
-    ignore_accreted : optional
-        Ignore accreted particles. Default is False.
-
-    Returns
-    -------
-    Quantity
-        The inclination on the particles.
-    """
-    if ignore_accreted:
-        h: Quantity = snap['smoothing_length']
-        mass: Quantity = snap['mass'][h > 0]
-        pos: Quantity = snap['position'][h > 0]
-        vel: Quantity = snap['velocity'][h > 0]
-    else:
-        mass = snap['mass']
-        pos = snap['position']
-        vel = snap['velocity']
-
-    origin = (mass[:, np.newaxis] * pos).sum(axis=0) / mass.sum()
-    pos = pos - origin
-
-    _specific_angular_momentum = cross(pos, vel)
-
-    return np.arccos(
-        _specific_angular_momentum[:, 2] / norm(_specific_angular_momentum, axis=1)
-    )
-
-
-def keplerian_frequency(
-    snap: SnapLike,
-    gravitational_parameter: Quantity = None,
-    origin: Quantity = None,
-    ignore_accreted: bool = False,
-) -> Quantity:
-    """Calculate the Keplerian orbital frequency.
-
-    The Keplerian orbital frequency of particles around a mass specified
-    by gravitational parameter with an optional to specify the position
-    of the mass.
-
-    Parameters
-    ----------
-    snap
-        The Snap object.
-    gravitational_parameter
-        The gravitational parameter (mu = G M) as a Pint quantity.
-    origin : optional
-        The origin around which to compute the Keplerian frequency as a
-        Quantity like (x, y, z) * au. Default is (0, 0, 0).
-    ignore_accreted : optional
-        Ignore accreted particles. Default is False.
-
-    Returns
-    -------
-    Quantity
-        The Keplerian frequency on the particles.
-    """
-    if ignore_accreted:
-        h: Quantity = snap['smoothing_length']
-        pos: Quantity = snap['position'][h > 0]
-    else:
-        pos = snap['position']
-
-    origin = snap.translation if snap.translation is not None else ORIGIN
-    pos = pos - origin
-
-    mu = snap.properties.get('gravitational_parameter')
-    if mu is None:
-        raise ValueError(
-            'must pass in gravitational_parameter or '
-            'set on Snap with set_gravitational_parameter'
-        )
-
-    radius = norm(pos, axis=1)
-    return np.sqrt(mu / radius ** 3)
-
-
 def kinetic_energy(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
     """Calculate the kinetic energy.
 
@@ -526,13 +389,18 @@ def momentum(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
     return mass[:, np.newaxis] * vel
 
 
-def polar_angle(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
+def polar_angle(
+    snap: SnapLike, origin: Quantity = None, ignore_accreted: bool = False
+) -> Quantity:
     """Calculate the polar angle.
 
     Parameters
     ----------
     snap
         The Snap object.
+    origin : optional
+        The origin around which to compute the angular momentum as a
+        Quantity like (x, y, z) * au. Default is (0, 0, 0).
     ignore_accreted : optional
         Ignore accreted particles. Default is False.
 
@@ -546,6 +414,9 @@ def polar_angle(snap: SnapLike, ignore_accreted: bool = False) -> Quantity:
         pos: Quantity = snap['position'][h > 0]
     else:
         pos = snap['position']
+
+    origin = snap.translation if snap.translation is not None else ORIGIN
+    pos = pos - origin
 
     x, y, z = pos[:, 0], pos[:, 1], pos[:, 2]
     r = np.sqrt(x ** 2 + y ** 2 + z ** 2)
@@ -577,6 +448,7 @@ def radius_cylindrical(
 
     origin = snap.translation if snap.translation is not None else ORIGIN
     pos = pos - origin
+
     x, y = pos[:, 0], pos[:, 1]
 
     return np.sqrt(x ** 2 + y ** 2)
@@ -607,72 +479,10 @@ def radius_spherical(
 
     origin = snap.translation if snap.translation is not None else ORIGIN
     pos = pos - origin
+
     x, y, z = pos[:, 0], pos[:, 1], pos[:, 2]
 
     return np.sqrt(x ** 2 + y ** 2 + z ** 2)
-
-
-def semi_major_axis(
-    snap: SnapLike,
-    gravitational_parameter: Quantity = None,
-    origin: Quantity = None,
-    ignore_accreted: bool = False,
-) -> Quantity:
-    """Calculate the semi-major axis.
-
-    The semi-major axis of particles around a mass specified by
-    gravitational parameter with an optional to specify the position of
-    the mass.
-
-    Parameters
-    ----------
-    snap
-        The Snap object.
-    gravitational_parameter
-        The gravitational parameter (mu = G M) as a Pint quantity.
-    origin : optional
-        The origin around which to compute the semi-major axis as a
-        Quantity like (x, y, z) * au. Default is (0, 0, 0).
-    ignore_accreted : optional
-        Ignore accreted particles. Default is False.
-
-    Returns
-    -------
-    Quantity
-        The semi-major axis on the particles.
-    """
-    if ignore_accreted:
-        h: Quantity = snap['smoothing_length']
-        pos: Quantity = snap['position'][h > 0]
-        vel: Quantity = snap['velocity'][h > 0]
-    else:
-        pos = snap['position']
-        vel = snap['velocity']
-
-    origin = snap.translation if snap.translation is not None else ORIGIN
-    pos = pos - origin
-
-    mu = snap.properties.get('gravitational_parameter')
-    if mu is None:
-        raise ValueError(
-            'must pass in gravitational_parameter or '
-            'set on Snap with set_gravitational_parameter'
-        )
-
-    radius = norm(pos, axis=1)
-
-    _specific_angular_momentum = cross(pos, vel)
-    specific_angular_momentum_magnitude = norm(_specific_angular_momentum, axis=1)
-
-    _specific_kinetic_energy = 1 / 2 * norm(vel, axis=1) ** 2
-    specific_potential_energy = -mu / radius
-    specific_energy = _specific_kinetic_energy + specific_potential_energy
-
-    term = specific_energy * (specific_angular_momentum_magnitude / mu) ** 2
-
-    _eccentricity = np.sqrt(1 + 2 * term)
-
-    return specific_angular_momentum_magnitude ** 2 / (mu * (1 - _eccentricity ** 2))
 
 
 def specific_angular_momentum(
@@ -733,56 +543,6 @@ def specific_kinetic_energy(snap: SnapLike, ignore_accreted: bool = False) -> Qu
     return 1 / 2 * norm(vel, axis=1) ** 2
 
 
-def stokes_number(
-    snap: SnapLike,
-    gravitational_parameter: Quantity = None,
-    origin: Quantity = None,
-    ignore_accreted: bool = False,
-) -> Quantity:
-    """Calculate the Stokes number.
-
-    Parameters
-    ----------
-    snap
-        The Snap object.
-    gravitational_parameter
-        The gravitational parameter (mu = G M) as a Pint quantity.
-    origin : optional
-        The origin around which to compute the Stokes number as a
-        Quantity like (x, y, z) * au. Default is (0, 0, 0).
-    ignore_accreted : optional
-        Ignore accreted particles. Default is False.
-
-    Returns
-    -------
-    Quantity
-        The Stokes number on the particles.
-    """
-    if ignore_accreted:
-        h: Quantity = snap['smoothing_length']
-        pos: Quantity = snap['position'][h > 0]
-        t_s: Quantity = snap['stopping_time'][h > 0]
-    else:
-        pos = snap['position']
-        t_s = snap['stopping_time']
-
-    origin = snap.translation if snap.translation is not None else ORIGIN
-    pos = pos - origin
-
-    mu = snap.properties.get('gravitational_parameter')
-    if mu is None:
-        raise ValueError(
-            'must pass in gravitational_parameter or '
-            'set on Snap with set_gravitational_parameter'
-        )
-
-    radius = norm(pos, axis=1)
-    Omega_k = np.sqrt(mu / radius ** 3)
-
-    Stokes = t_s * Omega_k[:, np.newaxis]
-    return Stokes
-
-
 def temperature(
     snap: SnapLike, molecular_weight: float = None, ignore_accreted: bool = False
 ) -> Quantity:
@@ -826,7 +586,7 @@ def temperature(
 
 
 def velocity_radial_cylindrical(
-    snap: SnapLike, ignore_accreted: bool = False
+    snap: SnapLike, origin: Quantity = None, ignore_accreted: bool = False
 ) -> Quantity:
     """Calculate the cylindrical radial velocity.
 
@@ -834,6 +594,9 @@ def velocity_radial_cylindrical(
     ----------
     snap
         The Snap object.
+    origin : optional
+        The origin around which to compute the angular momentum as a
+        Quantity like (x, y, z) * au. Default is (0, 0, 0).
     ignore_accreted : optional
         Ignore accreted particles. Default is False.
 
@@ -849,6 +612,9 @@ def velocity_radial_cylindrical(
     else:
         pos = snap['position']
         vel = snap['velocity']
+
+    origin = snap.translation if snap.translation is not None else ORIGIN
+    pos = pos - origin
 
     x, y = pos[:, 0], pos[:, 1]
     vx, vy = vel[:, 0], vel[:, 1]
@@ -857,7 +623,7 @@ def velocity_radial_cylindrical(
 
 
 def velocity_radial_spherical(
-    snap: SnapLike, ignore_accreted: bool = False
+    snap: SnapLike, origin: Quantity = None, ignore_accreted: bool = False
 ) -> Quantity:
     """Calculate the spherical radial velocity.
 
@@ -865,6 +631,9 @@ def velocity_radial_spherical(
     ----------
     snap
         The Snap object.
+    origin : optional
+        The origin around which to compute the angular momentum as a
+        Quantity like (x, y, z) * au. Default is (0, 0, 0).
     ignore_accreted : optional
         Ignore accreted particles. Default is False.
 
@@ -880,6 +649,9 @@ def velocity_radial_spherical(
     else:
         pos = snap['position']
         vel = snap['velocity']
+
+    origin = snap.translation if snap.translation is not None else ORIGIN
+    pos = pos - origin
 
     x, y, z = pos[:, 0], pos[:, 1], pos[:, 2]
     vx, vy, vz = vel[:, 0], vel[:, 1], vel[:, 2]

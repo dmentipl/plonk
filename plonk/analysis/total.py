@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from .._units import Quantity
-from ..utils.math import norm
 from . import particles
 
 if TYPE_CHECKING:
@@ -137,29 +136,6 @@ def gas_mass(snap: SnapLike, ignore_accreted: bool = True) -> float:
     return (_mass * gas_frac).sum()
 
 
-def inclination(snap: SnapLike, ignore_accreted: bool = True) -> float:
-    """Calculate the inclination with respect to the xy-plane.
-
-    The inclination is calculated by taking the angle between the
-    angular momentum vector and the z-axis, with the angular momentum
-    calculated with respect to the center of mass.
-
-    Parameters
-    ----------
-    snap
-        The Snap object.
-    ignore_accreted : optional
-        Ignore accreted particles. Default is True.
-
-    Returns
-    -------
-    float
-        The mean inclination.
-    """
-    angmom = angular_momentum(snap=snap, ignore_accreted=ignore_accreted)
-    return np.arccos(angmom[2] / norm(angmom))
-
-
 def kinetic_energy(snap: SnapLike, ignore_accreted: bool = True) -> float:
     """Calculate the total kinetic energy.
 
@@ -220,32 +196,6 @@ def momentum(snap: SnapLike, ignore_accreted: bool = True) -> Quantity:
         The total linear momentum like (px, py, pz).
     """
     return particles.momentum(snap=snap, ignore_accreted=ignore_accreted).sum(axis=0)
-
-
-def position_angle(snap: SnapLike, ignore_accreted: bool = True) -> float:
-    """Calculate the position angle of inclination.
-
-    The position angle is taken from the x-axis in the xy-plane. It
-    defines a unit vector around which the snap is inclined.
-
-    Parameters
-    ----------
-    snap
-        The Snap object.
-    ignore_accreted : optional
-        Ignore accreted particles. Default is True.
-
-    Returns
-    -------
-    float
-        The mean inclination.
-    """
-    angmom = angular_momentum(snap=snap, ignore_accreted=ignore_accreted)
-    if isinstance(angmom, Quantity):
-        pi_2 = np.pi / 2 * Quantity('radian')
-    else:
-        pi_2 = np.pi / 2
-    return np.arctan2(angmom[1], angmom[0]) + pi_2
 
 
 def specific_angular_momentum(
