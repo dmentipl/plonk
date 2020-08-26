@@ -480,14 +480,18 @@ def _interpolated_plot(
         cax = divider.append_axes(position=position, size=size, pad=pad)
         cbar = fig.colorbar(plot_object, cax, **_kwargs)
 
+        qname = pretty_array_name(names["quantity"])
         if interp == 'projection' and not weighted:
+            qname = 'Integrated ' + qname[0].lower() + qname[1:]
             qunit = units['quantity'] * units['projection']
         else:
             qunit = units['quantity']
         if np.allclose(qunit.magnitude, 1.0):
             qunit = qunit.units
-        qname = pretty_array_name(names["quantity"])
-        cbar.set_label(f'{qname} [{qunit:~P}]')
+        qlabel = qname
+        if f'{qunit:~P}' != '':
+            qlabel = qlabel + f' [{qunit:~P}]'
+        cbar.set_label(qlabel)
 
 
 def plot(
