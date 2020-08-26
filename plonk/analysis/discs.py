@@ -298,58 +298,76 @@ def stokes_number(
     return Stokes
 
 
-def unit_normal(snap: SnapLike) -> ndarray:
-    """Calculate unit normal to disc.
+def unit_normal(snap: SnapLike, sinks: bool = False) -> ndarray:
+    """Calculate unit normal to plane of rotation.
+
+    I.e. calculate a unit angular momentum vector.
 
     Parameters
     ----------
     snap
-        The Snap object which is assumed to be a single disc.
+        The Snap object.
+    sinks : optional
+        Include sink particles. Default is False.
 
     Returns
     -------
     ndarray
-        A unit normal to the plane of the disc.
+        A unit angular momentum vector.
     """
-    origin = center_of_mass(snap=snap, sinks=False)
-    L = angular_momentum(snap=snap, sinks=False, origin=origin).magnitude
+    origin = center_of_mass(snap=snap, sinks=sinks)
+    L = angular_momentum(snap=snap, sinks=sinks, origin=origin).magnitude
     return L / np.linalg.norm(L)
 
 
-def rotate_face_on(snap: SnapLike) -> SnapLike:
-    """Rotate disc to face-on.
+def rotate_face_on(snap: SnapLike, sinks: bool = False) -> SnapLike:
+    """Rotate to face-on with the angular momentum vector.
+
+    I.e. rotate such that the angular momentum points in the
+    z-direction.
 
     Parameters
     ----------
     snap
         The Snap object.
+    sinks : optional
+        Include sink particles. Default is False.
 
     Returns
     -------
     Snap
         The rotated Snap.
     """
-    x, y, z = unit_normal(snap=snap)
-    axis = (-x, y, 0)
-    angle = np.arctan(np.sqrt(x ** 2 + y ** 2) / z)
+    vec = unit_normal(snap=snap, sinks=sinks)
+    z_axis = np.array([0, 0, 1])
+    axis = cross(vec, z_axis)
+    angle = np.arccos(np.dot(vec, z_axis))
     return snap.rotate(axis=axis, angle=angle)
 
 
-def rotate_edge_on(snap: SnapLike) -> SnapLike:
-    """Rotate disc to edge-on.
+def rotate_edge_on(snap: SnapLike, sinks: bool = False) -> SnapLike:
+    """Rotate to edge-on with the angular momentum vector.
+
+    I.e. rotate such that the angular momentum points in the
+    y-direction.
 
     Parameters
     ----------
     snap
         The Snap object.
+    sinks : optional
+        Include sink particles. Default is False.
 
     Returns
     -------
     Snap
         The rotated Snap.
     """
-    snap = rotate_face_on(snap=snap)
-    return snap.rotate(axis=(1, 0, 0), angle=np.pi / 2)
+    vec = unit_normal(snap=snap, sinks=sinks)
+    y_axis = np.array([0, 1, 0])
+    axis = cross(vec, y_axis)
+    angle = np.arccos(np.dot(vec, y_axis))
+    return snap.rotate(axis=axis, angle=angle)
 
 
 def position_angle(snap: SnapLike) -> Quantity:

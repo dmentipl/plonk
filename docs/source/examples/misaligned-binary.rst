@@ -17,12 +17,13 @@ binary.
 .. code-block:: python
 
     import plonk
+    from plonk import analysis
 
+    # Load snap
     snap = plonk.load_snap('disc_00060.h5')
-
     snap.set_units(density='g/cm^3', position='au', projection='cm', velocity='km/s')
 
-    # Plot column density and add sinks
+    # Plot column density with sinks
     ax = snap.image(quantity='density', cmap='gist_heat', norm='log', vmin=3e-3)
     snap.sinks.plot(color='green', ax=ax)
 
@@ -36,13 +37,16 @@ binary.
         colorbar_kwargs={'extend': 'both'},
     )
 
-    # Plot tilt and twist as radial profile
+    # Rotate to face-on w.r.t. total angular momentum of system
+    analysis.discs.rotate_face_on(snap=snap, sinks=True)
+
+    # Generate radial profile in plane perpendicular to total system angular momentum
     prof = plonk.load_profile(snap, cmax='450 au')
     prof.set_units(
-        position='au',
-        angular_momentum_theta='degrees',
-        angular_momentum_phi='degrees',
+        position='au', angular_momentum_theta='degrees', angular_momentum_phi='degrees'
     )
+
+    # Plot tilt and twist as radial profile
     prof.plot(
         x='radius',
         y=['angular_momentum_theta', 'angular_momentum_phi'],
