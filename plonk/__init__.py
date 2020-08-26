@@ -10,7 +10,7 @@ Features
 Here are some of the features of Plonk:
 
 - Read in Phantom HDF snapshot files.
-- Read in global quantity and sink evolution files.
+- Read in global quantity and sink time series data files.
 - Encapsulate entire simulation data as Simulation object.
 - Access particle and sink arrays.
 - Access simulation parameters and units.
@@ -60,8 +60,8 @@ from ._config import read_config, write_config
 from ._logging import logger_init as _logger_init
 from ._units import Quantity, add_units, array_units, units
 from .analysis.profile import Profile, load_profile
-from .simulation.evolution import load_ev
 from .simulation.simulation import Simulation, load_sim
+from .simulation.time_series import load_ev, load_time_series
 from .snap.readers import load_snap
 from .snap.snap import Sinks, Snap, SnapLike, SubSnap
 from .visualize.animation import animate
@@ -92,6 +92,7 @@ __all__ = [
     'load_profile',
     'load_sim',
     'load_snap',
+    'load_time_series',
     'plot',
     'read_config',
     'units',

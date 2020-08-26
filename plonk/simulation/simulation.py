@@ -7,6 +7,7 @@ and sink quantity time series files as pandas DataFrames.
 
 from __future__ import annotations
 
+import warnings
 from copy import copy
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Union
@@ -18,7 +19,7 @@ from .._logging import logger
 from .._units import Quantity
 from ..snap.readers import load_snap
 from ..visualize.simulation import visualize_sim
-from .evolution import evolution_units, load_ev
+from .time_series import load_time_series, time_series_units
 
 if TYPE_CHECKING:
     from ..snap.snap import Snap
@@ -90,6 +91,36 @@ class Simulation:
             The SPH code used to produce the simulation data. Default
             is 'Phantom'.
         """
+        msg = (
+            'load_sim is deprecated and will be removed in v0.7.4, '
+            'please use load_simulation instead'
+        )
+        logger.warning(msg)
+        warnings.warn(msg, DeprecationWarning)
+        return self.load_simulation(
+            prefix=prefix, directory=directory, data_source=data_source
+        )
+
+    def load_simulation(
+        self,
+        prefix: str,
+        directory: Union[str, Path] = None,
+        data_source: str = 'Phantom',
+    ) -> Simulation:
+        """Load Simulation.
+
+        Parameters
+        ----------
+        prefix
+            Simulation prefix, e.g. 'disc', if files are named like
+            disc_00000.h5, disc01.ev, discSink0001N01.ev, etc.
+        directory : optional
+            Directory containing simulation snapshot files and auxiliary
+            files. Default is None.
+        data_source : optional
+            The SPH code used to produce the simulation data. Default
+            is 'Phantom'.
+        """
         if data_source not in _data_sources:
             raise ValueError(f'Data source not available: try {_data_sources}')
         self.data_source = data_source
@@ -109,8 +140,8 @@ class Simulation:
         self._snap_file_extension = self._get_snap_file_extension()
 
         self.paths['snaps'] = self._get_snap_files()
-        self.paths['time_series_global'] = self._get_global_ev_files()
-        self.paths['time_series_sinks'] = self._get_sink_ev_files()
+        self.paths['time_series_global'] = self._get_global_ts_files()
+        self.paths['time_series_sinks'] = self._get_sink_ts_files()
 
         return self
 
@@ -229,22 +260,24 @@ class Simulation:
         """Generate time series data."""
         self._time_series = dict()
         if self.paths['time_series_global']:
-            self._time_series['global'] = load_ev(self.paths['time_series_global'])
+            self._time_series['global'] = load_time_series(
+                self.paths['time_series_global']
+            )
         if self.paths['time_series_sinks']:
             self._time_series['sinks'] = [
-                load_ev(files) for files in self.paths['time_series_sinks']
+                load_time_series(files) for files in self.paths['time_series_sinks']
             ]
 
-    def _get_global_ev_files(self, glob: str = None) -> List[Path]:
-        """Get global ev files."""
+    def _get_global_ts_files(self, glob: str = None) -> List[Path]:
+        """Get global time series files."""
         if glob is None:
             # Phantom ev file name format
             glob = self.prefix + '[0-9][0-9].ev'
 
         return sorted(list(self.paths['directory'].glob(glob)))
 
-    def _get_sink_ev_files(self, glob: str = None) -> List[List[Path]]:
-        """Get sink ev files."""
+    def _get_sink_ts_files(self, glob: str = None) -> List[List[Path]]:
+        """Get sink time series files."""
         if glob is None:
             # Phantom ev file name format
             glob = self.prefix + 'Sink[0-9][0-9][0-9][0-9]N[0-9][0-9].ev'
@@ -272,12 +305,12 @@ class Simulation:
         config : optional
             The path to a Plonk config.toml file.
         """
-        units = evolution_units(sim=self, data_source=self.data_source, config=config)
+        units = time_series_units(sim=self, data_source=self.data_source, config=config)
         if 'global' in self.time_series:
             _apply_units_to_dataframe(self.time_series['global'], units)
         if 'sinks' in self.time_series:
-            for ev in self.time_series['sinks']:
-                _apply_units_to_dataframe(ev, units)
+            for ts in self.time_series['sinks']:
+                _apply_units_to_dataframe(ts, units)
 
         return self
 
@@ -289,12 +322,12 @@ class Simulation:
         config : optional
             The path to a Plonk config.toml file.
         """
-        units = evolution_units(sim=self, data_source=self.data_source, config=config)
+        units = time_series_units(sim=self, data_source=self.data_source, config=config)
         if 'global' in self.time_series:
             _un_apply_units_to_dataframe(self.time_series['global'], units)
         if 'sinks' in self.time_series:
-            for ev in self.time_series['sinks']:
-                _un_apply_units_to_dataframe(ev, units)
+            for ts in self.time_series['sinks']:
+                _un_apply_units_to_dataframe(ts, units)
 
         return self
 

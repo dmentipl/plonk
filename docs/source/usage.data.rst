@@ -101,19 +101,19 @@ Load a single snapshot and access sink arrays via :attr:`~Snap.sinks` attribute.
 
 
 ~~~~~~~~~~~~~~~~~~~~~
-Load auxilliary files
+Load time series data
 ~~~~~~~~~~~~~~~~~~~~~
 
-Load a Phantom `.ev` file with :func:`load_ev` and see what columns are
-available.
+Load a Phantom time series (`.ev`) file with :func:`load_time_series` and see
+what columns are available.
 
 .. code-block:: python
 
     >>> import plonk
 
-    >>> ev = plonk.load_ev('disc01.ev')
+    >>> ts = plonk.load_time_series('disc01.ev')
 
-    >>> ev.columns
+    >>> ts.columns
     Index(['time', 'energy_kinetic', 'energy_thermal', 'energy_magnetic',
            'energy_potential', 'energy_total', 'momentum', 'angular_momentum',
            'density_max', 'density_average', 'timestep', 'entropy',
@@ -122,7 +122,7 @@ available.
            'gas_density_average', 'dust_density_max', 'dust_density_average'],
           dtype='object')
 
-    >>> ev
+    >>> ts
                  time  energy_kinetic  ...  dust_density_max  dust_density_average
     0        0.000000        0.000013  ...      1.720023e-10          8.015937e-12
     1        1.593943        0.000013  ...      1.714059e-10          8.015771e-12

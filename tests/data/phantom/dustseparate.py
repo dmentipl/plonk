@@ -4,7 +4,7 @@ import numpy as np
 
 filename = 'dustseparate_00000.h5'
 
-ev_file = 'dustseparate01.ev'
+ts_file = 'dustseparate01.ev'
 
 profile_file = 'dustseparate_00000_profile.csv'
 
@@ -82,7 +82,7 @@ len_gas = 1000
 
 length_unit = 149600000000.0
 
-mean_ev_values = {
+mean_ts_values = {
     'time': 5.918015573791112,
     'energy_kinetic': 0.0005606857456011111,
     'energy_thermal': 0.0037500000000000003,

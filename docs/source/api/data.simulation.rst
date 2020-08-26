@@ -7,4 +7,4 @@ Simulation
 
 .. autofunction:: plonk.load_sim
 
-.. autofunction:: plonk.load_ev
+.. autofunction:: plonk.load_time_series

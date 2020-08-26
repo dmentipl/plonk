@@ -9,7 +9,7 @@ import plonk
 
 DIR_PATH = Path(__file__).parent / 'data/phantom'
 PREFIX = 'dustseparate'
-EV_FILENAME = 'dustseparate01.ev'
+TS_FILENAME = 'dustseparate01.ev'
 
 
 def test_init_simulation():
@@ -45,7 +45,7 @@ def test_sim_data():
         else:
             assert sim.properties[key] == properties[key]
 
-    assert sim.paths['time_series_global'][0].name == EV_FILENAME
+    assert sim.paths['time_series_global'][0].name == TS_FILENAME
 
 
 def test_simulation_visualization():

@@ -32,6 +32,12 @@ Types of changes:
 - The analysis.total module now uses sink particles in computing summed quantities.
 - Moved some quantities from particles to discs as they are not generic but appropriate for discs simulations.
 - Rename interpolate arguments: number_of_pixels -> num_pixels and density_weighted -> weighted. And weighted is a named argument (i.e. not just caught with **kwargs) to image, vector, and interpolate
+- Rename `load_ev` to `load_time_series`.
+
+### Deprecated
+
+- `load_ev` is deprecated in favour of `load_time_series`.
+- `load_sim` is deprecated in favour of `load_simulation`.
 
 ### Fixed
 

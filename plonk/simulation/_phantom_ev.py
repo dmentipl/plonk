@@ -1,4 +1,4 @@
-"""Read Phantom evolution files."""
+"""Read Phantom time series (.ev) files."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ import pandas as pd
 from pandas import DataFrame
 
 from .._config import read_config
-from .._units import _convert_dim_string, _get_code_unit, generate_array_code_units
+from .._units import _convert_dim_string, _get_code_unit
 
 if TYPE_CHECKING:
     from .simulation import Simulation
@@ -20,7 +20,7 @@ def load_data_from_file(
     filenames: Union[str, Path, Tuple[str], Tuple[Path], List[str], List[Path]],
     config: Union[str, Path] = None,
 ):
-    """Load data from Phantom .ev files.
+    """Load data from Phantom time series (.ev) files.
 
     Parameters
     ----------
@@ -56,8 +56,8 @@ def load_data_from_file(
     return dataframe
 
 
-def evolution_units(sim: Simulation, config: Union[str, Path] = None):
-    """Get units of Phantom .ev files from Simulation object.
+def time_series_units(sim: Simulation, config: Union[str, Path] = None):
+    """Get units of Phantom time series files from Simulation object.
 
     Parameters
     ----------

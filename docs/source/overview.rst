@@ -216,8 +216,8 @@ SPH simulation data is usually spread over multiple files of, possibly,
 different types, even though, logically, a simulation is a singular "object".
 Plonk has the :class:`Simulation` class to represent the complete data set.
 :class:`Simulation` is an aggregation of the :class:`Snap` and pandas DataFrames
-to represent time evolution data (see below) objects, plus metadata, such as the
-directory on the file system.
+to represent time series data (see below), plus metadata, such as the directory
+on the file system.
 
 Use the :func:`load_sim` function to instantiate a :class:`Simulation`
 object.
@@ -243,25 +243,27 @@ The :class:`Simulation` class has an attribute :attr:`~Simulation.time_series`
 which contains time series data as pandas DataFrames discussed in the next
 section.
 
-~~~~~~~~~
-Evolution
-~~~~~~~~~
+~~~~~~~~~~~
+Time series
+~~~~~~~~~~~
 
-SPH simulation data also include auxiliary files containing globally-averaged
-quantities output more frequently than snapshot files. For example, Phantom
-writes text files with the file extension ".ev". These files are output every
-time step rather than at the frequency of the snapshot files.
+SPH simulation datasets often include auxiliary files containing
+globally-averaged time series data output more frequently than snapshot files.
+For example, Phantom writes text files with the file extension ".ev". These
+files are output every time step rather than at the frequency of the snapshot
+files.
 
-We store this data in pandas DataFrames. Use :func:`load_ev` to instantiate.
+We store this data in pandas DataFrames. Use :func:`load_time_series` to
+instantiate.
 
 .. code-block:: pycon
 
-    >>> ev = plonk.load_ev('disc01.ev')
+    >>> ts = plonk.load_time_series('disc01.ev')
 
 The data may be split over several files, for example, if the simulation was run
 with multiple jobs on a computation cluster. In that case, pass in a list of
-files in chronological order to :func:`load_ev`, and Plonk will concatenate the
-data removing any duplicated time steps.
+files in chronological order to :func:`load_time_series`, and Plonk will
+concatenate the data removing any duplicated time steps.
 
 The underlying data is stored as a pandas [#f1]_ DataFrame. This allows for
 the use of typical pandas operations with which users in the scientific Python
@@ -269,7 +271,7 @@ community may be familiar with.
 
 .. code-block:: pycon
 
-    >>> ev
+    >>> ts
                  time  energy_kinetic  energy_thermal  ...  gas_density_average  dust_density_max  dust_density_average
     0        0.000000        0.000013        0.001186  ...         8.231917e-10      1.720023e-10          8.015937e-12
     1        1.593943        0.000013        0.001186  ...         8.229311e-10      1.714059e-10          8.015771e-12
@@ -289,7 +291,7 @@ You can plot columns with the pandas plotting interface.
 
 .. code-block:: pycon
 
-    >>> ev.plot('time', ['center_of_mass_x', 'center_of_mass_y', 'center_of_mass_z'])
+    >>> ts.plot('time', ['center_of_mass_x', 'center_of_mass_y', 'center_of_mass_z'])
 
 The previous code produces the following figure.
 
