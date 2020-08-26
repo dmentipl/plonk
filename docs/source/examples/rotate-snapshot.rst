@@ -36,7 +36,7 @@ plane.
     snap.image(quantity='density', cmap='gist_heat')
 
     # Plot cross-section in the disc plane
-    slice_normal = analysis.discs.normal(snap=snap)
+    slice_normal = analysis.discs.unit_normal(snap=snap)
     snap.image(
         quantity='density', interp='slice', slice_normal=slice_normal, cmap='gist_heat'
     )

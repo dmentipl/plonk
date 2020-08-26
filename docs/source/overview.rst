@@ -103,10 +103,7 @@ these arrays are stored on file, while others are computed as required.
      'azimuthal_angle',
      'density',
      'dust_to_gas_ratio',
-     'eccentricity',
      'id',
-     'inclination',
-     'keplerian_frequency',
      'kinetic_energy',
      'mass',
      'momentum',
@@ -115,11 +112,10 @@ these arrays are stored on file, while others are computed as required.
      'pressure',
      'radius_cylindrical',
      'radius_spherical',
-     'semi_major_axis',
      'smoothing_length',
      'sound_speed',
      'specific_angular_momentum',
-     'stokes_number',
+     'specific_kinetic_energy',
      'stopping_time',
      'sub_type',
      'temperature',
@@ -154,7 +150,6 @@ dictionary of metadata, i.e. non-array data, on the snapshot.
     >>> snap.properties['time']
     61485663602.558136 <Unit('second')>
 
-
     >>> list(snap.properties)
     ['adiabatic_index',
      'dust_method',
@@ -177,6 +172,7 @@ You can set default units as follows.
 .. code-block:: pycon
 
     >>> snap.set_units(position='au', density='g/cm^3', velocity='km/s')
+    <plonk.Snap "disc_00030.h5">
 
     >>> snap['position']
     array([[ -24.6998837 ,   49.60184016,   -4.98066567],
@@ -322,6 +318,9 @@ column density, i.e. a projection plot.
 
 .. code-block:: pycon
 
+    >>> filename = 'disc_00030.h5'
+    >>> snap = plonk.load_snap(filename)
+
     >>> snap.image(quantity='density')
 
 .. figure:: _static/density.png
@@ -427,10 +426,7 @@ To see all available arrays on the :class:`Snap` object:
      'azimuthal_angle',
      'density',
      'dust_to_gas_ratio',
-     'eccentricity',
      'id',
-     'inclination',
-     'keplerian_frequency',
      'kinetic_energy',
      'mass',
      'momentum',
@@ -439,11 +435,10 @@ To see all available arrays on the :class:`Snap` object:
      'pressure',
      'radius_cylindrical',
      'radius_spherical',
-     'semi_major_axis',
      'smoothing_length',
      'sound_speed',
      'specific_angular_momentum',
-     'stokes_number',
+     'specific_kinetic_energy',
      'stopping_time',
      'sub_type',
      'temperature',
@@ -454,11 +449,29 @@ To see all available arrays on the :class:`Snap` object:
      'velocity_radial_cylindrical',
      'velocity_radial_spherical']
 
+This is a disc simulation. You can add quantities appropriate for discs with the
+:meth:`~Snap.add_quantities` method.
+
+.. code-block:: pycon
+
+    >>> previous_arrays = snap.available_arrays()
+
+    >>> snap.add_quantities('disc')
+
+    # Additional available arrays
+    >>> set(snap.available_arrays()) - set(previous_arrays)
+    {'eccentricity',
+     'inclination',
+     'keplerian_frequency',
+     'semi_major_axis',
+     'stokes_number'}
+
 You can create a new, derived array on the particles as follows.
 
 .. code-block:: pycon
 
     >>> snap['rad'] = np.sqrt(snap['x'] ** 2 + snap['y'] ** 2)
+
     >>> snap['rad']
     array([8.28943225e+12, 2.00284678e+13, 1.79690392e+13, ...,
            1.81598604e+13, 1.38078875e+13, 2.08972008e+13]) <Unit('meter')>
@@ -475,6 +488,7 @@ the decorator :meth:`~Snap.add_array`.
     ... def radius(snap):
     ...     radius = np.hypot(snap['x'], snap['y'])
     ...     return radius
+
     >>> snap['radius']
     array([8.28943225e+12, 2.00284678e+13, 1.79690392e+13, ...,
            1.81598604e+13, 1.38078875e+13, 2.08972008e+13]) <Unit('meter')>
@@ -488,6 +502,7 @@ Plonk uses Pint to set arrays to physical units.
 .. code-block:: pycon
 
     >>> snap = plonk.load_snap(filename)
+
     >>> snap['x']
     array([-3.69505001e+12, -1.63052677e+13, -7.66283930e+12, ...,
             1.39571712e+13,  9.53716176e+12,  1.21421196e+12]) <Unit('meter')>
@@ -513,7 +528,11 @@ To do this we use the :class:`Profile` class in the :mod:`analysis` module.
 .. code-block:: pycon
 
     >>> snap = plonk.load_snap(filename)
+
+    >>> snap.add_quantities('disc')
+
     >>> prof = plonk.load_profile(snap, cmin='10 au', cmax='200 au')
+
     >>> prof
     <plonk.Profile "disc_00030.h5">
 
@@ -528,7 +547,8 @@ methods.
     ['number', 'radius', 'size']
 
     >>> prof.available_profiles()
-    ['angular_momentum_mag',
+    ['alpha_shakura_sunyaev',
+     'angular_momentum_mag',
      'angular_momentum_phi',
      'angular_momentum_theta',
      'angular_momentum_x',
@@ -538,13 +558,16 @@ methods.
      'aspect_ratio',
      'azimuthal_angle',
      'density',
+     'disc_viscosity',
      'dust_to_gas_ratio_001',
      'eccentricity',
+     'epicyclic_frequency',
      'id',
      'inclination',
      'keplerian_frequency',
      'kinetic_energy',
      'mass',
+     'midplane_stokes_number_001',
      'momentum_mag',
      'momentum_x',
      'momentum_y',
@@ -568,13 +591,14 @@ methods.
      'specific_angular_momentum_x',
      'specific_angular_momentum_y',
      'specific_angular_momentum_z',
+     'specific_kinetic_energy',
      'stokes_number_001',
      'stopping_time_001',
      'sub_type',
      'surface_density',
      'temperature',
      'timestep',
-     'toomre_Q',
+     'toomre_q',
      'type',
      'velocity_divergence',
      'velocity_mag',
@@ -628,7 +652,9 @@ and puts them into the DataFrame with units indicated in brackets.
     ...    'surface_density',
     ...    'scale_height',
     ... ]
+
     >>> df = prof.to_dataframe(columns=profiles)
+
     >>> df
           radius [m]  angular_momentum_phi [rad]  angular_momentum_theta [rad]  surface_density [kg / m ** 2]  scale_height [m]
     0   1.638097e+12                   -0.019731                      0.049709                       0.486007      7.971250e+10
@@ -650,8 +676,11 @@ We can also plot the profiles.
 .. code-block:: pycon
 
     >>> prof.set_units(position='au', scale_height='au', surface_density='g/cm^2')
+
     >>> fig, axs = plt.subplots(ncols=2, figsize=(12, 5))
+
     >>> prof.plot('radius', 'surface_density', ax=axs[0])
+
     >>> prof.plot('radius', 'scale_height', ax=axs[1])
 
 .. figure:: _static/profile.png

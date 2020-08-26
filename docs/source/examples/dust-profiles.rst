@@ -29,4 +29,5 @@ Plot the surface density profile of each dust species.
     ax_kwargs = {'ylabel': r'Surface density [g/cm${}^2$]', 'yscale': 'log'}
 
     # Make the plot
-    prof.plot(x='radius', y='dust_surface_density', label=labels, ax_kwargs=ax_kwargs)
+    ax = prof.plot(x='radius', y='dust_surface_density', label=labels, ax_kwargs=ax_kwargs)
+    ax.legend(title='Grain size')

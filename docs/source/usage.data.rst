@@ -23,10 +23,7 @@ available with :meth:`~Snap.available_arrays`.
      'azimuthal_angle',
      'density',
      'dust_to_gas_ratio',
-     'eccentricity',
      'id',
-     'inclination',
-     'keplerian_frequency',
      'kinetic_energy',
      'mass',
      'momentum',
@@ -35,11 +32,10 @@ available with :meth:`~Snap.available_arrays`.
      'pressure',
      'radius_cylindrical',
      'radius_spherical',
-     'semi_major_axis',
      'smoothing_length',
      'sound_speed',
      'specific_angular_momentum',
-     'stokes_number',
+     'specific_kinetic_energy',
      'stopping_time',
      'sub_type',
      'temperature',
@@ -156,7 +152,7 @@ attributes.
 
     >>> sim = plonk.load_sim(prefix='disc')
 
-    >>> snaps = sim.snaps
+    >>> sim.snaps
     [<plonk.Snap "disc_00000.h5">,
      <plonk.Snap "disc_00001.h5">,
      <plonk.Snap "disc_00002.h5">,

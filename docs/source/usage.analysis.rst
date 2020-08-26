@@ -41,6 +41,7 @@ Generate a :class:`SubSnap` with a boolean mask.
 
     # Particles with positive x-coordinate.
     >>> mask = snap['x'] > 0
+
     >>> subsnap = snap[mask]
 
     >>> subsnap['x'].to('au').min()
@@ -69,6 +70,7 @@ Filters are available to generate :class:`SubSnap` from geometric shapes.
 .. code-block:: python
 
     >>> import plonk
+
     >>> from plonk.analysis import filters
 
     >>> au = plonk.units['au']
@@ -93,6 +95,7 @@ available by default.
 .. code-block:: python
 
     >>> import plonk
+
     >>> from plonk.analysis import particles
 
     >>> snap = plonk.load_snap('disc_00030.h5')
@@ -112,17 +115,19 @@ Calculate total (summed) quantities on a Snap.
 .. code-block:: python
 
     >>> import plonk
+
     >>> from plonk.analysis import total
 
     >>> snap = plonk.load_snap('disc_00030.h5')
 
-    # Calculate the center of mass over all particles
+    # Calculate the center of mass over all particles including sinks
     >>> total.center_of_mass(snap=snap).to('au')
-    array([-0.68900851,  0.48217375, -0.00397694]) <Unit('astronomical_unit')>
+    array([-1.52182463e-07,  1.25054338e-08,  6.14859166e-07]) <Unit('astronomical_unit')>
 
-    # Calculate the kinetic energy
+    # Calculate the kinetic energy including sinks
     >>> total.kinetic_energy(snap=snap).to('joule')
-    1.0927396706568755e+34 <Unit('joule')>
+    2.232949413087673e+34 <Unit('joule')>
+
 
 ~~~~~~~~
 Profiles
@@ -140,7 +145,8 @@ A :class:`Profile` allows for creating a 1-dimensional profile through the
     >>> prof = plonk.load_profile(snap)
 
     >>> prof.available_profiles()
-    ['angular_momentum_mag',
+    ['alpha_shakura_sunyaev',
+     'angular_momentum_mag',
      'angular_momentum_phi',
      'angular_momentum_theta',
      'angular_momentum_x',
@@ -150,13 +156,13 @@ A :class:`Profile` allows for creating a 1-dimensional profile through the
      'aspect_ratio',
      'azimuthal_angle',
      'density',
+     'disc_viscosity',
      'dust_to_gas_ratio_001',
-     'eccentricity',
+     'epicyclic_frequency',
      'id',
-     'inclination',
-     'keplerian_frequency',
      'kinetic_energy',
      'mass',
+     'midplane_stokes_number_001',
      'momentum_mag',
      'momentum_x',
      'momentum_y',
@@ -172,7 +178,6 @@ A :class:`Profile` allows for creating a 1-dimensional profile through the
      'radius_cylindrical',
      'radius_spherical',
      'scale_height',
-     'semi_major_axis',
      'size',
      'smoothing_length',
      'sound_speed',
@@ -180,13 +185,13 @@ A :class:`Profile` allows for creating a 1-dimensional profile through the
      'specific_angular_momentum_x',
      'specific_angular_momentum_y',
      'specific_angular_momentum_z',
-     'stokes_number_001',
+     'specific_kinetic_energy',
      'stopping_time_001',
      'sub_type',
      'surface_density',
      'temperature',
      'timestep',
-     'toomre_Q',
+     'toomre_q',
      'type',
      'velocity_divergence',
      'velocity_mag',
@@ -223,6 +228,7 @@ Plot a radial profile.
 .. code-block:: python
 
     >>> import matplotlib.pyplot as plt
+
     >>> import plonk
 
     >>> snap = plonk.load_snap('disc_00030.h5')
@@ -230,8 +236,11 @@ Plot a radial profile.
     >>> prof = plonk.load_profile(snap)
 
     >>> prof.set_units(position='au', scale_height='au')
+
     >>> ax = prof.plot('radius', 'scale_height')
+
     >>> ax.set_ylabel('Scale height [au]')
+
     >>> ax.legend().remove()
 
 .. image:: _static/scale_height.png
@@ -242,12 +251,15 @@ of particles by radius.
 .. code-block:: python
 
     >>> import matplotlib.pyplot as plt
+
     >>> import plonk
+
     >>> from plonk.analysis.filters import annulus
 
     >>> snap = plonk.load_snap('disc_00030.h5')
 
     >>> au = plonk.units('au')
+
     >>> subsnap = annulus(snap=snap, radius_min=50*au, radius_max=55*au, height=100*au)
 
     >>> prof = plonk.load_profile(
@@ -259,6 +271,7 @@ of particles by radius.
     ... )
 
     >>> prof.set_units(position='au', density='g/cm^3')
+
     >>> ax = prof.plot('z', 'density')
 
 .. image:: _static/profile_z.png
@@ -282,6 +295,7 @@ implementation uses the efficient `scipy.spatial.cKDTree`.
 
     # Set the kernel
     >>> snap.set_kernel('cubic')
+    <plonk.Snap "disc_00030.h5">
 
     # Find the neighbours of the first three particles
     >>> snap.neighbours([0, 1, 2])
