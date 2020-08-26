@@ -386,7 +386,7 @@ def position_angle(snap: SnapLike) -> Quantity:
     Quantity
         The disc position angle.
     """
-    angmom = angular_momentum(snap=snap)
+    angmom = angular_momentum(snap=snap, sinks=False)
     if isinstance(angmom, Quantity):
         pi_2 = np.pi / 2 * Quantity('radian')
     else:
@@ -394,7 +394,7 @@ def position_angle(snap: SnapLike) -> Quantity:
     return np.arctan2(angmom[1], angmom[0]) + pi_2
 
 
-def inclination_disc(snap: SnapLike) -> Quantity:
+def inclination_angle(snap: SnapLike) -> Quantity:
     """Calculate the disc inclination.
 
     The inclination is calculated by taking the angle between the
@@ -411,5 +411,5 @@ def inclination_disc(snap: SnapLike) -> Quantity:
     Quantity
         The disc inclination.
     """
-    angmom = angular_momentum(snap=snap)
+    angmom = angular_momentum(snap=snap, sinks=False)
     return np.arccos(angmom[2] / norm(angmom))
