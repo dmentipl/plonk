@@ -21,7 +21,7 @@ def test_animate():
         quantity='density',
         units={'position': 'au', 'density': 'g/cm^3'},
         adaptive_colorbar=False,
-        number_of_pixels=(32, 32),
+        num_pixels=(32, 32),
     )
     filename.unlink()
 
@@ -38,7 +38,7 @@ def test_animation_images():
         quantity='density',
         units={'position': 'au', 'density': 'g/cm^3'},
         adaptive_colorbar=False,
-        number_of_pixels=(32, 32),
+        num_pixels=(32, 32),
     )
     filename.unlink()
 

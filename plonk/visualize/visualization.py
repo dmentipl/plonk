@@ -37,6 +37,7 @@ def image(
     x: str = 'x',
     y: str = 'y',
     interp: str = 'projection',
+    weighted: bool = False,
     slice_normal: Tuple[float, float, float] = None,
     slice_offset: Union[Quantity, float] = None,
     extent: Quantity = None,
@@ -68,6 +69,9 @@ def image(
 
         - 'projection' : 2d interpolation via projection to xy-plane
         - 'slice' : 3d interpolation via cross-section slice.
+    weighted
+        Whether to density weight the interpolation or not.
+        Default is False.
     slice_normal
         The normal vector to the plane in which to take the
         cross-section slice as a tuple (x, y, z). Default is
@@ -114,12 +118,9 @@ def image(
 
     Other Parameters
     ----------------
-    number_of_pixels : tuple
+    num_pixels : tuple
         The number of pixels to interpolate particle quantities
         to as a tuple (nx, ny). Default is (512, 512).
-    density_weighted : bool
-        Whether to density weight the interpolation or not.
-        Default is False.
     show_colorbar : bool
         Whether or not to display a colorbar. Default is True.
 
@@ -150,6 +151,7 @@ def image(
             y=y,
             kind='image',
             interp=interp,
+            weighted=weighted,
             slice_normal=slice_normal,
             slice_offset=slice_offset,
             extent=extent,
@@ -168,6 +170,7 @@ def vector(
     x: str = 'x',
     y: str = 'y',
     interp: str = 'projection',
+    weighted: bool = False,
     slice_normal: Tuple[float, float, float] = None,
     slice_offset: Union[Quantity, float] = None,
     extent: Quantity = None,
@@ -198,6 +201,9 @@ def vector(
 
         - 'projection' : 2d interpolation via projection to xy-plane
         - 'slice' : 3d interpolation via cross-section slice.
+    weighted
+        Whether to density weight the interpolation or not.
+        Default is False.
     slice_normal
         The normal vector to the plane in which to take the
         cross-section slice as a tuple (x, y, z). Default is
@@ -240,12 +246,9 @@ def vector(
 
     Other Parameters
     ----------------
-    number_of_pixels : tuple
+    num_pixels : tuple
         The number of pixels to interpolate particle quantities
         to as a tuple (nx, ny). Default is (512, 512).
-    density_weighted : bool
-        Whether to density weight the interpolation or not.
-        Default is False.
     number_of_arrows : tuple
         The number of arrows to display by sub-sampling the
         interpolated data. Default is (25, 25).
@@ -280,6 +283,7 @@ def vector(
             y=y,
             kind='quiver',
             interp=interp,
+            weighted=weighted,
             slice_normal=slice_normal,
             slice_offset=slice_offset,
             extent=extent,
@@ -298,6 +302,7 @@ def _interpolation_plot(
     y: str = 'y',
     kind: str = None,
     interp: str = 'projection',
+    weighted: bool = False,
     slice_normal: Tuple[float, float, float] = None,
     slice_offset: Union[Quantity, float] = None,
     extent: Quantity = None,
@@ -332,24 +337,19 @@ def _interpolation_plot(
         fig = ax.figure
 
     # Interpolate data to plot
-    interp_kwargs = {
-        key: val
-        for key, val in _kwargs.items()
-        if key in ('number_of_pixels', 'density_weighted')
-    }
-    for key in interp_kwargs:
-        _kwargs.pop(key)
+    num_pixels = _kwargs.pop('num_pixels', None)
     _data, _extent, _units = _interpolated_data(
         snap=snap,
         quantity=quantity,
         x=x,
         y=y,
         interp=interp,
+        weighted=weighted,
         slice_normal=slice_normal,
         slice_offset=slice_offset,
         extent=extent,
         units=units,
-        **interp_kwargs,
+        num_pixels=num_pixels,
     )
 
     # Make the actual plot
@@ -359,6 +359,7 @@ def _interpolation_plot(
         names={'quantity': quantity, 'x': x, 'y': y},
         kind=kind,
         interp=interp,
+        weighted=weighted,
         units=_units,
         ax=ax,
         fig=fig,
@@ -371,7 +372,17 @@ def _interpolation_plot(
 
 
 def _interpolated_data(
-    snap, quantity, x, y, interp, slice_normal, slice_offset, extent, units, **kwargs,
+    snap,
+    quantity,
+    x,
+    y,
+    interp,
+    weighted,
+    slice_normal,
+    slice_offset,
+    extent,
+    units,
+    num_pixels,
 ):
     units = {
         'quantity': _get_unit(snap, quantity, units),
@@ -394,15 +405,16 @@ def _interpolated_data(
         x=x,
         y=y,
         interp=interp,
+        weighted=weighted,
         slice_normal=slice_normal,
         slice_offset=slice_offset,
         extent=extent,
-        **kwargs,
+        num_pixels=num_pixels,
     )
 
     # Convert Quantity to ndarray
     extent = extent.to(units['extent']).magnitude
-    if interp == 'projection':
+    if interp == 'projection' and not weighted:
         interpolated_data = interpolated_data.to(
             units['quantity'] * units['projection']
         ).magnitude
@@ -418,6 +430,7 @@ def _interpolated_plot(
     names,
     kind,
     interp,
+    weighted,
     units,
     ax,
     fig,
@@ -429,8 +442,8 @@ def _interpolated_plot(
     show_colorbar = kwargs.pop('show_colorbar', kind == 'image')
 
     vmin, vmax = kwargs.get('vmin', None), kwargs.get('vmax', None)
-    vmin = _convert_units_for_cmap(vmin, 'vmin', units, interp)
-    vmax = _convert_units_for_cmap(vmax, 'vmax', units, interp)
+    vmin = _convert_units_for_cmap(vmin, 'vmin', units, interp, weighted)
+    vmax = _convert_units_for_cmap(vmax, 'vmax', units, interp, weighted)
     if vmin is not None:
         kwargs['vmin'] = vmin
     if vmax is not None:
@@ -467,9 +480,9 @@ def _interpolated_plot(
         cax = divider.append_axes(position=position, size=size, pad=pad)
         cbar = fig.colorbar(plot_object, cax, **_kwargs)
 
-        if interp == 'projection':
+        if interp == 'projection' and not weighted:
             qunit = units['quantity'] * units['projection']
-        elif interp == 'slice':
+        else:
             qunit = units['quantity']
         if np.allclose(qunit.magnitude, 1.0):
             qunit = qunit.units
@@ -725,41 +738,10 @@ def _plot_plot(
         cbar.set_label(f'{cname} [{cunit:~P}]')
 
 
-def _convert_units_for_interpolation(
-    *,
-    snap: SnapLike,
-    quantity: str,
-    interpolated_data: ndarray,
-    extent: ndarray,
-    units: Dict[str, Any],
-    interp: str,
-):
-    required_keys = {'extent', 'projection', 'quantity'}
-    if not set(units) == required_keys:
-        raise ValueError(f'units dictionary requires: {required_keys}')
-    quantity_unit = snap.array_code_unit(quantity)
-    if interp == 'projection':
-        proj_unit = units['quantity'] * units['projection']
-        data = (interpolated_data * quantity_unit * snap.code_units['length']).to(
-            proj_unit.units
-        ).magnitude / proj_unit.magnitude
-    elif interp == 'slice':
-        data = (interpolated_data * quantity_unit).to(
-            units['quantity'].units
-        ).magnitude / units['quantity'].magnitude
-
-    new_extent = tuple(
-        (extent * snap.code_units['length']).to(units['extent'].units).magnitude
-        / units['extent'].magnitude
-    )
-
-    return data, new_extent
-
-
-def _convert_units_for_cmap(vm, name, units, interp):
-    if interp == 'projection':
+def _convert_units_for_cmap(vm, name, units, interp, weighted):
+    if interp == 'projection' and not weighted:
         quantity_unit = units['quantity'] * units['projection']
-    elif interp == 'slice':
+    else:
         quantity_unit = units['quantity']
     if vm is not None:
         if isinstance(vm, Quantity):

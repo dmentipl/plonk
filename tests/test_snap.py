@@ -334,7 +334,7 @@ def test_plot_as_methods(snaptype):
     filename = DIR / snaptype.filename
     snap = plonk.load_snap(filename)
 
-    snap.image('density', number_of_pixels=(16, 16))
+    snap.image('density', num_pixels=(16, 16))
     snap.plot()
 
     if snap.num_sinks > 0:
@@ -342,7 +342,7 @@ def test_plot_as_methods(snaptype):
         sinks.plot()
 
     subsnap = snap['gas']
-    subsnap.image('density', number_of_pixels=(16, 16))
+    subsnap.image('density', num_pixels=(16, 16))
     subsnap.plot()
 
     snap.close_file()
@@ -358,7 +358,7 @@ def test_context(snaptype):
     with snap.context(cache=False):
         assert snap.loaded_arrays() == []
         with snap.context(cache=True):
-            snap.image('density', number_of_pixels=(16, 16))
+            snap.image('density', num_pixels=(16, 16))
             assert snap.loaded_arrays() == [
                 'density',
                 'mass',

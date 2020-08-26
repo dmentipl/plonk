@@ -22,6 +22,8 @@ if TYPE_CHECKING:
 
 Extent = Tuple[float, float, float, float]
 
+NUM_PIXELS = (512, 512)
+
 
 def interpolate(
     *,
@@ -30,10 +32,11 @@ def interpolate(
     x: str = 'x',
     y: str = 'y',
     interp: 'str',
+    weighted: bool = False,
     slice_normal: Tuple[float, float, float] = None,
     slice_offset: Quantity = None,
     extent: Quantity,
-    **kwargs,
+    num_pixels: Tuple[float, float] = None,
 ) -> ndarray:
     """Interpolate a quantity on the snapshot to a pixel grid.
 
@@ -54,6 +57,8 @@ def interpolate(
 
         - 'projection' : 2d interpolation via projection to xy-plane
         - 'slice' : 3d interpolation via cross-section slice.
+    weighted
+        Use density weighted interpolation. Default is False.
     slice_normal
         The normal vector to the plane in which to take the
         cross-section slice as an array (x, y, z).
@@ -61,9 +66,9 @@ def interpolate(
         The offset of the cross-section slice. Default is 0.0.
     extent
         The xy extent of the image as (xmin, xmax, ymin, ymax).
-    **kwargs
-        Additional keyword arguments to pass to scalar_interpolation
-        and vector_interpolation.
+    num_pixels
+        The pixel grid to interpolate the scalar quantity to, as
+        (npixx, npixy). Default is (512, 512).
 
     Returns
     -------
@@ -85,6 +90,9 @@ def interpolate(
     """
     if not isinstance(extent[0], Quantity):
         raise ValueError('extent must have units')
+
+    if num_pixels is None:
+        num_pixels = NUM_PIXELS
 
     _quantity, x, y, z = _get_arrays_from_str(snap=snap, quantity=quantity, x=x, y=y)
     h = snap.array_in_code_units('smoothing_length')
@@ -125,7 +133,8 @@ def interpolate(
             smoothing_length=h,
             particle_mass=m,
             hfact=snap.properties['smoothing_length_factor'],
-            **kwargs,
+            weighted=weighted,
+            num_pixels=num_pixels,
         )
 
     elif _quantity.ndim == 2:
@@ -139,14 +148,15 @@ def interpolate(
             smoothing_length=h,
             particle_mass=m,
             hfact=snap.properties['smoothing_length_factor'],
-            **kwargs,
+            weighted=weighted,
+            num_pixels=num_pixels,
         )
 
     else:
         raise ValueError('quantity.ndim > 2: cannot determine quantity')
 
     interpolated_data = interpolated_data * snap.array_code_unit(quantity)
-    if interp == 'projection':
+    if interp == 'projection' and not weighted:
         interpolated_data = interpolated_data * snap.array_code_unit('position')
     return interpolated_data
 
@@ -161,8 +171,8 @@ def scalar_interpolation(
     smoothing_length: ndarray,
     particle_mass: ndarray,
     hfact: float,
-    number_of_pixels: Tuple[float, float] = (512, 512),
-    density_weighted: bool = None,
+    weighted: bool = None,
+    num_pixels: Tuple[float, float] = (512, 512),
 ) -> ndarray:
     """Interpolate scalar quantity to a pixel grid.
 
@@ -185,11 +195,11 @@ def scalar_interpolation(
         The particle mass on each particle.
     hfact
         The smoothing length factor.
-    number_of_pixels
-        The pixel grid to interpolate the scalar quantity to, as
-        (npixx, npixy).
-    density_weighted
+    weighted
         Use density weighted interpolation. Default is off.
+    num_pixels
+        The pixel grid to interpolate the scalar quantity to, as
+        (npixx, npixy). Default is (512, 512).
 
     Returns
     -------
@@ -206,8 +216,8 @@ def scalar_interpolation(
         smoothing_length=smoothing_length,
         particle_mass=particle_mass,
         hfact=hfact,
-        number_of_pixels=number_of_pixels,
-        density_weighted=density_weighted,
+        weighted=weighted,
+        num_pixels=num_pixels,
     )
 
 
@@ -222,8 +232,8 @@ def vector_interpolation(
     smoothing_length: ndarray,
     particle_mass: ndarray,
     hfact: float,
-    number_of_pixels: Tuple[float, float] = (512, 512),
-    density_weighted: bool = None,
+    weighted: bool = None,
+    num_pixels: Tuple[float, float] = (512, 512),
 ) -> ndarray:
     """Interpolate scalar quantity to a pixel grid.
 
@@ -248,11 +258,11 @@ def vector_interpolation(
         The particle mass on each particle.
     hfact
         The smoothing length factor.
-    number_of_pixels
-        The pixel grid to interpolate the scalar quantity to, as
-        (npixx, npixy).
-    density_weighted
+    weighted
         Use density weighted interpolation. Default is off.
+    num_pixels
+        The pixel grid to interpolate the scalar quantity to, as
+        (npixx, npixy). Default is (512, 512).
 
     Returns
     -------
@@ -269,8 +279,8 @@ def vector_interpolation(
         smoothing_length=smoothing_length,
         particle_mass=particle_mass,
         hfact=hfact,
-        number_of_pixels=number_of_pixels,
-        density_weighted=density_weighted,
+        weighted=weighted,
+        num_pixels=num_pixels,
     )
     vecsmoothy = _interpolate(
         quantity=quantity_y,
@@ -281,8 +291,8 @@ def vector_interpolation(
         smoothing_length=smoothing_length,
         particle_mass=particle_mass,
         hfact=hfact,
-        number_of_pixels=number_of_pixels,
-        density_weighted=density_weighted,
+        weighted=weighted,
+        num_pixels=num_pixels,
     )
     return np.stack((np.array(vecsmoothx), np.array(vecsmoothy)))
 
@@ -297,27 +307,27 @@ def _interpolate(
     smoothing_length: ndarray,
     particle_mass: ndarray,
     hfact: float,
-    number_of_pixels: Tuple[float, float],
-    density_weighted: bool = None,
+    weighted: bool = None,
+    num_pixels: Tuple[float, float],
 ) -> ndarray:
     if dist_from_slice is None:
         do_slice = False
     else:
         do_slice = True
     normalise = False
-    if density_weighted is None:
-        density_weighted = False
-    if density_weighted:
+    if weighted is None:
+        weighted = False
+    if weighted:
         normalise = True
 
-    npixx, npixy = number_of_pixels
+    npixx, npixy = num_pixels
     xmin, ymin = extent[0], extent[2]
     pixwidthx = (extent[1] - extent[0]) / npixx
     pixwidthy = (extent[3] - extent[2]) / npixy
     npart = len(smoothing_length)
 
     itype = np.ones(smoothing_length.shape)
-    if density_weighted:
+    if weighted:
         weight = particle_mass / smoothing_length ** 3
     else:
         weight = hfact ** -3 * np.ones(smoothing_length.shape)

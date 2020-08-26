@@ -21,8 +21,6 @@ if TYPE_CHECKING:
     from ..analysis.profile import Profile
     from ..snap.snap import SnapLike
 
-_interp_kwargs = ('number_of_pixels', 'density_weighted')
-
 
 def animate(
     filename: Union[str, Path],
@@ -274,7 +272,8 @@ def animation_images(
     slice_offset = kwargs.get('slice_offset')
     extent = kwargs.get('extent')
     units = kwargs.get('units')
-    interp_kwargs = {k: v for k, v in kwargs.items() if k in _interp_kwargs}
+    weighted = kwargs.get('weighted')
+    num_pixels = kwargs.get('num_pixels')
 
     def animate(idx):
         if tqdm is not None:
@@ -290,7 +289,8 @@ def animation_images(
             slice_offset=slice_offset,
             extent=extent,
             units=units,
-            **interp_kwargs,
+            weighted=weighted,
+            num_pixels=num_pixels,
         )
         image.set_data(interp_data)
         image.set_extent(_extent)

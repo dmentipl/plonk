@@ -45,7 +45,7 @@ def test_image_projection(snaptype):
     """Test image projection."""
     filename = DIR / snaptype.filename
     snap = plonk.load_snap(filename)
-    plonk.image(snap=snap, quantity='density', number_of_pixels=(32, 32))
+    plonk.image(snap=snap, quantity='density', num_pixels=(32, 32))
 
     snap.close_file()
 
@@ -64,7 +64,7 @@ def test_image_projection_with_kwargs(snaptype):
         extent=(-150, 150, -150, 150) * AU,
         norm='linear',
         cmap='gist_heat',
-        number_of_pixels=(32, 32),
+        num_pixels=(32, 32),
     )
 
     snap.close_file()
@@ -75,7 +75,7 @@ def test_image_on_snap(snaptype):
     """Test image projection as method on Snap."""
     filename = DIR / snaptype.filename
     snap = plonk.load_snap(filename)
-    snap.image(quantity='density', number_of_pixels=(32, 32))
+    snap.image(quantity='density', num_pixels=(32, 32))
 
     snap.close_file()
 
@@ -85,9 +85,7 @@ def test_image_slice(snaptype):
     """Test image slice."""
     filename = DIR / snaptype.filename
     snap = plonk.load_snap(filename)
-    plonk.image(
-        snap=snap, quantity='density', interp='slice', number_of_pixels=(32, 32)
-    )
+    plonk.image(snap=snap, quantity='density', interp='slice', num_pixels=(32, 32))
 
     snap.close_file()
 
@@ -107,7 +105,7 @@ def test_image_slice_with_kwargs(snaptype):
         extent=(-150, 150, -150, 150) * AU,
         norm='linear',
         cmap='gist_heat',
-        number_of_pixels=(32, 32),
+        num_pixels=(32, 32),
     )
 
     snap.close_file()

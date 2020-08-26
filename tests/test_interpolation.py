@@ -40,7 +40,7 @@ def test_scalar_interpolation_projection():
         smoothing_length=HH,
         particle_mass=MM,
         hfact=HFACT,
-        number_of_pixels=PIX,
+        num_pixels=PIX,
     )
 
     np.testing.assert_allclose(im, scalar_projection, rtol=1e-5)
@@ -57,7 +57,7 @@ def test_scalar_interpolation_slice():
         smoothing_length=HH,
         particle_mass=MM,
         hfact=HFACT,
-        number_of_pixels=PIX,
+        num_pixels=PIX,
     )
 
     np.testing.assert_allclose(im, scalar_slice, rtol=1e-5)
@@ -74,7 +74,7 @@ def test_vector_interpolation_projection():
         smoothing_length=HH,
         particle_mass=MM,
         hfact=HFACT,
-        number_of_pixels=PIX,
+        num_pixels=PIX,
     )
 
     np.testing.assert_allclose(vec, vector_projection, rtol=1e-5)
@@ -92,7 +92,7 @@ def test_vector_interpolation_slice():
         smoothing_length=HH,
         particle_mass=MM,
         hfact=HFACT,
-        number_of_pixels=PIX,
+        num_pixels=PIX,
     )
 
     np.testing.assert_allclose(vec, vector_slice, rtol=1e-5)

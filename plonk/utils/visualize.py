@@ -170,7 +170,7 @@ def cartesian_to_polar(
     if not np.allclose(extent[1] - extent[0], extent[3] - extent[2]):
         raise ValueError('Bad polar plot: x and y have different scales')
 
-    number_of_pixels = data.shape
+    num_pixels = data.shape
     radius_pix = 0.5 * data.shape[0]
 
     data = transform.warp_polar(data, radius=radius_pix)
@@ -181,8 +181,8 @@ def cartesian_to_polar(
     x_grid = np.linspace(*extent[:2], data.shape[0])
     y_grid = np.linspace(*extent[2:], data.shape[1])
     spl = RectBivariateSpline(x_grid, y_grid, data)
-    x_regrid = np.linspace(extent[0], extent[1], number_of_pixels[0])
-    y_regrid = np.linspace(extent[2], extent[3], number_of_pixels[1])
+    x_regrid = np.linspace(extent[0], extent[1], num_pixels[0])
+    y_regrid = np.linspace(extent[2], extent[3], num_pixels[1])
     interpolated_data_polar = spl(x_regrid, y_regrid)
 
     return interpolated_data_polar, extent_polar
