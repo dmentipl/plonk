@@ -142,15 +142,15 @@ what columns are available.
 Load simulation
 ~~~~~~~~~~~~~~~
 
-Load a simulation with :func:`load_sim` and access snapshots and time series
-data with :attr:`~Simulation.snaps` and :attr:`~Simulation.time_series`
+Load a simulation with :func:`load_simulation` and access snapshots and time
+series data with :attr:`~Simulation.snaps` and :attr:`~Simulation.time_series`
 attributes.
 
 .. code-block:: python
 
     >>> import plonk
 
-    >>> sim = plonk.load_sim(prefix='disc')
+    >>> sim = plonk.load_simulation(prefix='disc')
 
     >>> sim.snaps
     [<plonk.Snap "disc_00000.h5">,

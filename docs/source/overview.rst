@@ -219,13 +219,13 @@ Plonk has the :class:`Simulation` class to represent the complete data set.
 to represent time series data (see below), plus metadata, such as the directory
 on the file system.
 
-Use the :func:`load_sim` function to instantiate a :class:`Simulation`
+Use the :func:`load_simulation` function to instantiate a :class:`Simulation`
 object.
 
 .. code-block:: pycon
 
     >>> prefix = 'disc'
-    >>> sim = plonk.load_sim(prefix=prefix)
+    >>> sim = plonk.load_simulation(prefix=prefix)
 
 Each of the snapshots are available via :attr:`~Simulation.snaps` as a list. We
 can get the first five snapshots with the following.

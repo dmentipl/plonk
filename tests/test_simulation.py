@@ -14,16 +14,18 @@ TS_FILENAME = 'dustseparate01.ev'
 
 def test_init_simulation():
     """Testing initialising simulation."""
-    plonk.load_sim(prefix=PREFIX, directory=DIR_PATH)
+    plonk.load_simulation(prefix=PREFIX, directory=DIR_PATH)
     with pytest.raises(ValueError):
-        plonk.load_sim(prefix=PREFIX, directory=DIR_PATH, data_source='not_available')
+        plonk.load_simulation(
+            prefix=PREFIX, directory=DIR_PATH, data_source='not_available'
+        )
     with pytest.raises(FileNotFoundError):
-        plonk.load_sim(prefix='does_not_exist', directory=DIR_PATH)
+        plonk.load_simulation(prefix='does_not_exist', directory=DIR_PATH)
 
 
 def test_sim_data():
     """Testing data in simulation."""
-    sim = plonk.load_sim(prefix=PREFIX, directory=DIR_PATH)
+    sim = plonk.load_simulation(prefix=PREFIX, directory=DIR_PATH)
 
     snaps = sim.snaps
     assert len(snaps) == 1
@@ -50,7 +52,7 @@ def test_sim_data():
 
 def test_simulation_visualization():
     """Test simulation visualization."""
-    sim = plonk.load_sim(prefix=PREFIX, directory=DIR_PATH)
+    sim = plonk.load_simulation(prefix=PREFIX, directory=DIR_PATH)
 
     viz = sim.visualize(kind='particle', x='x', y='y')
     viz.next()
@@ -59,12 +61,12 @@ def test_simulation_visualization():
 
 def test_to_array():
     """Testing to_array method."""
-    sim = plonk.load_sim(prefix=PREFIX, directory=DIR_PATH)
+    sim = plonk.load_simulation(prefix=PREFIX, directory=DIR_PATH)
     sim.to_array(quantity='density', indices=[0, 1, 2])
 
 
 def test_set_units_time_series():
     """Test set/unset units time series."""
-    sim = plonk.load_sim(prefix=PREFIX, directory=DIR_PATH)
+    sim = plonk.load_simulation(prefix=PREFIX, directory=DIR_PATH)
     sim.unset_units_on_time_series()
     sim.set_units_on_time_series()

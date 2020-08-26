@@ -60,7 +60,7 @@ from ._config import read_config, write_config
 from ._logging import logger_init as _logger_init
 from ._units import Quantity, add_units, array_units, units
 from .analysis.profile import Profile, load_profile
-from .simulation.simulation import Simulation, load_sim
+from .simulation.simulation import Simulation, load_sim, load_simulation
 from .simulation.time_series import load_ev, load_time_series
 from .snap.readers import load_snap
 from .snap.snap import Sinks, Snap, SnapLike, SubSnap
@@ -91,6 +91,7 @@ __all__ = [
     'load_ev',
     'load_profile',
     'load_sim',
+    'load_simulation',
     'load_snap',
     'load_time_series',
     'plot',

@@ -18,7 +18,7 @@ Plot a density profile for multiple snapshots.
     import plonk
 
     # Load simulation
-    sim = plonk.load_sim(prefix='disc')
+    sim = plonk.load_simulation(prefix='disc')
 
     # Generate density profiles for every 7th snap
     stride = 7

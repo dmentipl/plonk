@@ -131,7 +131,7 @@ Produce an animation of images using :func:`~animate`.
 
     >>> import plonk
 
-    >>> sim = plonk.load_sim(prefix='disc')
+    >>> sim = plonk.load_simulation(prefix='disc')
 
     >>> units={'position': 'au', 'density': 'g/cm^3', 'projection': 'cm'}
 

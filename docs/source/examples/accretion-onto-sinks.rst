@@ -18,7 +18,7 @@ Plot mass accretion and accretion rate onto sink particles.
     import plonk
 
     # Load simulation
-    sim = plonk.load_sim(prefix='disc')
+    sim = plonk.load_simulation(prefix='disc')
     sink_labels = ('Star', 'Planet')
 
     # Initialize figure

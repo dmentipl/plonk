@@ -41,7 +41,7 @@ class Simulation:
     --------
     Reading simulation data into a Simulation object.
 
-    >>> sim = plonk.load_sim('prefix', path_to_directory)
+    >>> sim = plonk.load_simulation('prefix', path_to_directory)
 
     Accessing the snapshots.
 
@@ -70,36 +70,6 @@ class Simulation:
 
         self._snap_file_extension = ''
         self._len = -1
-
-    def load_sim(
-        self,
-        prefix: str,
-        directory: Union[str, Path] = None,
-        data_source: str = 'Phantom',
-    ) -> Simulation:
-        """Load Simulation.
-
-        Parameters
-        ----------
-        prefix
-            Simulation prefix, e.g. 'disc', if files are named like
-            disc_00000.h5, disc01.ev, discSink0001N01.ev, etc.
-        directory : optional
-            Directory containing simulation snapshot files and auxiliary
-            files. Default is None.
-        data_source : optional
-            The SPH code used to produce the simulation data. Default
-            is 'Phantom'.
-        """
-        msg = (
-            'load_sim is deprecated and will be removed in v0.7.4, '
-            'please use load_simulation instead'
-        )
-        logger.warning(msg)
-        warnings.warn(msg, DeprecationWarning)
-        return self.load_simulation(
-            prefix=prefix, directory=directory, data_source=data_source
-        )
 
     def load_simulation(
         self,
@@ -408,9 +378,35 @@ def load_sim(
         The SPH code used to produce the simulation data. Default
         is 'Phantom'.
     """
+    msg = (
+        'load_sim is deprecated and will be removed in v0.7.4, '
+        'please use load_simulation instead'
+    )
+    logger.warning(msg)
+    warnings.warn(msg, DeprecationWarning)
+    return load_simulation(prefix=prefix, directory=directory, data_source=data_source)
+
+
+def load_simulation(
+    prefix: str, directory: Union[str, Path] = None, data_source: str = 'Phantom',
+) -> Simulation:
+    """Load Simulation.
+
+    Parameters
+    ----------
+    prefix
+        Simulation prefix, e.g. 'disc', if files are named like
+        disc_00000.h5, disc01.ev, discSink0001N01.ev, etc.
+    directory : optional
+        Directory containing simulation snapshot files and auxiliary
+        files. Default is None.
+    data_source : optional
+        The SPH code used to produce the simulation data. Default
+        is 'Phantom'.
+    """
     return (
         Simulation()
-        .load_sim(prefix=prefix, directory=directory, data_source=data_source)
+        .load_simulation(prefix=prefix, directory=directory, data_source=data_source)
         .set_units_on_time_series()
     )
 
