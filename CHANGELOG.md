@@ -15,6 +15,30 @@ Types of changes:
 
 ## [Unreleased]
 
+### Added
+
+- Add add_alias method to Profile.
+- Add disc_viscosity, alpha_shakura_sunyaev, epicyclic_frequency, midplane_stokes_number profiles.
+- Add utils vector_array_names like dust_array_names.
+- Add plotting of multiple dust or vector profiles.
+- Add extra test data to complement the test suite.
+- Add function to set missing header values on converted Phantom-HDF5 files.
+
+### Changed
+
+- Renamed toomre_Q profile to toomre_q.
+- Use cache context manager to generate some Snap attributes so as to not cache some arrays in memory.
+- Some profiles have been removed when making non-radial profiles.
+- The analysis.total module now uses sink particles in computing summed quantities.
+- Moved some quantities from particles to discs as they are not generic but appropriate for discs simulations.
+
+### Fixed
+
+- Fix units labels in Profile.plot.
+- Fix units of internal energy.
+- Fix bugs in rotation to face-on and edge-on.
+- Fix bugs in disc position and inclination angles.
+
 ## [0.7.2] - 2020-08-23
 
 ### Added
