@@ -8,8 +8,8 @@ import toml
 CONFIG_FILE = Path(__file__).parent / 'config.toml'
 
 
-def load_config(filename: Union[str, Path] = None) -> MutableMapping[str, Any]:
-    """Load config file.
+def read_config(filename: Union[str, Path] = None) -> MutableMapping[str, Any]:
+    """Read config file.
 
     Parameters
     ----------
@@ -36,6 +36,6 @@ def write_config(filename: Union[str, Path]):
         The name of the config file (must be TOML) as a string or
         pathlib.Path.
     """
-    config = load_config()
+    config = read_config()
     with open(filename, mode='w') as f:
         toml.dump(config, f)

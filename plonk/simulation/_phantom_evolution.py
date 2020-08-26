@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 from pandas import DataFrame
 
-from .._config import load_config
+from .._config import read_config
 from .._units import _convert_dim_string, _get_code_unit, generate_array_code_units
 
 if TYPE_CHECKING:
@@ -40,7 +40,7 @@ def load_data_from_file(
     else:
         raise ValueError('filenames is not a known type')
 
-    conf = load_config(filename=config)
+    conf = read_config(filename=config)
     name_map = conf['phantom']['time_series']['namemap']
 
     _file_paths = list()
@@ -70,7 +70,7 @@ def evolution_units(sim: Simulation, config: Union[str, Path] = None):
     -------
     Dict
     """
-    conf = load_config(filename=config)
+    conf = read_config(filename=config)
     arrays = conf['phantom']['time_series']['dimensions']
     dim = dict()
     for key, val in arrays.items():

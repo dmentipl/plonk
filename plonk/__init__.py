@@ -56,8 +56,9 @@ available at https://github.com/dmentipl/plonk.
 
 import importlib_metadata as _importlib_metadata
 
+from ._config import read_config, write_config
 from ._logging import logger_init as _logger_init
-from ._units import add_units, array_units, units
+from ._units import Quantity, add_units, array_units, units
 from .analysis.profile import Profile, load_profile
 from .simulation.evolution import load_ev
 from .simulation.simulation import Simulation, load_sim
@@ -76,6 +77,7 @@ add_units()
 
 __all__ = [
     'Profile',
+    'Quantity',
     'Simulation',
     'Sinks',
     'Snap',
@@ -91,7 +93,9 @@ __all__ = [
     'load_sim',
     'load_snap',
     'plot',
+    'read_config',
     'units',
     'vector',
     'visualize_sim',
+    'write_config',
 ]

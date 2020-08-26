@@ -5,7 +5,7 @@ from typing import Any, Dict, Union
 
 import pint
 
-from ._config import load_config
+from ._config import read_config
 
 units = pint.UnitRegistry()
 Quantity = units.Quantity
@@ -20,7 +20,7 @@ def add_units(config: Union[str, Path] = None):
         The path to a Plonk config.toml file. If None, use the default
         file.
     """
-    conf = load_config(filename=config)
+    conf = read_config(filename=config)
     for unit, definition in conf['units']['definitions'].items():
         units.define(f'{unit} = {definition}')
 
@@ -42,7 +42,7 @@ def array_units(config: Union[str, Path] = None) -> Dict[str, str]:
     -------
     Dict
     """
-    conf = load_config(filename=config)
+    conf = read_config(filename=config)
     d = dict()
     for key, val in conf['arrays']['dimensions'].items():
         dim = _convert_dim_string(val)
@@ -80,7 +80,7 @@ def array_quantities(config: Union[str, Path] = None) -> Dict[str, Any]:
     -------
     Dict
     """
-    conf = load_config(filename=config)
+    conf = read_config(filename=config)
     arrays = conf['arrays']['dimensions']
     dim = dict()
     for key, val in arrays.items():

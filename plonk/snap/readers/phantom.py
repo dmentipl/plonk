@@ -8,7 +8,7 @@ from typing import Callable, Dict, List, Union
 import h5py
 import numpy as np
 
-from ..._config import load_config
+from ..._config import read_config
 from ..._logging import logger
 from ..._units import Quantity, array_units, generate_array_code_units
 from ..._units import units as plonk_units
@@ -123,11 +123,11 @@ def generate_snap_from_file(
     snap._properties, snap._code_units = header_to_properties(header)
     snap._array_code_units = generate_array_code_units(snap._code_units)
 
-    # OPTIONAL: Set snap._units.
+    # OPTIONAL: Set snap._default_units.
     snap._default_units = array_units(config=config)
 
     # OPTIONAL: Set snap._name_map.
-    conf = load_config(filename=config)
+    conf = read_config(filename=config)
     snap._name_map = {
         'particles': conf['phantom']['particles']['namemap'],
         'sinks': conf['phantom']['sinks']['namemap'],

@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Union
 
-from .._config import load_config
+from .._config import read_config
 from .._units import units as plonk_units
 
 if TYPE_CHECKING:
@@ -46,7 +46,7 @@ def add_aliases(snap: SnapLike, filename: Union[str, Path] = None):
         The path to a Plonk config.toml file. If None, use the default
         file.
     """
-    conf = load_config(filename=filename)
+    conf = read_config(filename=filename)
     for key, val in conf['arrays']['aliases'].items():
         snap.add_alias(key, val)
 
