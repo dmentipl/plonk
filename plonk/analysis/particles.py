@@ -14,7 +14,7 @@ from ..utils.math import cross, norm
 if TYPE_CHECKING:
     from ..snap.snap import Sinks, SnapLike
 
-ORIGIN = (0, 0, 0) * plonk_units.au
+ORIGIN = (0, 0, 0) * plonk_units('meter')
 MOLECULAR_HYDROGEN_WEIGHT = 2.381
 
 # Derived quantities require some arrays already present
@@ -77,7 +77,8 @@ def angular_momentum(
         pos = snap['position']
         vel = snap['velocity']
 
-    origin = snap.translation if snap.translation is not None else ORIGIN
+    if origin is None:
+        origin = ORIGIN
     pos = pos - origin
 
     if pos.ndim == 1:
@@ -95,7 +96,7 @@ def angular_velocity(
     snap
         The Snap object.
     origin : optional
-        The origin around which to compute the angular momentum as a
+        The origin around which to compute the angular velocity as a
         Quantity like (x, y, z) * au. Default is (0, 0, 0).
     ignore_accreted : optional
         Ignore accreted particles. Default is False.
@@ -113,7 +114,8 @@ def angular_velocity(
         pos = snap['position']
         vel = snap['velocity']
 
-    origin = snap.translation if snap.translation is not None else ORIGIN
+    if origin is None:
+        origin = ORIGIN
     pos = pos - origin
 
     x, y = pos[:, 0], pos[:, 1]
@@ -134,7 +136,7 @@ def azimuthal_angle(
     snap
         The Snap object.
     origin : optional
-        The origin around which to compute the angular momentum as a
+        The origin around which to compute the azimuthal angle as a
         Quantity like (x, y, z) * au. Default is (0, 0, 0).
     ignore_accreted : optional
         Ignore accreted particles. Default is False.
@@ -150,7 +152,8 @@ def azimuthal_angle(
     else:
         pos = snap['position']
 
-    origin = snap.translation if snap.translation is not None else ORIGIN
+    if origin is None:
+        origin = ORIGIN
     pos = pos - origin
 
     x, y = pos[:, 0], pos[:, 1]
@@ -405,7 +408,7 @@ def polar_angle(
     snap
         The Snap object.
     origin : optional
-        The origin around which to compute the angular momentum as a
+        The origin around which to compute the polar angle as a
         Quantity like (x, y, z) * au. Default is (0, 0, 0).
     ignore_accreted : optional
         Ignore accreted particles. Default is False.
@@ -421,7 +424,8 @@ def polar_angle(
     else:
         pos = snap['position']
 
-    origin = snap.translation if snap.translation is not None else ORIGIN
+    if origin is None:
+        origin = ORIGIN
     pos = pos - origin
 
     x, y, z = pos[:, 0], pos[:, 1], pos[:, 2]
@@ -440,6 +444,9 @@ def radius_cylindrical(
     ----------
     snap
         The Snap object.
+    origin : optional
+        The origin around which to compute the cylindrical radius as a
+        Quantity like (x, y, z) * au. Default is (0, 0, 0).
     ignore_accreted : optional
         Ignore accreted particles. Default is False.
 
@@ -454,7 +461,8 @@ def radius_cylindrical(
     else:
         pos = snap['position']
 
-    origin = snap.translation if snap.translation is not None else ORIGIN
+    if origin is None:
+        origin = ORIGIN
     pos = pos - origin
 
     x, y = pos[:, 0], pos[:, 1]
@@ -473,6 +481,9 @@ def radius_spherical(
     ----------
     snap
         The Snap object.
+    origin : optional
+        The origin around which to compute the spherical radius as a
+        Quantity like (x, y, z) * au. Default is (0, 0, 0).
     ignore_accreted : optional
         Ignore accreted particles. Default is False.
 
@@ -487,7 +498,8 @@ def radius_spherical(
     else:
         pos = snap['position']
 
-    origin = snap.translation if snap.translation is not None else ORIGIN
+    if origin is None:
+        origin = ORIGIN
     pos = pos - origin
 
     x, y, z = pos[:, 0], pos[:, 1], pos[:, 2]
@@ -505,8 +517,8 @@ def specific_angular_momentum(
     snap
         The Snap object.
     origin : optional
-        The origin around which to compute the angular momentum as a
-        Quantity like (x, y, z) * au. Default is (0, 0, 0).
+        The origin around which to compute the specific angular momentum
+        as a Quantity like (x, y, z) * au. Default is (0, 0, 0).
     ignore_accreted : optional
         Ignore accreted particles. Default is False.
 
@@ -523,7 +535,8 @@ def specific_angular_momentum(
         pos = snap['position']
         vel = snap['velocity']
 
-    origin = snap.translation if snap.translation is not None else ORIGIN
+    if origin is None:
+        origin = ORIGIN
     pos = pos - origin
 
     return cross(pos, vel)
@@ -607,8 +620,9 @@ def velocity_radial_cylindrical(
     snap
         The Snap object.
     origin : optional
-        The origin around which to compute the angular momentum as a
-        Quantity like (x, y, z) * au. Default is (0, 0, 0).
+        The origin around which to compute the cylindrical radial
+        velocity as a Quantity like (x, y, z) * au. Default is
+        (0, 0, 0).
     ignore_accreted : optional
         Ignore accreted particles. Default is False.
 
@@ -625,7 +639,8 @@ def velocity_radial_cylindrical(
         pos = snap['position']
         vel = snap['velocity']
 
-    origin = snap.translation if snap.translation is not None else ORIGIN
+    if origin is None:
+        origin = ORIGIN
     pos = pos - origin
 
     x, y = pos[:, 0], pos[:, 1]
@@ -644,8 +659,8 @@ def velocity_radial_spherical(
     snap
         The Snap object.
     origin : optional
-        The origin around which to compute the angular momentum as a
-        Quantity like (x, y, z) * au. Default is (0, 0, 0).
+        The origin around which to compute the spherical radial velocity
+        as a Quantity like (x, y, z) * au. Default is (0, 0, 0).
     ignore_accreted : optional
         Ignore accreted particles. Default is False.
 
@@ -662,7 +677,8 @@ def velocity_radial_spherical(
         pos = snap['position']
         vel = snap['velocity']
 
-    origin = snap.translation if snap.translation is not None else ORIGIN
+    if origin is None:
+        origin = ORIGIN
     pos = pos - origin
 
     x, y, z = pos[:, 0], pos[:, 1], pos[:, 2]

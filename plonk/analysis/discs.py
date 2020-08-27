@@ -71,7 +71,8 @@ def eccentricity(
         pos = snap['position']
         vel = snap['velocity']
 
-    origin = snap.translation if snap.translation is not None else ORIGIN
+    if origin is None:
+        origin = ORIGIN
     pos = pos - origin
 
     mu = snap.properties.get('gravitational_parameter')
@@ -126,7 +127,8 @@ def inclination(
         pos = snap['position']
         vel = snap['velocity']
 
-    origin = snap.translation if snap.translation is not None else ORIGIN
+    if origin is None:
+        origin = ORIGIN
     pos = pos - origin
 
     _specific_angular_momentum = cross(pos, vel)
@@ -171,7 +173,8 @@ def keplerian_frequency(
     else:
         pos = snap['position']
 
-    origin = snap.translation if snap.translation is not None else ORIGIN
+    if origin is None:
+        origin = ORIGIN
     pos = pos - origin
 
     mu = snap.properties.get('gravitational_parameter')
@@ -222,7 +225,8 @@ def semi_major_axis(
         pos = snap['position']
         vel = snap['velocity']
 
-    origin = snap.translation if snap.translation is not None else ORIGIN
+    if origin is None:
+        origin = ORIGIN
     pos = pos - origin
 
     mu = snap.properties.get('gravitational_parameter')
@@ -281,7 +285,8 @@ def stokes_number(
         pos = snap['position']
         t_s = snap['stopping_time']
 
-    origin = snap.translation if snap.translation is not None else ORIGIN
+    if origin is None:
+        origin = ORIGIN
     pos = pos - origin
 
     mu = snap.properties.get('gravitational_parameter')

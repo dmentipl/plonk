@@ -527,18 +527,11 @@ class Snap:
             _rotation = axis / norm(axis) * angle
         if isinstance(_rotation, (list, tuple, ndarray)):
             _rotation = Rotation.from_rotvec(_rotation)
-        for arr in self._vector_arrays:
-            if arr in self.loaded_arrays():
-                array_m, array_u = self._arrays[arr].magnitude, self._arrays[arr].units
-                self._arrays[arr] = _rotation.apply(array_m) * array_u
-            if self.num_sinks > 0 and arr in self.sinks.loaded_arrays():
-                array_m = self._sink_arrays[arr].magnitude
-                array_u = self._sink_arrays[arr].units
-                self._sink_arrays[arr] = _rotation.apply(array_m) * array_u
-        for arr in self._vector_arrays:
-            if arr in self.loaded_arrays():
-                del self._arrays[arr]
-            if self.num_sinks > 0 and arr in self.sinks.loaded_arrays():
+
+        for arr in self.loaded_arrays():
+            del self[arr]
+        if self.num_sinks > 0:
+            for arr in self.sinks.loaded_arrays():
                 del self._sink_arrays[arr]
 
         if self.rotation is None:
@@ -585,10 +578,12 @@ class Snap:
                     'translation must have units, or you must specify units argument'
                 )
             translation *= plonk_units(unit)
-        if 'position' in self.loaded_arrays():
-            self._arrays['position'] += translation
-        if self.num_sinks > 0 and 'position' in self.sinks.loaded_arrays():
-            self._sink_arrays['position'] += translation
+
+        for arr in self.loaded_arrays():
+            del self[arr]
+        if self.num_sinks > 0:
+            for arr in self.sinks.loaded_arrays():
+                del self._sink_arrays[arr]
 
         if self.translation is None:
             self.translation = translation
