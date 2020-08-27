@@ -99,19 +99,19 @@ def test_discs(snaptype):
     snap = plonk.load_snap(filename)
 
     if snap.num_sinks > 0:
-        snap.set_gravitational_parameter(0)
-    mu = snap.properties.get('gravitational_parameter')
+        snap.set_central_body(0)
 
     discs.unit_normal(snap=snap)
     discs.rotate_edge_on(snap=snap)
     discs.rotate_face_on(snap=snap)
 
-    discs.inclination(snap=snap)
     discs.position_angle(snap=snap)
+    discs.inclination_angle(snap=snap)
 
-    discs.eccentricity(snap=snap, gravitational_parameter=mu)
-    discs.keplerian_frequency(snap=snap, gravitational_parameter=mu)
-    discs.semi_major_axis(snap=snap, gravitational_parameter=mu)
-    discs.stokes_number(snap=snap, gravitational_parameter=mu)
+    discs.eccentricity(snap=snap)
+    discs.inclination(snap=snap)
+    discs.keplerian_frequency(snap=snap)
+    discs.semi_major_axis(snap=snap)
+    discs.stokes_number(snap=snap)
 
     snap.close_file()

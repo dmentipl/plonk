@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, Dict, List
 
 import numpy as np
 from numpy import ndarray
@@ -15,7 +15,7 @@ from .total import angular_momentum, center_of_mass
 if TYPE_CHECKING:
     from ..snap.snap import SnapLike
 
-ORIGIN = (0, 0, 0) * plonk_units.au
+G = (1 * plonk_units.newtonian_constant_of_gravitation).to_base_units()
 
 # Derived quantities require some arrays already present
 # Ignoring type, sub_type, (optional) smoothing_length
@@ -36,25 +36,20 @@ dust_arrays = ['stokes_number']
 
 def eccentricity(
     snap: SnapLike,
-    gravitational_parameter: Quantity = None,
-    origin: Quantity = None,
+    central_body: Dict[str, Quantity] = None,
     ignore_accreted: bool = False,
 ) -> Quantity:
     """Calculate the eccentricity.
-
-    The eccentricity of particles around a mass specified by
-    gravitational parameter with an optional to specify the position of
-    the mass.
 
     Parameters
     ----------
     snap
         The Snap object.
-    gravitational_parameter
-        The gravitational parameter (mu = G M) as a Pint quantity.
-    origin : optional
-        The origin around which to compute the eccentricity as a
-        Quantity like (x, y, z) * au. Default is (0, 0, 0).
+    central_body : optional
+        A dictionary with the mass, position, and velocity (as Pint
+        quantities) of the central body around which the particles are
+        orbiting. If None, attempt to read from
+        snap.properties['central_body'].
     ignore_accreted : optional
         Ignore accreted particles. Default is False.
 
@@ -71,46 +66,43 @@ def eccentricity(
         pos = snap['position']
         vel = snap['velocity']
 
-    if origin is None:
-        origin = ORIGIN
-    pos = pos - origin
+    if central_body is None:
+        try:
+            central_body = snap.properties['central_body']
+        except KeyError:
+            raise ValueError(
+                'must pass in central_body or '
+                'set both on snap with snap.set_central_body'
+            )
 
-    mu = snap.properties.get('gravitational_parameter')
-    if mu is None:
-        raise ValueError(
-            'must pass in gravitational_parameter or '
-            'set on Snap with set_gravitational_parameter'
-        )
+    mu = (G * central_body['mass']).to_reduced_units()
+    r = pos - central_body['position']
+    v = vel - central_body['velocity']
 
-    radius = norm(pos, axis=1)
+    h = norm(cross(r, v), axis=1)
+    eps_k = 1 / 2 * norm(v, axis=1) ** 2
+    eps_p = -mu / norm(r, axis=1)
+    eps = eps_k + eps_p
 
-    _specific_angular_momentum = cross(pos, vel)
-    specific_angular_momentum_magnitude = norm(_specific_angular_momentum, axis=1)
-
-    _specific_kinetic_energy = 1 / 2 * norm(vel, axis=1) ** 2
-    specific_potential_energy = -mu / radius
-    specific_energy = _specific_kinetic_energy + specific_potential_energy
-
-    term = specific_energy * (specific_angular_momentum_magnitude / mu) ** 2
-    return np.sqrt(1 + 2 * term)
+    return np.sqrt(1 + 2 * eps * (h / mu) ** 2)
 
 
 def inclination(
-    snap: SnapLike, origin: Quantity = None, ignore_accreted: bool = False,
+    snap: SnapLike,
+    central_body: Dict[str, Quantity] = None,
+    ignore_accreted: bool = False,
 ) -> Quantity:
     """Calculate the inclination.
-
-    The inclination is calculated by taking the angle between the
-    angular momentum vector and the z-axis, with the angular momentum
-    calculated with respect to the center of mass.
 
     Parameters
     ----------
     snap
         The Snap object.
-    origin : optional
-        The origin around which to compute the semi-major axis as a
-        Quantity like (x, y, z) * au. Default is (0, 0, 0).
+    central_body : optional
+        A dictionary with the mass, position, and velocity (as Pint
+        quantities) of the central body around which the particles are
+        orbiting. If None, attempt to read from
+        snap.properties['central_body'].
     ignore_accreted : optional
         Ignore accreted particles. Default is False.
 
@@ -127,38 +119,38 @@ def inclination(
         pos = snap['position']
         vel = snap['velocity']
 
-    if origin is None:
-        origin = ORIGIN
-    pos = pos - origin
+    if central_body is None:
+        try:
+            central_body = snap.properties['central_body']
+        except KeyError:
+            raise ValueError(
+                'must pass in central_body or '
+                'set both on snap with snap.set_central_body'
+            )
 
-    _specific_angular_momentum = cross(pos, vel)
+    r = pos - central_body['position']
+    v = vel - central_body['velocity']
+    h = cross(r, v)
 
-    return np.arccos(
-        _specific_angular_momentum[:, 2] / norm(_specific_angular_momentum, axis=1)
-    )
+    return np.arccos(h[:, 2] / norm(h, axis=1))
 
 
 def keplerian_frequency(
     snap: SnapLike,
-    gravitational_parameter: Quantity = None,
-    origin: Quantity = None,
+    central_body: Dict[str, Quantity] = None,
     ignore_accreted: bool = False,
 ) -> Quantity:
     """Calculate the Keplerian orbital frequency.
-
-    The Keplerian orbital frequency of particles around a mass specified
-    by gravitational parameter with an optional to specify the position
-    of the mass.
 
     Parameters
     ----------
     snap
         The Snap object.
-    gravitational_parameter
-        The gravitational parameter (mu = G M) as a Pint quantity.
-    origin : optional
-        The origin around which to compute the Keplerian frequency as a
-        Quantity like (x, y, z) * au. Default is (0, 0, 0).
+    central_body : optional
+        A dictionary with the mass, position, and velocity (as Pint
+        quantities) of the central body around which the particles are
+        orbiting. If None, attempt to read from
+        snap.properties['central_body'].
     ignore_accreted : optional
         Ignore accreted particles. Default is False.
 
@@ -173,42 +165,37 @@ def keplerian_frequency(
     else:
         pos = snap['position']
 
-    if origin is None:
-        origin = ORIGIN
-    pos = pos - origin
+    if central_body is None:
+        try:
+            central_body = snap.properties['central_body']
+        except KeyError:
+            raise ValueError(
+                'must pass in central_body or '
+                'set both on snap with snap.set_central_body'
+            )
 
-    mu = snap.properties.get('gravitational_parameter')
-    if mu is None:
-        raise ValueError(
-            'must pass in gravitational_parameter or '
-            'set on Snap with set_gravitational_parameter'
-        )
+    mu = (G * central_body['mass']).to_reduced_units()
+    r = norm(pos - central_body['position'], axis=1)
 
-    radius = norm(pos, axis=1)
-    return np.sqrt(mu / radius ** 3)
+    return np.sqrt(mu / r ** 3)
 
 
 def semi_major_axis(
     snap: SnapLike,
-    gravitational_parameter: Quantity = None,
-    origin: Quantity = None,
+    central_body: Dict[str, Quantity] = None,
     ignore_accreted: bool = False,
 ) -> Quantity:
     """Calculate the semi-major axis.
-
-    The semi-major axis of particles around a mass specified by
-    gravitational parameter with an optional to specify the position of
-    the mass.
 
     Parameters
     ----------
     snap
         The Snap object.
-    gravitational_parameter
-        The gravitational parameter (mu = G M) as a Pint quantity.
-    origin : optional
-        The origin around which to compute the semi-major axis as a
-        Quantity like (x, y, z) * au. Default is (0, 0, 0).
+    central_body : optional
+        A dictionary with the mass, position, and velocity (as Pint
+        quantities) of the central body around which the particles are
+        orbiting. If None, attempt to read from
+        snap.properties['central_body'].
     ignore_accreted : optional
         Ignore accreted particles. Default is False.
 
@@ -225,37 +212,29 @@ def semi_major_axis(
         pos = snap['position']
         vel = snap['velocity']
 
-    if origin is None:
-        origin = ORIGIN
-    pos = pos - origin
+    if central_body is None:
+        try:
+            central_body = snap.properties['central_body']
+        except KeyError:
+            raise ValueError(
+                'must pass in central_body or '
+                'set both on snap with snap.set_central_body'
+            )
 
-    mu = snap.properties.get('gravitational_parameter')
-    if mu is None:
-        raise ValueError(
-            'must pass in gravitational_parameter or '
-            'set on Snap with set_gravitational_parameter'
-        )
+    mu = (G * central_body['mass']).to_reduced_units()
+    r = norm(pos - central_body['position'], axis=1)
+    v = vel - central_body['velocity']
 
-    radius = norm(pos, axis=1)
+    eps_k = 1 / 2 * norm(v, axis=1) ** 2
+    eps_p = -mu / r
+    eps = eps_k + eps_p
 
-    _specific_angular_momentum = cross(pos, vel)
-    specific_angular_momentum_magnitude = norm(_specific_angular_momentum, axis=1)
-
-    _specific_kinetic_energy = 1 / 2 * norm(vel, axis=1) ** 2
-    specific_potential_energy = -mu / radius
-    specific_energy = _specific_kinetic_energy + specific_potential_energy
-
-    term = specific_energy * (specific_angular_momentum_magnitude / mu) ** 2
-
-    _eccentricity = np.sqrt(1 + 2 * term)
-
-    return specific_angular_momentum_magnitude ** 2 / (mu * (1 - _eccentricity ** 2))
+    return -mu / (2 * eps)
 
 
 def stokes_number(
     snap: SnapLike,
-    gravitational_parameter: Quantity = None,
-    origin: Quantity = None,
+    central_body: Dict[str, Quantity] = None,
     ignore_accreted: bool = False,
 ) -> Quantity:
     """Calculate the Stokes number.
@@ -264,11 +243,11 @@ def stokes_number(
     ----------
     snap
         The Snap object.
-    gravitational_parameter
-        The gravitational parameter (mu = G M) as a Pint quantity.
-    origin : optional
-        The origin around which to compute the Stokes number as a
-        Quantity like (x, y, z) * au. Default is (0, 0, 0).
+    central_body : optional
+        A dictionary with the mass, position, and velocity (as Pint
+        quantities) of the central body around which the particles are
+        orbiting. If None, attempt to read from
+        snap.properties['central_body'].
     ignore_accreted : optional
         Ignore accreted particles. Default is False.
 
@@ -285,22 +264,21 @@ def stokes_number(
         pos = snap['position']
         t_s = snap['stopping_time']
 
-    if origin is None:
-        origin = ORIGIN
-    pos = pos - origin
+    if central_body is None:
+        try:
+            central_body = snap.properties['central_body']
+        except KeyError:
+            raise ValueError(
+                'must pass in central_body or '
+                'set both on snap with snap.set_central_body'
+            )
 
-    mu = snap.properties.get('gravitational_parameter')
-    if mu is None:
-        raise ValueError(
-            'must pass in gravitational_parameter or '
-            'set on Snap with set_gravitational_parameter'
-        )
+    mu = (G * central_body['mass']).to_reduced_units()
+    r = norm(pos - central_body['position'], axis=1)
 
-    radius = norm(pos, axis=1)
-    Omega_k = np.sqrt(mu / radius ** 3)
+    Omega_k = np.sqrt(mu / r ** 3)
 
-    Stokes = t_s * Omega_k[:, np.newaxis]
-    return Stokes
+    return t_s * Omega_k[:, np.newaxis]
 
 
 def unit_normal(snap: SnapLike, sinks: bool = False) -> ndarray:

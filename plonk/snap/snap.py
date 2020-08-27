@@ -703,14 +703,15 @@ class Snap:
 
         return self
 
-    def set_gravitational_parameter(self, sink_idx: Union[int, List[int]]) -> Snap:
-        """Set standard gravitational parameter.
+    def set_central_body(self, sink_idx: Union[int, List[int]]) -> Snap:
+        """Set the central body for orbital dynamics.
 
-        Calculate the standard gravitational parameter (G M) given a
-        sink index, or list of sink indices for multiple systems, etc,
-        and set snap.properties['gravitational_parameter']. This is
-        required to calculate orbital quantities such as eccentricity
-        or Stokes number.
+        The central body can be a sink particle or multiple sink
+        particles given by a sink index, or list of sink indices. This
+        method sets snap.properties['central_body'] with the central
+        body mass, barycenter position and velocity. This is required to
+        calculate orbital quantities on the particles such as
+        eccentricity.
 
         Parameters
         ----------
@@ -722,13 +723,23 @@ class Snap:
         Snap
             The Snap.
         """
-        G = plonk_units.newtonian_constant_of_gravitation
         if isinstance(sink_idx, (int, list)):
-            M = np.sum(self.sinks[sink_idx]['mass'])
+            mass = self.sinks[sink_idx]['mass']
+            position = self.sinks[sink_idx]['position']
+            velocity = self.sinks[sink_idx]['velocity']
         else:
-            raise ValueError('Cannot determine gravitational parameter')
-        G = (G * M).to_base_units()
-        self._properties['gravitational_parameter'] = G
+            raise ValueError('Cannot determine the central body')
+        if position.ndim == 1:
+            barycenter = position
+            velocity = velocity
+        elif position.ndim == 2:
+            barycenter = (mass[:, np.newaxis] * position).sum(axis=0) / np.sum(mass)
+            velocity = (mass[:, np.newaxis] * velocity).sum(axis=0) / np.sum(mass)
+        self._properties['central_body'] = {
+            'mass': np.sum(mass),
+            'position': barycenter,
+            'velocity': velocity,
+        }
 
         return self
 
