@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, List
+from typing import TYPE_CHECKING, Dict, List, Union
 
 import numpy as np
 from numpy import ndarray
@@ -281,7 +281,7 @@ def stokes_number(
     return t_s * Omega_k[:, np.newaxis]
 
 
-def unit_normal(snap: SnapLike, sinks: bool = False) -> ndarray:
+def unit_normal(snap: SnapLike, sinks: Union[bool, List[int]] = False) -> ndarray:
     """Calculate unit normal to plane of rotation.
 
     I.e. calculate a unit angular momentum vector.
@@ -291,7 +291,9 @@ def unit_normal(snap: SnapLike, sinks: bool = False) -> ndarray:
     snap
         The Snap object.
     sinks : optional
-        Include sink particles. Default is False.
+        Include sink particles specified by a list of indices, or a
+        bool indicating all sinks or no sinks. Default is True (all
+        sinks).
 
     Returns
     -------
@@ -303,7 +305,7 @@ def unit_normal(snap: SnapLike, sinks: bool = False) -> ndarray:
     return L / np.linalg.norm(L)
 
 
-def rotate_face_on(snap: SnapLike, sinks: bool = False) -> SnapLike:
+def rotate_face_on(snap: SnapLike, sinks: Union[bool, List[int]] = False) -> SnapLike:
     """Rotate to face-on with the angular momentum vector.
 
     I.e. rotate such that the angular momentum points in the
@@ -314,7 +316,9 @@ def rotate_face_on(snap: SnapLike, sinks: bool = False) -> SnapLike:
     snap
         The Snap object.
     sinks : optional
-        Include sink particles. Default is False.
+        Include sink particles specified by a list of indices, or a
+        bool indicating all sinks or no sinks. Default is True (all
+        sinks).
 
     Returns
     -------
@@ -328,7 +332,7 @@ def rotate_face_on(snap: SnapLike, sinks: bool = False) -> SnapLike:
     return snap.rotate(axis=axis, angle=angle)
 
 
-def rotate_edge_on(snap: SnapLike, sinks: bool = False) -> SnapLike:
+def rotate_edge_on(snap: SnapLike, sinks: Union[bool, List[int]] = False) -> SnapLike:
     """Rotate to edge-on with the angular momentum vector.
 
     I.e. rotate such that the angular momentum points in the
@@ -339,7 +343,9 @@ def rotate_edge_on(snap: SnapLike, sinks: bool = False) -> SnapLike:
     snap
         The Snap object.
     sinks : optional
-        Include sink particles. Default is False.
+        Include sink particles specified by a list of indices, or a
+        bool indicating all sinks or no sinks. Default is True (all
+        sinks).
 
     Returns
     -------

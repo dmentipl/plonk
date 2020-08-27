@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Union
 
 import numpy as np
+from numpy import ndarray
 
 from .._units import Quantity
 from ..utils.math import norm
@@ -34,7 +35,7 @@ def accreted_mass(snap: SnapLike) -> Quantity:
 
 
 def angular_momentum(
-    snap: SnapLike, sinks: bool = True, origin: Quantity = None
+    snap: SnapLike, sinks: Union[bool, List[int]] = True, origin: Quantity = None
 ) -> Quantity:
     """Calculate the total angular momentum.
 
@@ -43,7 +44,9 @@ def angular_momentum(
     snap
         The Snap object.
     sinks : optional
-        Include sink particles. Default is True.
+        Include sink particles specified by a list of indices, or a
+        bool indicating all sinks or no sinks. Default is True (all
+        sinks).
     origin : optional
         The origin around which to compute the angular momentum as a
         Quantity like (x, y, z) * au. Default is (0, 0, 0).
@@ -53,21 +56,25 @@ def angular_momentum(
     Quantity
         The total angular momentum like (lx, ly, lz).
     """
+    _sinks = _get_sinks(snap, sinks)
+
     angmom = particles.angular_momentum(
         snap=snap, origin=origin, ignore_accreted=True
     ).sum(axis=0)
-    if sinks and snap.num_sinks > 0:
+
+    if len(_sinks) > 0:
         angmom_sinks = particles.angular_momentum(
-            snap=snap.sinks, origin=origin, ignore_accreted=False
+            snap=_sinks, origin=origin, ignore_accreted=False
         )
         if angmom_sinks.ndim == 1:
             angmom = angmom + angmom_sinks
         elif angmom_sinks.ndim == 2:
             angmom = angmom + angmom_sinks.sum(axis=0)
+
     return angmom
 
 
-def center_of_mass(snap: SnapLike, sinks: bool = True) -> Quantity:
+def center_of_mass(snap: SnapLike, sinks: Union[bool, List[int]] = True) -> Quantity:
     """Calculate the center of mass.
 
     Parameters
@@ -75,13 +82,17 @@ def center_of_mass(snap: SnapLike, sinks: bool = True) -> Quantity:
     snap
         The Snap object.
     sinks : optional
-        Include sink particles. Default is True.
+        Include sink particles specified by a list of indices, or a
+        bool indicating all sinks or no sinks. Default is True (all
+        sinks).
 
     Returns
     -------
     Quantity
         The center of mass as a vector (cx, cy, cz).
     """
+    _sinks = _get_sinks(snap, sinks)
+
     h: Quantity = snap['smoothing_length']
     _mass: Quantity = snap['mass'][h > 0]
     pos: Quantity = snap['position'][h > 0]
@@ -89,9 +100,9 @@ def center_of_mass(snap: SnapLike, sinks: bool = True) -> Quantity:
     mass_pos = (_mass[:, np.newaxis] * pos).sum(axis=0)
     mass_tot = _mass.sum()
 
-    if sinks and snap.num_sinks > 0:
-        mass_sinks = snap.sinks['mass']
-        pos_sinks = snap.sinks['position']
+    if len(_sinks) > 0:
+        mass_sinks = _sinks['mass']
+        pos_sinks = _sinks['position']
         if pos_sinks.ndim == 1:
             mass_pos = mass_pos + mass_sinks * pos_sinks
             mass_tot = mass_tot + mass_sinks
@@ -102,7 +113,7 @@ def center_of_mass(snap: SnapLike, sinks: bool = True) -> Quantity:
     return mass_pos / mass_tot
 
 
-def dust_mass(snap: SnapLike, squeeze: bool = False) -> Quantity:
+def dust_mass(snap: SnapLike, squeeze: Union[bool, List[int]] = False) -> Quantity:
     """Calculate the total dust mass per species.
 
     Parameters
@@ -173,7 +184,7 @@ def gas_mass(snap: SnapLike) -> Quantity:
     raise ValueError('Cannot calculate gas mass')
 
 
-def kinetic_energy(snap: SnapLike, sinks: bool = True) -> Quantity:
+def kinetic_energy(snap: SnapLike, sinks: Union[bool, List[int]] = True) -> Quantity:
     """Calculate the total kinetic energy.
 
     Parameters
@@ -181,24 +192,29 @@ def kinetic_energy(snap: SnapLike, sinks: bool = True) -> Quantity:
     snap
         The Snap object.
     sinks : optional
-        Include sink particles. Default is True.
+        Include sink particles specified by a list of indices, or a
+        bool indicating all sinks or no sinks. Default is True (all
+        sinks).
 
     Returns
     -------
     Quantity
         The total kinetic energy.
     """
+    _sinks = _get_sinks(snap, sinks)
+
     ke = particles.kinetic_energy(snap=snap, ignore_accreted=True).sum()
-    if sinks and snap.num_sinks > 0:
-        if snap.num_sinks == 1:
-            m, v = snap.sinks['mass'], snap.sinks['velocity']
-            ke = ke + 1 / 2 * m * norm(v) ** 2
-        elif snap.num_sinks > 1:
-            ke = ke + particles.kinetic_energy(snap=snap.sinks).sum()
+
+    if len(_sinks) == 1:
+        m, v = _sinks['mass'], _sinks['velocity']
+        ke = ke + 1 / 2 * m * norm(v) ** 2
+    elif len(_sinks) > 1:
+        ke = ke + particles.kinetic_energy(snap=_sinks).sum()
+
     return ke
 
 
-def mass(snap: SnapLike, sinks: bool = True) -> Quantity:
+def mass(snap: SnapLike, sinks: Union[bool, List[int]] = True) -> Quantity:
     """Calculate the total mass.
 
     Parameters
@@ -206,24 +222,28 @@ def mass(snap: SnapLike, sinks: bool = True) -> Quantity:
     snap
         The Snap object.
     sinks : optional
-        Include sink particles. Default is True.
+        Include sink particles specified by a list of indices, or a
+        bool indicating all sinks or no sinks. Default is True (all
+        sinks).
 
     Returns
     -------
     Quantity
         The total mass.
     """
+    _sinks = _get_sinks(snap, sinks)
+
     h: Quantity = snap['smoothing_length']
     mass: Quantity = snap['mass'][h > 0]
 
     mass_sum = mass.sum()
-    if sinks and snap.num_sinks > 0:
-        mass_sum = mass_sum + np.sum(snap.sinks['mass'])
+    if len(_sinks) > 0:
+        mass_sum = mass_sum + np.sum(_sinks['mass'])
 
     return mass_sum
 
 
-def momentum(snap: SnapLike, sinks: bool = True) -> Quantity:
+def momentum(snap: SnapLike, sinks: Union[bool, List[int]] = True) -> Quantity:
     """Calculate the total momentum.
 
     Parameters
@@ -231,26 +251,31 @@ def momentum(snap: SnapLike, sinks: bool = True) -> Quantity:
     snap
         The Snap object.
     sinks : optional
-        Include sink particles. Default is True.
+        Include sink particles specified by a list of indices, or a
+        bool indicating all sinks or no sinks. Default is True (all
+        sinks).
 
     Returns
     -------
     Quantity
         The total linear momentum like (px, py, pz).
     """
+    _sinks = _get_sinks(snap, sinks)
+
     mom = particles.momentum(snap=snap, ignore_accreted=True).sum(axis=0)
-    if sinks and snap.num_sinks > 0:
-        if snap.num_sinks == 1:
-            mom = mom + snap.sinks['mass'] * snap.sinks['velocity']
-        elif snap.num_sinks > 1:
-            mass = snap.sinks['mass']
-            velocity = snap.sinks['velocity']
-            mom = mom + (mass[:, np.newaxis] * velocity).sum(axis=0)
+
+    if len(_sinks) == 1:
+        mom = mom + _sinks['mass'] * _sinks['velocity']
+    elif len(_sinks) > 1:
+        mass = _sinks['mass']
+        velocity = _sinks['velocity']
+        mom = mom + (mass[:, np.newaxis] * velocity).sum(axis=0)
+
     return mom
 
 
 def specific_angular_momentum(
-    snap: SnapLike, sinks: bool = True, origin: Quantity = None
+    snap: SnapLike, sinks: Union[bool, List[int]] = True, origin: Quantity = None
 ) -> Quantity:
     """Calculate the total specific angular momentum.
 
@@ -259,7 +284,9 @@ def specific_angular_momentum(
     snap
         The Snap object.
     sinks : optional
-        Include sink particles. Default is True.
+        Include sink particles specified by a list of indices, or a
+        bool indicating all sinks or no sinks. Default is True (all
+        sinks).
     origin : optional
         The origin around which to compute the angular momentum as a
         Quantity like (x, y, z) * au. Default is (0, 0, 0).
@@ -270,21 +297,27 @@ def specific_angular_momentum(
         The total specific angular momentum on the particles like
         (hx, hy, hz).
     """
+    _sinks = _get_sinks(snap, sinks)
+
     angmom = particles.specific_angular_momentum(
         snap=snap, origin=origin, ignore_accreted=True
     ).sum(axis=0)
-    if sinks and snap.num_sinks > 0:
+
+    if len(_sinks) > 0:
         angmom_sinks = particles.specific_angular_momentum(
-            snap=snap.sinks, origin=origin, ignore_accreted=False
+            snap=_sinks, origin=origin, ignore_accreted=False
         )
         if angmom_sinks.ndim == 1:
             angmom = angmom + angmom_sinks
         elif angmom_sinks.ndim == 2:
             angmom = angmom + angmom_sinks.sum(axis=0)
+
     return angmom
 
 
-def specific_kinetic_energy(snap: SnapLike, sinks: bool = True) -> Quantity:
+def specific_kinetic_energy(
+    snap: SnapLike, sinks: Union[bool, List[int]] = True
+) -> Quantity:
     """Calculate the total specific kinetic energy.
 
     Parameters
@@ -292,18 +325,34 @@ def specific_kinetic_energy(snap: SnapLike, sinks: bool = True) -> Quantity:
     snap
         The Snap object.
     sinks : optional
-        Include sink particles. Default is True.
+        Include sink particles specified by a list of indices, or a
+        bool indicating all sinks or no sinks. Default is True (all
+        sinks).
 
     Returns
     -------
     Quantity
         The total specific kinetic energy.
     """
+    _sinks = _get_sinks(snap, sinks)
+
     ke = particles.specific_kinetic_energy(snap=snap, ignore_accreted=True).sum()
-    if sinks and snap.num_sinks > 0:
-        if snap.num_sinks == 1:
-            v = snap.sinks['velocity']
-            ke = ke + 1 / 2 * norm(v) ** 2
-        elif snap.num_sinks > 1:
-            ke = ke + particles.specific_kinetic_energy(snap=snap.sinks).sum()
+
+    if len(_sinks) == 1:
+        v = _sinks['velocity']
+        ke = ke + 1 / 2 * norm(v) ** 2
+    elif len(_sinks) > 1:
+        ke = ke + particles.specific_kinetic_energy(snap=_sinks).sum()
+
     return ke
+
+
+def _get_sinks(snap, sinks):
+    if sinks is False:
+        return []
+    if snap.num_sinks > 0:
+        if sinks is True:
+            return snap.sinks
+        elif isinstance(sinks, (int, tuple, list, ndarray)):
+            return snap.sinks[sinks]
+    return []
