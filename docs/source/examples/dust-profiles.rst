@@ -9,7 +9,9 @@ Plot the surface density profile of each dust species.
 .. note::
 
     The data is from a Phantom simulation with multiple dust species using the
-    mixture (or "1-fluid") method with an embedded planet.
+    mixture (or "1-fluid") method with an embedded planet available from
+    `figshare
+    <https://figshare.com/articles/dataset/Plonk_example_multi-species_dust-gas_protoplanetary_disc_using_mixture_method/12885641>`_.
 
 .. code-block:: python
 

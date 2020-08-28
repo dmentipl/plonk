@@ -30,8 +30,8 @@ Working with SPH data
 ---------------------
 
 .. important::
-    To follow along, download the sample data, :code:`plonk_example_data.tar`,
-    from `Anaconda Cloud <https://anaconda.org/dmentipl/plonk_example_data/>`_.
+    To follow along, download the sample data :code:`plonk_example_data.tar`
+    from `figshare <https://figshare.com/articles/dataset/Plonk_example_dataset/12885587>`_.
     Then extract with :code:`tar xvf plonk_example_data.tar` and change into the
     :code:`plonk_example_data` directory. This data set is from a Phantom
     simulation of a dust and gas protoplanetary disc with an embedded

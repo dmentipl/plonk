@@ -12,7 +12,8 @@ binary.
 .. note::
 
     The data is from a Phantom gas simulation of a disc around a misaligned
-    binary.
+    binary available from `figshare
+    <https://figshare.com/articles/dataset/Plonk_example_misaligned_binary_disc/12885596>`_.
 
 .. code-block:: python
 

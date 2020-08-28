@@ -10,8 +10,10 @@ plane.
 
 .. note::
 
-    The data is from a Phantom simulation with a single dust species using the
-    separate particles (or "2-fluid") method with an embedded planet.
+    The data is from the `example dataset
+    <https://figshare.com/articles/dataset/Plonk_example_dataset/12885587>`_ of
+    a Phantom simulation with a single dust species using the separate particles
+    (or "2-fluid") method with an embedded planet.
 
 .. code-block:: python
 
