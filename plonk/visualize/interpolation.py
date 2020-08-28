@@ -37,7 +37,7 @@ def interpolate(
     slice_offset: Quantity = None,
     extent: Quantity,
     num_pixels: Tuple[float, float] = None,
-) -> ndarray:
+) -> Quantity:
     """Interpolate a quantity on the snapshot to a pixel grid.
 
     Parameters
