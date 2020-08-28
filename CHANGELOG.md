@@ -15,6 +15,8 @@ Types of changes:
 
 ## [Unreleased]
 
+## [0.7.3] - 2020-08-28
+
 ### Added
 
 - Add add_alias method to Profile.
@@ -33,6 +35,10 @@ Types of changes:
 - Moved some quantities from particles to discs as they are not generic but appropriate for discs simulations.
 - Rename interpolate arguments: number_of_pixels -> num_pixels and density_weighted -> weighted. And weighted is a named argument (i.e. not just caught with **kwargs) to image, vector, and interpolate
 - Rename `load_ev` to `load_time_series`.
+- Rename `load_sim` to `load_simulation`.
+- Replaced Snap.set_gravitational_parameter to Snap.set_central_body. A central body is required to calculate orbital dynamics quantities, e.g. eccentricity, on the particles.
+- Refactored plonk.load_snap. Much of the code that was in the phantom reader module was, in fact, more general. Now, some of that code lives in Snap.load_snap which requires defining three functions in the reader modules: snap_properties_and_units, snap_array_registry, and snap_sink_registry
+- Use figshare to host sample datasets not Anaconda Cloud.
 
 ### Deprecated
 
