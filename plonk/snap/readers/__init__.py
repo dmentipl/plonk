@@ -1,5 +1,34 @@
 """Reader for snapshot files."""
 
+# To write a new reader, three functions are required:
+#
+# - snap_properties_and_units,
+# - snap_array_registry,
+# - snap_sink_registry.
+#
+# These functions take an h5py.File object as an argument (and optionally
+# a name map dictionary to rename arrays on file) and a string data_source
+# to say where the data is from, e.g. 'phantom'.
+#
+# The first function gets some properties and code units, e.g. from the
+# Phantom header. It is called by Snap.load_snap as follows
+#
+# self._properties, self._code_units = snap_properties_and_units(self._file_pointer)
+#
+# The second two functions each create a dictionary with
+# keys as names of arrays and values as a function that when called with a
+# Snap object returns that array. They are called by Snap.load_snap as follows
+#
+# self._array_registry.update(
+#     snap_array_registry(self._file_pointer, self._name_map['particles'])
+# )
+#
+# self._sink_registry.update(
+#     snap_sink_registry(self._file_pointer, self._name_map['sinks'])
+# )
+#
+# See phantom.py for an example.
+
 from __future__ import annotations
 
 from typing import Any, Callable, Dict, Tuple
