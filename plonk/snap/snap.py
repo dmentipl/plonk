@@ -19,13 +19,21 @@ from scipy.spatial import cKDTree
 from scipy.spatial.transform import Rotation
 
 from .. import visualize
+from .._config import read_config
 from .._logging import logger
-from .._units import Quantity
+from .._units import Quantity, array_units, generate_array_code_units
 from .._units import units as plonk_units
 from ..utils.kernels import kernel_names, kernel_radius
 from ..utils.math import norm
+from ..utils.snap import add_aliases
 from . import context
 from .extra import add_quantities as _add_quantities
+from .readers import (
+    DATA_SOURCES,
+    snap_array_registry,
+    snap_properties_and_units,
+    snap_sink_registry,
+)
 
 
 class Snap:
@@ -129,6 +137,77 @@ class Snap:
         self.rotation = None
         self.translation = None
         self._tree = None
+
+    def load_snap(
+        self,
+        filename: Union[str, Path],
+        data_source: str,
+        config: Union[str, Path] = None,
+    ):
+        """Load snapshot from file.
+
+        Parameters
+        ----------
+        filename
+            The path to the file.
+        data_source : optional
+            The SPH software that produced the data. Default is 'phantom'.
+        config : optional
+            The path to a Plonk config.toml file.
+        """
+        logger.debug(f'Loading Phantom snapshot: {filename}')
+
+        # Set data_source
+        if data_source.lower() not in DATA_SOURCES:
+            raise ValueError(
+                f'Unknown data source. Available data sources:\n{DATA_SOURCES}'
+            )
+        self.data_source = data_source
+
+        # Set file_path
+        file_path = Path(filename).expanduser()
+        if not file_path.is_file():
+            raise FileNotFoundError('Cannot find snapshot file')
+        self.file_path = file_path
+
+        # Set file_pointer
+        self._file_pointer = h5py.File(file_path, mode='r')
+
+        # Set properties and units
+        self._properties, self._code_units = snap_properties_and_units(
+            file_pointer=self._file_pointer
+        )
+        self._array_code_units = generate_array_code_units(self._code_units)
+        self._default_units = array_units(config=config)
+
+        # Set name_map
+        conf = read_config(filename=config)
+        self._name_map = {
+            'particles': conf[self.data_source]['particles']['namemap'],
+            'sinks': conf[self.data_source]['sinks']['namemap'],
+        }
+
+        # Set array_registry
+        self._array_registry.update(
+            snap_array_registry(
+                file_pointer=self._file_pointer, name_map=self._name_map['particles']
+            )
+        )
+
+        # Set sink_registry
+        self._sink_registry.update(
+            snap_sink_registry(
+                file_pointer=self._file_pointer, name_map=self._name_map['sinks']
+            )
+        )
+
+        # Add aliases
+        add_aliases(self, filename=config)
+
+        # Make extra derived quantities available
+        self.add_quantities()
+
+        return self
 
     def close_file(self):
         """Close access to underlying file."""

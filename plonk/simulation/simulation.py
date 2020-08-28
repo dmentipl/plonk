@@ -17,7 +17,7 @@ from pandas import DataFrame
 
 from .._logging import logger
 from .._units import Quantity
-from ..snap.readers import load_snap
+from ..snap import load_snap
 from ..visualize.simulation import visualize_sim
 from .time_series import load_time_series, time_series_units
 

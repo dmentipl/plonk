@@ -3,17 +3,17 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Callable, Dict, List, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Tuple, Union
 
 import h5py
 import numpy as np
 
-from ..._config import read_config
 from ..._logging import logger
-from ..._units import Quantity, array_units, generate_array_code_units
+from ..._units import Quantity
 from ..._units import units as plonk_units
-from ...utils.snap import add_aliases
-from ..snap import Snap
+
+if TYPE_CHECKING:
+    from ..snap import Snap
 
 igas, iboundary, istar, idarkmatter, ibulge = 1, 3, 4, 5, 6
 bignumber = 1e29
@@ -83,99 +83,15 @@ def fileid(snap: Snap) -> str:
     return snap._file_pointer['header/fileident'][()].decode()
 
 
-def generate_snap_from_file(
-    filename: Union[str, Path], config: Union[str, Path] = None
-) -> Snap:
-    """Generate a Snap object from a Phantom HDF5 file.
+def snap_properties_and_units(
+    file_pointer: h5py.File,
+) -> Tuple[Dict[str, Any], Dict[str, Quantity]]:
+    """Generate snap properties and units.
 
     Parameters
     ----------
-    filename
-        The path to the file.
-    config : optional
-        The path to a Plonk config.toml file.
-
-    Returns
-    -------
-    Snap
-        A Snap object.
-    """
-    logger.debug(f'Loading Phantom snapshot: {filename}')
-
-    # REQUIRED: Instantiate Snap.
-    snap = Snap()
-
-    # REQUIRED: Set snap.data_source.
-    snap.data_source = 'Phantom'
-
-    # REQUIRED: Set snap.file_path.
-    file_path = Path(filename).expanduser()
-    if not file_path.is_file():
-        raise FileNotFoundError('Cannot find snapshot file')
-    snap.file_path = file_path
-
-    # REQUIRED: Set snap._file_pointer.
-    file_handle = h5py.File(file_path, mode='r')
-    snap._file_pointer = file_handle
-
-    # REQUIRED: Set snap._properties, snap._code_units, and snap._array_code_units.
-    header = {key: val[()] for key, val in file_handle['header'].items()}
-    snap._properties, snap._code_units = header_to_properties(header)
-    snap._array_code_units = generate_array_code_units(snap._code_units)
-
-    # OPTIONAL: Set snap._default_units.
-    snap._default_units = array_units(config=config)
-
-    # OPTIONAL: Set snap._name_map.
-    conf = read_config(filename=config)
-    snap._name_map = {
-        'particles': conf['phantom']['particles']['namemap'],
-        'sinks': conf['phantom']['sinks']['namemap'],
-    }
-
-    # REQUIRED: Set snap._array_registry dictionary.
-    #
-    # The keys are the names of the arrays and the values are functions that return the
-    # array when called with snap as the argument.
-    arrays = list(file_handle['particles'])
-    ndustsmall = header['ndustsmall']
-    ndustlarge = header['ndustlarge']
-    array_registry = populate_particle_array_registry(
-        arrays=arrays,
-        name_map=snap._name_map['particles'],
-        ndustsmall=ndustsmall,
-        ndustlarge=ndustlarge,
-    )
-    snap._array_registry.update(array_registry)
-
-    # REQUIRED (if there are sink particles): Set _sink_registry.
-    #
-    # The keys are the names of the arrays and the values are functions that return the
-    # array when called with snap as the argument.
-    if header['nptmass'] > 0:
-        sinks = list(file_handle['sinks'])
-        sink_registry = populate_sink_array_registry(
-            sinks=sinks, name_map=snap._name_map['sinks']
-        )
-        snap._sink_registry.update(sink_registry)
-
-    # OPTIONAL: Add aliases
-    add_aliases(snap)
-
-    # OPTIONAL: Make extra derived quantities available.
-    snap.add_quantities()
-
-    # REQUIRED: Return Snap object.
-    return snap
-
-
-def header_to_properties(header: dict):
-    """Convert Phantom header to properties and units.
-
-    Parameters
-    ----------
-    header
-        The Phantom header as a dict.
+    file_pointer
+        The h5py file pointer to the snap file.
 
     Returns
     -------
@@ -184,6 +100,7 @@ def header_to_properties(header: dict):
     units
         The units as a dict.
     """
+    header = {key: val[()] for key, val in file_pointer['header'].items()}
     length = (header['udist'] * plonk_units('cm')).to_base_units()
     time = (header['utime'] * plonk_units('s')).to_base_units()
     mass = (header['umass'] * plonk_units('g')).to_base_units()
@@ -242,32 +159,34 @@ def header_to_properties(header: dict):
     return prop, units
 
 
-def populate_particle_array_registry(
-    arrays: List[str],
-    name_map: Dict[str, str],
-    ndustsmall: int = 0,
-    ndustlarge: int = 0,
-):
-    """Populate particle arrays registry.
+def snap_array_registry(
+    file_pointer: h5py.File, name_map: Dict[str, str] = None
+) -> Dict[str, Callable]:
+    """Generate snap array registry.
 
     Parameters
     ----------
-    arrays
-        A list of particle array names as they are on file.
-    name_map
+    file_pointer
+        The h5py file pointer to the snap file.
+    name_map : optional
         A dict to convert from Phantom array names to Plonk names.
-    ndustsmall
-        The number of "small" dust species. I.e. the number of mixture
-        method (1-fluid) dust species.
-    ndustlarge
-        The number of "large" dust species. I.e. the number of separate
-        sets of particles (2-fluid) dust species.
 
     Returns
     -------
     Dict
         The particle array registry.
     """
+    # The keys are the names of the arrays and the values are functions that return the
+    # array when called with snap as the argument.
+
+    if name_map is None:
+        name_map = {}
+
+    header = {key: val[()] for key, val in file_pointer['header'].items()}
+    arrays = list(file_pointer['particles'])
+    ndustsmall = header['ndustsmall']
+    ndustlarge = header['ndustlarge']
+
     array_registry = dict()
 
     # Each particle gets an id
@@ -312,14 +231,16 @@ def populate_particle_array_registry(
     return array_registry
 
 
-def populate_sink_array_registry(sinks: List[str], name_map: Dict[str, str]):
-    """Populate particle arrays registry.
+def snap_sink_registry(
+    file_pointer: h5py.File, name_map: Dict[str, str] = None
+) -> Dict[str, Callable]:
+    """Generate snap sink registry.
 
     Parameters
     ----------
-    sinks
-        A list of sink array names as they are on file.
-    name_map
+    file_pointer
+        The h5py file pointer to the snap file.
+    name_map : optional
         A dict to convert from Phantom array names to Plonk names.
 
     Returns
@@ -327,19 +248,30 @@ def populate_sink_array_registry(sinks: List[str], name_map: Dict[str, str]):
     Dict
         The sink array registry.
     """
-    sink_registry = dict()
+    # The keys are the names of the arrays and the values are functions that return the
+    # array when called with snap as the argument.
 
-    # Read arrays if available
-    for name_on_file, name in name_map.items():
-        if name_on_file in sinks:
-            sink_registry[name] = get_dataset(name_on_file, 'sinks')
-            sinks.remove(name_on_file)
+    if name_map is None:
+        name_map = {}
+    header = {key: val[()] for key, val in file_pointer['header'].items()}
 
-    # Read *any* extra arrays
-    for sink in sinks:
-        sink_registry[sink] = get_dataset(sink, 'sinks')
+    if header['nptmass'] > 0:
+        sinks = list(file_pointer['sinks'])
+        sink_registry = dict()
 
-    return sink_registry
+        # Read arrays if available
+        for name_on_file, name in name_map.items():
+            if name_on_file in sinks:
+                sink_registry[name] = get_dataset(name_on_file, 'sinks')
+                sinks.remove(name_on_file)
+
+        # Read *any* extra arrays
+        for sink in sinks:
+            sink_registry[sink] = get_dataset(sink, 'sinks')
+
+        return sink_registry
+
+    return {}
 
 
 def get_dataset(dataset: str, group: str) -> Callable:

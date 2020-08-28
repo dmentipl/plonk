@@ -62,7 +62,7 @@ from ._units import Quantity, add_units, array_units, units
 from .analysis.profile import Profile, load_profile
 from .simulation.simulation import Simulation, load_sim, load_simulation
 from .simulation.time_series import load_ev, load_time_series
-from .snap.readers import load_snap
+from .snap import load_snap
 from .snap.snap import Sinks, Snap, SnapLike, SubSnap
 from .visualize.animation import animate
 from .visualize.interpolation import interpolate
