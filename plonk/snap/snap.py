@@ -157,13 +157,6 @@ class Snap:
         """
         logger.debug(f'Loading Phantom snapshot: {filename}')
 
-        # Set data_source
-        if data_source.lower() not in DATA_SOURCES:
-            raise ValueError(
-                f'Unknown data source. Available data sources:\n{DATA_SOURCES}'
-            )
-        self.data_source = data_source
-
         # Set file_path
         file_path = Path(filename).expanduser()
         if not file_path.is_file():
@@ -173,9 +166,16 @@ class Snap:
         # Set file_pointer
         self._file_pointer = h5py.File(file_path, mode='r')
 
+        # Set data_source
+        if data_source.lower() not in DATA_SOURCES:
+            raise ValueError(
+                f'Unknown data source. Available data sources:\n{DATA_SOURCES}'
+            )
+        self.data_source = data_source
+
         # Set properties and units
         self._properties, self._code_units = snap_properties_and_units(
-            file_pointer=self._file_pointer
+            file_pointer=self._file_pointer, data_source=self.data_source
         )
         self._array_code_units = generate_array_code_units(self._code_units)
         self._default_units = array_units(config=config)
@@ -190,14 +190,18 @@ class Snap:
         # Set array_registry
         self._array_registry.update(
             snap_array_registry(
-                file_pointer=self._file_pointer, name_map=self._name_map['particles']
+                file_pointer=self._file_pointer,
+                data_source=self.data_source,
+                name_map=self._name_map['particles'],
             )
         )
 
         # Set sink_registry
         self._sink_registry.update(
             snap_sink_registry(
-                file_pointer=self._file_pointer, name_map=self._name_map['sinks']
+                file_pointer=self._file_pointer,
+                data_source=self.data_source,
+                name_map=self._name_map['sinks'],
             )
         )
 

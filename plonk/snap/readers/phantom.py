@@ -95,10 +95,10 @@ def snap_properties_and_units(
 
     Returns
     -------
-    prop
+    properties
         The properties as a dict.
-    units
-        The units as a dict.
+    code_units
+        The code units as a dict.
     """
     header = {key: val[()] for key, val in file_pointer['header'].items()}
     length = (header['udist'] * plonk_units('cm')).to_base_units()
@@ -112,7 +112,7 @@ def snap_properties_and_units(
     ).to_base_units()
     current = (mass / time ** 2 / magnetic_field).to_base_units()
 
-    units = {
+    code_units = {
         'length': length,
         'time': time,
         'mass': mass,
@@ -120,22 +120,22 @@ def snap_properties_and_units(
         'current': current,
     }
 
-    prop = dict()
+    properties = dict()
 
-    prop['time'] = header['time'] * units['time']
-    prop['smoothing_length_factor'] = header['hfact']
+    properties['time'] = header['time'] * code_units['time']
+    properties['smoothing_length_factor'] = header['hfact']
 
     gamma = header['gamma']
     ieos = header['ieos']
     if ieos == 1:
-        prop['equation_of_state'] = 'isothermal'
-        prop['adiabatic_index'] = gamma
+        properties['equation_of_state'] = 'isothermal'
+        properties['adiabatic_index'] = gamma
     elif ieos == 2:
-        prop['equation_of_state'] = 'adiabatic'
-        prop['adiabatic_index'] = gamma
+        properties['equation_of_state'] = 'adiabatic'
+        properties['adiabatic_index'] = gamma
     elif ieos == 3:
-        prop['equation_of_state'] = 'locally isothermal disc'
-        prop['adiabatic_index'] = gamma
+        properties['equation_of_state'] = 'locally isothermal disc'
+        properties['adiabatic_index'] = gamma
 
     ndustsmall = header['ndustsmall']
     ndustlarge = header['ndustlarge']
@@ -145,18 +145,20 @@ def snap_properties_and_units(
             'or dust as separate sets of particles (aka multi-fluid dust).'
         )
     if ndustsmall > 0:
-        prop['dust_method'] = 'dust/gas mixture'
+        properties['dust_method'] = 'dust/gas mixture'
     elif ndustlarge > 0:
-        prop['dust_method'] = 'dust as separate sets of particles'
+        properties['dust_method'] = 'dust as separate sets of particles'
 
     n_dust = ndustsmall + ndustlarge
     if n_dust > 0:
-        prop['grain_size'] = header['grainsize'][:n_dust] * units['length']
-        prop['grain_density'] = (
-            header['graindens'][:n_dust] * units['mass'] / units['length'] ** 3
+        properties['grain_size'] = header['grainsize'][:n_dust] * code_units['length']
+        properties['grain_density'] = (
+            header['graindens'][:n_dust]
+            * code_units['mass']
+            / code_units['length'] ** 3
         )
 
-    return prop, units
+    return properties, code_units
 
 
 def snap_array_registry(

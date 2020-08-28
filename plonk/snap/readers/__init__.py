@@ -13,18 +13,28 @@
 # The first function gets some properties and code units, e.g. from the
 # Phantom header. It is called by Snap.load_snap as follows
 #
-# self._properties, self._code_units = snap_properties_and_units(self._file_pointer)
+# self._properties, self._code_units = snap_properties_and_units(
+#     file_pointer=self._file_pointer, data_source=self.data_source
+# )
 #
 # The second two functions each create a dictionary with
 # keys as names of arrays and values as a function that when called with a
 # Snap object returns that array. They are called by Snap.load_snap as follows
 #
 # self._array_registry.update(
-#     snap_array_registry(self._file_pointer, self._name_map['particles'])
+#     snap_array_registry(
+#         file_pointer=self._file_pointer,
+#         data_source=self.data_source,
+#         name_map=self._name_map['particles'],
+#     )
 # )
 #
 # self._sink_registry.update(
-#     snap_sink_registry(self._file_pointer, self._name_map['sinks'])
+#     snap_sink_registry(
+#         file_pointer=self._file_pointer,
+#         data_source=self.data_source,
+#         name_map=self._name_map['sinks'],
+#     )
 # )
 #
 # See phantom.py for an example.
@@ -44,7 +54,7 @@ DATA_SOURCES = ['phantom']
 
 
 def snap_properties_and_units(
-    file_pointer: h5py.File, data_source: str = 'phantom'
+    file_pointer: h5py.File, data_source: str
 ) -> Tuple[Dict[str, Any], Dict[str, Quantity]]:
     """Generate snap properties and units.
 
@@ -52,23 +62,31 @@ def snap_properties_and_units(
     ----------
     file_pointer
         The h5py file pointer to the snap file.
+    data_source
+        The SPH code that produced the data. E.g. 'phantom'.
 
     Returns
     -------
-    prop
+    properties
         The properties as a dict.
-    units
-        The units as a dict.
+    code_units
+        The code units as a dict.
     """
+    # The properties dictionary has keys like "equation_of_state" and "time", with
+    # varied values like "locally isothermal disc" and "61485663602.558136
+    # <Unit('second')>".
+
+    # The code_units dictionary has keys like "length" and "mass" with values as Pint
+    # quantities, e.g. "149600000000.0 <Unit('meter')>" and "1.9891000000000002e+30
+    # <Unit('kilogram')>".
+
     if data_source.lower() == 'phantom':
         return snap_properties_and_units_phantom(file_pointer=file_pointer)
     raise RuntimeError('Cannot generate properties and units')
 
 
 def snap_array_registry(
-    file_pointer: h5py.File,
-    name_map: Dict[str, str] = None,
-    data_source: str = 'phantom',
+    file_pointer: h5py.File, data_source: str, name_map: Dict[str, str] = None,
 ) -> Dict[str, Callable]:
     """Generate snap array registry.
 
@@ -76,6 +94,8 @@ def snap_array_registry(
     ----------
     file_pointer
         The h5py file pointer to the snap file.
+    data_source
+        The SPH code that produced the data. E.g. 'phantom'.
     name_map : optional
         A dict to convert from Phantom array names to Plonk names.
 
@@ -93,9 +113,7 @@ def snap_array_registry(
 
 
 def snap_sink_registry(
-    file_pointer: h5py.File,
-    name_map: Dict[str, str] = None,
-    data_source: str = 'phantom',
+    file_pointer: h5py.File, data_source: str, name_map: Dict[str, str] = None,
 ) -> Dict[str, Callable]:
     """Generate snap sink registry.
 
@@ -103,6 +121,8 @@ def snap_sink_registry(
     ----------
     file_pointer
         The h5py file pointer to the snap file.
+    data_source
+        The SPH code that produced the data. E.g. 'phantom'.
     name_map : optional
         A dict to convert from Phantom array names to Plonk names.
 
