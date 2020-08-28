@@ -15,7 +15,7 @@ Smoothed particle hydrodynamics analysis and visualization with Python.
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/dmentipl/plonk/blob/master/LICENSE)
 
 [![JOSS](https://joss.theoj.org/papers/10.21105/joss.01884/status.svg)](https://doi.org/10.21105/joss.01884)
-[![Zenodo](https://zenodo.org/badge/DOI/10.5281/zenodo.3698382.svg)](https://doi.org/10.5281/zenodo.3698382)
+[![Zenodo](https://zenodo.org/badge/DOI/10.5281/zenodo.3554567.svg)](https://doi.org/10.5281/zenodo.3554567)
 
 Description
 -----------
