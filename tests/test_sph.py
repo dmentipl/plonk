@@ -41,7 +41,10 @@ def test_sph_derivative():
     snap = plonk.load_snap(filename)
 
     analysis.sph.derivative(
-        snap=snap, derivative='div', quantity='velocity', kernel='cubic',
+        snap=snap,
+        derivative='div',
+        quantity='velocity',
+        kernel='cubic',
     )
 
     snap.close_file()

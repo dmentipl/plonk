@@ -21,7 +21,9 @@ missing_infile_parameters = ['alpha', 'alphaB', 'alphau', 'C_cour', 'C_force', '
 
 
 def add_to_header_from_infile(
-    snapfile: Union[str, Path], infile: Union[str, Path], parameters: List[str] = None,
+    snapfile: Union[str, Path],
+    infile: Union[str, Path],
+    parameters: List[str] = None,
 ):
     """Add missing values to Phantom snapshot header.
 

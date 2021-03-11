@@ -884,7 +884,9 @@ class Snap:
         r_kern = kernel_radius[kernel]
 
         neighbours = self.tree.query_ball_point(
-            position.magnitude, r_kern * smoothing_length.magnitude, n_jobs=-1,
+            position.magnitude,
+            r_kern * smoothing_length.magnitude,
+            n_jobs=-1,
         )
 
         return neighbours
@@ -914,7 +916,10 @@ class Snap:
             units = self.array_code_unit(array)
             arr = (arr_with_units / units).magnitude
             dset = f.create_dataset(
-                array, arr.shape, dtype=arr.dtype, compression='gzip',
+                array,
+                arr.shape,
+                dtype=arr.dtype,
+                compression='gzip',
             )
             dset[:] = arr
         f.close()
@@ -1226,7 +1231,9 @@ class Snap:
         raise ValueError('Array not available')
 
     def _getitem(
-        self, inp: Union[str, ndarray, int, slice], sinks: bool = False,
+        self,
+        inp: Union[str, ndarray, int, slice],
+        sinks: bool = False,
     ) -> Union[Quantity, SubSnap, List[SubSnap]]:
         """Return an array, or family, or subset."""
         if isinstance(inp, str):

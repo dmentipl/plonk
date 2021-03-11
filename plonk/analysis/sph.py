@@ -295,7 +295,14 @@ def _compute_derivative(
 
 @numba.njit
 def _compute_grad_over_neighbours(
-    posi, hi, quani, quanj, posj, mj, rhoj, kernel_gradient_function,
+    posi,
+    hi,
+    quani,
+    quanj,
+    posj,
+    mj,
+    rhoj,
+    kernel_gradient_function,
 ):
     result = np.zeros(3)
 
@@ -314,7 +321,14 @@ def _compute_grad_over_neighbours(
 
 @numba.njit
 def _compute_div_over_neighbours(
-    posi, hi, quani, quanj, posj, mj, rhoj, kernel_gradient_function,
+    posi,
+    hi,
+    quani,
+    quanj,
+    posj,
+    mj,
+    rhoj,
+    kernel_gradient_function,
 ):
     result = 0.0
 
@@ -333,7 +347,14 @@ def _compute_div_over_neighbours(
 
 @numba.njit
 def _compute_curl_over_neighbours(
-    posi, hi, quani, quanj, posj, mj, rhoj, kernel_gradient_function,
+    posi,
+    hi,
+    quani,
+    quanj,
+    posj,
+    mj,
+    rhoj,
+    kernel_gradient_function,
 ):
     result = np.zeros(3)
     cross = np.zeros(3)

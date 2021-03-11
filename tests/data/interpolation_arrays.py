@@ -15,5 +15,8 @@ vector_projection = np.array(
     )
 )
 vector_slice = np.array(
-    (np.loadtxt(DIR / 'vector_x_slice.csv'), np.loadtxt(DIR / 'vector_y_slice.csv'),)
+    (
+        np.loadtxt(DIR / 'vector_x_slice.csv'),
+        np.loadtxt(DIR / 'vector_y_slice.csv'),
+    )
 )
