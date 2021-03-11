@@ -62,3 +62,5 @@ jobs:
         python -m pytest
         NUMBA_DISABLE_JIT=1 python -m coverage run
         python -m coveralls
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
