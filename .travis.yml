@@ -18,19 +18,20 @@ before_install:
 
   # Install Python dependencies with conda using environment.yml.
   - conda env create --file environment.yml
-  - source activate plonk-dev
+  - source activate plonk
 
 install:
-  - conda develop .
+  - pip install -e .
 
 script:
-  - python -m coverage run -m pytest
-  - isort --skip plonk/__init__.py --check-only -rc
-  - black --check --skip-string-normalization plonk tests
-  - mypy --ignore-missing-imports plonk tests
+  - python -m pytest
+  - NUMBA_DISABLE_JIT=1 python -m coverage run
+  - python -m isort --check .
+  - python -m black --check .
+  - python -m mypy .
 
 after_success:
-  - coveralls
+  - python -m coveralls
 
 notifications:
   email:

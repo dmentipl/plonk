@@ -3,7 +3,6 @@ matplotlib
 numba
 numpy
 pandas
-pint
-scikit-image
+pint>=0.10.1
 scipy
-tqdm
+toml

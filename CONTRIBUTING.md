@@ -11,10 +11,14 @@ We expect users and contributors to follow the [Python Community Code of Conduct
 Getting started
 ---------------
 
-If you want to contribute to Plonk you should fork the repository. You can then clone it to your local machine.
+If you want to contribute to Plonk you should first fork the repository. You can then clone it to your local machine.
 
 ```bash
+# clone via HTTPS
 git clone https://github.com/your_user_name/plonk
+
+# or clone via SSH
+$ git clone git@github.com:your_user_name/plonk
 ```
 
 Replace `your_user_name` with your GitHub user name.
@@ -23,13 +27,19 @@ Set up an environment for Plonk development with Conda.
 
 ```bash
 conda env create --file environment.yml
-conda develop --name plonk-dev .
 ```
 
 Use this environment for Plonk development.
 
 ```bash
-conda activate plonk-dev
+conda activate plonk
+```
+
+Then you must create an "editable" install with pip.
+
+```bash
+cd plonk
+python -m pip install -e .
 ```
 
 Then you can make changes to your local copy of Plonk and these changes will be reflected when you import Plonk and use it. You can leave the development environment when done.
@@ -38,19 +48,32 @@ Then you can make changes to your local copy of Plonk and these changes will be 
 conda deactivate
 ```
 
-If you make changes to Plonk that you would like to contribute, you need to test that your code passes the test suite, and satisfies the code style requirements. To run the tests and check the code formatting do the following
+If you make changes to Plonk that you would like to contribute, you need to test that your code passes the test suite, and satisfies the code style requirements. To run the tests do the following
 
 ```bash
-python -m coverage run -m pytest && coverage html
-isort --skip plonk/__init__.py --check-only -rc
-black --check --skip-string-normalization plonk tests
-mypy --no-strict-optional --ignore-missing-imports plonk tests
+python -m pytest
+python -m mypy .
+```
+
+To check the code formatting do the following
+
+```bash
+python -m isort --check .
+python -m black --check .
 ```
 
 If any of these commands fail then there is either a test failure, or you need to reformat the code in line with the chosen code style for Plonk. (See below.)
 
-After you have committed and pushed your changes to your forked repository you
-can issue a [pull request](https://github.com/dmentipl/plonk/pull/new/master).
+After you have committed and pushed your changes to your forked repository you can issue a [pull request](https://github.com/dmentipl/plonk/pull/new/master).
+
+To check the [code coverage](https://en.wikipedia.org/wiki/Code_coverage) do the following
+
+```bash
+python -m coverage run
+python -m coverage html
+```
+
+Then open the report `htmlcov/index.html` in a web browser.
 
 Code style
 ----------
@@ -66,8 +89,8 @@ We follow [PEP 8](https://www.python.org/dev/peps/pep-0008/) for code style, and
 To format your changes run the following from the main repository directory:
 
 ```bash
-isort --skip plonk/__init__.py -rc
-black --skip-string-normalization plonk tests
+python -m isort .
+python -m black .
 ```
 
 ### Commit messages
@@ -113,7 +136,7 @@ The documentation is not comprehensive. Documentation of use cases is encouraged
 
 ### Testing
 
-We welcome contributions to the testing framework. To see where test coverage is lacking run `python -m coverage run -m pytest && coverage html` and then open `htmlcov/index.html` in a web browser.
+We welcome contributions to the testing framework. To see where test coverage is lacking run `python -m coverage run && python -m coverage html` and then open `htmlcov/index.html` in a web browser.
 
 Coming up with ideas of what to test is useful.
 
@@ -133,13 +156,13 @@ Suggestions for new features include:
 New releases and PyPI and Conda packages
 ----------------------------------------
 
-**Note: these instructions are for the Plonk maintainers only (e.g. [@dmentipl](https://github.com/dmentipl)).**
+**Note: these instructions are for the Plonk maintainers (e.g. [@dmentipl](https://github.com/dmentipl)).**
 
 ### Make a release
 
-First, increase the version number in `__init__.py`, and commit the change with a message like "Bump version to v0.3.1".
+First, increase the version number in `setup.cfg`, and update the `CHANGELOG.md` adding a heading like `[v0.3.1] - yyyy-mm-dd` under "Unreleased" heading. Then commit the change with a message like "Bump version to v0.3.1".
 
-Then, make a new release on GitHub at <https://github.com/dmentipl/plonk/releases>. The title and tag should both be like "v0.3.1" which corresponds to the Plonk version number. This creates a git tag for the commit, and generates a GitHub release with downloadable source as a tar.gz file.
+Then, make a new release on GitHub at <https://github.com/dmentipl/plonk/releases>. The title and tag should both be like "v0.3.1" which corresponds to the Plonk version number. Copy in the changes from the `CHANGELOG.md`. This creates a git tag for the commit, and generates a GitHub release with downloadable source as a tar.gz file.
 
 ### PyPI and pip
 
@@ -174,32 +197,6 @@ python -m twine upload dist/*
 Clone [my fork](https://github.com/dmentipl/plonk-feedstock) of the Plonk feedstock. Modify the `meta.yml` file in two ways:
 
 1. Update the version number.
-2. Update the sha256 hash to correspond to the version on [PyPI](https://pypi.org/project/plonk/).
+2. Update the sha256 hash to correspond to the source version on [PyPI](https://pypi.org/project/plonk/).
 
-Commit the change with a message like "Update to version 0.3.1". Then go to the GitHub page and generate a new [pull request](https://github.com/dmentipl/plonk-feedstock/pull/new/master). This will run several tests. If they pass merge the pull request into the conda-forge/plonk-feedstock repository. Then a new conda package should soon be available on the [Anaconda cloud](https://anaconda.org/conda-forge/plonk).
-
-### Old instructions for local conda package
-
-**These instructions are deprecated.**
-
-*Note: you must build a Conda package for each operating system. We support macOS and Linux.*
-
-From the root directory of the repository build the Conda package.
-
-```bash
-conda build conda
-```
-
-Then upload to Anaconda Cloud, with the correct path to the Conda package.
-
-```bash
-anaconda upload path_to_plonk_conda_package.tar.bz2
-```
-
-The path will be something like `~/conda/conda-bld/<os>/plonk-<v.v.v>-py3<x>_0.tar.bz2`, replacing:
-
-* `<os>` with either `osx-64` for macOS or `linux-64` for Linux,
-* `<v.v.v>` with the version number, e.g. `0.2.1`, and
-* `<x>` with the Python minor version number, e.g. `7`.
-
-The first time you run this command you will be required to enter credentials. However, they are usually cached for future uploads.
+Commit the change with a message like "Update to version 0.3.1". Then go to the GitHub page and generate a new [pull request](https://github.com/dmentipl/plonk-feedstock/pull/new/master). This will run several tests. If they pass, merge the pull request into the conda-forge/plonk-feedstock repository. Then a new conda package should soon be available on the [Anaconda cloud](https://anaconda.org/conda-forge/plonk).

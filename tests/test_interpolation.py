@@ -2,13 +2,13 @@
 
 import numpy as np
 
-import plonk
+from plonk.visualize.interpolation import scalar_interpolation, vector_interpolation
 
-from .stubdata.interpolation_arrays import (
-    scalar_cross_section,
+from .data.interpolation_arrays import (
     scalar_projection,
-    vector_cross_section,
+    scalar_slice,
     vector_projection,
+    vector_slice,
 )
 
 N = 10
@@ -32,71 +32,67 @@ HFACT = 1.0
 
 def test_scalar_interpolation_projection():
     """Test projection interpolation."""
-    im = plonk.visualize.interpolation.scalar_interpolation(
+    im = scalar_interpolation(
         quantity=S_DATA,
         x_coordinate=XX,
         y_coordinate=YY,
-        z_coordinate=ZZ,
         extent=EXTENT,
         smoothing_length=HH,
         particle_mass=MM,
         hfact=HFACT,
-        number_of_pixels=PIX,
+        num_pixels=PIX,
     )
 
     np.testing.assert_allclose(im, scalar_projection, rtol=1e-5)
 
 
-def test_scalar_interpolation_cross_section():
+def test_scalar_interpolation_slice():
     """Test cross section interpolation."""
-    im = plonk.visualize.interpolation.scalar_interpolation(
+    im = scalar_interpolation(
         quantity=S_DATA,
         x_coordinate=XX,
         y_coordinate=YY,
-        z_coordinate=ZZ,
+        dist_from_slice=ZZ * ZSLICE,
         extent=EXTENT,
         smoothing_length=HH,
         particle_mass=MM,
         hfact=HFACT,
-        number_of_pixels=PIX,
-        cross_section=ZSLICE,
+        num_pixels=PIX,
     )
 
-    np.testing.assert_allclose(im, scalar_cross_section, rtol=1e-5)
+    np.testing.assert_allclose(im, scalar_slice, rtol=1e-5)
 
 
 def test_vector_interpolation_projection():
     """Test projection interpolation."""
-    vec = plonk.visualize.interpolation.vector_interpolation(
+    vec = vector_interpolation(
         quantity_x=X_DATA,
         quantity_y=Y_DATA,
         x_coordinate=XX,
         y_coordinate=YY,
-        z_coordinate=ZZ,
         extent=EXTENT,
         smoothing_length=HH,
         particle_mass=MM,
         hfact=HFACT,
-        number_of_pixels=PIX,
+        num_pixels=PIX,
     )
 
     np.testing.assert_allclose(vec, vector_projection, rtol=1e-5)
 
 
-def test_vector_interpolation_cross_section():
+def test_vector_interpolation_slice():
     """Test cross section interpolation."""
-    vec = plonk.visualize.interpolation.vector_interpolation(
+    vec = vector_interpolation(
         quantity_x=X_DATA,
         quantity_y=Y_DATA,
         x_coordinate=XX,
         y_coordinate=YY,
-        z_coordinate=ZZ,
+        dist_from_slice=ZZ * ZSLICE,
         extent=EXTENT,
         smoothing_length=HH,
         particle_mass=MM,
         hfact=HFACT,
-        number_of_pixels=PIX,
-        cross_section=ZSLICE,
+        num_pixels=PIX,
     )
 
-    np.testing.assert_allclose(vec, vector_cross_section, rtol=1e-5)
+    np.testing.assert_allclose(vec, vector_slice, rtol=1e-5)

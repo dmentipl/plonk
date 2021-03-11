@@ -1,0 +1,5 @@
+include *.md
+include **/*.toml
+include LICENSE
+include environment.yml
+include CITATION.bib

@@ -11,11 +11,11 @@ Smoothed particle hydrodynamics analysis and visualization with Python.
 [![Documentation Status](https://readthedocs.org/projects/plonk/badge/?version=stable)](https://plonk.readthedocs.io/en/stable/?badge=stable)
 
 [![PyPI](https://img.shields.io/pypi/v/plonk)](https://pypi.org/project/plonk/)
-[![Anaconda Version](https://img.shields.io/conda/v/conda-forge/plonk.svg)](https://anaconda.org/conda-forge/plonk)
+[![conda-forge](https://img.shields.io/conda/v/conda-forge/plonk.svg)](https://anaconda.org/conda-forge/plonk)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/dmentipl/plonk/blob/master/LICENSE)
 
 [![JOSS](https://joss.theoj.org/papers/10.21105/joss.01884/status.svg)](https://doi.org/10.21105/joss.01884)
-[![Zenodo](https://zenodo.org/badge/DOI/10.5281/zenodo.3698382.svg)](https://doi.org/10.5281/zenodo.3698382)
+[![Zenodo](https://zenodo.org/badge/DOI/10.5281/zenodo.3554567.svg)](https://doi.org/10.5281/zenodo.3554567)
 
 Description
 -----------
@@ -29,7 +29,7 @@ Usage
 
 Plonk supports the following SPH file formats:
 
-+ [Phantom](https://phantomsph.bitbucket.io/) output in [HDF5](https://en.wikipedia.org/wiki/Hierarchical_Data_Format) format.
++ [Phantom](https://github.com/danieljprice/phantom) output in [HDF5](https://en.wikipedia.org/wiki/Hierarchical_Data_Format) format.
 
 *Note: you can convert Phantom non-HDF5 snapshots to HDF5. See the [Phantom docs](https://phantomsph.readthedocs.io).*
 
@@ -50,15 +50,11 @@ To read in a simulation with snapshot files like `disc_00000.h5`, and global qua
 You can load individual snapshots and access the particle arrays:
 
 ```python
->>> snap = plonk.load_snap('disc_00030.h5')
+>>> snap = plonk.load_snap(filename='disc_00030.h5')
 >>> snap['position']
-array([[ -24.69953214,   49.60113417,   -4.98059478],
-       [-108.99243136,   77.74663833,   12.89299546],
-       [ -51.22218782,  108.64454019,    1.56619644],
+array([[-3.69505001e+12,  7.42032967e+12, -7.45096980e+11],
        ...,
-       [  93.296599  ,  -77.66042087,    5.40835798],
-       [  63.75108128,   66.7446782 ,    3.30169363],
-       [   8.11639008,  139.45117413,    7.55340187]])
+       [ 1.21421196e+12,  2.08618956e+13,  1.12998892e+12]]) <Unit('meter')>
 ```
 
 The Snap objects contain the particle arrays, lazily loaded from the HDF5 file, as well as simulation metadata properties stored as a dictionary.
@@ -68,25 +64,23 @@ The Snap objects contain the particle arrays, lazily loaded from the HDF5 file, 
 To visualize the column density on a snapshot:
 
 ```python
->>> plonk.visualize.plot(snap=snap, quantity='density')
+>>> snap.image(quantity='density')
+<AxesSubplot:xlabel='x [m]', ylabel='y [m]'>
 ```
 
 For a more complicated example, here is the deviation from Keplerian velocity around a planet embedded in a protoplanetary disc.
 
 ![Planet embedded in protoplanetary disc](https://raw.githubusercontent.com/dmentipl/plonk/master/image.png)
 
-*Deviation from Keplerian velocity around a planet: at the disc midplane (left), and 10 (middle) and 20 au (right) above the disc midplane. Data from a Phantom simulation.*
+*Deviation from Keplerian velocity around a planet: at the disc midplane (left), and 10 (middle) and 20 au (right) above the disc midplane. See [here](https://plonk.readthedocs.io/en/latest/examples/deviation-from-keplerian.html) for details.*
 
 ### Analysis
 
 Extra quantities not written to the snapshot file are available:
 
 ```python
->>> snap.extra_quantities()
-<plonk.Snap "disc_00030.h5">
-
 >>> snap['angular_momentum']
-array([ ... ])
+array([ ... ]) <Unit('kilogram * meter ** 2 / second')>
 ```
 
 You can generate radial profiles on the snapshot. For example, to calculate the scale height in a disc:
@@ -95,63 +89,88 @@ You can generate radial profiles on the snapshot. For example, to calculate the 
 >>> prof = plonk.load_profile(snap)
 
 >>> prof['scale_height']
-array([ ... ])
+array([ ... ]) <Unit('meter')>
 ```
 
-Physical units for array quantities and other properties are available.
+Physical units of array quantities and other properties allow for unit conversion:
 
 ```python
->>> snap['position'][0]
-array([-24.69953214,  49.60113417,  -4.98059478])
+>>> pos = snap['position'][0]
+>>> pos
+array([-3.69505001e+12,  7.42032967e+12, -7.45096980e+11]) <Unit('meter')>
 
->>> snap.physical_units()
-<plonk.Snap "disc_00030.h5">
-
->>> snap['position'][0]
-array([-3.69505001e+14,  7.42032967e+14, -7.45096980e+13]) <Unit('centimeter')>
-
->>> snap['position'][0].to('au')
+>>> pos.to('au')
 array([-24.6998837 ,  49.60184016,  -4.98066567]) <Unit('astronomical_unit')>
+```
+
+You can get a subset of particles as a SubSnap.
+
+```python
+>>> subsnap = snap[:1000]
+>>> subsnap = snap[snap['x'] > 0]
+>>> subsnap = snap.family('gas')
 ```
 
 ### More
 
-For further usage, see documentation. The code is internally documented with docstrings. Try, for example, `help(plonk.Snap)` or `help(plonk.load_snap)`.
+For further usage, see [documentation](https://plonk.readthedocs.io/). The code is internally documented with docstrings. Try, for example, `help(plonk.Snap)` or `help(plonk.load_snap)`.
 
 Install
 -------
 
 ### Conda
 
-You can install Plonk via the package manager Conda from conda-forge.
+You can install Plonk via the package manager [Conda](https://docs.conda.io/) from [conda-forge](https://conda-forge.org/).
 
 ```bash
-conda install plonk
+conda install plonk --channel conda-forge
 ```
 
-This will install the required dependencies. Note: you may need to first add the `conda-forge` channel with `conda config --add channels conda-forge`. I also recommend strictly using conda-forge which you can do with `conda config --set channel_priority true`. For details on Conda, see <https://docs.conda.io/>.
+This will install the required dependencies.
+
+Note: You can simply use `conda install plonk` if you add the `conda-forge` channel with `conda config --add channels conda-forge`. I also recommend strictly using conda-forge which you can do with `conda config --set channel_priority true`. Both of these commands modify the Conda configuration file `~/.condarc`.
 
 ### pip
 
-You can also install Plonk via pip.
+You can also install Plonk from [PyPI](https://pypi.org/) via [pip](https://pip.pypa.io/).
 
 ```bash
-pip install plonk
+python -m pip install plonk
 ```
 
-This should install the required dependencies. For details on pip, see
-<https://pip.pypa.io/>.
+This should install the required dependencies.
+
+### Source
+
+You can install Plonk from source as follows.
+
+```bash
+# clone via HTTPS
+git clone https://github.com/dmentipl/plonk.git
+
+# or clone via SSH
+git clone git@github.com:dmentipl/plonk
+
+cd plonk
+python -m pip install -e .
+```
+
+This assumes you have already installed the dependencies. One way to do this is by setting up a conda environment. The [environment.yml](https://github.com/dmentipl/plonk/blob/master/environment.yml) file provided sets up a conda environment "plonk" for using or developing Plonk.
+
+```bash
+conda env create --file environment.yml
+conda activate plonk
+```
 
 Requirements
 ------------
 
-Python 3.6+ with h5py, matplotlib, numba, numpy, pandas, pint, scikit-image,
-scipy, tqdm. Installing Plonk with conda or pip will install these dependencies.
+Python 3.6+ with [h5py](https://www.h5py.org/), [matplotlib](https://www.matplotlib.org/), [numba](http://numba.pydata.org/), [numpy](https://numpy.org/), [pandas](https://pandas.pydata.org/), [pint](https://pint.readthedocs.io/), [scipy](https://www.scipy.org/), [toml](https://github.com/uiri/toml). Installing Plonk with conda or pip will install these dependencies.
 
 Getting help
 ------------
 
-If you need help, please try the following, in order:
+If you need help, please try the following:
 
 1. Check the [documentation](https://plonk.readthedocs.io/).
 2. Check the built-in help, e.g. `help(plonk.load_snap)`.
@@ -164,15 +183,29 @@ If you don't get an immediate response, please be patient. Plonk is maintained b
 Contributing
 ------------
 
-Thank you for considering contributing to Plonk. *All types of contributions are welcome from all types of people with different skill levels.*
+*All types of contributions are welcome from all types of people with different skill levels.*
 
-See [CONTRIBUTING.md](https://github.com/dmentipl/plonk/blob/master/CONTRIBUTING.md) for guidelines on how to contribute.
+Thank you for considering contributing to Plonk. There are many ways to contribute:
+
+1. If you find any bugs or cannot work out how to do something, please file a [bug report](https://github.com/dmentipl/plonk/issues/new?assignees=&labels=&template=bug_report.md&title=) in the issue tracker. Even if the issue is not a bug it may be that there is a lack of documentation.
+2. If you have any suggestions for new features, please raise a [feature request](https://github.com/dmentipl/plonk/issues/new?assignees=&labels=&template=feature_request.md&title=) in the issue tracker.
+3. If you use Plonk to do anything please consider contributing to the [examples](https://plonk.readthedocs.io/en/stable/examples.html) section in particular, or any other section, of the documentation.
+4. If you would like to contribute code, firstly thank you! We take code contributions via [pull request](https://github.com/dmentipl/plonk/pull/new/master).
+
+See [CONTRIBUTING.md](https://github.com/dmentipl/plonk/blob/master/CONTRIBUTING.md) for detailed guidelines on how to contribute.
 
 Citation
 --------
 
 If you use Plonk in a scientific publication, please cite the paper published in JOSS.
 
-> [Plonk: Smoothed particle hydrodynamics analysis and visualization with Python](https://joss.theoj.org/papers/10.21105/joss.01884#)
+> [Plonk: Smoothed particle hydrodynamics analysis and visualization with Python](https://doi.org/10.21105/joss.01884)
 
-You should also consider citing any other scientific software packages that you use.
+A BibTeX entry is available in [CITATION.bib](https://github.com/dmentipl/plonk/blob/master/CITATION.bib)
+
+If you use the interpolation to pixel grid component of Plonk please cite the [Splash paper](https://doi.org/10.1071/AS07022). You should also consider citing any other scientific software packages that you use.
+
+Change log
+----------
+
+The change log is available in [CHANGELOG.md](https://github.com/dmentipl/plonk/blob/master/CHANGELOG.md)

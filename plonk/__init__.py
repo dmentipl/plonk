@@ -7,112 +7,97 @@ particle hydrodynamics simulation data.
 
 Features
 --------
+Here are some of the features of Plonk:
 
 - Read in Phantom HDF snapshot files.
-- Read in global quantity and sink evolution files.
+- Read in global quantity and sink time series data files.
 - Encapsulate entire simulation data as Simulation object.
 - Access particle and sink arrays.
 - Access simulation parameters and units.
 - Compute extra quantities on particles.
 - Visualize data using kernel interpolation.
-- Generate radial profiles.
+- Generate profiles.
 
 Classes
 -------
-
-- Profile
-    Represents a radial profile through the snapshot in either
-    cylindrical or spherical coordinates.
-
-- Snap
+Profile
+    Represents a profile through the snapshot in Cartesian, cylindrical
+    or spherical coordinates.
+Sinks
+    Represents sinks in a snapshot file.
+Snap
     Represents a smoothed particle hydrodynamics snapshot file,
     containing particles, sinks, and file header information.
-
-- Simulation
+SubSnap
+    Represents a subset of particles in a snapshot file.
+Simulation
     Represents an entire smoothed particle hydrodynamics simulation.
     It contains a list of Snap objects, and time series data as pandas
     dataframes.
 
 Subpackages
 -----------
-
-- analysis
-    Contains classes and functions for performing analysis on snapshot
-    files.
-
-- simulation
-    Contains classes and functions for accessing multiple simulation
-    files as a coherent object.
-
-- snap
-    Contains classes and functions for reading and accessing snapshot
-    files.
-
-- utils
-    Contains utility classes and functions.
-
-- visualize
-    Contains classes and functions for visualization of snapshot files.
+analysis
+    Perform analysis on SPH snapshot data.
+simulation
+    Access multiple simulation files as a coherent object.
+snap
+    Read and accessing snapshot files.
+utils
+    Utility functions.
+visualize
+    Visualize of snapshot files.
 
 Documentation
 -------------
-
 See https://plonk.readthedocs.io/ for documentation. The source code is
 available at https://github.com/dmentipl/plonk.
 """
 
-import logging
-import platform
-from typing import Any
+import importlib_metadata as _importlib_metadata
 
-import pint
+from ._config import read_config, write_config
+from ._logging import logger_init as _logger_init
+from ._units import Quantity, add_units, array_units, units
+from .analysis.profile import Profile, load_profile
+from .simulation.simulation import Simulation, load_sim, load_simulation
+from .simulation.time_series import load_ev, load_time_series
+from .snap import load_snap
+from .snap.snap import Sinks, Snap, SnapLike, SubSnap
+from .visualize.animation import animate
+from .visualize.interpolation import interpolate
+from .visualize.simulation import visualize_sim
+from .visualize.visualization import image, plot, vector
 
-# Canonical version number
-__version__ = '0.5.0'
+__version__ = _importlib_metadata.version('plonk')
 
-# Units
-units: Any = pint.UnitRegistry(system='cgs')
-Quantity: Any = units.Quantity
+_logger_init(__version__)
 
-# Logging
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+add_units()
 
-console_handler = logging.StreamHandler()
-file_handler = logging.FileHandler('.plonk.log')
-
-console_handler.setLevel(logging.INFO)
-file_handler.setLevel(logging.DEBUG)
-
-console_format = logging.Formatter('%(levelname)s - %(message)s')
-file_format = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-console_handler.setFormatter(console_format)
-file_handler.setFormatter(file_format)
-
-logger.addHandler(console_handler)
-logger.addHandler(file_handler)
-
-
-def get_os_info():
-    """Get the operating system version for logging."""
-    system = platform.system()
-    if system == 'Darwin':
-        system = 'macOS'
-    release = platform.release()
-    return f'{system} version: {release}'
-
-
-logger.debug(f'Plonk v{__version__} on Python {platform.python_version()}')
-logger.debug(f'{get_os_info()}, {platform.machine()}')
-
-from . import analysis, simulation, snap, utils, visualize
-from .analysis import Profile, load_profile
-from .simulation import Simulation, load_ev, load_sim
-from .snap import Snap, load_snap
-
-__all__ = (
-    ['Profile', 'Simulation', 'Snap']  # Classes
-    + ['analysis', 'simulation', 'snap', 'utils', 'visualize']  # Packages
-    + ['load_ev', 'load_profile', 'load_snap', 'load_sim']  # User functions
-    + ['units', 'Quantity']
-)
+__all__ = [
+    'Profile',
+    'Quantity',
+    'Simulation',
+    'Sinks',
+    'Snap',
+    'SnapLike',
+    'SubSnap',
+    'add_units',
+    'animate',
+    'array_units',
+    'image',
+    'interpolate',
+    'load_ev',
+    'load_profile',
+    'load_sim',
+    'load_simulation',
+    'load_snap',
+    'load_time_series',
+    'plot',
+    'read_config',
+    'units',
+    'vector',
+    'visualize_sim',
+    'write_config',
+]

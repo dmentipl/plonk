@@ -12,29 +12,27 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import io
-import os
-import re
+import configparser
 import sys
+from pathlib import Path
 
-sys.path.insert(0, os.path.abspath('../..'))
-
-__version__ = re.search(
-    r'__version__\s*=\s*[\'"]([^\'"]*)[\'"]',  # It excludes inline comment too
-    io.open('../../plonk/__init__.py', encoding='utf_8_sig').read(),
-).group(1)
-
+path = (Path(__file__) / '../../..').resolve()
+sys.path.insert(0, str(path))
 
 # -- Project information -----------------------------------------------------
 
-project = 'Plonk'
-copyright = '2020, Daniel Mentiplay'
-author = 'Daniel Mentiplay'
+setup_cfg = configparser.ConfigParser()
+setup_cfg.read('../../setup.cfg')
+project = setup_cfg['metadata']['name']
+author = setup_cfg['metadata']['author']
+_version = setup_cfg['metadata']['version']
+
+copyright = f'2020, {author}'
 
 # The short X.Y version
-version = __version__.split(':')[0]
+version = _version.split(':')[0]
 # The full version, including alpha/beta/rc tags
-release = __version__
+release = _version
 
 
 # -- General configuration ---------------------------------------------------

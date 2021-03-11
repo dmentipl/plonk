@@ -1,13 +1,13 @@
 """Matplotlib wrapper functions for visualization."""
 
 from copy import copy
-from typing import Any, Optional
+from typing import Any
 
 import matplotlib as mpl
 import numpy as np
 from numpy import ndarray
 
-from .. import logger
+from .._logging import logger
 from .interpolation import Extent
 
 
@@ -40,8 +40,8 @@ def scatter(
     *,
     x: ndarray,
     y: ndarray,
-    c: Optional[ndarray] = None,
-    s: Optional[ndarray] = None,
+    c: ndarray = None,
+    s: ndarray = None,
     n_samples=10_000,
     random_seed=None,
     ax: Any,

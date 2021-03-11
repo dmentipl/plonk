@@ -1,34 +1,196 @@
 """Animations of visualizations."""
 
-import pathlib
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Any, Dict, List, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Union
 
 import matplotlib.pyplot as plt
 from matplotlib import animation as _animation
-from tqdm import tqdm
 
-from ..analysis import Profile
-from ..snap import SnapLike
-from .functions import get_extent_from_percentile
-from .interpolation import interpolate
-from .visualization import particle_plot, plot
+try:
+    from tqdm import tqdm
+except ImportError:
+    tqdm = None
 
-_interp_kwargs = ('number_of_pixels', 'density_weighted')
+from .._logging import logger
+from .._units import units as plonk_units
+from . import visualization as viz
 
-Extent = Tuple[float, float, float, float]
+if TYPE_CHECKING:
+    from ..analysis.profile import Profile
+    from ..snap.snap import SnapLike
 
 
-def animation(
+def animate(
+    filename: Union[str, Path],
+    *,
+    snaps: List[SnapLike] = None,
+    profiles: List[Profile] = None,
+    quantity: str = None,
+    x: str = None,
+    y: str = None,
+    fig: Any = None,
+    adaptive_colorbar: bool = True,
+    adaptive_limits: bool = True,
+    text: List[str] = None,
+    text_kwargs: Dict[str, Any] = {},
+    func_animation_kwargs: Dict[str, Any] = {},
+    save_kwargs: Dict[str, Any] = {},
+    **kwargs,
+):
+    """Animate a Snap or Profile visualization.
+
+    Pass in a list of Snap objects or Profile objects. If snaps are
+    passed in and the quantity is None, then the animation will be of
+    particle plots, otherwise it will be of images. If profiles are
+    passed in the animation will be of profiles.
+
+    Parameters
+    ----------
+    filename
+        The file name to save the animation to.
+    snaps
+        A list of Snap objects to animate.
+    profiles
+        A list of Profile objects to animate.
+    quantity : optional
+        The quantity to visualize. Must be a string to pass to Snap.
+    x : optional
+        The quantity for the x-axis. Must be a string to pass to Snap.
+        For interpolated plots must be 'x', 'y', or 'z'.
+    y : optional
+        The quantity for the y-axis. Must be a string to pass to Snap.
+        For interpolated plots must be 'x', 'y', or 'z'.
+    fig : optional
+        A matplotlib Figure object to animate. If None, generate a new
+        Figure.
+    adaptive_colorbar : optional
+        If True, adapt colorbar range during animation. If False, the
+        colorbar range is fixed by the initial image. Default is True.
+    adaptive_limits : optional
+        If True, adapt plot limits during animation. If False, the plot
+        limits are fixed by the initial plot. Default is True.
+    text : optional
+        List of strings to display per snap.
+    text_kwargs : optional
+        Keyword arguments to pass to matplotlib text.
+    func_animation_kwargs : optional
+        Keyword arguments to pass to matplotlib FuncAnimation.
+    save_kwargs : optional
+        Keyword arguments to pass to matplotlib Animation.save.
+    **kwargs
+        Arguments to pass to visualize.image.
+
+    Returns
+    -------
+    anim
+        The matplotlib FuncAnimation object.
+
+    Examples
+    --------
+    Make an image animation of projected density.
+
+    >>> units = {
+    ...     'position': 'au',
+    ...     'density': 'g/cm^3',
+    ...     'projection': 'cm'
+    ... }
+    >>> plonk.animate(
+    ...     filename='animation.mp4',
+    ...     snaps=snaps,
+    ...     quantity='density',
+    ...     units=units,
+    ...     save_kwargs={'fps': 10, 'dpi': 300},
+    ... )
+
+    Make a particle animation of x vs density.
+
+    >>> units = {'position': 'au', 'density': 'g/cm^3'}
+    >>> plonk.animate(
+    ...     filename='animation.mp4',
+    ...     snaps=snaps,
+    ...     x='x',
+    ...     y='density',
+    ...     units=units,
+    ...     adaptive_limits=False,
+    ...     save_kwargs={'fps': 10, 'dpi': 300},
+    ... )
+
+    Make a profile animation of radius vs surface density.
+
+    >>> units={'position': 'au', 'surface_density': 'g/cm^2'}
+    >>> plonk.animate(
+    ...     filename='animation.mp4',
+    ...     profiles=profiles,
+    ...     x='radius',
+    ...     y='surface_density',
+    ...     units=units,
+    ...     adaptive_limits=False,
+    ...     save_kwargs={'fps': 10, 'dpi': 300},
+    ... )
+    """
+    if snaps is not None:
+        if profiles is not None:
+            raise ValueError('Cannot pass in snaps and profiles')
+        if quantity is None:
+            anim = animation_particles(
+                filename=filename,
+                snaps=snaps,
+                x=x,
+                y=y,
+                fig=fig,
+                adaptive_limits=adaptive_limits,
+                text=text,
+                text_kwargs=text_kwargs,
+                func_animation_kwargs=func_animation_kwargs,
+                save_kwargs=save_kwargs,
+                **kwargs,
+            )
+        else:
+            anim = animation_images(
+                filename=filename,
+                snaps=snaps,
+                quantity=quantity,
+                fig=fig,
+                adaptive_colorbar=adaptive_colorbar,
+                text=text,
+                text_kwargs=text_kwargs,
+                func_animation_kwargs=func_animation_kwargs,
+                save_kwargs=save_kwargs,
+                **kwargs,
+            )
+    elif profiles is not None:
+        if x is None:
+            raise ValueError('x must be passed in for profile animations')
+        if y is None:
+            raise ValueError('y must be passed in for profile animations')
+        anim = animation_profiles(
+            filename=filename,
+            profiles=profiles,
+            x=x,
+            y=y,
+            fig=fig,
+            adaptive_limits=adaptive_limits,
+            text=text,
+            text_kwargs=text_kwargs,
+            func_animation_kwargs=func_animation_kwargs,
+            save_kwargs=save_kwargs,
+            **kwargs,
+        )
+    else:
+        raise ValueError('Must pass in snaps or profiles')
+
+    return anim
+
+
+def animation_images(
     *,
     filename: Union[str, Path],
     snaps: List[SnapLike],
-    quantity: Union[str, List[str]],
-    x: Union[str, List[str]] = 'x',
-    y: Union[str, List[str]] = 'y',
-    extent: Union[Extent, List[Extent]] = (-1, -1, -1, -1),
+    quantity: str,
     fig: Any = None,
-    adaptive_colorbar: bool = False,
+    adaptive_colorbar: bool = True,
     text: List[str] = None,
     text_kwargs: Dict[str, Any] = {},
     func_animation_kwargs: Dict[str, Any] = {},
@@ -44,23 +206,275 @@ def animation(
     snaps
         A list of Snap objects to animate.
     quantity
-        The quantity, or quantities, to visualize. Must be a string, or
-        list of strings, to pass to Snap.
-    x
-        The x-axis as a string to pass to Snap. Can be a list of strings
-        if multiple quantities are animated.
-    y
-        The y-axis as a string to pass to Snap. Can be a list of strings
-        if multiple quantities are animated.
-    extent
-        The extent as a tuple (xmin, xmax, ymin, ymax). Can be a list
-        of tuples if multiple quantities are animated.
+        The quantity to visualize. Must be a string to pass to Snap.
     fig : optional
         A matplotlib Figure object to animate. If None, generate a new
         Figure.
     adaptive_colorbar : optional
         If True, adapt colorbar range during animation. If False, the
-        colorbar range is fixed by the initial plot. Default is False.
+        colorbar range is fixed by the initial image. Default is True.
+    text : optional
+        List of strings to display per snap.
+    text_kwargs : optional
+        Keyword arguments to pass to matplotlib text.
+    func_animation_kwargs : optional
+        Keyword arguments to pass to matplotlib FuncAnimation.
+    save_kwargs : optional
+        Keyword arguments to pass to matplotlib Animation.save.
+    **kwargs
+        Arguments to pass to visualize.image.
+
+    Returns
+    -------
+    anim
+        The matplotlib FuncAnimation object.
+
+    Examples
+    --------
+    Make an animation of projected density.
+
+    >>> animation_images(
+    ...     filename='animation.mp4',
+    ...     snaps=snaps,
+    ...     quantity='density',
+    ...     units={'position': 'au', 'density': 'g/cm^3'},
+    ...     save_kwargs={'fps': 10, 'dpi': 300},
+    ... )
+    """
+    filepath = Path(filename)
+    if filepath.suffix != '.mp4':
+        raise ValueError('filename should end in ".mp4"')
+
+    if fig is None:
+        ax = snaps[0].image(quantity=quantity, **kwargs)
+        fig = ax.figure
+        image = ax.images[0]
+    else:
+        ax = fig.axes[0]
+        image = ax.images[0]
+
+    if text is not None:
+        _text = ax.text(
+            0.9, 0.9, text[0], ha='right', transform=ax.transAxes, **text_kwargs
+        )
+
+    if tqdm is not None:
+        pbar = tqdm(total=len(snaps))
+    else:
+        logger.info(
+            'progress bar not available\ntry pip install tqdm --or-- conda install tqdm'
+        )
+
+    x = kwargs.get('x', 'x')
+    y = kwargs.get('y', 'y')
+    interp = kwargs.get('interp', 'projection')
+    slice_normal = kwargs.get('slice_normal')
+    slice_offset = kwargs.get('slice_offset')
+    extent = kwargs.get('extent')
+    units = kwargs.get('units')
+    weighted = kwargs.get('weighted')
+    num_pixels = kwargs.get('num_pixels')
+
+    def animate(idx):
+        if tqdm is not None:
+            pbar.update(n=1)
+        snap = snaps[idx]
+        interp_data, _extent, _units = viz._interpolated_data(
+            snap=snap,
+            quantity=quantity,
+            x=x,
+            y=y,
+            interp=interp,
+            slice_normal=slice_normal,
+            slice_offset=slice_offset,
+            extent=extent,
+            units=units,
+            weighted=weighted,
+            num_pixels=num_pixels,
+        )
+        image.set_data(interp_data)
+        image.set_extent(_extent)
+        image.axes.set_xlim(_extent[:2])
+        image.axes.set_ylim(_extent[2:])
+        if adaptive_colorbar:
+            vmin = kwargs.get('vmin', interp_data.min())
+            vmax = kwargs.get('vmax', interp_data.max())
+            image.set_clim(vmin, vmax)
+        if text is not None:
+            _text.set_text(text[idx])
+        return [image]
+
+    anim = _animation.FuncAnimation(
+        fig, animate, frames=len(snaps), **func_animation_kwargs
+    )
+    anim.save(filepath, extra_args=['-vcodec', 'libx264'], **save_kwargs)
+    plt.close()
+    if tqdm is not None:
+        pbar.close()
+
+    return anim
+
+
+def animation_profiles(
+    *,
+    filename: Union[str, Path],
+    profiles: List[Profile],
+    x: str,
+    y: Union[str, List[str]],
+    fig: Any = None,
+    adaptive_limits: bool = True,
+    text: List[str] = None,
+    text_kwargs: Dict[str, Any] = {},
+    func_animation_kwargs: Dict[str, Any] = {},
+    save_kwargs: Dict[str, Any] = {},
+    **kwargs,
+):
+    """Generate an animation of a profile.
+
+    Parameters
+    ----------
+    filename
+        The file name to save the animation to.
+    profiles
+        A list of Profile objects to animate.
+    x
+        The quantity for the x-axis. Must be a string to pass to Snap.
+    y
+        The quantity for the y-axis, or list of quantities. Must be a
+        string (or list of strings) to pass to Snap.
+    fig : optional
+        A matplotlib Figure object to animate. If None, generate a new
+        Figure.
+    adaptive_limits : optional
+        If True, adapt plot limits during animation. If False, the plot
+        limits are fixed by the initial plot. Default is True.
+    text : optional
+        List of strings to display per profile plot.
+    text_kwargs : optional
+        Keyword arguments to pass to matplotlib text.
+    func_animation_kwargs : optional
+        Keyword arguments to pass to matplotlib FuncAnimation.
+    save_kwargs : optional
+        Keyword arguments to pass to matplotlib Animation.save.
+    **kwargs
+        Arguments to pass to Profile.plot function.
+
+    Returns
+    -------
+    anim
+        The matplotlib FuncAnimation object.
+
+    Examples
+    --------
+    Make an animation of radius vs surface density.
+
+    >>> animation_profiles(
+    ...     filename='animation.mp4',
+    ...     profiles=profiles,
+    ...     x='radius',
+    ...     y='surface_density',
+    ...     units={'position': 'au', 'surface_density': 'g/cm^2'},
+    ...     adaptive_limits=False,
+    ...     save_kwargs={'fps': 10, 'dpi': 300},
+    ... )
+    """
+    filepath = Path(filename)
+    if filepath.suffix != '.mp4':
+        raise ValueError('filename should end in ".mp4"')
+
+    if isinstance(y, str):
+        ys = [y]
+    elif isinstance(y, (tuple, list)):
+        ys = y
+    else:
+        raise ValueError('y must be a string or list of strings')
+
+    prof = profiles[0]
+    if fig is None:
+        ax = prof.plot(x=x, y=ys, **kwargs)
+        fig = ax.figure
+        lines = ax.lines
+    else:
+        ax = fig.axes[0]
+        lines = [line for line in ax.lines]
+
+    if text is not None:
+        _text = ax.text(
+            0.9, 0.9, text[0], ha='right', transform=ax.transAxes, **text_kwargs
+        )
+
+    if tqdm is not None:
+        pbar = tqdm(total=len(profiles))
+    else:
+        logger.info(
+            'progress bar not available\ntry pip install tqdm --or-- conda install tqdm'
+        )
+
+    units = kwargs.get('units')
+    if units is not None:
+        xunit = plonk_units(units.get(prof.base_profile_name(x), str(prof[x].units)))
+        yunits = [
+            plonk_units(units.get(prof.base_profile_name(y), str(prof[y].units)))
+            for y in ys
+        ]
+    else:
+        xunit = prof[x].units
+        yunits = [prof[y].units for y in ys]
+
+    def animate(idx):
+        if tqdm is not None:
+            pbar.update(n=1)
+        profile = profiles[idx]
+        xlim, ylim = (0, 0), (0, 0)
+        _x = (profile[x] / xunit).to_base_units().magnitude
+        for line, y, yunit in zip(lines, ys, yunits):
+            _y = (profile[y] / yunit).to_base_units().magnitude
+            line.set_data(_x, _y)
+            if adaptive_limits:
+                ax = line.axes
+                xlim, ylim = _get_range(_x, xlim), _get_range(_y, ylim)
+                ax.set(xlim=xlim, ylim=ylim)
+        if text is not None:
+            _text.set_text(text[idx])
+        return lines
+
+    anim = _animation.FuncAnimation(
+        fig, animate, frames=len(profiles), **func_animation_kwargs
+    )
+    anim.save(filepath, extra_args=['-vcodec', 'libx264'], **save_kwargs)
+    plt.close()
+    if tqdm is not None:
+        pbar.close()
+
+    return anim
+
+
+def animation_particles(
+    *,
+    filename: Union[str, Path],
+    snaps: List[SnapLike],
+    fig: Any = None,
+    adaptive_limits: bool = True,
+    text: List[str] = None,
+    text_kwargs: Dict[str, Any] = {},
+    func_animation_kwargs: Dict[str, Any] = {},
+    save_kwargs: Dict[str, Any] = {},
+    **kwargs,
+):
+    """Generate an animation of particle plots.
+
+    Parameters
+    ----------
+    filename
+        The file name to save the animation to.
+    snaps
+        A list of Snap objects to animate.
+    fig : optional
+        A matplotlib Figure object to animate. If None, generate a new
+        Figure.
+    adaptive_limits : optional
+        If True, adapt plot limits during animation. If False, the plot
+        limits are fixed by the initial plot. Default is True.
     text : optional
         List of strings to display per snap.
     text_kwargs : optional
@@ -79,363 +493,71 @@ def animation(
 
     Examples
     --------
-    Make an animation of multiple snaps.
+    Make an animation of x vs density on the particles.
 
-    >>> plonk.visualize.animation(
-    ...     snaps=snaps,
-    ...     quantity='density',
-    ...     x='x',
-    ...     y='y',
-    ...     extent=(-100, 100, -100, 100),
-    ...     vmin=0.0,
-    ...     vmax=1.0,
+    >>> animation_particles(
     ...     filename='animation.mp4',
+    ...     snaps=snaps,
+    ...     x='x',
+    ...     y='density',
+    ...     adaptive_limits=False,
+    ...     save_kwargs={'fps': 10, 'dpi': 300},
     ... )
     """
-    filepath = pathlib.Path(filename)
+    filepath = Path(filename)
     if filepath.suffix != '.mp4':
         raise ValueError('filename should end in ".mp4"')
 
-    if isinstance(quantity, list):
-        quantities = quantity
-    elif isinstance(quantity, str):
-        quantities = [quantity]
-    else:
-        raise ValueError('Cannot determine quantity')
-    if isinstance(x, list):
-        xs = x
-    elif isinstance(x, str):
-        xs = [x]
-    else:
-        raise ValueError('Cannot determine x')
-    if isinstance(y, list):
-        ys = y
-    elif isinstance(y, str):
-        ys = [y]
-    else:
-        raise ValueError('Cannot determine y')
-    if isinstance(extent, list):
-        extents = extent
-    elif isinstance(extent, tuple):
-        extents = [extent]
-    else:
-        raise ValueError('Cannot determine extent')
-    if len(quantities) > 1:
-        if len(xs) == 1:
-            xs = [xs[0] for _ in range(len(quantities))]
-        if len(ys) == 1:
-            ys = [ys[0] for _ in range(len(quantities))]
-        if len(extents) == 1:
-            extents = [extents[0] for _ in range(len(quantities))]
-    if len(xs) != len(quantities):
-        raise ValueError('x must have same length as quantity or be a single value')
-    if len(ys) != len(quantities):
-        raise ValueError('y must have same length as quantity or be a single value')
-    if len(extents) != len(quantities):
-        raise ValueError('extent have same length as quantity or be a single value')
-
-    interp = kwargs.get('interp', 'projection')
-
     if fig is None:
-        fig, axs = plt.subplots(ncols=len(quantities), squeeze=False)
-        axs = axs.flatten()
-        images = list()
-        for quantity, x, y, extent, ax in zip(quantities, xs, ys, extents, axs):
-            plot(
-                snap=snaps[0],
-                quantity=quantity,
-                x=x,
-                y=y,
-                extent=extent,
-                ax=ax,
-                **kwargs,
-            )
-            images += ax.images
+        ax = snaps[0].plot(**kwargs)
+        fig = ax.figure
+        lines = ax.lines
     else:
-        images = [image for ax in fig.axes for image in ax.images]
+        ax = fig.axes[0]
+        lines = [line for line in ax.lines]
 
     if text is not None:
         _text = ax.text(
             0.9, 0.9, text[0], ha='right', transform=ax.transAxes, **text_kwargs
         )
 
-    pbar = tqdm(total=len(snaps))
+    if tqdm is not None:
+        pbar = tqdm(total=len(snaps))
+    else:
+        logger.info(
+            'progress bar not available\ntry pip install tqdm --or-- conda install tqdm'
+        )
+
+    x = kwargs.get('x', 'x')
+    y = kwargs.get('y', 'y')
+    c = kwargs.get('c')
+    s = kwargs.get('s')
+    units = kwargs.get('units')
 
     def animate(idx):
-        pbar.update(n=1)
-        _kwargs = {k: v for k, v in kwargs.items() if k in _interp_kwargs}
-        for quantity, x, y, extent, image in zip(quantities, xs, ys, extents, images):
-            if extent == (-1, -1, -1, -1):
-                _extent = get_extent_from_percentile(snaps[idx], x, y)
-            else:
-                _extent = extent
-            interp_data = interpolate(
-                snap=snaps[idx],
-                interp=interp,
-                quantity=quantity,
-                x=x,
-                y=y,
-                extent=_extent,
-                **_kwargs,
+        snap = snaps[idx]
+        if tqdm is not None:
+            pbar.update(n=1)
+        xlim, ylim = (0, 0), (0, 0)
+
+        if c is None and s is None:
+            try:
+                subsnaps = snap.subsnaps_as_list(squeeze=False)
+            except AttributeError:
+                subsnaps = [snap]
+        else:
+            subsnaps = [snap]
+
+        for line, subsnap in zip(lines, subsnaps):
+            _x, _y, _c, _s, _units = viz._plot_data(
+                snap=subsnap, x=x, y=y, c=c, s=s, units=units
             )
-            image.set_data(interp_data)
-            image.set_extent(_extent)
-            image.axes.set_xlim(_extent[:2])
-            image.axes.set_ylim(_extent[2:])
-            if adaptive_colorbar:
-                vmin = kwargs.get('vmin', interp_data.min())
-                vmax = kwargs.get('vmax', interp_data.max())
-                image.set_clim(vmin, vmax)
+            line.set_data(_x, _y)
+            if adaptive_limits:
+                xlim, ylim = _get_range(_x, xlim), _get_range(_y, ylim)
+                line.axes.set(xlim=xlim, ylim=ylim)
         if text is not None:
             _text.set_text(text[idx])
-        return images
-
-    anim = _animation.FuncAnimation(
-        fig, animate, frames=len(snaps), **func_animation_kwargs
-    )
-    anim.save(filepath, extra_args=['-vcodec', 'libx264'], **save_kwargs)
-    plt.close()
-    pbar.close()
-
-    return anim
-
-
-def animation_profiles(
-    *,
-    filename: Union[str, Path],
-    profiles: List[Profile],
-    quantity: Union[str, List[str]],
-    fig: Any = None,
-    adaptive_limits: bool = True,
-    xlim: Tuple[float, float] = None,
-    ylim: Tuple[float, float] = None,
-    text: List[str] = None,
-    text_kwargs: Dict[str, Any] = {},
-    func_animation_kwargs: Dict[str, Any] = {},
-    save_kwargs: Dict[str, Any] = {},
-    **kwargs,
-):
-    """Generate an animation of a radial profile.
-
-    Parameters
-    ----------
-    filename
-        The file name to save the animation to.
-    profiles
-        A list of Profile objects to animate.
-    quantity
-        The quantity, or quantities, to profile. Must be a string to
-        pass to Profile, or a list of such strings.
-    fig : optional
-        A matplotlib Figure object to animate. If None, generate a new
-        Figure.
-    adaptive_limits : optional
-        If True, adapt plot limits during animation. If False, the plot
-        limits are fixed by the initial plot. Default is True.
-    xlim : optional
-        The x-axis range as a tuple (xmin, xmax). Only used if fig not
-        passed in.
-    ylim : optional
-        The y-axis range as a tuple (ymin, ymax). Only used if fig not
-        passed in.
-    text : optional
-        List of strings to display per profile plot.
-    text_kwargs : optional
-        Keyword arguments to pass to matplotlib text.
-    func_animation_kwargs : optional
-        Keyword arguments to pass to matplotlib FuncAnimation.
-    save_kwargs : optional
-        Keyword arguments to pass to matplotlib Animation.save.
-    **kwargs
-        Arguments to pass to plot function.
-
-    Returns
-    -------
-    anim
-        The matplotlib FuncAnimation object.
-    """
-    filepath = pathlib.Path(filename)
-    if filepath.suffix != '.mp4':
-        raise ValueError('filename should end in ".mp4"')
-
-    if isinstance(quantity, list):
-        quantities = quantity
-    elif isinstance(quantity, str):
-        quantities = [quantity]
-    else:
-        raise ValueError('Cannot determine quantity')
-
-    if fig is None:
-        fig, ax = plt.subplots()
-        for quantity in quantities:
-            ax.plot(profiles[0]['radius'], profiles[0][quantity], **kwargs)
-            ax.set(xlim=xlim, ylim=ylim)
-        lines = ax.lines
-        if text is not None:
-            texts = [
-                ax.text(
-                    0.9, 0.9, text[0], ha='right', transform=ax.transAxes, **text_kwargs
-                )
-            ]
-    else:
-        lines = [line for ax in fig.axes for line in ax.lines]
-        if text is not None:
-            texts = [text for ax in fig.axes for text in ax.texts]
-
-    pbar = tqdm(total=len(profiles))
-
-    def animate(idx):
-        pbar.update(n=1)
-        for line, quantity in zip(lines, quantities):
-            x, y = profiles[idx]['radius'], profiles[idx][quantity]
-            line.set_data(x, y)
-            if adaptive_limits:
-                ax = line.axes
-                ylim = _get_range(y, (0, 0))
-                ax.set(ylim=ylim)
-        if text is not None:
-            for _text in texts:
-                _text.set_text(text[idx])
-        return [line]
-
-    anim = _animation.FuncAnimation(
-        fig, animate, frames=len(profiles), **func_animation_kwargs
-    )
-    anim.save(filepath, extra_args=['-vcodec', 'libx264'], **save_kwargs)
-    plt.close()
-    pbar.close()
-
-    return anim
-
-
-def animation_particles(
-    *,
-    filename: Union[str, Path],
-    snaps: List[SnapLike],
-    x: str,
-    y: Union[str, List[str]],
-    fig: Any = None,
-    adaptive_limits: bool = True,
-    xlim: Tuple[float, float] = None,
-    ylim: Tuple[float, float] = None,
-    text: List[str] = None,
-    text_kwargs: Dict[str, Any] = {},
-    func_animation_kwargs: Dict[str, Any] = {},
-    save_kwargs: Dict[str, Any] = {},
-    **kwargs,
-):
-    """Generate an animation of particle plots.
-
-    Parameters
-    ----------
-    filename
-        The file name to save the animation to.
-    snaps
-        A list of Snap objects to animate.
-    x
-        The quantity for the x-axis. Must be a string to pass to Snap.
-    y
-        The quantity for the y-axis, or list of quantities. Must be a
-        string (or list of strings) to pass to Snap.
-    fig : optional
-        A matplotlib Figure object to animate. If None, generate a new
-        Figure.
-    adaptive_limits : optional
-        If True, adapt plot limits during animation. If False, the plot
-        limits are fixed by the initial plot. Default is True.
-    xlim : optional
-        The x-axis range as a tuple (xmin, xmax). Only used if fig not
-        passed in.
-    ylim : optional
-        The y-axis range as a tuple (ymin, ymax). Only used if fig not
-        passed in.
-    text : optional
-        List of strings to display per snap.
-    text_kwargs : optional
-        Keyword arguments to pass to matplotlib text.
-    func_animation_kwargs : optional
-        Keyword arguments to pass to matplotlib FuncAnimation.
-    save_kwargs : optional
-        Keyword arguments to pass to matplotlib Animation.save.
-    **kwargs
-        Arguments to pass to visualize.particle_plot.
-
-    Returns
-    -------
-    anim
-        The matplotlib FuncAnimation object.
-
-    Examples
-    --------
-    Make an animation of x vs density on the particles.
-
-    >>> plonk.visualize.animation(
-    ...     snaps=snaps,
-    ...     x='x',
-    ...     y='density',
-    ...     filename='animation.mp4',
-    ... )
-
-    Make an animation of x vs density x vs velocity_x on the
-    particles on the same axes, specifying the x- and y-plot limits.
-
-    >>> plonk.visualize.animation(
-    ...     snaps=snaps,
-    ...     x='x',
-    ...     y=['density', 'velocity_x'],
-    ...     xlim=(-100, 100),
-    ...     ylim=(0, 1),
-    ...     filename='animation.mp4',
-    ... )
-    """
-    filepath = pathlib.Path(filename)
-    if filepath.suffix != '.mp4':
-        raise ValueError('filename should end in ".mp4"')
-
-    if isinstance(y, list):
-        ys = y
-    elif isinstance(y, str):
-        ys = [y]
-    else:
-        raise ValueError('Cannot determine y')
-
-    if fig is None:
-        fig, ax = plt.subplots()
-        for y in ys:
-            particle_plot(snap=snaps[0], x=x, y=y, ax=ax, **kwargs)
-            ax.set(xlim=xlim, ylim=ylim)
-        lines = ax.lines
-        if text is not None:
-            texts = [
-                ax.text(
-                    0.9, 0.9, text[0], ha='right', transform=ax.transAxes, **text_kwargs
-                )
-            ]
-    else:
-        lines = [line for ax in fig.axes for line in ax.lines]
-        if text is not None:
-            texts = [text for ax in fig.axes for text in ax.texts]
-
-    pbar = tqdm(total=len(snaps))
-
-    def animate(idx):
-        pbar.update(n=1)
-        subsnaps = snaps[idx].subsnaps_as_list()
-        num_subsnaps = len(subsnaps)
-        for idxi, y in enumerate(ys):
-            _xlim, _ylim = (0.0, 0.0), (0.0, 0.0)
-            for idxj, subsnap in enumerate(subsnaps):
-                line = lines[idxi * num_subsnaps + idxj]
-                _x = subsnap[x]
-                _y = subsnap[y]
-                line.set_data(_x, _y)
-                if adaptive_limits:
-                    ax = line.axes
-                    _xlim, _ylim = _get_range(_x, _xlim), _get_range(_y, _ylim)
-                    ax.set(xlim=_xlim, ylim=_ylim)
-        if text is not None:
-            for _text in texts:
-                _text.set_text(text[idx])
         return lines
 
     anim = _animation.FuncAnimation(
@@ -443,7 +565,8 @@ def animation_particles(
     )
     anim.save(filepath, extra_args=['-vcodec', 'libx264'], **save_kwargs)
     plt.close()
-    pbar.close()
+    if tqdm is not None:
+        pbar.close()
 
     return anim
 

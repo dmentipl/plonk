@@ -11,22 +11,24 @@ Plonk is a Python tool for analysis and visualization of smoothed particle
 hydrodynamics data with a focus on astrophysical fluid dynamics.
 
 With Plonk we aim to integrate the high quality SPH visualisation of
-Splash into the modern Python astronomer workflow, and provide a framework for
-analysis of smoothed particle hydrodynamics simulation data.
+`Splash <https://github.com/danieljprice/splash>`_ into the modern Python
+astronomer workflow, and to provide a framework for analysis of smoothed
+particle hydrodynamics simulation data.
 
-.. warning::
-    Plonk is under development. However, it is becoming more stable. Please use
-    Plonk and if you have any issues or feature requests please leave feedback
-    by raising a `GitHub issue
+.. note::
+    Plonk is being used for `scientific publications
+    <https://ui.adsabs.harvard.edu/abs/2019JOSS....4.1884M/citations>`_.
+    However, no software is bug free. Please use Plonk and if you have any
+    issues or feature requests please leave feedback by raising a `GitHub issue
     <https://github.com/dmentipl/plonk/issues/new/choose>`_.
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 1
     :caption: User Guide
 
     installation
     overview
-    quickstart
+    usage
     examples
     getting-help
     api
@@ -48,6 +50,16 @@ JOSS.
 
 For BibTeX entry, see
 `CITATION.bib <https://github.com/dmentipl/plonk/blob/master/CITATION.bib>`_.
+
+If you use the interpolation to pixel grid component of Plonk please cite the
+`Splash paper <https://doi.org/10.1071/AS07022>`_.
+
+----------
+Change log
+----------
+
+The change log is available at
+`CHANGELOG.md <https://github.com/dmentipl/plonk/blob/master/CHANGELOG.md>`_.
 
 ------------
 Contributors
@@ -87,11 +99,8 @@ In addition, `Splash <https://github.com/danieljprice/splash>`_ is a mature,
 Unix command line, "free and open source visualisation tool for Smoothed
 Particle Hydrodynamics (SPH) simulations", written in Fortran.
 
-
 ------------------
 Indices and tables
 ------------------
 
 * :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
