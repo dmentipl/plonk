@@ -60,7 +60,7 @@ class VisualizeSimulation:
         self.ax: Any = None
         self.snaps = sim.snaps
 
-        self._particle_ids: ndarray = None
+        self._particle_ids: ndarray
         self._kind = kind
         self._len = -1
         self._where = 0

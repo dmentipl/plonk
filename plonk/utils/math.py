@@ -73,7 +73,7 @@ def average(x, weights, **kwargs):
 
 def distance_from_plane(
     x: ndarray, y: ndarray, z: ndarray, normal: ndarray, height: float = 0
-) -> float:
+) -> ndarray:
     """Calculate distance from a plane.
 
     Parameters

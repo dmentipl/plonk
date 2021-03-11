@@ -36,7 +36,7 @@ jobs:
         source '/usr/share/miniconda/etc/profile.d/conda.sh'
         conda activate plonk
         pip install -e .
-        python -m mypy .
+        python -m mypy plonk tests
   Tests:
     runs-on: ubuntu-latest
     strategy:

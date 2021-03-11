@@ -94,9 +94,9 @@ def interpolate(
     if num_pixels is None:
         num_pixels = NUM_PIXELS
 
-    _quantity, x, y, z = _get_arrays_from_str(snap=snap, quantity=quantity, x=x, y=y)
-    h = snap.array_in_code_units('smoothing_length')
-    m = snap.array_in_code_units('mass')
+    _quantity, _x, _y, _z = _get_arrays_from_str(snap=snap, quantity=quantity, x=x, y=y)
+    _h = snap.array_in_code_units('smoothing_length')
+    _m = snap.array_in_code_units('mass')
 
     extent = (
         (extent[0] / snap.code_units['length']).to_base_units().magnitude,
@@ -117,21 +117,23 @@ def interpolate(
         if not isinstance(slice_offset, Quantity):
             raise ValueError('slice_offset must have units')
         if slice_normal is None:
-            slice_normal = np.array([0, 0, 1])
+            _slice_normal = np.array([0, 0, 1])
+        else:
+            _slice_normal = np.array(slice_normal)
         slice_offset = (
             (slice_offset / snap.code_units['length']).to_base_units().magnitude
         )
-        dist_from_slice = distance_from_plane(x, y, z, slice_normal, slice_offset)
+        dist_from_slice = distance_from_plane(_x, _y, _z, _slice_normal, slice_offset)
 
     if _quantity.ndim == 1:
         interpolated_data = scalar_interpolation(
             quantity=_quantity,
-            x_coordinate=x,
-            y_coordinate=y,
+            x_coordinate=_x,
+            y_coordinate=_y,
             dist_from_slice=dist_from_slice,
             extent=extent,
-            smoothing_length=h,
-            particle_mass=m,
+            smoothing_length=_h,
+            particle_mass=_m,
             hfact=snap.properties['smoothing_length_factor'],
             weighted=weighted,
             num_pixels=num_pixels,
@@ -141,12 +143,12 @@ def interpolate(
         interpolated_data = vector_interpolation(
             quantity_x=_quantity[:, 0],
             quantity_y=_quantity[:, 1],
-            x_coordinate=x,
-            y_coordinate=y,
+            x_coordinate=_x,
+            y_coordinate=_y,
             dist_from_slice=dist_from_slice,
             extent=extent,
-            smoothing_length=h,
-            particle_mass=m,
+            smoothing_length=_h,
+            particle_mass=_m,
             hfact=snap.properties['smoothing_length_factor'],
             weighted=weighted,
             num_pixels=num_pixels,
