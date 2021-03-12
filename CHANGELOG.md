@@ -15,6 +15,10 @@ Types of changes:
 
 ## [Unreleased]
 
+### Changed
+
+- Moved from Travis CI to GitHub actions for tests/CI.
+
 ## [0.7.3] - 2020-08-28
 
 ### Added
