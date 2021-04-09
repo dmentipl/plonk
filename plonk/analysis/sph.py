@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, Tuple
 import numba
 import numpy as np
 from numba.typed import List
+from numpy import ndarray
 
 from .._logging import logger
 from .._units import Quantity
@@ -216,7 +217,7 @@ def summation(
                     else:
                         logger.info('Finding neighbours...')
                 _neighbours = snap[indices].neighbours(np.arange(len(indices)))
-                neighbours = List()
+                neighbours: List[ndarray] = List()
                 for neigh in _neighbours:
                     neighbours.append(np.array(neigh))
 
@@ -242,7 +243,7 @@ def summation(
     return result
 
 
-@numba.njit
+@numba.njit  # type: ignore
 def _compute_derivative(
     indices,
     neighbours,
@@ -293,9 +294,16 @@ def _compute_derivative(
     return result
 
 
-@numba.njit
+@numba.njit  # type: ignore
 def _compute_grad_over_neighbours(
-    posi, hi, quani, quanj, posj, mj, rhoj, kernel_gradient_function,
+    posi,
+    hi,
+    quani,
+    quanj,
+    posj,
+    mj,
+    rhoj,
+    kernel_gradient_function,
 ):
     result = np.zeros(3)
 
@@ -312,9 +320,16 @@ def _compute_grad_over_neighbours(
     return result
 
 
-@numba.njit
+@numba.njit  # type: ignore
 def _compute_div_over_neighbours(
-    posi, hi, quani, quanj, posj, mj, rhoj, kernel_gradient_function,
+    posi,
+    hi,
+    quani,
+    quanj,
+    posj,
+    mj,
+    rhoj,
+    kernel_gradient_function,
 ):
     result = 0.0
 
@@ -331,9 +346,16 @@ def _compute_div_over_neighbours(
     return result
 
 
-@numba.njit
+@numba.njit  # type: ignore
 def _compute_curl_over_neighbours(
-    posi, hi, quani, quanj, posj, mj, rhoj, kernel_gradient_function,
+    posi,
+    hi,
+    quani,
+    quanj,
+    posj,
+    mj,
+    rhoj,
+    kernel_gradient_function,
 ):
     result = np.zeros(3)
     cross = np.zeros(3)

@@ -468,7 +468,8 @@ class Profile:
                 continue
             if aggregation == 'average':
                 val = average(
-                    _array[bin_ind], weights=self._weights[self._mask][bin_ind],
+                    _array[bin_ind],
+                    weights=self._weights[self._mask][bin_ind],
                 )
             elif aggregation == 'mean':
                 val = np.mean(_array[bin_ind])
@@ -752,7 +753,11 @@ def _std_plot(profile, xdata, ydata, yname, yunit, std, color, ax):
     xdata = xdata.magnitude
     if std == 'shading':
         ax.fill_between(
-            xdata, y_mean - y_std, y_mean + y_std, color=color, alpha=0.2,
+            xdata,
+            y_mean - y_std,
+            y_mean + y_std,
+            color=color,
+            alpha=0.2,
         )
     elif std == 'errorbar':
         ax.errorbar(xdata, y_mean, yerr=y_std, linestyle='', color=color, alpha=0.5)

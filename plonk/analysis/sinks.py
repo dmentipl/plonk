@@ -254,7 +254,7 @@ def _norm(x):
     return np.sqrt(x[..., 0] ** 2 + x[..., 1] ** 2 + x[..., 2] ** 2)
 
 
-@numba.njit
+@numba.njit  # type: ignore
 def _potential(position, mass):
     """Get gravitational potential on particles.
 

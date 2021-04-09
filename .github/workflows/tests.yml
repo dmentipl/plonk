@@ -1,0 +1,66 @@
+name: Tests
+
+on: [pull_request, push]
+jobs:
+  Formatting:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+    - uses: actions/checkout@v2
+    - name: conda env update
+      run: |
+        source '/usr/share/miniconda/etc/profile.d/conda.sh'
+        conda install -c conda-forge mamba
+        mamba env update -q --file environment.yml --name plonk
+    - name: conda info
+      run: |
+        source '/usr/share/miniconda/etc/profile.d/conda.sh'
+        conda activate plonk
+        conda info
+        conda list
+    - name: isort
+      run: |
+        source '/usr/share/miniconda/etc/profile.d/conda.sh'
+        conda activate plonk
+        pip install -e .
+        python -m isort --check .
+    - name: black
+      run: |
+        source '/usr/share/miniconda/etc/profile.d/conda.sh'
+        conda activate plonk
+        pip install -e .
+        python -m black --check .
+    - name: mypy
+      run: |
+        source '/usr/share/miniconda/etc/profile.d/conda.sh'
+        conda activate plonk
+        pip install -e .
+        python -m mypy plonk tests
+  Tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+    - uses: actions/checkout@v2
+    - name: conda env update
+      run: |
+        source '/usr/share/miniconda/etc/profile.d/conda.sh'
+        conda install -c conda-forge mamba
+        mamba env update -q --file environment.yml --name plonk
+    - name: conda info
+      run: |
+        source '/usr/share/miniconda/etc/profile.d/conda.sh'
+        conda activate plonk
+        conda info
+        conda list
+    - name: pytest
+      run: |
+        source '/usr/share/miniconda/etc/profile.d/conda.sh'
+        conda activate plonk
+        pip install -e .
+        python -m pytest
+        NUMBA_DISABLE_JIT=1 python -m coverage run
+        python -m coveralls --service=github
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

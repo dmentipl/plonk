@@ -74,7 +74,7 @@ If you would like to contribute, see `CONTRIBUTING.md
 License
 -------
 
-Copyright 2020 Daniel Mentiplay and contributors.
+Copyright 2019-2021 Daniel Mentiplay and contributors.
 
 Plonk is available under the MIT license. For details see `LICENSE
 <https://github.com/dmentipl/plonk/blob/master/LICENSE>`_.

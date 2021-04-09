@@ -649,7 +649,7 @@ class Snap:
         """
         logger.debug(f'Translating snapshot: {self.file_path.name}')
         if isinstance(translation, (list, tuple)):
-            translation = np.array(translation, dtype=np.float)
+            translation = np.array(translation, dtype=float)
         if translation.shape != (3,):
             raise ValueError('translation must be like (x, y, z)')
         if isinstance(translation, Quantity):
@@ -884,7 +884,9 @@ class Snap:
         r_kern = kernel_radius[kernel]
 
         neighbours = self.tree.query_ball_point(
-            position.magnitude, r_kern * smoothing_length.magnitude, n_jobs=-1,
+            position.magnitude,
+            r_kern * smoothing_length.magnitude,
+            n_jobs=-1,
         )
 
         return neighbours
@@ -914,7 +916,10 @@ class Snap:
             units = self.array_code_unit(array)
             arr = (arr_with_units / units).magnitude
             dset = f.create_dataset(
-                array, arr.shape, dtype=arr.dtype, compression='gzip',
+                array,
+                arr.shape,
+                dtype=arr.dtype,
+                compression='gzip',
             )
             dset[:] = arr
         f.close()
@@ -1226,7 +1231,9 @@ class Snap:
         raise ValueError('Array not available')
 
     def _getitem(
-        self, inp: Union[str, ndarray, int, slice], sinks: bool = False,
+        self,
+        inp: Union[str, ndarray, int, List[int], slice],
+        sinks: bool = False,
     ) -> Union[Quantity, SubSnap, List[SubSnap]]:
         """Return an array, or family, or subset."""
         if isinstance(inp, str):
@@ -1237,7 +1244,7 @@ class Snap:
             raise ValueError('Cannot return sinks as SubSnap')
         return SubSnap(self, inp)
 
-    def __getitem__(self, inp: Union[str, ndarray, int, slice]):
+    def __getitem__(self, inp: Union[str, ndarray, int, List[int], slice]):
         """Return an array, or family, or subset."""
         return self._getitem(inp, sinks=False)
 
@@ -1322,7 +1329,9 @@ class SubSnap(Snap):
     >>> subsnap = snap[[0, 9, 99]]
     """
 
-    def __init__(self, base: Snap, indices: Union[ndarray, slice, list, int, tuple]):
+    def __init__(
+        self, base: Snap, indices: Union[ndarray, slice, List[int], int, tuple]
+    ):
         super().__init__()
 
         self.base = base
@@ -1548,12 +1557,12 @@ def _str_is_int(string: str) -> bool:
 
 def _input_indices_array(
     inp: Union[ndarray, slice, list, int, tuple], max_slice: int
-) -> Union[ndarray, List[int]]:
+) -> ndarray:
     """Take array, slice, int, list, tuple and return indices array."""
     if isinstance(inp, ndarray):
-        if np.issubdtype(np.bool, inp.dtype):
+        if np.issubdtype(bool, inp.dtype):
             return np.flatnonzero(inp)
-        if np.issubdtype(np.int, inp.dtype):
+        if np.issubdtype(int, inp.dtype):
             return inp
     if isinstance(inp, (list, tuple)):
         return np.array(inp)
@@ -1563,4 +1572,4 @@ def _input_indices_array(
         i1 = inp.start if inp.start is not None else 0
         i2 = inp.stop if inp.stop is not None else max_slice
         return np.arange(i1, i2, inp.step)
-    return []
+    return np.array([])

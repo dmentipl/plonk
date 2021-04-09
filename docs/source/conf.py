@@ -27,7 +27,7 @@ project = setup_cfg['metadata']['name']
 author = setup_cfg['metadata']['author']
 _version = setup_cfg['metadata']['version']
 
-copyright = f'2020, {author}'
+copyright = f'2019-2021, {author}'
 
 # The short X.Y version
 version = _version.split(':')[0]

@@ -152,7 +152,8 @@ def contour(*, interpolated_data: ndarray, extent: Extent, ax: Any, **kwargs):
     """
     n_interp_x, n_interp_y = interpolated_data.shape
     X, Y = np.meshgrid(
-        np.linspace(*extent[:2], n_interp_x), np.linspace(*extent[2:], n_interp_y),
+        np.linspace(*extent[:2], n_interp_x),
+        np.linspace(*extent[2:], n_interp_y),
     )
 
     return ax.contour(X, Y, interpolated_data, **kwargs)

@@ -362,7 +362,9 @@ class Simulation:
 
 
 def load_sim(
-    prefix: str, directory: Union[str, Path] = None, data_source: str = 'Phantom',
+    prefix: str,
+    directory: Union[str, Path] = None,
+    data_source: str = 'Phantom',
 ) -> Simulation:
     """Load Simulation.
 
@@ -388,7 +390,9 @@ def load_sim(
 
 
 def load_simulation(
-    prefix: str, directory: Union[str, Path] = None, data_source: str = 'Phantom',
+    prefix: str,
+    directory: Union[str, Path] = None,
+    data_source: str = 'Phantom',
 ) -> Simulation:
     """Load Simulation.
 

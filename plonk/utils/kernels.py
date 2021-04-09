@@ -4,7 +4,7 @@ import numba
 import numpy as np
 
 
-@numba.njit
+@numba.njit  # type: ignore
 def kernel_cubic(q):
     """Cubic kernel function.
 
@@ -29,7 +29,7 @@ def kernel_cubic(q):
         return 0.0
 
 
-@numba.njit
+@numba.njit  # type: ignore
 def kernel_gradient_cubic(q):
     """Cubic kernel gradient function.
 
@@ -54,7 +54,7 @@ def kernel_gradient_cubic(q):
         return 0.0
 
 
-@numba.njit
+@numba.njit  # type: ignore
 def kernel_quintic(q):
     """Quintic kernel function.
 
@@ -81,7 +81,7 @@ def kernel_quintic(q):
         return 0.0
 
 
-@numba.njit
+@numba.njit  # type: ignore
 def kernel_gradient_quintic(q):
     """Quintic kernel gradient function.
 
@@ -108,7 +108,7 @@ def kernel_gradient_quintic(q):
         return 0.0
 
 
-@numba.njit
+@numba.njit  # type: ignore
 def kernel_wendland_c4(q):
     """Wendland C4 kernel function.
 
@@ -133,7 +133,7 @@ def kernel_wendland_c4(q):
         return 0.0
 
 
-@numba.njit
+@numba.njit  # type: ignore
 def kernel_gradient_wendland_c4(q):
     """Wendland C4 kernel gradient function.
 

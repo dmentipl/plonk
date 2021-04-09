@@ -86,7 +86,9 @@ def snap_properties_and_units(
 
 
 def snap_array_registry(
-    file_pointer: h5py.File, data_source: str, name_map: Dict[str, str] = None,
+    file_pointer: h5py.File,
+    data_source: str,
+    name_map: Dict[str, str] = None,
 ) -> Dict[str, Callable]:
     """Generate snap array registry.
 
@@ -113,7 +115,9 @@ def snap_array_registry(
 
 
 def snap_sink_registry(
-    file_pointer: h5py.File, data_source: str, name_map: Dict[str, str] = None,
+    file_pointer: h5py.File,
+    data_source: str,
+    name_map: Dict[str, str] = None,
 ) -> Dict[str, Callable]:
     """Generate snap sink registry.
 

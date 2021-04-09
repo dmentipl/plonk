@@ -19,7 +19,7 @@ DDQ2TABLE = 1.0 / DQ2TABLE
 IVERBOSE = -1
 
 
-@numba.njit
+@numba.njit  # type: ignore
 def w_cubic(q2: float):
     """Cubic spline kernel.
 
@@ -41,7 +41,7 @@ def w_cubic(q2: float):
     return w
 
 
-@numba.njit
+@numba.njit  # type: ignore
 def setup_integratedkernel():
     """Set up integrated kernel.
 
@@ -76,7 +76,7 @@ def setup_integratedkernel():
     return coltable
 
 
-@numba.njit
+@numba.njit  # type: ignore
 def wfromtable(q2, coltable):
     """Interpolate from integrated kernel table values to give w(q).
 
@@ -103,7 +103,7 @@ def wfromtable(q2, coltable):
     return coltable[index] + dwdx * dxx
 
 
-@numba.njit
+@numba.njit  # type: ignore
 def interpolate_projection(
     x: ndarray,
     y: ndarray,
@@ -282,7 +282,7 @@ def interpolate_projection(
     return datsmooth.T
 
 
-@numba.njit
+@numba.njit  # type: ignore
 def interpolate_slice(
     x: ndarray,
     y: ndarray,

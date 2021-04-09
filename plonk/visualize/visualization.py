@@ -450,7 +450,10 @@ def _interpolated_plot(
         kwargs['vmax'] = vmax
 
     plot_object = _kind_to_function[kind](
-        interpolated_data=interpolated_data, extent=extent, ax=ax, **kwargs,
+        interpolated_data=interpolated_data,
+        extent=extent,
+        ax=ax,
+        **kwargs,
     )
 
     ax.set_xlim(*extent[:2])
@@ -601,7 +604,18 @@ def plot(
 
 
 def _plot(
-    snap, x, y, c, s, units, xlim, ylim, ax, ax_kwargs, colorbar_kwargs, **kwargs,
+    snap,
+    x,
+    y,
+    c,
+    s,
+    units,
+    xlim,
+    ylim,
+    ax,
+    ax_kwargs,
+    colorbar_kwargs,
+    **kwargs,
 ) -> Any:
     logger.debug(f'Plotting particles "{x}" vs "{y}"" on snap: {snap.file_path.name}')
     _kwargs = copy(kwargs)
@@ -687,7 +701,19 @@ def _plot_data(snap, x, y, c, s, units):
 
 
 def _plot_plot(
-    x, y, c, s, units, xlim, ylim, names, fig, ax, ax_kwargs, colorbar_kwargs, **kwargs,
+    x,
+    y,
+    c,
+    s,
+    units,
+    xlim,
+    ylim,
+    names,
+    fig,
+    ax,
+    ax_kwargs,
+    colorbar_kwargs,
+    **kwargs,
 ):
     show_colorbar = kwargs.pop('show_colorbar', c is not None)
 

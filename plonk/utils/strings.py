@@ -12,7 +12,10 @@ def is_documented_by(original):
 
 
 def time_string(
-    snap, unit: str, unit_str: str = None, float_format: str = '.0f',
+    snap,
+    unit: str,
+    unit_str: str = None,
+    float_format: str = '.0f',
 ) -> str:
     """Generate time stamp string.
 
