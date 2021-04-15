@@ -112,6 +112,7 @@ class Simulation:
         self.paths['snaps'] = self._get_snap_files()
         self.paths['time_series_global'] = self._get_global_ts_files()
         self.paths['time_series_sinks'] = self._get_sink_ts_files()
+        #print(self.paths['snaps'], self.paths['time_series_global'], self.paths['time_series_sinks'])
 
         return self
 
@@ -253,8 +254,7 @@ class Simulation:
             glob = self.prefix + 'Sink[0-9][0-9][0-9][0-9]N[0-9][0-9].ev'
 
         n = len(self.prefix) + len('Sink')
-        n_sinks = len({p.name[n : n + 4] for p in self.paths['directory'].glob(glob)})
-
+        n_sinks = len(np.unique({p.name[n : n + 4] for p in self.paths['directory'].glob(glob)}))
         sinks = list()
         for idx in range(1, n_sinks + 1):
             sinks.append(
@@ -264,7 +264,7 @@ class Simulation:
                     )
                 )
             )
-
+        print(sinks)
         return sinks
 
     def set_units_on_time_series(self, config: Union[str, Path] = None):

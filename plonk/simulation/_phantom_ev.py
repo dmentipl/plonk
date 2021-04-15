@@ -124,7 +124,7 @@ def _get_columns(filename: Path, name_map: Dict[str, str]) -> Tuple[str, ...]:
 def _check_file_consistency(
     filenames: Tuple[Path, ...], name_map: Dict[str, str]
 ) -> None:
-
+    
     columns = _get_columns(filenames[0], name_map)
     for filename in filenames:
         columns_previous = columns
