@@ -4,5 +4,6 @@ numba
 numpy
 pandas
 pint>=0.10.1
+pydata-sphinx-theme
 scipy
 toml
