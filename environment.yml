@@ -29,13 +29,13 @@ dependencies:
   - pandas
   - pint>=0.10.1
   - pip
+  - pydata-sphinx-theme
   - pydocstyle
   - pylint
   - pytest
   - scikit-image>=0.16
   - scipy
   - sphinx
-  - sphinx_rtd_theme
   - toml
   - tqdm
   - twine
