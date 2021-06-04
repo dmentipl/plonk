@@ -64,7 +64,7 @@ python -m black --check .
 
 If any of these commands fail then there is either a test failure, or you need to reformat the code in line with the chosen code style for Plonk. (See below.)
 
-After you have committed and pushed your changes to your forked repository you can issue a [pull request](https://github.com/dmentipl/plonk/pull/new/master).
+After you have committed and pushed your changes to your forked repository you can issue a [pull request](https://github.com/dmentipl/plonk/pull/new/main).
 
 To check the [code coverage](https://en.wikipedia.org/wiki/Code_coverage) do the following
 
@@ -199,4 +199,4 @@ Clone [my fork](https://github.com/dmentipl/plonk-feedstock) of the Plonk feedst
 1. Update the version number.
 2. Update the sha256 hash to correspond to the source version on [PyPI](https://pypi.org/project/plonk/).
 
-Commit the change with a message like "Update to version 0.3.1". Then go to the GitHub page and generate a new [pull request](https://github.com/dmentipl/plonk-feedstock/pull/new/master). This will run several tests. If they pass, merge the pull request into the conda-forge/plonk-feedstock repository. Then a new conda package should soon be available on the [Anaconda cloud](https://anaconda.org/conda-forge/plonk).
+Commit the change with a message like "Update to version 0.3.1". Then go to the GitHub page and generate a new [pull request](https://github.com/dmentipl/plonk-feedstock/pull/new/main). This will run several tests. If they pass, merge the pull request into the conda-forge/plonk-feedstock repository. Then a new conda package should soon be available on the [Anaconda cloud](https://anaconda.org/conda-forge/plonk).
