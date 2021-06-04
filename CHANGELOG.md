@@ -20,6 +20,7 @@ Types of changes:
 - Moved from Travis CI to GitHub actions for tests/CI.
 - Moved to src layout.
 - Version is set in `plonk/__init__.py` which is read in `setup.cfg`.
+- Update MANIFEST.in.
 
 ## [0.7.3] - 2020-08-28
 
