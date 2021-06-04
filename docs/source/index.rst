@@ -49,7 +49,7 @@ JOSS.
     `<https://doi.org/10.21105/joss.01884>`_.
 
 For BibTeX entry, see
-`CITATION.bib <https://github.com/dmentipl/plonk/blob/master/CITATION.bib>`_.
+`CITATION.bib <https://github.com/dmentipl/plonk/blob/main/CITATION.bib>`_.
 
 If you use the interpolation to pixel grid component of Plonk please cite the
 `Splash paper <https://doi.org/10.1071/AS07022>`_.
@@ -59,7 +59,7 @@ Change log
 ----------
 
 The change log is available at
-`CHANGELOG.md <https://github.com/dmentipl/plonk/blob/master/CHANGELOG.md>`_.
+`CHANGELOG.md <https://github.com/dmentipl/plonk/blob/main/CHANGELOG.md>`_.
 
 ------------
 Contributors
@@ -68,7 +68,7 @@ Contributors
 The main author is `Daniel Mentiplay <https://github.com/dmentipl>`_.
 
 If you would like to contribute, see `CONTRIBUTING.md
-<https://github.com/dmentipl/plonk/blob/master/CONTRIBUTING.md>`_.
+<https://github.com/dmentipl/plonk/blob/main/CONTRIBUTING.md>`_.
 
 -------
 License
@@ -77,7 +77,7 @@ License
 Copyright 2019-2021 Daniel Mentiplay and contributors.
 
 Plonk is available under the MIT license. For details see `LICENSE
-<https://github.com/dmentipl/plonk/blob/master/LICENSE>`_.
+<https://github.com/dmentipl/plonk/blob/main/LICENSE>`_.
 
 --------------
 Other Packages

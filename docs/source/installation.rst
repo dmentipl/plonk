@@ -55,7 +55,7 @@ You can install Plonk from source as follows.
 
 This assumes you have already installed the dependencies. One way to do this is
 by setting up a conda environment. The `environment.yml
-<https://github.com/dmentipl/plonk/blob/master/environment.yml>`_ file provided
+<https://github.com/dmentipl/plonk/blob/main/environment.yml>`_ file provided
 sets up a conda environment "plonk" for using or developing Plonk.
 
 .. code-block:: console
@@ -64,5 +64,5 @@ sets up a conda environment "plonk" for using or developing Plonk.
     $ conda activate plonk
 
 Plonk has Python runtime requirements listed in `setup.py
-<https://github.com/dmentipl/plonk/blob/master/setup.py>`_ in the
+<https://github.com/dmentipl/plonk/blob/main/setup.py>`_ in the
 :code:`install_requires` variable.

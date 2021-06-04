@@ -7,12 +7,12 @@ Smoothed particle hydrodynamics analysis and visualization with Python.
 + Repo: <https://www.github.com/dmentipl/plonk>
 
 [![Build Status](https://github.com/dmentipl/plonk/actions/workflows/tests.yml/badge.svg)](https://github.com/dmentipl/plonk/actions)
-[![Coverage Status](https://coveralls.io/repos/github/dmentipl/plonk/badge.svg?branch=master)](https://coveralls.io/github/dmentipl/plonk?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/dmentipl/plonk/badge.svg?branch=main)](https://coveralls.io/github/dmentipl/plonk?branch=main)
 [![Documentation Status](https://readthedocs.org/projects/plonk/badge/?version=stable)](https://plonk.readthedocs.io/en/stable/?badge=stable)
 
 [![PyPI](https://img.shields.io/pypi/v/plonk)](https://pypi.org/project/plonk/)
 [![conda-forge](https://img.shields.io/conda/v/conda-forge/plonk.svg)](https://anaconda.org/conda-forge/plonk)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/dmentipl/plonk/blob/master/LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/dmentipl/plonk/blob/main/LICENSE)
 
 [![JOSS](https://joss.theoj.org/papers/10.21105/joss.01884/status.svg)](https://doi.org/10.21105/joss.01884)
 [![Zenodo](https://zenodo.org/badge/DOI/10.5281/zenodo.3554567.svg)](https://doi.org/10.5281/zenodo.3554567)
@@ -70,7 +70,7 @@ To visualize the column density on a snapshot:
 
 For a more complicated example, here is the deviation from Keplerian velocity around a planet embedded in a protoplanetary disc.
 
-![Planet embedded in protoplanetary disc](https://raw.githubusercontent.com/dmentipl/plonk/master/image.png)
+![Planet embedded in protoplanetary disc](https://raw.githubusercontent.com/dmentipl/plonk/main/image.png)
 
 *Deviation from Keplerian velocity around a planet: at the disc midplane (left), and 10 (middle) and 20 au (right) above the disc midplane. See [here](https://plonk.readthedocs.io/en/latest/examples/deviation-from-keplerian.html) for details.*
 
@@ -155,7 +155,7 @@ cd plonk
 python -m pip install -e .
 ```
 
-This assumes you have already installed the dependencies. One way to do this is by setting up a conda environment. The [environment.yml](https://github.com/dmentipl/plonk/blob/master/environment.yml) file provided sets up a conda environment "plonk" for using or developing Plonk.
+This assumes you have already installed the dependencies. One way to do this is by setting up a conda environment. The [environment.yml](https://github.com/dmentipl/plonk/blob/main/environment.yml) file provided sets up a conda environment "plonk" for using or developing Plonk.
 
 ```bash
 conda env create --file environment.yml
@@ -190,9 +190,9 @@ Thank you for considering contributing to Plonk. There are many ways to contribu
 1. If you find any bugs or cannot work out how to do something, please file a [bug report](https://github.com/dmentipl/plonk/issues/new?assignees=&labels=&template=bug_report.md&title=) in the issue tracker. Even if the issue is not a bug it may be that there is a lack of documentation.
 2. If you have any suggestions for new features, please raise a [feature request](https://github.com/dmentipl/plonk/issues/new?assignees=&labels=&template=feature_request.md&title=) in the issue tracker.
 3. If you use Plonk to do anything please consider contributing to the [examples](https://plonk.readthedocs.io/en/stable/examples.html) section in particular, or any other section, of the documentation.
-4. If you would like to contribute code, firstly thank you! We take code contributions via [pull request](https://github.com/dmentipl/plonk/pull/new/master).
+4. If you would like to contribute code, firstly thank you! We take code contributions via [pull request](https://github.com/dmentipl/plonk/pull/new/main).
 
-See [CONTRIBUTING.md](https://github.com/dmentipl/plonk/blob/master/CONTRIBUTING.md) for detailed guidelines on how to contribute.
+See [CONTRIBUTING.md](https://github.com/dmentipl/plonk/blob/main/CONTRIBUTING.md) for detailed guidelines on how to contribute.
 
 Citation
 --------
@@ -201,11 +201,11 @@ If you use Plonk in a scientific publication, please cite the paper published in
 
 > [Plonk: Smoothed particle hydrodynamics analysis and visualization with Python](https://doi.org/10.21105/joss.01884)
 
-A BibTeX entry is available in [CITATION.bib](https://github.com/dmentipl/plonk/blob/master/CITATION.bib)
+A BibTeX entry is available in [CITATION.bib](https://github.com/dmentipl/plonk/blob/main/CITATION.bib)
 
 If you use the interpolation to pixel grid component of Plonk please cite the [Splash paper](https://doi.org/10.1071/AS07022). You should also consider citing any other scientific software packages that you use.
 
 Change log
 ----------
 
-The change log is available in [CHANGELOG.md](https://github.com/dmentipl/plonk/blob/master/CHANGELOG.md)
+The change log is available in [CHANGELOG.md](https://github.com/dmentipl/plonk/blob/main/CHANGELOG.md)
