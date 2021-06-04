@@ -54,8 +54,6 @@ See https://plonk.readthedocs.io/ for documentation. The source code is
 available at https://github.com/dmentipl/plonk.
 """
 
-import importlib_metadata as _importlib_metadata
-
 from ._config import read_config, write_config
 from ._logging import logger_init as _logger_init
 from ._units import Quantity, add_units, array_units, units
@@ -69,7 +67,7 @@ from .visualize.interpolation import interpolate
 from .visualize.simulation import visualize_sim
 from .visualize.visualization import image, plot, vector
 
-__version__ = _importlib_metadata.version('plonk')
+__version__ = '0.7.3'
 
 _logger_init(__version__)
 
