@@ -1,5 +1,6 @@
-include *.md
-include **/*.toml
-include LICENSE
-include environment.yml
+graft src
+include CHANGELOG.md
 include CITATION.bib
+include CONTRIBUTING.md
+include LICENSE
+include README.md
