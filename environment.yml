@@ -24,13 +24,13 @@ dependencies:
   # Development
   - black
   - coverage[toml]
-  - coveralls
   - doc8
   - flake8
   - ipython
   - isort>=5.0
   - jupyterlab
   - mypy
+  - myst-parser
   - pip
   - pydata-sphinx-theme
   - pydocstyle
@@ -43,4 +43,6 @@ dependencies:
   - scikit-image>=0.16
   - tqdm
   - pip:
+    - coveralls
     - phantomconfig
+    - types-toml
