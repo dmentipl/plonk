@@ -24,7 +24,6 @@ dependencies:
   # Development
   - black
   - coverage[toml]
-  - coveralls
   - doc8
   - flake8
   - ipython
@@ -44,5 +43,6 @@ dependencies:
   - scikit-image>=0.16
   - tqdm
   - pip:
-    - types-toml
+    - coveralls
     - phantomconfig
+    - types-toml
