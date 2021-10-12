@@ -234,7 +234,7 @@ Plot a radial profile.
 >>> ax.legend().remove()
 ```
 
-```{image} _static/scale_height.png
+```{image} ../_static/scale_height.png
 ```
 
 Generate and plot a {class}`Profile` in the z-coordinate with a {class}`SubSnap`
@@ -266,13 +266,13 @@ of particles by radius.
 >>> ax = prof.plot('z', 'density')
 ```
 
-```{image} _static/profile_z.png
+```{image} ../_static/profile_z.png
 ```
 
 ## Neighbours
 
 Find particle neighbours using {meth}`~Snap.neighbours` via a k-d tree. The
-implementation uses the efficient `scipy.spatial.cKDTree`.
+implementation uses the efficient {class}`scipy.spatial.cKDTree`.
 
 ```python
 >>> import plonk

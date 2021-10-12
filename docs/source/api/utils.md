@@ -1,5 +1,9 @@
 # Utils
 
+```{eval-rst}
+.. currentmodule:: plonk
+```
+
 Here are some useful utility functions. There are SPH kernel functions,
 mathematical functions, utility functions relating to {class}`Snap` objects,
 string functions, and visualization functions.

@@ -21,16 +21,13 @@ However, no software is bug free. Please use Plonk and if you have any
 issues or feature requests please leave feedback by raising a [GitHub issue](https://github.com/dmentipl/plonk/issues/new/choose).
 ```
 
-## User guide
+## Contents
 
 ```{toctree}
 :maxdepth: 1
 
-installation
-overview
-usage
-examples
-getting-help
+getting-started
+user-guide
 api
 ```
 
@@ -66,7 +63,7 @@ Copyright 2019-2021 Daniel Mentiplay and contributors.
 
 Plonk is available under the MIT license. For details see [LICENSE](https://github.com/dmentipl/plonk/blob/main/LICENSE).
 
-## Other Packages
+## Other packages
 
 Here are some other, mature, Python analysis and visualization packages for
 smoothed particle hydrodynamics, and other scientific, data:
@@ -84,6 +81,6 @@ In addition, [Splash](https://github.com/danieljprice/splash) is a mature,
 Unix command line, "free and open source visualisation tool for Smoothed
 Particle Hydrodynamics (SPH) simulations", written in Fortran.
 
-## Indices and tables
+## Index
 
 - {ref}`genindex`

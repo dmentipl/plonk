@@ -53,5 +53,5 @@ conda env create --file environment.yml
 conda activate plonk
 ```
 
-Plonk has Python runtime requirements listed in [setup.py](https://github.com/dmentipl/plonk/blob/main/setup.py) in the
+Plonk has Python runtime requirements listed in [setup.cfg](https://github.com/dmentipl/plonk/blob/main/setup.cfg) in the
 `install_requires` variable.

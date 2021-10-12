@@ -3,11 +3,11 @@
 Plot the column density, kinematics, and tilt and twist of a disc around a
 binary.
 
-![](../_static/misaligned_density.png)
+![](../../_static/misaligned_density.png)
 
-![](../_static/misaligned_kinematics.png)
+![](../../_static/misaligned_kinematics.png)
 
-![](../_static/misaligned_tilt_twist.png)
+![](../../_static/misaligned_tilt_twist.png)
 
 ```{note}
 The data is from a Phantom gas simulation of a disc around a misaligned

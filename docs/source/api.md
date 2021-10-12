@@ -1,4 +1,4 @@
-# API
+# API reference
 
 ```{eval-rst}
 .. currentmodule:: plonk

@@ -48,6 +48,7 @@ release = __version__
 extensions = [
     'myst_parser',
     'sphinx.ext.autodoc',
+    'sphinx.ext.intersphinx',
     'sphinx.ext.napoleon',
     'sphinx.ext.todo',
     'sphinx.ext.imgmath',
@@ -81,6 +82,13 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 pygments_style = 'sphinx'
 
 autodoc_typehints = 'description'
+
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3', None),
+    'matplotlib': ('https://matplotlib.org/stable/', None),
+    'pandas': ('http://pandas.pydata.org/pandas-docs/dev', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy/', None),
+}
 
 # -- Options for HTML output -------------------------------------------------
 

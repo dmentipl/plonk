@@ -1,5 +1,9 @@
 # Visualization
 
+```{eval-rst}
+.. currentmodule:: plonk
+```
+
 Smoothed particle hydrodynamics data as a {class}`Snap` can be visualized by
 plotting the particles directly with or without color or size variation to
 represent a quantity, or via interpolation of scalar and vector quantities to a

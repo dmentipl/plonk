@@ -2,7 +2,7 @@
 
 Plot deviation from Keplerian velocity around planet.
 
-![](../_static/deviation_from_keplerian.png)
+![](../../_static/deviation_from_keplerian.png)
 
 ```{note}
 The data is from the [example dataset](https://figshare.com/articles/dataset/Plonk_example_dataset/12885587) of

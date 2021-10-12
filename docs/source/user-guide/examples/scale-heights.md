@@ -2,7 +2,7 @@
 
 Plot the dust and gas scale heights.
 
-![](../_static/dust_and_gas_scale_heights.png)
+![](../../_static/dust_and_gas_scale_heights.png)
 
 ```{note}
 The data is from the [example dataset](https://figshare.com/articles/dataset/Plonk_example_dataset/12885587) of
