@@ -2,7 +2,7 @@
 
 Plot cross section at z=0.
 
-![](../_static/cross_section.png)
+![](../../_static/cross_section.png)
 
 ```{note}
 The data is from the [example dataset](https://figshare.com/articles/dataset/Plonk_example_dataset/12885587) of

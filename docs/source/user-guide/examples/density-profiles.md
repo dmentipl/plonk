@@ -2,7 +2,7 @@
 
 Plot a density profile for multiple snapshots.
 
-![](../_static/density_profile.png)
+![](../../_static/density_profile.png)
 
 ```{note}
 The data is from the [example dataset](https://figshare.com/articles/dataset/Plonk_example_dataset/12885587) of

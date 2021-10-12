@@ -3,7 +3,7 @@
 Calculate and plot the density and temperature vertical profiles at multiple
 radii in a disc.
 
-![](../_static/vertical_profile.png)
+![](../../_static/vertical_profile.png)
 
 ```{note}
 The data is from the [example dataset](https://figshare.com/articles/dataset/Plonk_example_dataset/12885587) of

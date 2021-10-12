@@ -285,7 +285,7 @@ You can plot columns with the pandas plotting interface.
 
 The previous code produces the following figure.
 
-![The accretion disc center of mass as a function of time.](_static/ev.png)
+![The accretion disc center of mass as a function of time.](../_static/ev.png)
 
 ## Visualization of SPH data
 
@@ -310,7 +310,7 @@ column density, i.e. a projection plot.
 >>> snap.image(quantity='density')
 ```
 
-![The total column density.](_static/density.png)
+![The total column density.](../_static/density.png)
 
 This produces an image via Matplotlib. The function returns a Matplotlib
 {class}`Axes <matplotlib:matplotlib.axes.Axes>` object.
@@ -330,7 +330,7 @@ minimum and maxiumum. In addition, we set the extent, i.e. the x- and y-limits.
 ... )
 ```
 
-![The column density zoomed around the planet.](_static/density_zoom.png)
+![The column density zoomed around the planet.](../_static/density_zoom.png)
 
 More fine-grained control can be achieved by using the full details of
 {meth}`~Snap.image`. See the API for more details.
@@ -378,7 +378,7 @@ Let's plot the gas and dust side-by-side.
 ...     subsnap.image(quantity='density', extent=extent, cmap='gist_heat', ax=ax)
 ```
 
-![The column density of the gas and dust.](_static/dust-gas.png)
+![The column density of the gas and dust.](../_static/dust-gas.png)
 
 ### Derived arrays
 
@@ -653,6 +653,6 @@ We can also plot the profiles.
 >>> prof.plot('radius', 'scale_height', ax=axs[1])
 ```
 
-![](_static/profile.png)
+![](../_static/profile.png)
 
 [^f1]: See [https://pandas.pydata.org/](https://pandas.pydata.org/) for more on pandas.

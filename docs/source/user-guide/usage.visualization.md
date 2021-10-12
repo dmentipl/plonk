@@ -16,7 +16,7 @@ Produce a projection {meth}`~Snap.image` plot of density.
 >>> snap.image(quantity='density')
 ```
 
-```{image} _static/density.png
+```{image} ../_static/density.png
 ```
 
 Set plot units, extent, colormap, and colorbar range.
@@ -38,7 +38,7 @@ Set plot units, extent, colormap, and colorbar range.
 ... )
 ```
 
-```{image} _static/density_zoom.png
+```{image} ../_static/density_zoom.png
 ```
 
 You can set the units on the {class}`Snap` instead of passing into the
@@ -76,7 +76,7 @@ Produce a cross-section {meth}`~Snap.image` plot of density.
 ... )
 ```
 
-```{image} _static/cross_section.png
+```{image} ../_static/cross_section.png
 ```
 
 ## Particle plot
@@ -96,7 +96,7 @@ The different colours refer to different particle types.
 >>> snap.plot(x='z', y='h', alpha=0.1)
 ```
 
-```{image} _static/particle_plot.png
+```{image} ../_static/particle_plot.png
 ```
 
 Plot particles with color representing density.
@@ -117,7 +117,7 @@ Plot particles with color representing density.
 ... )
 ```
 
-```{image} _static/particle_plot2.png
+```{image} ../_static/particle_plot2.png
 ```
 
 ## Animations
@@ -144,7 +144,7 @@ Produce an animation of images using {func}`~animate`.
 
 ```{raw} html
 <video width="100%" controls>
-    <source src="_static/animation.mp4" type="video/mp4">
+    <source src="../_static/animation.mp4" type="video/mp4">
     Your browser does not support the video tag.
 </video>
 ```

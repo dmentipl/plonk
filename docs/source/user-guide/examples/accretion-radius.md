@@ -2,7 +2,7 @@
 
 Plot the accretion radius on the sink particles.
 
-![](../_static/accretion_radius.png)
+![](../../_static/accretion_radius.png)
 
 ```{note}
 The data is from the [example dataset](https://figshare.com/articles/dataset/Plonk_example_dataset/12885587) of

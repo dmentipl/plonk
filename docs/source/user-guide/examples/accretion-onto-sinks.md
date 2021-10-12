@@ -2,7 +2,7 @@
 
 Plot mass accretion and accretion rate onto sink particles.
 
-![](../_static/accretion.png)
+![](../../_static/accretion.png)
 
 ```{note}
 The data is from the [example dataset](https://figshare.com/articles/dataset/Plonk_example_dataset/12885587) of

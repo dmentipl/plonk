@@ -2,7 +2,7 @@
 
 Plot the surface density profile of each dust species.
 
-![](../_static/dust_profiles.png)
+![](../../_static/dust_profiles.png)
 
 ```{note}
 The data is from a Phantom simulation with multiple dust species using the
