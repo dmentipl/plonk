@@ -272,7 +272,7 @@ of particles by radius.
 ## Neighbours
 
 Find particle neighbours using {meth}`~Snap.neighbours` via a k-d tree. The
-implementation uses the efficient `scipy.spatial.cKDTree`.
+implementation uses the efficient {class}`scipy.spatial.cKDTree`.
 
 ```python
 >>> import plonk

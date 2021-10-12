@@ -154,7 +154,7 @@ dictionary of metadata, i.e. non-array data, on the snapshot.
  'time']
 ```
 
-Units are available. We make use of the Python units library Pint. The code
+Units are available. We make use of the Python units library [Pint](https://pint.readthedocs.io/). The code
 units of the data are available as {attr}`~Snap.code_units`.
 
 ```pycon
@@ -207,7 +207,7 @@ array([[ 3.56866999e+36, -1.17910663e+37,  2.44598074e+40],
 SPH simulation data is usually spread over multiple files of, possibly,
 different types, even though, logically, a simulation is a singular "object".
 Plonk has the {class}`Simulation` class to represent the complete data set.
-{class}`Simulation` is an aggregation of the {class}`Snap` and pandas DataFrames
+{class}`Simulation` is an aggregation of the {class}`Snap` and pandas {class}`DataFrame <pandas:pandas.DataFrame>`s
 to represent time series data (see below), plus metadata, such as the directory
 on the file system.
 
@@ -232,7 +232,7 @@ can get the first five snapshots with the following.
 ```
 
 The {class}`Simulation` class has an attribute {attr}`~Simulation.time_series`
-which contains time series data as pandas DataFrames discussed in the next
+which contains time series data as a pandas {class}`DataFrame <pandas:pandas.DataFrame>` discussed in the next
 section.
 
 ### Time series
@@ -243,7 +243,7 @@ For example, Phantom writes text files with the file extension ".ev". These
 files are output every time step rather than at the frequency of the snapshot
 files.
 
-We store this data in pandas DataFrames. Use {func}`load_time_series` to
+We store this data in a pandas {class}`DataFrame <pandas:pandas.DataFrame>`. Use {func}`load_time_series` to
 instantiate.
 
 ```pycon
@@ -255,7 +255,7 @@ with multiple jobs on a computation cluster. In that case, pass in a list of
 files in chronological order to {func}`load_time_series`, and Plonk will
 concatenate the data removing any duplicated time steps.
 
-The underlying data is stored as a pandas [^f1] DataFrame. This allows for
+The underlying data is stored as a pandas [^f1] {class}`DataFrame <pandas:pandas.DataFrame>`. This allows for
 the use of typical pandas operations with which users in the scientific Python
 community may be familiar with.
 
@@ -285,12 +285,7 @@ You can plot columns with the pandas plotting interface.
 
 The previous code produces the following figure.
 
-```{figure} _static/ev.png
----
-width: 100%
----
-The accretion disc center of mass as a function of time.
-```
+![The accretion disc center of mass as a function of time.](_static/ev.png)
 
 ## Visualization of SPH data
 
@@ -301,7 +296,7 @@ magnitude of a quantity of interest. An alternative is to interpolate any
 quantity on the particles to a pixel grid with weighted kernel density
 estimation. This is what [Splash](https://github.com/danieljprice/splash)
 does. For the technical details, see Price (2007), [PASA, 24, 3, 159](https://ui.adsabs.harvard.edu/abs/2007PASA...24..159P). We use the same
-numerical method as Splash, with the Python function compiled with Numba so it
+numerical method as Splash, with the Python function compiled with [Numba](https://numba.pydata.org/) so it
 has the same performance as the Fortran code.
 
 You can use the {meth}`~Snap.image` method to interpolate a quantity to a pixel
@@ -315,15 +310,10 @@ column density, i.e. a projection plot.
 >>> snap.image(quantity='density')
 ```
 
-```{figure} _static/density.png
----
-width: 100%
----
-The total column density.
-```
+![The total column density.](_static/density.png)
 
 This produces an image via Matplotlib. The function returns a Matplotlib
-{class}`AxesSubplot` object.
+{class}`Axes <matplotlib:matplotlib.axes.Axes>` object.
 
 Alternatively, you can pass keyword arguments to the matplotlib functions. For
 example, we set the units, the colormap to 'gist_heat' and set the colorbar
@@ -340,12 +330,7 @@ minimum and maxiumum. In addition, we set the extent, i.e. the x- and y-limits.
 ... )
 ```
 
-```{figure} _static/density_zoom.png
----
-width: 100%
----
-The column density zoomed around the planet.
-```
+![The column density zoomed around the planet.](_static/density_zoom.png)
 
 More fine-grained control can be achieved by using the full details of
 {meth}`~Snap.image`. See the API for more details.
@@ -370,8 +355,8 @@ one dust species. We can squeeze all the dust sub-types together using the
 >>> dust = snap.family('dust', squeeze=True)
 ```
 
-You can access arrays on the {py:class}`SubSnap` objects as for any
-{py:class}`Snap` object.
+You can access arrays on the {class}`SubSnap` objects as for any
+{class}`Snap` object.
 
 ```pycon
 >>> gas['mass'].sum().to('solar_mass')
@@ -393,12 +378,7 @@ Let's plot the gas and dust side-by-side.
 ...     subsnap.image(quantity='density', extent=extent, cmap='gist_heat', ax=ax)
 ```
 
-```{figure} _static/dust-gas.png
----
-width: 100%
----
-The column density of the gas and dust.
-```
+![The column density of the gas and dust.](_static/dust-gas.png)
 
 ### Derived arrays
 
@@ -490,7 +470,7 @@ array([8.28943225e+12, 2.00284678e+13, 1.79690392e+13, ...,
 
 ### Units
 
-Plonk uses Pint to set arrays to physical units.
+Plonk uses [Pint](https://pint.readthedocs.io/) to set arrays to physical units.
 
 ```pycon
 >>> snap = plonk.load_snap(filename)
@@ -629,9 +609,9 @@ array([7.97124951e+10, 9.84227660e+10, 1.18761140e+11, 1.37555034e+11,
        4.63783507e+12, 4.95119779e+12, 5.17961431e+12, 5.29308491e+12]) <Unit('meter')>
 ```
 
-You can convert the data in the {class}`Profile` object to a pandas DataFrame
+You can convert the data in the {class}`Profile` object to a pandas {class}`DataFrame <pandas:pandas.DataFrame>`
 with the {meth}`~Profile.to_dataframe` method. This takes all loaded profiles
-and puts them into the DataFrame with units indicated in brackets.
+and puts them into the {class}`DataFrame <pandas:pandas.DataFrame>` with units indicated in brackets.
 
 ```pycon
 >>> profiles = [
@@ -673,10 +653,6 @@ We can also plot the profiles.
 >>> prof.plot('radius', 'scale_height', ax=axs[1])
 ```
 
-```{figure} _static/profile.png
----
-width: 100%
----
-```
+![](_static/profile.png)
 
 [^f1]: See [https://pandas.pydata.org/](https://pandas.pydata.org/) for more on pandas.
