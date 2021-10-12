@@ -1,5 +1,9 @@
 # Visualization of SPH data
 
+```{eval-rst}
+.. currentmodule:: plonk
+```
+
 SPH particle data is not gridded like the data produced by, for example, finite
 difference or finite volume hydrodynamical codes. One visualization method is to
 plot the particles as a scatter plot, and possibly color the particles with the

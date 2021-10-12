@@ -1,5 +1,9 @@
 # Working with SPH data
 
+```{eval-rst}
+.. currentmodule:: plonk
+```
+
 First import the Plonk package.
 
 ```pycon

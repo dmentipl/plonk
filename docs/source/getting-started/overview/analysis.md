@@ -1,5 +1,9 @@
 # Analysis of SPH data
 
+```{eval-rst}
+.. currentmodule:: plonk
+```
+
 ## Subsnaps
 
 When analyzing SPH data it can be useful to look at a subset of particles. For
