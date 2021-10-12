@@ -21,6 +21,8 @@ However, no software is bug free. Please use Plonk and if you have any
 issues or feature requests please leave feedback by raising a [GitHub issue](https://github.com/dmentipl/plonk/issues/new/choose).
 ```
 
+## Contents
+
 ```{toctree}
 :maxdepth: 1
 
