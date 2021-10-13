@@ -67,7 +67,7 @@ from .visualize.interpolation import interpolate
 from .visualize.simulation import visualize_sim
 from .visualize.visualization import image, plot, vector
 
-__version__ = '0.7.3'
+__version__ = '0.7.4'
 
 _logger_init(__version__)
 
