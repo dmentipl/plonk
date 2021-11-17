@@ -473,15 +473,50 @@ def _interpolated_plot(
     ax.set(**ax_kwargs)
 
     if show_colorbar:
-        divider = make_axes_locatable(ax)
         _kwargs = copy(colorbar_kwargs)
         position = _kwargs.pop('position', 'right')
-        size = _kwargs.pop('size', '5%')
-        pad = _kwargs.pop('pad', '2%')
+        divide_ax = _kwargs.pop('divide_ax', True)
         if position in ('top', 'bottom'):
             _kwargs.update({'orientation': 'horizontal'})
-        cax = divider.append_axes(position=position, size=size, pad=pad)
+        if divide_ax:
+            divider = make_axes_locatable(ax)
+            size = _kwargs.pop('size', '5%')
+            pad = _kwargs.pop('pad', '2%')
+            cax = divider.append_axes(position=position, size=size, pad=pad)
+        else: # Make a new axes and do not split the previous one
+            # This is useful for plots created with matplotlib.gridspec
+            print('Manually creating cbar ax.. ')
+            size = _kwargs.pop('size', 0.05)
+            pad = _kwargs.pop('pad', 0.02)
+            ax_pos = ax.get_position()
+            print(ax_pos.width, ax_pos.height, ax_pos.x0, ax_pos.y0)
+            # Top or bottom cbars
+            if position in ('top', 'bottom'):
+                width = ax_pos.width
+                left = ax_pos.x0
+                height = ax_pos.height * size
+            if position == 'top':
+                bottom = ax_pos.y0 + ax_pos.height + pad
+            elif position == 'bottom':
+                bottom = ax_pos.y0 - pad
+            # Left or right cbars
+            if position in ('right', 'left'):
+                width = ax_pos.width * size
+                bottom = ax_pos.y0
+                height = ax_pos.height
+            if position == 'left':
+                left = ax_pos.x0 - width - pad
+            elif position == 'right':
+                left = ax_pos.x0 + pad
+
+            # Finally add the cbar ax
+            cax = fig.add_axes((left, bottom, width, height))
+
         cbar = fig.colorbar(plot_object, cax, **_kwargs)
+        if position in ('top', 'bottom'):
+            # Change tick locations based on location
+            cax.xaxis.set_ticks_position(position)
+            cax.xaxis.set_label_position(position)
 
         qname = pretty_array_name(names["quantity"])
         if interp == 'projection' and not weighted:
@@ -494,7 +529,7 @@ def _interpolated_plot(
         qlabel = qname
         if f'{qunit:~P}' != '':
             qlabel = qlabel + f' [{qunit:~P}]'
-        cbar.set_label(qlabel)
+        # cbar.set_label(qlabel)
 
 
 def plot(
