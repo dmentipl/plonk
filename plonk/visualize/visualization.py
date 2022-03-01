@@ -485,11 +485,10 @@ def _interpolated_plot(
             cax = divider.append_axes(position=position, size=size, pad=pad)
         else: # Make a new axes and do not split the previous one
             # This is useful for plots created with matplotlib.gridspec
-            print('Manually creating cbar ax.. ')
             size = _kwargs.pop('size', 0.05)
             pad = _kwargs.pop('pad', 0.02)
             ax_pos = ax.get_position()
-            print(ax_pos.width, ax_pos.height, ax_pos.x0, ax_pos.y0)
+
             # Top or bottom cbars
             if position in ('top', 'bottom'):
                 width = ax_pos.width
