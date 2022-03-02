@@ -1,6 +1,11 @@
 name: Tests
 
-on: [pull_request, push]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
 jobs:
   Formatting:
     runs-on: ubuntu-latest
@@ -36,7 +41,7 @@ jobs:
         source '/usr/share/miniconda/etc/profile.d/conda.sh'
         conda activate plonk
         pip install -e .
-        python -m mypy plonk tests
+        python -m mypy src tests
   Tests:
     runs-on: ubuntu-latest
     strategy:

@@ -64,7 +64,7 @@ python -m black --check .
 
 If any of these commands fail then there is either a test failure, or you need to reformat the code in line with the chosen code style for Plonk. (See below.)
 
-After you have committed and pushed your changes to your forked repository you can issue a [pull request](https://github.com/dmentipl/plonk/pull/new/master).
+After you have committed and pushed your changes to your forked repository you can issue a [pull request](https://github.com/dmentipl/plonk/pull/new/main).
 
 To check the [code coverage](https://en.wikipedia.org/wiki/Code_coverage) do the following
 
@@ -160,7 +160,7 @@ New releases and PyPI and Conda packages
 
 ### Make a release
 
-First, increase the version number in `setup.cfg`, and update the `CHANGELOG.md` adding a heading like `[v0.3.1] - yyyy-mm-dd` under "Unreleased" heading. Then commit the change with a message like "Bump version to v0.3.1".
+First, increase the version number in `src/plonk/__init__.py`, and update the `CHANGELOG.md` adding a heading like `[v0.3.1] - yyyy-mm-dd` under "Unreleased" heading. Then commit the change with a message like "Bump version to v0.3.1".
 
 Then, make a new release on GitHub at <https://github.com/dmentipl/plonk/releases>. The title and tag should both be like "v0.3.1" which corresponds to the Plonk version number. Copy in the changes from the `CHANGELOG.md`. This creates a git tag for the commit, and generates a GitHub release with downloadable source as a tar.gz file.
 
@@ -199,4 +199,4 @@ Clone [my fork](https://github.com/dmentipl/plonk-feedstock) of the Plonk feedst
 1. Update the version number.
 2. Update the sha256 hash to correspond to the source version on [PyPI](https://pypi.org/project/plonk/).
 
-Commit the change with a message like "Update to version 0.3.1". Then go to the GitHub page and generate a new [pull request](https://github.com/dmentipl/plonk-feedstock/pull/new/master). This will run several tests. If they pass, merge the pull request into the conda-forge/plonk-feedstock repository. Then a new conda package should soon be available on the [Anaconda cloud](https://anaconda.org/conda-forge/plonk).
+Commit the change with a message like "Update to version 0.3.1". Then go to the GitHub page and generate a new [pull request](https://github.com/dmentipl/plonk-feedstock/pull/new/main). This will run several tests. If they pass, merge the pull request into the conda-forge/plonk-feedstock repository. Then a new conda package should soon be available on the [Anaconda cloud](https://anaconda.org/conda-forge/plonk).

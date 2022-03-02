@@ -15,9 +15,16 @@ Types of changes:
 
 ## [Unreleased]
 
+## [0.7.4] - 2021-10-13
+
 ### Changed
 
 - Moved from Travis CI to GitHub actions for tests/CI.
+- Moved to src layout.
+- Version is now set in `src/plonk/__init__.py` which is read in `setup.cfg`.
+- Update MANIFEST.in.
+- Renamed master branch to main. Changes reflected in docs.
+- Restructure docs, including changing from reStructuredText to Markdown using myst-parser.
 
 ## [0.7.3] - 2020-08-28
 

@@ -12,32 +12,37 @@ channels:
 
 dependencies:
   - python>=3.6
-  - black
-  - coverage[toml]
-  - coveralls
-  - doc8
-  - ffmpeg
-  - flake8
+  # Required
   - h5py
-  - ipython
-  - isort>=5.0
-  - jupyterlab
   - matplotlib
-  - mypy
   - numba
   - numpy
   - pandas
   - pint>=0.10.1
+  - scipy
+  - toml
+  # Development
+  - black
+  - coverage[toml]
+  - doc8
+  - flake8
+  - ipython
+  - isort>=5.0
+  - jupyterlab
+  - mypy
+  - myst-parser
   - pip
+  - pydata-sphinx-theme
   - pydocstyle
   - pylint
   - pytest
-  - scikit-image>=0.16
-  - scipy
   - sphinx
-  - sphinx_rtd_theme
-  - toml
-  - tqdm
   - twine
+  # Optional
+  - ffmpeg
+  - scikit-image>=0.16
+  - tqdm
   - pip:
+    - coveralls
     - phantomconfig
+    - types-toml

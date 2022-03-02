@@ -16,23 +16,24 @@ import configparser
 import sys
 from pathlib import Path
 
-path = (Path(__file__) / '../../..').resolve()
+path = (Path(__file__).parent / '..' / '..' / 'src').resolve()
 sys.path.insert(0, str(path))
 
 # -- Project information -----------------------------------------------------
+
+from plonk import __version__
 
 setup_cfg = configparser.ConfigParser()
 setup_cfg.read('../../setup.cfg')
 project = setup_cfg['metadata']['name']
 author = setup_cfg['metadata']['author']
-_version = setup_cfg['metadata']['version']
 
 copyright = f'2019-2021, {author}'
 
 # The short X.Y version
-version = _version.split(':')[0]
+version = __version__.split(':')[0]
 # The full version, including alpha/beta/rc tags
-release = _version
+release = __version__
 
 
 # -- General configuration ---------------------------------------------------
@@ -45,7 +46,9 @@ release = _version
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'myst_parser',
     'sphinx.ext.autodoc',
+    'sphinx.ext.intersphinx',
     'sphinx.ext.napoleon',
     'sphinx.ext.todo',
     'sphinx.ext.imgmath',
@@ -58,8 +61,7 @@ templates_path = ['_templates']
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
-# source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+source_suffix = ['.rst', '.md']
 
 # The master toctree document.
 master_doc = 'index'
@@ -79,13 +81,21 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
 
+autodoc_typehints = 'description'
+
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3', None),
+    'matplotlib': ('https://matplotlib.org/stable/', None),
+    'pandas': ('http://pandas.pydata.org/pandas-docs/dev', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy/', None),
+}
 
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'pydata_sphinx_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
