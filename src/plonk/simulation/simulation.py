@@ -112,7 +112,6 @@ class Simulation:
         self.paths['snaps'] = self._get_snap_files()
         self.paths['time_series_global'] = self._get_global_ts_files()
         self.paths['time_series_sinks'] = self._get_sink_ts_files()
-        #print(self.paths['snaps'], self.paths['time_series_global'], self.paths['time_series_sinks'])
 
         return self
 
@@ -264,7 +263,6 @@ class Simulation:
                     )
                 )
             )
-        print(sinks)
         return sinks
 
     def set_units_on_time_series(self, config: Union[str, Path] = None):

@@ -185,7 +185,6 @@ def snap_array_registry(
 
     if name_map is None:
         name_map = {}
-    print(file_pointer.filename)
 
     header = {key: val[()] for key, val in file_pointer['header'].items()}
     arrays = list(file_pointer['particles'])
