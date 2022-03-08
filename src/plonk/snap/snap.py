@@ -19,7 +19,7 @@ from scipy.spatial import cKDTree
 from scipy.spatial.transform import Rotation
 
 from .. import visualize
-import .. import analysis.total.centre_of_mass
+from .. import analysis
 from .._config import read_config
 from .._logging import logger
 from .._units import Quantity, array_units, generate_array_code_units
@@ -679,18 +679,18 @@ class Snap:
     def shift_to_com(
         self
     ) -> Snap:
-        """Shift the snapshot to the centre of mass.
+        """Shift the snapshot to the center of mass.
 
         Returns
         -------
         Snap
-            The Snap shifted to the centre of mass. Note that the translation operation is
-            in-place.
+            The Snap shifted to the center of mass. Note that the shift to center of mass
+            operation is in-place.
         """
         logger.debug(f'Shifting snapshot to centre of mass : {self.file_path.name}')
 
-        com = analysis.total.centre_of_mass(self)
-        return self.translation(com)
+        com = analysis.total.center_of_mass(self)
+        return self.translate(com)
 
     def particle_indices(
         self, particle_type: str, squeeze: bool = False
