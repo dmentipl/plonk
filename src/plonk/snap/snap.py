@@ -690,7 +690,7 @@ class Snap:
         logger.debug(f'Shifting snapshot to centre of mass : {self.file_path.name}')
 
         com = analysis.total.center_of_mass(self)
-        return self.translate(com)
+        return self.translate(-com)
 
     def particle_indices(
         self, particle_type: str, squeeze: bool = False
