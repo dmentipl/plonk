@@ -90,7 +90,10 @@ def _get_data(columns: Tuple[str, ...], file_paths: Tuple[Path, ...]) -> DataFra
     _skiprows = [0]
     if len(times) > 1:
         for t1, t2 in zip(times, times[1:]):
-            _skiprows.append(np.where(t2 < t1[-1])[0][-1] + 2)
+            if t2[0] < t1[-1]:
+                _skiprows.append(np.where(t2 < t1[-1])[0][-1] + 2)
+            else:
+                _skiprows.append(0)
 
     df = pd.concat(
         (
@@ -124,7 +127,7 @@ def _get_columns(filename: Path, name_map: Dict[str, str]) -> Tuple[str, ...]:
 def _check_file_consistency(
     filenames: Tuple[Path, ...], name_map: Dict[str, str]
 ) -> None:
-
+    
     columns = _get_columns(filenames[0], name_map)
     for filename in filenames:
         columns_previous = columns

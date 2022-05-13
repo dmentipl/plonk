@@ -60,9 +60,12 @@ def add_to_header_from_infile(
     file = h5py.File(filename, mode='r+')
     logger.info(f'Opening snapshot file {snapfile}')
     for param in parameters:
+        print(param)
         if param in config.config:
             logger.info(f'Updating {param} from in-file')
             file[f'header/{param}'][()] = config.config[param].value
+            print(param)
+            print(file[f'header/{param}'][()])
     file.close()
 
 
@@ -135,7 +138,7 @@ def snap_properties_and_units(
     elif ieos == 2:
         properties['equation_of_state'] = 'adiabatic'
         properties['adiabatic_index'] = gamma
-    elif ieos == 3:
+    elif ieos in (3, 6, 14, 21):
         properties['equation_of_state'] = 'locally isothermal disc'
         properties['adiabatic_index'] = gamma
 
@@ -434,8 +437,9 @@ def pressure(snap: Snap) -> Quantity:
                 * snap.code_units['time'] ** (-2)
             )
             return K * rho ** (gamma - 1)
-    if ieos == 3:
+    if ieos in (3, 6, 14, 21):
         # Vertically isothermal (for accretion disc)
+        # All of these ieos values are vertically isothermal
         K = K * snap.code_units['length'] ** 2 * snap.code_units['time'] ** (-2)
         q = snap._file_pointer['header/qfacdisc'][()]
         pos = get_dataset('xyz', 'particles')(snap)
@@ -451,7 +455,7 @@ def sound_speed(snap: Snap) -> Quantity:
     gamma = snap.properties['adiabatic_index']
     rho = density(snap)
     P = pressure(snap)
-    if ieos in (1, 3):
+    if ieos in (1, 3, 6, 14, 21):
         return np.sqrt(P / rho)
     if ieos == 2:
         return np.sqrt(gamma * P / rho)

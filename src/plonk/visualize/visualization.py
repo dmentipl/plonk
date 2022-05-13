@@ -5,6 +5,7 @@ from __future__ import annotations
 from contextlib import suppress
 from copy import copy
 from typing import TYPE_CHECKING, Any, Dict, Sequence, Tuple, Union
+from collections.abc import Callable
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -39,6 +40,7 @@ def image(
     interp: str = 'projection',
     weighted: bool = False,
     slice_normal: Tuple[float, float, float] = None,
+    slice_func: Callable[[SnapLike], ndarray] = None,
     slice_offset: Union[Quantity, float] = None,
     extent: Quantity = None,
     units: Dict[str, str] = None,
@@ -76,6 +78,9 @@ def image(
         The normal vector to the plane in which to take the
         cross-section slice as a tuple (x, y, z). Default is
         (0, 0, 1).
+    slice_func
+        The function which returns an ndarray of the distance of
+        each particle from an arbitrary slice.
     slice_offset
         The offset of the cross-section slice. Default is 0.0.
     extent
@@ -153,6 +158,7 @@ def image(
             interp=interp,
             weighted=weighted,
             slice_normal=slice_normal,
+            slice_func=slice_func,
             slice_offset=slice_offset,
             extent=extent,
             units=units,
@@ -304,6 +310,7 @@ def _interpolation_plot(
     interp: str = 'projection',
     weighted: bool = False,
     slice_normal: Tuple[float, float, float] = None,
+    slice_func: Callable[[SnapLike], ndarray] = None,
     slice_offset: Union[Quantity, float] = None,
     extent: Quantity = None,
     units: Dict[str, str] = None,
@@ -346,6 +353,7 @@ def _interpolation_plot(
         interp=interp,
         weighted=weighted,
         slice_normal=slice_normal,
+        slice_func=slice_func,
         slice_offset=slice_offset,
         extent=extent,
         units=units,
@@ -379,6 +387,7 @@ def _interpolated_data(
     interp,
     weighted,
     slice_normal,
+    slice_func,
     slice_offset,
     extent,
     units,
@@ -407,6 +416,7 @@ def _interpolated_data(
         interp=interp,
         weighted=weighted,
         slice_normal=slice_normal,
+        slice_func=slice_func,
         slice_offset=slice_offset,
         extent=extent,
         num_pixels=num_pixels,
@@ -473,15 +483,49 @@ def _interpolated_plot(
     ax.set(**ax_kwargs)
 
     if show_colorbar:
-        divider = make_axes_locatable(ax)
         _kwargs = copy(colorbar_kwargs)
         position = _kwargs.pop('position', 'right')
-        size = _kwargs.pop('size', '5%')
-        pad = _kwargs.pop('pad', '2%')
+        divide_ax = _kwargs.pop('divide_ax', True)
         if position in ('top', 'bottom'):
             _kwargs.update({'orientation': 'horizontal'})
-        cax = divider.append_axes(position=position, size=size, pad=pad)
+        if divide_ax:
+            divider = make_axes_locatable(ax)
+            size = _kwargs.pop('size', '5%')
+            pad = _kwargs.pop('pad', '2%')
+            cax = divider.append_axes(position=position, size=size, pad=pad)
+        else: # Make a new axes and do not split the previous one
+            # This is useful for plots created with matplotlib.gridspec
+            size = _kwargs.pop('size', 0.05)
+            pad = _kwargs.pop('pad', 0.02)
+            ax_pos = ax.get_position()
+
+            # Top or bottom cbars
+            if position in ('top', 'bottom'):
+                width = ax_pos.width
+                left = ax_pos.x0
+                height = ax_pos.height * size
+            if position == 'top':
+                bottom = ax_pos.y0 + ax_pos.height + pad
+            elif position == 'bottom':
+                bottom = ax_pos.y0 - pad
+            # Left or right cbars
+            if position in ('right', 'left'):
+                width = ax_pos.width * size
+                bottom = ax_pos.y0
+                height = ax_pos.height
+            if position == 'left':
+                left = ax_pos.x0 - width - pad
+            elif position == 'right':
+                left = ax_pos.x1 + pad #  - width
+
+            # Finally add the cbar ax
+            cax = fig.add_axes((left, bottom, width, height))
+
         cbar = fig.colorbar(plot_object, cax, **_kwargs)
+        if position in ('top', 'bottom'):
+            # Change tick locations based on location
+            cax.xaxis.set_ticks_position(position)
+            cax.xaxis.set_label_position(position)
 
         qname = pretty_array_name(names["quantity"])
         if interp == 'projection' and not weighted:
@@ -494,7 +538,7 @@ def _interpolated_plot(
         qlabel = qname
         if f'{qunit:~P}' != '':
             qlabel = qlabel + f' [{qunit:~P}]'
-        cbar.set_label(qlabel)
+        # cbar.set_label(qlabel)
 
 
 def plot(
