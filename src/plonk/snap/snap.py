@@ -676,10 +676,9 @@ class Snap:
 
         return self
 
-    def shift_to_com(
-        self
-    ) -> Snap:
-        """Shift the snapshot to the center of mass.
+    def shift_to_com(self, sink_idx: Union[int, List[int]] = None) -> Snap:
+        """Shift the snapshot to the center of mass, or the location
+        of the central body
 
         Returns
         -------
@@ -687,10 +686,15 @@ class Snap:
             The Snap shifted to the center of mass. Note that the shift to center of mass
             operation is in-place.
         """
-        logger.debug(f'Shifting snapshot to centre of mass : {self.file_path.name}')
 
-        com = analysis.total.center_of_mass(self)
-        return self.translate(-com)
+        logger.debug(f'Shifting snapshot to centre of mass : {self.file_path.name}')
+        if sink_idx == None:
+            com = analysis.total.center_of_mass(self)
+            return self.translate(-com)
+        else:
+            self.set_central_body(sink_idx)
+            com = self._properties['central_body']['position']
+            return self.translate(-com)
 
     def particle_indices(
         self, particle_type: str, squeeze: bool = False

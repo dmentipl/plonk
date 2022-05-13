@@ -7,6 +7,7 @@ for interpolation of vector fields.
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Tuple
+from collections.abc import Callable
 
 import numpy as np
 from numpy import ndarray
@@ -34,6 +35,7 @@ def interpolate(
     interp: 'str',
     weighted: bool = False,
     slice_normal: Tuple[float, float, float] = None,
+    slice_func: Callable[[SnapLike], ndarray] = None,
     slice_offset: Quantity = None,
     extent: Quantity,
     num_pixels: Tuple[float, float] = None,
@@ -62,6 +64,9 @@ def interpolate(
     slice_normal
         The normal vector to the plane in which to take the
         cross-section slice as an array (x, y, z).
+    slice_func
+        The function which returns an ndarray of the distance of
+        each particle from an arbitrary slice.
     slice_offset
         The offset of the cross-section slice. Default is 0.0.
     extent
@@ -123,7 +128,12 @@ def interpolate(
         slice_offset = (
             (slice_offset / snap.code_units['length']).to_base_units().magnitude
         )
-        dist_from_slice = distance_from_plane(_x, _y, _z, _slice_normal, slice_offset)
+        if slice_func is not None:
+            dist_from_slice = slice_func(snap, normal=_slice_normal)
+        else:
+            dist_from_slice = distance_from_plane(_x, _y, _z, _slice_normal, slice_offset)
+            print("Dist from slice")
+            print(dist_from_slice)
 
     if _quantity.ndim == 1:
         interpolated_data = scalar_interpolation(

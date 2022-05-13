@@ -5,6 +5,7 @@ from __future__ import annotations
 from contextlib import suppress
 from copy import copy
 from typing import TYPE_CHECKING, Any, Dict, Sequence, Tuple, Union
+from collections.abc import Callable
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -39,6 +40,7 @@ def image(
     interp: str = 'projection',
     weighted: bool = False,
     slice_normal: Tuple[float, float, float] = None,
+    slice_func: Callable[[SnapLike], ndarray] = None,
     slice_offset: Union[Quantity, float] = None,
     extent: Quantity = None,
     units: Dict[str, str] = None,
@@ -76,6 +78,9 @@ def image(
         The normal vector to the plane in which to take the
         cross-section slice as a tuple (x, y, z). Default is
         (0, 0, 1).
+    slice_func
+        The function which returns an ndarray of the distance of
+        each particle from an arbitrary slice.
     slice_offset
         The offset of the cross-section slice. Default is 0.0.
     extent
@@ -153,6 +158,7 @@ def image(
             interp=interp,
             weighted=weighted,
             slice_normal=slice_normal,
+            slice_func=slice_func,
             slice_offset=slice_offset,
             extent=extent,
             units=units,
@@ -304,6 +310,7 @@ def _interpolation_plot(
     interp: str = 'projection',
     weighted: bool = False,
     slice_normal: Tuple[float, float, float] = None,
+    slice_func: Callable[[SnapLike], ndarray] = None,
     slice_offset: Union[Quantity, float] = None,
     extent: Quantity = None,
     units: Dict[str, str] = None,
@@ -346,6 +353,7 @@ def _interpolation_plot(
         interp=interp,
         weighted=weighted,
         slice_normal=slice_normal,
+        slice_func=slice_func,
         slice_offset=slice_offset,
         extent=extent,
         units=units,
@@ -379,6 +387,7 @@ def _interpolated_data(
     interp,
     weighted,
     slice_normal,
+    slice_func,
     slice_offset,
     extent,
     units,
@@ -407,6 +416,7 @@ def _interpolated_data(
         interp=interp,
         weighted=weighted,
         slice_normal=slice_normal,
+        slice_func=slice_func,
         slice_offset=slice_offset,
         extent=extent,
         num_pixels=num_pixels,
@@ -506,7 +516,7 @@ def _interpolated_plot(
             if position == 'left':
                 left = ax_pos.x0 - width - pad
             elif position == 'right':
-                left = ax_pos.x0 + pad
+                left = ax_pos.x1 + pad #  - width
 
             # Finally add the cbar ax
             cax = fig.add_axes((left, bottom, width, height))
